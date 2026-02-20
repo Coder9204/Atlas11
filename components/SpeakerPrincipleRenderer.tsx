@@ -745,7 +745,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     const isNextDisabled = currentIndex === phaseOrder.length - 1 || isTestActive;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -838,7 +838,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -911,7 +911,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1033,10 +1033,10 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1220,7 +1220,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1311,7 +1311,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1413,10 +1413,10 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1550,7 +1550,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1658,7 +1658,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
@@ -1872,7 +1872,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1928,7 +1928,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2094,7 +2094,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

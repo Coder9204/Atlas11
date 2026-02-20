@@ -746,7 +746,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     const hasNext = currentIndex < phaseOrder.length - 1;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -819,14 +819,14 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         textAlign: 'center',
@@ -904,10 +904,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1039,11 +1039,11 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-      }}><div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      }}><div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         {renderNavBar()}
         {renderProgressBar()}
 
@@ -1242,10 +1242,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1363,10 +1363,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1482,10 +1482,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1620,10 +1620,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1729,10 +1729,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -1921,10 +1921,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           overflowY: 'auto',
@@ -2005,10 +2005,10 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         overflowY: 'auto',
@@ -2176,14 +2176,14 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         textAlign: 'center',

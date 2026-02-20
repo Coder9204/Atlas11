@@ -933,7 +933,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(false)}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Seeing Sound
@@ -986,7 +986,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           {/* Progress indicator for predict phase */}
           <div style={{
             padding: '12px 16px',
@@ -1051,7 +1051,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Chladni Patterns</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1159,7 +1159,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1229,7 +1229,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           {/* Progress indicator */}
           <div style={{
             padding: '12px 16px',
@@ -1301,7 +1301,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frequency vs Pattern</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1392,7 +1392,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1464,7 +1464,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1580,7 +1580,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar()}
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1663,7 +1663,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1831,7 +1831,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }} aria-label="trophy">&#127942;</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1881,7 +1881,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderNavBar(false)}
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px', textAlign: 'center', padding: '24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', textAlign: 'center', padding: '24px' }}>
         <h1 style={{ color: colors.textPrimary }}>Chladni Patterns</h1>
         <p style={{ color: colors.textSecondary }}>Loading...</p>
       </div>

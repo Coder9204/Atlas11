@@ -705,9 +705,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>📸</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
@@ -742,9 +742,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
               Make Your Prediction
@@ -807,9 +807,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     const cocSize = (apertureSize * Math.abs(1 / subjectDistance - 1 / focusDistance) * 500).toFixed(1);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
               Depth of Field Lab
@@ -957,9 +957,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
               The Physics of Depth of Field
@@ -1038,9 +1038,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <span style={{ background: `${colors.secondary}22`, border: `1px solid ${colors.secondary}`, borderRadius: '20px', padding: '4px 16px', color: colors.secondary, fontSize: '14px' }}>THE TWIST</span>
@@ -1103,9 +1103,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.secondary, textAlign: 'center', marginBottom: '8px' }}>
               Distance and Background Blur
@@ -1187,9 +1187,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.secondary, textAlign: 'center', marginBottom: '16px' }}>
               Key Discovery: Three Paths to Blur
@@ -1254,9 +1254,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     const allAppsCompleted = transferCompleted.size >= 4;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '24px 16px 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1388,9 +1388,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1430,9 +1430,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             {/* Progress indicator */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1565,9 +1565,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
             <h2 style={{ ...typo.h2, color: colors.success, marginBottom: '16px' }}>
@@ -1608,9 +1608,9 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
 
   // Default fallback
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary }}>Depth of Field</h1>
           <button onClick={() => goToPhase('hook')} style={primaryButtonStyle}>Start</button>

@@ -575,7 +575,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const renderBottomNav = (backAction?: () => void, nextAction?: () => void, nextLabel?: string) => (
     <div
       style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1005,7 +1005,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   // ============================================================================
 
   const renderHook = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px 120px', textAlign: 'center', overflowY: 'auto' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '999px', marginBottom: '32px' }}>
@@ -1042,7 +1042,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <div style={{ marginBottom: '16px' }}>
@@ -1105,7 +1105,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <h2 style={{ fontSize: typo.heading, fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>Diver Lab</h2>
@@ -1200,7 +1200,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <h2 style={{ fontSize: typo.heading, fontWeight: 700, color: colors.textPrimary, marginBottom: '16px' }}>How Pressure Affects Buoyancy</h2>
@@ -1257,7 +1257,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderTwistPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <div style={{ marginBottom: '16px' }}>
@@ -1350,7 +1350,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <h2 style={{ fontSize: typo.heading, fontWeight: 700, color: '#fbbf24', marginBottom: '8px' }}>Compare Different Divers</h2>
@@ -1439,7 +1439,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderTwistReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <h2 style={{ fontSize: typo.heading, fontWeight: 700, color: '#fbbf24', marginBottom: '24px' }}>Air Volume and Sinking Depth</h2>
@@ -1486,7 +1486,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   const renderTransfer = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
         <div style={{ marginBottom: '16px' }}>
@@ -1573,7 +1573,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     const q = quizQuestions[currentQuestion];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
         {renderNavDots()}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px 120px', overflowY: 'auto' }}>
           <div style={{ marginBottom: '16px' }}>
@@ -1734,7 +1734,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   };
 
   const renderMastery = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderNavDots()}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px 120px', textAlign: 'center', overflowY: 'auto' }}>
         <div style={{ background: 'linear-gradient(to bottom right, rgba(6,182,212,0.2), rgba(59,130,246,0.2), rgba(20,184,166,0.2))', borderRadius: '24px', padding: '32px', maxWidth: '600px', border: '1px solid rgba(6,182,212,0.3)' }}>
@@ -1780,21 +1780,17 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Cartesian Diver"
-            applications={realWorldApplications}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Cartesian Diver"
+          applications={realWorldApplications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1802,7 +1798,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgDark, color: colors.textPrimary, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgDark, color: colors.textPrimary, position: 'relative', overflow: 'hidden' }}>
       {/* Background gradients */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
       <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(6,182,212,0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />

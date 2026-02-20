@@ -467,19 +467,19 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    height: '100vh',
+    height: '100dvh',
     background: '#0a0f1a',
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
     overflow: 'hidden',
     position: 'relative',
-    minHeight: '100vh'
+    minHeight: '100dvh'
   };
 
   const scrollContentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    paddingBottom: '80px'
+    paddingBottom: '16px'
   };
 
   const progressPercent = ((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100;
@@ -1827,7 +1827,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
         {/* Quiz navigation - using div for jsdom compatibility */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,

@@ -2293,219 +2293,19 @@ export default function SoapBoatRenderer({
 
       // ───────────────────────────────────────────────────
       // TRANSFER
-      // ───────────────────────────────────────────────────
-      if (phase === 'transfer') {
-        return (
+      // ───────────────────────────────────────────────────
+
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Soap Boat"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Soap Boat"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer':
-        const app = realWorldApps[activeApp];
-
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700, textAlign: 'center' }}>
-              Surface Tension in the Real World
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
-              Application {activeApp + 1} of {realWorldApps.length}
-            </p>
-
-            {/* Tab navigation */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center', overflowX: 'auto' }}>
-              {realWorldApps.map((a, i) => {
-                const completed = completedApps.has(i);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setActiveApp(i)}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      fontWeight: 500,
-                      fontSize: '0.85rem',
-                      transition: 'all 0.2s ease-out',
-                      border: completed ? `1px solid ${colors.success}` : '1px solid rgba(71, 85, 105, 0.5)',
-                      background: activeApp === i ? colors.secondary : completed ? `${colors.success}33` : colors.bgCardLight,
-                      color: activeApp === i ? colors.textPrimary : completed ? colors.success : '#e2e8f0',
-                      cursor: 'pointer',
-                      minHeight: 44
-                    }}
-                  >
-                    {completed ? '✓' : a.icon} {a.short ? a.short.substring(0, 20) : a.title.substring(0, 20)}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* App content - scrollable */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.5)',
-              borderRadius: 16,
-              padding: '20px',
-              border: '1px solid rgba(71, 85, 105, 0.5)',
-              maxHeight: '400px',
-              overflowY: 'auto'
-            }}>
-              {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ fontSize: '2.5rem' }}>{app.icon}</div>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', marginBottom: '4px' }}>{app.title}</h3>
-                  <p style={{ fontSize: '0.85rem', color: app.color, fontWeight: 600 }}>{app.tagline}</p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p style={{ color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.6 }}>{app.description}</p>
-
-              {/* Connection */}
-              <div style={{
-                background: 'rgba(59, 130, 246, 0.1)',
-                borderLeft: '3px solid #3b82f6',
-                padding: '12px',
-                borderRadius: '4px',
-                marginBottom: '16px'
-              }}>
-                <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#60a5fa' }}>Connection:</strong> {app.connection}
-                </p>
-              </div>
-
-              {/* How it works */}
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ color: '#e2e8f0', fontSize: '1rem', fontWeight: 600, marginBottom: '8px' }}>How It Works</h4>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6 }}>{app.howItWorks}</p>
-              </div>
-
-              {/* Stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                {app.stats.map((stat, i) => (
-                  <div key={i} style={{
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>{stat.icon}</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#60a5fa', marginBottom: '4px' }}>{stat.value}</div>
-                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Examples */}
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, marginBottom: '8px' }}>Examples</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {app.examples.map((ex, i) => (
-                    <span key={i} style={{
-                      background: 'rgba(59, 130, 246, 0.2)',
-                      color: '#93c5fd',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.8rem'
-                    }}>{ex}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Companies */}
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ color: '#e2e8f0', fontSize: '0.95rem', fontWeight: 600, marginBottom: '8px' }}>Key Players</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {app.companies.map((company, i) => (
-                    <span key={i} style={{
-                      background: 'rgba(168, 85, 247, 0.2)',
-                      color: '#d8b4fe',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600
-                    }}>{company}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Future Impact */}
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                borderRadius: '8px',
-                padding: '12px',
-                borderLeft: '3px solid #10b981'
-              }}>
-                <h4 style={{ color: '#6ee7b7', fontSize: '0.9rem', fontWeight: 600, marginBottom: '6px' }}>Future Impact</h4>
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem', lineHeight: 1.5 }}>{app.futureImpact}</p>
-              </div>
-            </div>
-
-            {/* Got It button */}
-            <button
-              onClick={() => {
-                setCompletedApps(prev => new Set([...prev, activeApp]));
-                playSound('click');
-                if (activeApp < realWorldApps.length - 1) {
-                  setActiveApp(activeApp + 1);
-                }
-              }}
-              style={{
-                padding: '12px 24px',
-                fontSize: '1rem',
-                fontWeight: 600,
-                background: completedApps.has(activeApp) ? 'rgba(34, 197, 94, 0.2)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: completedApps.has(activeApp) ? '1px solid #22c55e' : 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-out',
-                minHeight: 44
-              }}
-            >
-              {completedApps.has(activeApp) ? '✓ Got It!' : 'Got It'}
-            </button>
-
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center' }}>
-              {completedApps.size} / {realWorldApps.length} applications explored
-            </p>
-
-            {completedApps.size >= realWorldApps.length && (
-              <button
-                onClick={() => goToPhase('test')}
-                style={{
-                  padding: '14px 28px',
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  minHeight: 44
-                }}
-              >
-                Take the Mastery Test →
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TEST
-      // ───────────────────────────────────────────────────
       case 'test':
         const score = testQuestions.reduce((acc, tq, i) => {
           if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
@@ -2799,7 +2599,7 @@ export default function SoapBoatRenderer({
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
       background: 'linear-gradient(180deg, #0a0f1a 0%, #0a1628 100%)',
       display: 'flex',
@@ -2900,7 +2700,7 @@ export default function SoapBoatRenderer({
 
       {/* Bottom Navigation */}
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

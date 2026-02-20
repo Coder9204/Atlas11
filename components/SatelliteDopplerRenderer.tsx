@@ -1504,111 +1504,17 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               See Real Applications
             </button>
           </div>
-        );
+        );
 
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Satellite Doppler"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Satellite Doppler"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          typo={typo}
+          playSound={playSound}
           />
-        );
-      }
-
-      case 'transfer':
-        return (
-          <div className="flex flex-col items-center min-h-[400px] p-6" style={{ overflowY: 'auto', flex: 1 }}>
-            <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
-
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
-              {realWorldApps.map((app, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveAppTab(index)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeAppTab === index
-                      ? 'bg-gradient-to-r from-cyan-600 to-green-600 text-white'
-                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                  }`}
-                >
-                  {completedApps.has(index) && '✓ '}{app.icon} {app.short}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #22c55e 100%)', padding: '4px', borderRadius: '12px', width: '100%', maxWidth: '48rem' }}>
-              <div style={{ backgroundColor: '#0f172a', padding: '24px', borderRadius: '8px' }}>
-                <h3 className="text-xl font-bold text-white mb-2">{realWorldApps[activeAppTab].icon} {realWorldApps[activeAppTab].title}</h3>
-                <p className="text-sm text-cyan-400 mb-4">{realWorldApps[activeAppTab].tagline}</p>
-                <p className="text-slate-300 mb-4">{realWorldApps[activeAppTab].description}</p>
-
-                <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                  <h4 className="text-cyan-400 font-bold mb-2">Doppler Connection</h4>
-                  <p className="text-slate-300 text-sm mb-3">{realWorldApps[activeAppTab].connection}</p>
-                  <h4 className="text-green-400 font-bold mb-2">How It Works</h4>
-                  <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].howItWorks}</p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {realWorldApps[activeAppTab].stats.map((stat, i) => (
-                    <div key={i} className="bg-slate-800/70 p-3 rounded-lg text-center">
-                      <div className="text-2xl mb-1">{stat.icon}</div>
-                      <div className="text-cyan-400 font-bold text-sm">{stat.value}</div>
-                      <div className="text-slate-400 text-xs">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mb-4">
-                  <h4 className="text-purple-400 font-bold mb-2 text-sm">Companies & Organizations</h4>
-                  <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].companies.join(', ')}</p>
-                </div>
-
-                <div className="bg-green-900/20 p-3 rounded-lg mb-4">
-                  <h4 className="text-green-400 font-bold mb-2 text-sm">Future Impact</h4>
-                  <p className="text-slate-300 text-sm">{realWorldApps[activeAppTab].futureImpact}</p>
-                </div>
-
-                {!completedApps.has(activeAppTab) && (
-                  <button
-                    onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', cursor: 'pointer', fontWeight: 700 }}
-                    className="w-full py-3 text-white rounded-lg transition-all"
-                  >
-                    Mark as Understood
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <p className="text-slate-400 mt-4">Completed: {completedApps.size} / {realWorldApps.length}</p>
-
-            <div className="flex gap-4 mt-4">
-              {activeAppTab < realWorldApps.length - 1 && (
-                <button
-                  onClick={() => setActiveAppTab(activeAppTab + 1)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: '#334155', cursor: 'pointer', fontWeight: 700 }}
-                  className="px-6 py-3 text-white rounded-xl transition-all"
-                >
-                  Next Application →
-                </button>
-              )}
-              {completedApps.size >= 3 && (
-                <button
-                  onClick={() => goToPhase('test')}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, background: 'linear-gradient(135deg, #06b6d4 0%, #22c55e 100%)' }}
-                  className="px-8 py-3 text-white font-bold rounded-xl transition-all"
-                >
-                  Take the Test
-                </button>
-              )}
-            </div>
-          </div>
         );
 
       case 'test':
@@ -1739,7 +1645,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div style={{ minHeight: '100vh', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', backgroundColor: '#0a0f1a', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', lineHeight: '1.6' }}>
+    <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', backgroundColor: '#0a0f1a', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', lineHeight: '1.6' }}>
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />

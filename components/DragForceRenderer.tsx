@@ -401,7 +401,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   const renderBottomBar = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -502,8 +502,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #020617 100%)`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+      <div style={{ minHeight: '100dvh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #020617 100%)`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           {renderProgressBar()}
           <style>{style_muted}</style>
 
@@ -555,8 +555,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -698,8 +698,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const ptY = chartTop + chartH - (ptFd / maxDrag) * (chartH - 10);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '800px', margin: '24px auto 0' }}>
@@ -904,8 +904,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -990,8 +990,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -1164,8 +1164,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const tvPtY = tvTop + tvChartH - Math.min((twistTerminalV / maxTermV) * (tvChartH - 10), tvChartH - 10);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '800px', margin: '24px auto 0' }}>
@@ -1269,8 +1269,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -1354,8 +1354,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   if (phase === 'transfer') {
     const currentApp = realWorldApps[activeAppTab];
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -1511,8 +1511,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     if (testSubmitted) {
       // Results view
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
             {renderProgressBar()}
 
             <div style={{ maxWidth: '700px', margin: '24px auto 0', textAlign: 'center' }}>
@@ -1584,8 +1584,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const isCorrect = selectedAnswer === correctId;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           {renderProgressBar()}
 
           <div style={{ maxWidth: '700px', margin: '24px auto 0' }}>
@@ -1776,8 +1776,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #020617 100%)`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+      <div style={{ minHeight: '100dvh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #020617 100%)`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           {renderProgressBar()}
 
           <div style={{ fontSize: '64px', marginBottom: '24px' }}>🏆</div>
@@ -1830,8 +1830,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   // Default fallback - should never reach here
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: colors.textSecondary, fontFamily }}>Loading Drag Force...</p>
       </div>
       {renderBottomBar()}

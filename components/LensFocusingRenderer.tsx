@@ -722,8 +722,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        height: '100vh',
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -803,7 +803,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -921,7 +921,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1140,7 +1140,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1240,7 +1240,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1358,7 +1358,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1500,7 +1500,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1606,7 +1606,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Real-World Applications</p>
@@ -1816,7 +1816,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1872,7 +1872,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2038,7 +2038,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

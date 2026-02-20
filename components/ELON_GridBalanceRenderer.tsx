@@ -472,7 +472,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   // Fixed navigation bar component
   const NavigationBar = ({ children }: { children: React.ReactNode }) => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -815,7 +815,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -827,7 +827,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',
@@ -919,7 +919,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -931,7 +931,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1065,7 +1065,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1077,7 +1077,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1277,7 +1277,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1289,7 +1289,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1413,7 +1413,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1425,7 +1425,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1562,7 +1562,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1574,7 +1574,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1776,7 +1776,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1788,7 +1788,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1869,7 +1869,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1881,7 +1881,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -2006,7 +2006,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -2018,7 +2018,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
             flex: '1 1 0%',
             overflowY: 'auto',
             paddingTop: '44px',
-            paddingBottom: '80px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -2072,7 +2072,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2084,7 +2084,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -2252,7 +2252,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2264,7 +2264,7 @@ const ELON_GridBalanceRenderer: React.FC<ELON_GridBalanceRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',

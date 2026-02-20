@@ -546,7 +546,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
   // Bottom Navigation Bar component
   const renderBottomNav = (backPhase: Phase | null, nextPhase: Phase | null, nextLabel?: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -828,12 +828,12 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: '#ffffff',
         overflow: 'hidden',
       }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '80px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -896,7 +896,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -999,12 +999,12 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
       }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '24px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px', maxWidth: '600px', margin: '0 auto', overflowY: 'auto' }}>
           <h2 style={{ ...typo.h2, marginBottom: '8px' }}>Boyle's Law Lab</h2>
           <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '24px' }}>
             Adjust the volume and observe how pressure changes - this demonstrates why compressing gases takes work and releases heat.
@@ -1124,7 +1124,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1194,7 +1194,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1297,7 +1297,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1394,7 +1394,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1478,7 +1478,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1608,7 +1608,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
           color: colors.textPrimary,
           overflow: 'hidden',
@@ -1668,7 +1668,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',
@@ -1770,7 +1770,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         color: colors.textPrimary,
         overflow: 'hidden',

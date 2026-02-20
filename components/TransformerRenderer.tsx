@@ -642,7 +642,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -756,7 +756,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -764,7 +764,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
         justifyContent: 'center',
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -831,7 +831,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -842,7 +842,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -981,7 +981,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -992,7 +992,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1208,7 +1208,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1219,7 +1219,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1358,7 +1358,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1369,7 +1369,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1474,7 +1474,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1485,7 +1485,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1633,7 +1633,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1644,7 +1644,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1735,7 +1735,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1746,7 +1746,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1912,7 +1912,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1923,7 +1923,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             flex: 1,
             overflowY: 'auto',
             paddingTop: '44px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -1978,7 +1978,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1989,7 +1989,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2154,7 +2154,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

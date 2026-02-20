@@ -523,7 +523,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       <>
         <div style={{ height: '70px' }} />
         <nav style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -650,7 +650,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -728,13 +728,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -836,13 +836,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1089,7 +1089,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1176,7 +1176,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1279,7 +1279,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   const renderTwistPlay = () => {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1453,7 +1453,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1537,13 +1537,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1737,9 +1737,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1802,9 +1802,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     const correctId = question.options.find(o => o.correct)?.id;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
@@ -1924,7 +1924,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   const renderMastery = () => {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2023,21 +2023,17 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Newtons Third Law"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Newtons Third Law"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2045,7 +2041,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgPrimary }}>
       {renderPhase()}
     </div>
   );

@@ -992,7 +992,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', minHeight: '600px', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               RC Delay in Interconnects
@@ -1043,7 +1043,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           {renderVisualization()}
 
           <div style={{
@@ -1097,7 +1097,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore RC Delay</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1178,7 +1178,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1233,7 +1233,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1293,7 +1293,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Materials & Nodes</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1373,7 +1373,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1441,7 +1441,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1525,7 +1525,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1565,7 +1565,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1611,7 +1611,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

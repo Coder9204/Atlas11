@@ -858,7 +858,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -898,9 +898,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               The Bottle Tornado
@@ -953,9 +953,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           {/* Progress indicator */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1030,9 +1030,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
               Create Your Tornado!
@@ -1162,9 +1162,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{
               color: isCorrect ? colors.success : colors.warning,
@@ -1241,9 +1241,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
               Plot Twist!
@@ -1312,9 +1312,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
               Scale Matters!
@@ -1409,9 +1409,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{
               color: isCorrect ? colors.success : colors.accent,
@@ -1487,9 +1487,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     const allCompleted = transferCompleted.size >= 4;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Real-World Applications
@@ -1589,9 +1589,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderTopNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 400 }}>
                 Test Complete! You Scored:
@@ -1691,9 +1691,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     }
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Knowledge Check
@@ -1746,7 +1746,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           ))}
         </div>
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1780,9 +1780,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Master!
@@ -1835,9 +1835,9 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
 
   // Default fallback - render hook phase
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {renderTopNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
             The Bottle Tornado

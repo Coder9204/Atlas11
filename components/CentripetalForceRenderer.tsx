@@ -2070,7 +2070,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      height: '100dvh',
       background: colors.bgPrimary,
       color: colors.textPrimary,
       position: 'relative',
@@ -2148,14 +2148,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
         position: 'relative',
         zIndex: 10,
         paddingTop: '64px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderPhaseContent()}
       </div>
 
       {/* Fixed bottom navigation bar */}
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

@@ -1708,7 +1708,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       {/* Scroll container with all app cards */}
-      <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1, width: '100%', maxWidth: '700px' }}>
+      <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', flex: 1, width: '100%', maxWidth: '700px' }}>
         {transferApps.map((app, appIdx) => (
           <div key={appIdx} style={{
             display: activeAppIndex === appIdx ? 'block' : 'none',
@@ -2147,21 +2147,17 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Electric Potential"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Electric Potential"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2175,7 +2171,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
   const renderBottomNav = () => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2262,7 +2258,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: 'linear-gradient(180deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)',
       color: '#ffffff',
       display: 'flex',
@@ -2305,7 +2301,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       {/* Main content - scrollable */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', position: 'relative', zIndex: 10 }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', position: 'relative', zIndex: 10 }}>
         {renderPhase()}
       </div>
 

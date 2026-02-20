@@ -731,7 +731,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -739,7 +739,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '80px', textAlign: 'center' }}>
           <div style={{
             fontSize: '64px',
             marginBottom: '24px',
@@ -801,7 +801,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -809,7 +809,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', padding: '24px', paddingTop: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', padding: '24px', paddingTop: '80px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -974,7 +974,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -982,7 +982,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Fluorescence Laboratory
@@ -1177,7 +1177,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1185,7 +1185,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Fluorescence Process
@@ -1293,7 +1293,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1301,7 +1301,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1423,7 +1423,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1431,7 +1431,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Excitation Wavelength and Efficiency
@@ -1537,7 +1537,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1545,7 +1545,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Singlet vs Triplet States
@@ -1633,7 +1633,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1641,7 +1641,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1843,7 +1843,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1851,7 +1851,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
           {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '24px' }}>
               <div style={{
                 fontSize: '80px',
@@ -1903,7 +1903,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1911,7 +1911,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             {/* Progress */}
             <div style={{
@@ -2073,7 +2073,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2081,7 +2081,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
           <div style={{
             fontSize: '100px',
             marginBottom: '24px',

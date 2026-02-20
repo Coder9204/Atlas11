@@ -822,7 +822,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -934,7 +934,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1041,11 +1041,11 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -1261,7 +1261,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1354,7 +1354,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1478,7 +1478,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1706,7 +1706,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1816,7 +1816,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1989,7 +1989,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '80px',
@@ -2047,7 +2047,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -2215,7 +2215,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

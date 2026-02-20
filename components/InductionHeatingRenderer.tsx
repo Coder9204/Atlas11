@@ -800,7 +800,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -877,7 +877,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -889,7 +889,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -991,7 +991,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1003,7 +1003,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1247,7 +1247,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1259,7 +1259,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1350,7 +1350,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1362,7 +1362,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1478,7 +1478,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1490,7 +1490,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1610,7 +1610,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1622,7 +1622,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1728,7 +1728,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1740,7 +1740,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1925,7 +1925,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1937,7 +1937,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             flex: 1,
             overflowY: 'auto',
             paddingTop: '80px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -1992,7 +1992,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2004,7 +2004,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2169,7 +2169,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

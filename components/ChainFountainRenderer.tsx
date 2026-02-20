@@ -1200,7 +1200,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1241,11 +1241,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // HOOK PHASE
   if (currentPhase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(false, '', true, 'Start', true)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
               The Self-Siphoning Chain
@@ -1300,11 +1300,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // PREDICT PHASE
   if (currentPhase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', !!prediction)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           {/* Progress indicator */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <span style={{ color: colors.textMuted, fontSize: '13px' }}>
@@ -1381,11 +1381,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // PLAY PHASE
   if (currentPhase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', true)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
               Create Your Chain Fountain!
@@ -1492,11 +1492,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', true)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '!' : '!'}
@@ -1601,11 +1601,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (currentPhase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', !!twistPrediction)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <span style={{ color: colors.textMuted, fontSize: '13px' }}>
               Prediction 2 of 2
@@ -1682,11 +1682,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // TWIST_PLAY PHASE
   if (currentPhase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', true)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
               The Kick Mechanism
@@ -1773,11 +1773,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', true)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '!' : '!'}
@@ -1890,11 +1890,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const allCompleted = transferCompleted.size >= 4;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', true, 'Next', allCompleted)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Real-World Applications
@@ -2024,11 +2024,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
           {renderNavBar(true, 'Back', true, 'Done', true)}
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
                 {score >= 80 ? '!' : score >= 60 ? '!' : '!'}
@@ -2085,11 +2085,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     }
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', false, '', false)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Knowledge Check
@@ -2191,7 +2191,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
         {/* Bottom action button */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2249,11 +2249,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // MASTERY PHASE
   if (currentPhase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true, 'Back', false, '', false)}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '16px' }}>!</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
@@ -2309,11 +2309,11 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
   // Default fallback - should render hook phase
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {renderProgressBar()}
       {renderNavBar(false, '', true, 'Start', true)}
 
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>
             The Self-Siphoning Chain

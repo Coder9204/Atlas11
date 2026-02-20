@@ -688,9 +688,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Space Physics</span>
             <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -719,9 +719,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Make Your Prediction</h2>
             <p style={{ textAlign: 'center', color: '#e2e8f0', marginBottom: '24px' }}>
@@ -761,9 +761,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Orbital Mechanics</h2>
             <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '8px' }}>
@@ -856,9 +856,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   if (phase === 'review') {
     const wasCorrect = prediction === 'falling';
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -907,9 +907,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '16px' }}>The Twist</h2>
 
@@ -950,9 +950,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Higher = Slower</h2>
 
@@ -1031,9 +1031,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'slower_higher';
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1113,9 +1113,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
             <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -1182,9 +1182,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+          <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
             <div style={{ maxWidth: '600px', margin: '0 auto' }}>
               <div style={{
                 background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1238,9 +1238,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2>Knowledge Test</h2>
@@ -1326,9 +1326,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🛰️</div>
             <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Orbital Mechanics Expert!</h1>

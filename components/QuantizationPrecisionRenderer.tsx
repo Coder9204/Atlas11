@@ -953,7 +953,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1010,8 +1010,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   // Phase renders
   const renderHook = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px', maxWidth: '672px', margin: '0 auto 24px' }}>
           <div style={{
             display: 'inline-block',
@@ -1074,8 +1074,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
           <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
             Make Your Prediction
           </h2>
@@ -1162,8 +1162,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   const renderPlay = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '16px' }}>
           Quantization Lab
         </h2>
@@ -1253,8 +1253,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   );
 
   const renderReview = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Understanding Quantization
         </h2>
@@ -1306,8 +1306,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
           <h2 style={{ color: colors.warning, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
             The Twist: Layer Sensitivity
           </h2>
@@ -1402,8 +1402,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   const renderTwistPlay = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '16px' }}>
           Layer Sensitivity Lab
         </h2>
@@ -1471,8 +1471,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   );
 
   const renderTwistReview = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <h2 style={{ color: colors.warning, fontSize: '24px', textAlign: 'center', marginBottom: '24px' }}>
           Mixed-Precision Strategy
         </h2>
@@ -1516,8 +1516,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   );
 
   const renderTransfer = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>
           Real-World Applications
         </h2>
@@ -1583,8 +1583,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
       const passed = score >= 7;
 
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, padding: '24px', paddingBottom: '16px', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
                 width: '80px',
@@ -1783,8 +1783,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
     }
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, padding: '24px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div style={{ marginBottom: '24px' }}>
             <p style={{
               fontSize: '10px',
@@ -1968,7 +1968,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   const renderMastery = () => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       <div style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{
           width: '100px',
@@ -2027,20 +2027,16 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Quantization Precision"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
+          conceptName="Quantization Precision"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2048,7 +2044,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgPrimary }}>
       {renderProgressBar()}
       {/* Main content with padding for fixed header */}
       <div style={{ paddingTop: '60px' }}>

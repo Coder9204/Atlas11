@@ -928,7 +928,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
       <div style={{
         position: 'absolute',
         inset: 0,
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: colors.bgDark,

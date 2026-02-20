@@ -482,7 +482,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const canGoNext = currentIndex < phaseOrder.length - 1 && !isTestActive;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -570,7 +570,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const isTestActive = phase === 'test' && !testSubmitted;
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -905,7 +905,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -977,7 +977,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1091,7 +1091,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1101,7 +1101,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
         overflowY: 'auto',
         padding: '24px',
         paddingTop: '56px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderProgressBar()}
 
@@ -1344,7 +1344,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1459,7 +1459,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1569,7 +1569,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1787,7 +1787,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1885,7 +1885,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -2092,13 +2092,13 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
         }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '56px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '56px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>
               {passed ? '🏆' : '📚'}
@@ -2193,7 +2193,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -2365,7 +2365,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

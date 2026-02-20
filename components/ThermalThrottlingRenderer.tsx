@@ -711,7 +711,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -788,7 +788,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -799,7 +799,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -916,7 +916,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -927,7 +927,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1103,7 +1103,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1114,7 +1114,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1202,7 +1202,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1213,7 +1213,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1323,7 +1323,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1334,7 +1334,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1474,7 +1474,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1485,7 +1485,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1592,7 +1592,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1603,7 +1603,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1771,7 +1771,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1853,7 +1853,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1864,7 +1864,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2029,7 +2029,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

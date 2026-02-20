@@ -1183,7 +1183,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1277,7 +1277,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>
@@ -1368,7 +1368,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1502,7 +1502,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1734,7 +1734,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{
@@ -1895,7 +1895,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -2014,7 +2014,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -2213,7 +2213,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{
@@ -2349,7 +2349,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -2579,7 +2579,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Progress */}
@@ -2746,7 +2746,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
 
         {showExplanation ? (
           <div style={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             left: 0,
             right: 0,
@@ -2816,7 +2816,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '16px' }}>

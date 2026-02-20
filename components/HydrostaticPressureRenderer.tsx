@@ -2328,21 +2328,17 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Hydrostatic Pressure"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Hydrostatic Pressure"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2356,7 +2352,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
   // ============================================================================
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgDeep,
@@ -2410,14 +2406,14 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         {renderPhase()}
       </div>
 
       {/* Fixed bottom navigation bar */}
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

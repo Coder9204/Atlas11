@@ -859,7 +859,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -955,9 +955,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
   // ─── Phase layouts ──────────────────────────────────────────────────────────
   const pageStyle: React.CSSProperties = {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     paddingTop: '48px',
-    paddingBottom: '100px',
+    paddingBottom: '16px',
     background: colors.bgPrimary,
     overflowX: 'hidden',
   };
@@ -965,9 +965,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // ── HOOK ────────────────────────────────────────────────────────────────────
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: isMobile ? '24px' : '32px', marginBottom: '8px', fontWeight: 800 }}>
               Solar Panel Temperature Coefficient
@@ -1015,9 +1015,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
@@ -1064,9 +1064,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // ── PLAY ─────────────────────────────────────────────────────────────────────
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '6px', fontSize: isMobile ? '18px' : '22px' }}>
               Explore Temperature Effects
@@ -1148,9 +1148,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     const wasCorrect = prediction === 'less_power_hot';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
@@ -1210,9 +1210,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
               ⚡ The Twist: Summer vs Winter
@@ -1270,9 +1270,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // ── TWIST PLAY ───────────────────────────────────────────────────────────────
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
               Season Comparison
@@ -1348,9 +1348,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     const winterPower = STC_PMAX * (1 + TEMP_COEFF_PMAX * (5 - STC_TEMP)) * (800 / STC_IRRADIANCE);
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
@@ -1412,9 +1412,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '6px', textAlign: 'center', fontSize: isMobile ? '20px' : '24px' }}>
               Real-World Applications
@@ -1545,9 +1545,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
               margin: '16px',
@@ -1615,9 +1615,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: isMobile ? '16px' : '18px' }}>Knowledge Test</h2>
@@ -1783,7 +1783,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
         </div>
         {/* Bottom nav is disabled during active quiz */}
         <nav style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1818,9 +1818,9 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // ── MASTERY ───────────────────────────────────────────────────────────────────
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px' }}>Mastery Achieved!</h1>

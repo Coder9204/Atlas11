@@ -472,7 +472,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -2562,21 +2562,17 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Shower Curtain"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Shower Curtain"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2584,7 +2580,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
@@ -2634,13 +2630,13 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
         maxHeight: 'calc(100vh - 64px)',
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         <div style={{
           maxWidth: '800px',
           margin: '0 auto',
           padding: isMobile ? '8px' : '16px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           {renderPhase()}
         </div>

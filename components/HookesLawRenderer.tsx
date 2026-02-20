@@ -814,7 +814,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
   // ============================================================================
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -918,7 +918,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     ];
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -1033,7 +1033,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
   // ============================================================================
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -1171,7 +1171,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     const userWasRight = prediction === 'double';
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -1515,7 +1515,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     const allCompleted = completedApps.size >= realWorldApps.length;
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -1695,7 +1695,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     }
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom right, #0f172a, #0a1628, #0f172a)' }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
         <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(20, 184, 166, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />

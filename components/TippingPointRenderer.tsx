@@ -1265,7 +1265,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = true) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1326,9 +1326,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // HOOK PHASE
   if (validPhase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Explore the Tipping Point
@@ -1377,9 +1377,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // PREDICT PHASE
   if (validPhase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1431,9 +1431,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // PLAY PHASE
   if (validPhase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Tipping Physics</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1544,9 +1544,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     };
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1605,9 +1605,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // TWIST PREDICT PHASE
   if (validPhase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1666,9 +1666,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // TWIST PLAY PHASE
   if (validPhase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Bottom Weight</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1716,9 +1716,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     const wasCorrect = twistPrediction === 'better';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1785,9 +1785,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     const allCompleted = transferCompleted.size >= transferApplications.length;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1954,9 +1954,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   if (validPhase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1994,9 +1994,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -2041,9 +2041,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   // MASTERY PHASE
   if (validPhase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -2076,9 +2076,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
 
   // Default fallback - should never reach here due to validPhase
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
             The Tipping Point

@@ -1714,21 +1714,17 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Thin Film Interference"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Thin Film Interference"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1737,7 +1733,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       background: colors.bgPrimary,
       color: colors.textPrimary,
       display: 'flex',
@@ -1749,8 +1745,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         <NavigationDots />
       </div>
       {/* Scrollable content area */}
-      <div style={{ flex: '1 1 0%', minHeight: '100vh', overflowY: 'auto', paddingTop: '48px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '100px' }}>
+      <div style={{ flex: '1 1 0%', minHeight: '100dvh', overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '16px' }}>
           {renderPhase()}
         </div>
       </div>

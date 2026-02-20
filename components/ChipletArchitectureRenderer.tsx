@@ -253,9 +253,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -834,7 +834,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#22c55e', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Chip Manufacturing</span>
@@ -866,7 +866,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -916,7 +916,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Yield Economics</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -1004,7 +1004,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     const wasCorrect = prediction === 'defects';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1060,7 +1060,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -1112,7 +1112,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Mixed Process Nodes</h2>
 
@@ -1157,7 +1157,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     const wasCorrect = twistPrediction === 'mixed';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1208,7 +1208,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
 
   if (phase === 'transfer') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -1324,7 +1324,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1381,7 +1381,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     const isCorrect = currentAnswer !== null && currentQ.options[currentAnswer].correct;
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: '#ffffff' }}>Knowledge Test</h2>
@@ -1556,7 +1556,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   // MASTERY PHASE
   if (phase === 'mastery') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Chiplet Architecture Expert!</h1>

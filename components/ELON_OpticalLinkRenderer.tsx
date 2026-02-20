@@ -476,7 +476,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   // Fixed navigation bar component
   const NavigationBar = ({ children }: { children: React.ReactNode }) => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -811,7 +811,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -823,7 +823,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',
@@ -915,7 +915,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -927,7 +927,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1064,7 +1064,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1076,7 +1076,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1228,7 +1228,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1240,7 +1240,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1364,7 +1364,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1376,7 +1376,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1508,7 +1508,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1520,7 +1520,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1683,7 +1683,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1695,7 +1695,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1776,7 +1776,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1788,7 +1788,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1915,7 +1915,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1927,7 +1927,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
             flex: '1 1 0%',
             overflowY: 'auto',
             paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -1981,7 +1981,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1993,7 +1993,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -2157,7 +2157,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2169,7 +2169,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',

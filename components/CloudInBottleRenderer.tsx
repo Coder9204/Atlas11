@@ -662,7 +662,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         : 'Released - Ready';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
           <defs>
             {/* Premium glass bottle gradient with transparency effect */}
@@ -2365,7 +2365,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const isTestPhase = currentPhase === 'test';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
       {/* Background */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)' }} />
       <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
@@ -2404,7 +2404,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </header>
 
       {/* Scrollable content area */}
-      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, paddingTop: '64px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, paddingTop: '64px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

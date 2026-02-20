@@ -1032,9 +1032,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{
               color: colors.accent,
@@ -1088,9 +1088,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>Make Your Prediction</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1155,9 +1155,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '22px' }}>Explore Moire Patterns</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1250,9 +1250,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     const wasCorrect = prediction === 'moire';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect
               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1346,9 +1346,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{
               color: colors.warning,
@@ -1420,9 +1420,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: '22px' }}>Test Spacing Differences</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1497,9 +1497,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     const wasCorrect = twistPrediction === 'speed';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect
               ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1586,9 +1586,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     const currentApp = realWorldApps[currentTransferApp];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontSize: '22px' }}>
               Real-World Applications
@@ -1711,9 +1711,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8
                 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)'
@@ -1778,9 +1778,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: '20px' }}>Knowledge Test</h2>
@@ -1924,9 +1924,9 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '72px',
@@ -1980,7 +1980,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
   // Default fallback to hook phase
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)' }}>
       {renderNavBar()}
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '20px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>

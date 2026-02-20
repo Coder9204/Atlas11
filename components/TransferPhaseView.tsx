@@ -162,38 +162,76 @@ export function TransferPhaseView({
   return (
     <div
       style={{
+        minHeight: '100vh',
+        // @ts-ignore -- dvh override for modern mobile browsers
+        minHeight: '100dvh',
+        background: c.bgDark,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        padding: isMobile ? '16px 12px' : '24px 16px',
-        overflowY: 'auto',
-        maxHeight: '100%',
-      }}
+      } as React.CSSProperties}
     >
-      {/* ---- Header ---- */}
-      <h2
+      {/* ---- Sticky Header ---- */}
+      <div
         style={{
-          fontSize: t.h2,
-          fontWeight: 700,
-          color: '#ffffff',
-          marginBottom: '6px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+          background: `${c.bgDark}ee`,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          padding: isMobile ? '16px 12px 12px' : '20px 16px 14px',
           textAlign: 'center',
+          borderBottom: `1px solid ${c.border}40`,
         }}
       >
-        {conceptName} in the Real World
-      </h2>
-      <p
-        style={{
-          fontSize: t.small,
-          color: c.textSecondary,
-          marginBottom: '16px',
-          textAlign: 'center',
-        }}
-      >
-        Explore all {totalApps} applications to unlock the quiz
-      </p>
+        <p
+          style={{
+            fontSize: t.label,
+            color: c.textMuted,
+            margin: '0 0 4px 0',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            fontWeight: 600,
+          }}
+        >
+          Step 8 &mdash; Real World
+        </p>
+        <h2
+          style={{
+            fontSize: isMobile ? '18px' : t.h2,
+            fontWeight: 700,
+            color: '#ffffff',
+            margin: 0,
+          }}
+        >
+          {conceptName} in the Real World
+        </h2>
+      </div>
 
-      {/* ---- Tab bar ---- */}
+      {/* ---- Scrollable Content ---- */}
+      <div
+        style={{
+          flex: '1 1 0%',
+          overflowY: 'auto',
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: isMobile ? '16px 12px' : '24px 16px',
+        }}
+      >
+        <p
+          style={{
+            fontSize: t.small,
+            color: c.textSecondary,
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}
+        >
+          Explore all {totalApps} applications to unlock the quiz
+        </p>
+
+        {/* ---- Tab bar ---- */}
       <div
         style={{
           display: 'flex',
@@ -562,12 +600,32 @@ export function TransferPhaseView({
           </div>
         )}
 
-        {/* ---- CTA Button ---- */}
+      </div>
+      </div>
+
+      {/* ---- Sticky Footer ---- */}
+      <div
+        style={{
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 20,
+          background: `${c.bgDark}ee`,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          padding: isMobile ? '12px 16px 16px' : '14px 24px 20px',
+          borderTop: `1px solid ${c.border}40`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+        }}
+      >
         <button
           onClick={ctaAction}
           style={{
             width: '100%',
-            padding: '12px',
+            maxWidth: '700px',
+            padding: '14px',
             borderRadius: '12px',
             border: 'none',
             fontWeight: 600,
@@ -581,38 +639,22 @@ export function TransferPhaseView({
             boxShadow: allCompleted
               ? `0 4px 12px ${c.success}30`
               : `0 4px 12px ${app.color}30`,
-            position: 'relative' as const,
-            zIndex: 10,
           }}
         >
           {ctaLabel}
         </button>
-      </div>
-
-      {/* ---- Progress text ---- */}
-      <p
-        style={{
-          fontSize: '14px',
-          color: c.textMuted,
-          marginBottom: '8px',
-          textAlign: 'center',
-        }}
-      >
-        {completedSet.size} of {totalApps} applications explored
-      </p>
-
-      {/* ---- Bottom hint when not all completed ---- */}
-      {!allCompleted && (
-        <span
+        <p
           style={{
-            fontSize: '14px',
+            fontSize: '13px',
             color: c.textMuted,
+            margin: 0,
             textAlign: 'center',
           }}
         >
-          Explore {totalApps - completedSet.size} more to continue
-        </span>
-      )}
+          {completedSet.size} of {totalApps} explored
+          {!allCompleted && ` \u2014 ${totalApps - completedSet.size} more to continue`}
+        </p>
+      </div>
     </div>
   );
 }

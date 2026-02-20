@@ -674,7 +674,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -822,7 +822,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -922,7 +922,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -933,7 +933,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
       }}>
@@ -1170,7 +1170,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     const correctPrediction = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -1263,7 +1263,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -1358,7 +1358,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -1526,7 +1526,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -1623,7 +1623,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -1793,7 +1793,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '80px 24px 100px',
           overflowY: 'auto',
@@ -1850,7 +1850,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 100px',
         overflowY: 'auto',
@@ -2021,7 +2021,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

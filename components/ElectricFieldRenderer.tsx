@@ -2265,21 +2265,17 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Electric Field"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Electric Field"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2309,7 +2305,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   );
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Electric Fields</span>
@@ -2321,7 +2317,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseIndex + 1}/10</span>
       </div>
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingBottom: '16px', paddingTop: '48px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((phaseIndex + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

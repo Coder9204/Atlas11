@@ -367,7 +367,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh',
+    minHeight: '100dvh',
     background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
@@ -1775,7 +1775,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {/* Educational header */}
           <div style={{
             padding: `${design.spacing.md}px ${design.spacing.lg}px`,
@@ -2071,7 +2071,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {/* Side-by-side layout */}
           <div style={{
             display: 'flex',

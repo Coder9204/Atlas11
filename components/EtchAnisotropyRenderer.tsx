@@ -1164,7 +1164,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1220,10 +1220,10 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
   // Wrapper for consistent layout
   const renderWrapper = (content: React.ReactNode, canProceed: boolean, nextLabel: string = 'Next') => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
       {renderNavigationBar()}
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', transition: 'all 0.3s ease' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {renderBottomBar(canProceed, nextLabel)}

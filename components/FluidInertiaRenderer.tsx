@@ -466,7 +466,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
   // Styles
   const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     background: `linear-gradient(135deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
     color: colors.textPrimary,
     fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -480,7 +480,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     paddingLeft: '20px',
     paddingRight: '20px',
     paddingTop: '48px',
-    paddingBottom: '100px',
+    paddingBottom: '16px',
   };
 
   const cardStyle: React.CSSProperties = {

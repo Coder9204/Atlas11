@@ -1118,7 +1118,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // CRITICAL: Bottom bar MUST use position: fixed to ALWAYS be visible
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1192,9 +1192,9 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)` }}>
         {renderTopNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 20px 60px', textAlign: 'center' }}>
           <div style={{ fontSize: '72px', marginBottom: '24px' }}>🔋⚡🔄</div>
           <h1 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
@@ -1273,7 +1273,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '60px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
@@ -1421,7 +1421,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '60px'
         }}>
           <div style={{ padding: '20px' }}>
@@ -1580,7 +1580,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '60px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1680,7 +1680,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Header */}
@@ -1813,7 +1813,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1944,7 +1944,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -2107,7 +2107,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* App header */}
@@ -2189,7 +2189,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
         {/* Footer - Fixed at bottom */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2291,7 +2291,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             overflowY: 'auto',
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -2368,7 +2368,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Progress */}
@@ -2509,7 +2509,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
         {/* Navigation - Fixed at bottom */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2590,7 +2590,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',

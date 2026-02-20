@@ -1087,7 +1087,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               Ion Implantation
@@ -1136,7 +1136,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1197,7 +1197,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore Ion Implantation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1356,7 +1356,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1572,7 +1572,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1650,7 +1650,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
@@ -1826,7 +1826,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>

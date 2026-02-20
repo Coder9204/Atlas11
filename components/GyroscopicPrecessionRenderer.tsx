@@ -347,7 +347,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // Premium wrapper for all phases
   const renderPremiumWrapper = (content: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
@@ -418,7 +418,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         overflowY: 'auto',
         overflowX: 'hidden',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         position: 'relative',
       }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: space.xl }}>

@@ -368,7 +368,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -421,9 +421,9 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   };
 
   const renderPhaseContent = (content: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', background: '#0f172a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px 24px', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px 24px', paddingTop: '48px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar()}

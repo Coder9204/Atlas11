@@ -818,7 +818,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
     const isNextDisabled = currentIndex === phaseOrder.length - 1 || isTestActive;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -913,7 +913,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -921,7 +921,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
         justifyContent: 'center',
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -987,7 +987,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -998,7 +998,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1120,7 +1120,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1131,7 +1131,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1314,7 +1314,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1325,7 +1325,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1425,7 +1425,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1436,7 +1436,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1559,7 +1559,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1570,7 +1570,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1710,7 +1710,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1721,7 +1721,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1838,7 +1838,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1849,7 +1849,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2051,7 +2051,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -2107,7 +2107,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2118,7 +2118,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2283,7 +2283,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

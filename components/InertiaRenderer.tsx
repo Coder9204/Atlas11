@@ -1944,21 +1944,17 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Inertia"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Inertia"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1966,7 +1962,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
       {renderProgressBar()}
 
       {/* Header */}
@@ -1980,7 +1976,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '80px', paddingTop: '44px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '16px', paddingTop: '44px' }}>
         {renderPhase()}
       </div>
 

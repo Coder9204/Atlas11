@@ -1033,7 +1033,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1090,9 +1090,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '700' }}>
               🌀 The Defiant Top
@@ -1149,9 +1149,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700' }}>Make Your Prediction</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1214,9 +1214,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '700' }}>Explore the Sleeping Top</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1371,9 +1371,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const wasCorrect = prediction === 'precess';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1472,9 +1472,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700' }}>🔄 The Twist</h2>
             <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>
@@ -1537,9 +1537,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700' }}>Test Spin Rate Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1637,9 +1637,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const wasCorrect = twistPrediction === 'faster_fall';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1716,9 +1716,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     };
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: '700' }}>
               🌍 Real-World Applications
@@ -1957,9 +1957,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavDots()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -2028,9 +2028,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: '700' }}>Knowledge Test</h2>
@@ -2179,7 +2179,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
         </div>
         {/* Fixed bottom bar - disabled during active quiz, enabled after submission */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2216,9 +2216,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   // ============================================================
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: '700' }}>Mastery Achieved!</h1>
@@ -2289,9 +2289,9 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
   // Default fallback
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderNavDots()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '24px', textAlign: 'center' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', padding: '24px', textAlign: 'center' }}>
         <h1 style={{ color: colors.accent, fontWeight: '700' }}>🌀 Sleeping Top</h1>
         <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>Loading...</p>
       </div>

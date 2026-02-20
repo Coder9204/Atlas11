@@ -1091,7 +1091,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   // Premium wrapper with proper scroll structure
   const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
@@ -1115,7 +1115,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
         position: 'relative',
         WebkitOverflowScrolling: 'touch',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         {children}
       </div>

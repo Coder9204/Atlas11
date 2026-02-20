@@ -527,7 +527,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -740,7 +740,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -753,7 +753,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '24px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -839,7 +839,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -852,7 +852,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '24px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Make Your Prediction</h2>
@@ -944,7 +944,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -957,7 +957,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary }}>Bimetallic Strip Lab</h2>
@@ -1092,7 +1092,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1105,7 +1105,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '24px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Understanding Bimetallic Bending</h2>
@@ -1174,7 +1174,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'twist_predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1187,7 +1187,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '24px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>The Thermostat Mystery</h2>
@@ -1284,7 +1284,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1297,7 +1297,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary }}>Hysteresis Lab</h2>
@@ -1437,7 +1437,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1450,7 +1450,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '24px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Hysteresis Explained</h2>
@@ -1533,7 +1533,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1546,7 +1546,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary }}>Bimetallic Strips Everywhere</h2>
@@ -1727,7 +1727,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1740,7 +1740,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             paddingTop: '24px',
             paddingLeft: '16px',
             paddingRight: '16px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             textAlign: 'center',
           }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>
@@ -1900,7 +1900,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -1913,7 +1913,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           paddingTop: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ ...typo.h3, color: colors.textPrimary }}>Knowledge Check</h2>
@@ -2098,7 +2098,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -2109,7 +2109,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
           flex: 1,
           overflowY: 'auto',
           padding: '24px 16px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
           <div style={{ fontSize: '100px', marginBottom: '16px' }}>🌡️</div>

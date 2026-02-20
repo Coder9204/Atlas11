@@ -2501,7 +2501,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
   const renderFixedBottomBar = () => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2564,8 +2564,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',
+      height: '100dvh',
       backgroundColor: colors.bgDark,
       color: colors.textPrimary,
       overflow: 'hidden',
@@ -2632,7 +2632,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         position: 'relative'
       }}>
         {/* Coach message */}
@@ -2685,7 +2685,6 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               playSound={playSound}
             />
           )}
-          {phase === 'transfer' && renderTransfer()}
           {phase === 'test' && renderTest()}
           {phase === 'mastery' && renderMastery()}
         </div>

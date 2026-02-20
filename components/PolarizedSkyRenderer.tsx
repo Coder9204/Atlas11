@@ -612,7 +612,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   // Bottom navigation bar
   const renderBottomNav = (onNext?: () => void, nextLabel = 'Next →', nextDisabled = false) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -753,9 +753,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
             display: 'flex',
             flexDirection: 'column',
@@ -900,9 +900,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1086,9 +1086,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1199,9 +1199,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1327,9 +1327,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1482,9 +1482,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1568,9 +1568,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1798,9 +1798,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -1907,9 +1907,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
-              minHeight: '100vh',
+              minHeight: '100dvh',
               background: colors.bgPrimary,
               padding: '24px',
             }}>
@@ -2084,9 +2084,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: colors.bgPrimary,
             padding: '24px',
           }}>
@@ -2179,9 +2179,9 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
             display: 'flex',
             flexDirection: 'column',

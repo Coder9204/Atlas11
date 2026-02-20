@@ -813,7 +813,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const canGoNext = currentIndex < phaseOrder.length - 1;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -872,7 +872,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const canGoBack = currentIndex > 0;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -948,7 +948,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -964,7 +964,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
           overflowY: 'auto',
         }}>
@@ -1032,7 +1032,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1126,7 +1126,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1137,7 +1137,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1343,10 +1343,10 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const predictionCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderProgressBar()}
 
@@ -1457,7 +1457,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1575,7 +1575,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1586,7 +1586,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1839,7 +1839,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1946,7 +1946,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1957,7 +1957,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2137,7 +2137,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -2193,7 +2193,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2410,7 +2410,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

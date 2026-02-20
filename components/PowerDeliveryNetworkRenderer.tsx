@@ -494,7 +494,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     const isLast = currentIndex === phaseOrder.length - 1;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -811,7 +811,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -820,7 +820,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
         paddingTop: '24px',
         paddingLeft: '24px',
         paddingRight: '24px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -891,7 +891,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -982,7 +982,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -993,7 +993,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1188,7 +1188,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1279,7 +1279,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1395,7 +1395,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1406,7 +1406,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1577,7 +1577,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1681,7 +1681,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1692,7 +1692,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1856,7 +1856,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1910,7 +1910,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2077,7 +2077,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

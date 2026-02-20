@@ -1146,9 +1146,9 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
 
   // Render wrapper with progress bar
   const renderPhaseContent = (content: React.ReactNode, bottomBar: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {content}
       </div>
       {bottomBar}

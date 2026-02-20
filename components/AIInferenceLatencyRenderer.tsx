@@ -198,7 +198,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         role="navigation"
         aria-label="Game navigation"
         style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -264,7 +264,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, color: colors.textPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, color: colors.textPrimary }}>
       {/* Phase identifier for content uniqueness - helps tests distinguish phases */}
       <span data-testid="phase-marker" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
         PHASE:{phase}:CONTENT_START
@@ -280,7 +280,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div className="phase-content" style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '100px' }}>
+      <div className="phase-content" style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '16px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -794,7 +794,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#f59e0b', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Systems</span>
@@ -875,7 +875,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Make Your Prediction</h2>
 
@@ -929,7 +929,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore LLM Inference</h2>
 
@@ -1074,7 +1074,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     const wasCorrect = prediction === 'memory';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1211,7 +1211,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px' }}>The Twist</h2>
 
@@ -1267,7 +1267,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px' }}>Stream vs Batch</h2>
 
@@ -1388,7 +1388,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     const wasCorrect = twistPrediction === 'depends';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1488,7 +1488,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   if (phase === 'transfer') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
 
@@ -1570,7 +1570,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1623,7 +1623,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
@@ -1738,7 +1738,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>AI Inference Expert!</h1>

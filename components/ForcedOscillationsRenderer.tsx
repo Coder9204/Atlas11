@@ -794,7 +794,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
@@ -803,7 +803,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: isMobile ? space.lg : space.xxl,
         paddingRight: isMobile ? space.lg : space.xxl,
         display: 'flex',
@@ -971,12 +971,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('🤔', 'Your Prediction', 'Step 1 of 2: Make your prediction')}
 
         {/* Static SVG for prediction phase */}
@@ -1100,12 +1100,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'Observe how driving frequency affects amplitude. This visualization shows the spring-mass system responding to a periodic driving force — important because resonance affects bridges, radios, and instruments!')}
         <div style={{ display: 'flex', flexDirection: 'row', gap: space.md, marginBottom: space.md, background: `${colors.primary}10`, borderRadius: radius.sm, padding: space.md }}>
           <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 400, lineHeight: 1.5 }}>
@@ -1464,12 +1464,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('📚', 'Understanding Forced Oscillations', 'The physics behind resonance')}
 
         <div style={{
@@ -1565,12 +1565,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('🌀', 'The Twist Challenge', 'A surprising source of periodic force')}
 
         <div style={{
@@ -1688,12 +1688,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('🔬', 'Vortex-Induced Vibration', 'How steady flow creates periodic forces')}
 
         {/* Side-by-side layout */}
@@ -1938,12 +1938,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderSectionHeader('💡', 'Key Discovery', 'Resonance can be hidden!')}
 
         <div style={{
@@ -2039,12 +2039,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderSectionHeader('🌍', 'Real-World Applications', 'Resonance engineering in everyday life')}
 
           {/* Progress indicator */}
@@ -2358,12 +2358,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {!showTestResults ? (
             <>
               <div style={{
@@ -2653,7 +2653,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         overflow: 'hidden',
         background: `radial-gradient(ellipse at top, ${colors.bgSecondary} 0%, ${colors.bgPrimary} 70%)`
       }}>
@@ -2664,7 +2664,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           paddingRight: isMobile ? space.lg : space.xl,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -2792,21 +2792,17 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Forced Oscillations"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Forced Oscillations"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2815,7 +2811,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',

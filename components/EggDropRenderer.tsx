@@ -349,7 +349,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh',
+    minHeight: '100dvh',
     background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
     fontFamily: design.font.sans,
     color: design.colors.textPrimary,
@@ -790,7 +790,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           padding: design.spacing.xl,
           textAlign: 'center',
           overflowY: 'auto',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{
             width: '100px',
@@ -854,7 +854,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -922,7 +922,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1082,7 +1082,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1176,7 +1176,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1278,7 +1278,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1375,7 +1375,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1476,7 +1476,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1692,7 +1692,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             flex: 1,
             overflowY: 'auto',
             padding: design.spacing.xl,
-            paddingBottom: '100px'
+            paddingBottom: '16px'
           }}>
             <div style={{ maxWidth: '700px', margin: '0 auto' }}>
               <h2 style={{ fontSize: '28px', fontWeight: 900, color: design.colors.textPrimary, marginBottom: design.spacing.lg, textAlign: 'center' }}>
@@ -1772,7 +1772,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           display: 'flex',
           flexDirection: 'column',
           padding: design.spacing.xl,
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ flex: 1, overflowY: 'auto', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
             <div style={{ marginBottom: design.spacing.lg, textAlign: 'center' }}>

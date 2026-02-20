@@ -593,7 +593,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -687,14 +687,14 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         textAlign: 'center',
@@ -765,7 +765,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -952,7 +952,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -965,7 +965,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1332,7 +1332,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1445,7 +1445,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1614,7 +1614,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1627,7 +1627,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1868,7 +1868,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1979,7 +1979,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1992,7 +1992,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -2189,10 +2189,10 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           overflowY: 'auto',
@@ -2318,7 +2318,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2485,14 +2485,14 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
         textAlign: 'center',

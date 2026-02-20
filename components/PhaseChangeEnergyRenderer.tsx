@@ -1441,7 +1441,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          <div style={{
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             height: '100%',
             width: '100%',
             background: '#0a0f1a',
@@ -1582,7 +1582,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // PREDICT Screen
    if (phase === 'predict') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
@@ -1672,7 +1672,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // PLAY Screen - Heating simulation
    if (phase === 'play') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
@@ -1834,7 +1834,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // REVIEW Screen
    if (phase === 'review') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
@@ -1898,7 +1898,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-PREDICT Screen
    if (phase === 'twist_predict') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
@@ -1988,7 +1988,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-PLAY Screen - Cooling demonstration
    if (phase === 'twist_play') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', overflow: 'hidden' }}>
@@ -2164,7 +2164,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    // TWIST-REVIEW Screen
    if (phase === 'twist_review') {
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
@@ -2338,7 +2338,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       };
 
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ padding: '16px', background: colors.bgCard, borderBottom: `1px solid ${colors.border}` }}>
@@ -2482,7 +2482,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          const percentage = (score / testQuestions.length) * 100;
 
          return (
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
                {renderProgressBar()}
 
                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -2572,7 +2572,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       }
 
       return (
-         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
+         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', height: '100%', overflow: 'hidden', background: colors.bgDark }}>
             {renderProgressBar()}
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
@@ -2725,7 +2725,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
          <div style={{
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             height: '100%',
             width: '100%',
             background: 'linear-gradient(180deg, #0f172a 0%, #020617 100%)',

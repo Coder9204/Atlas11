@@ -2155,7 +2155,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
           {/* Content */}
           <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px',
           paddingTop: '48px',
             <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -2905,7 +2905,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)',
@@ -2995,14 +2995,14 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
         flex: 1,
         overflowY: 'auto',
         paddingTop: '72px',
-        paddingBottom: '80px'
+        paddingBottom: '16px'
       }}>
         {renderPhase()}
       </div>
 
       {/* Fixed Bottom Navigation Bar */}
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

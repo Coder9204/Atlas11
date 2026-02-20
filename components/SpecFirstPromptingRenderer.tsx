@@ -844,7 +844,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -904,7 +904,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Spec-First Prompting
@@ -952,7 +952,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -992,7 +992,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Compare Prompt Styles</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1071,7 +1071,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1125,7 +1125,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1172,7 +1172,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Edge Case Checklists</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1224,7 +1224,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1290,7 +1290,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1354,7 +1354,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1391,7 +1391,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1489,7 +1489,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Achievement</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

@@ -809,7 +809,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
       }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '84px', paddingBottom: '80px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '84px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -881,7 +881,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -1027,7 +1027,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Data Center Airflow Lab
@@ -1284,7 +1284,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Physics of Data Center Cooling
@@ -1399,7 +1399,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1518,7 +1518,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Containment & Efficiency Lab
@@ -1747,7 +1747,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             CFD Modeling & Optimization
@@ -1845,7 +1845,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '72px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -2019,7 +2019,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '84px',
@@ -2077,7 +2077,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -2249,7 +2249,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

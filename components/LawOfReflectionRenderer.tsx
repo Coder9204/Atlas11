@@ -602,7 +602,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       color: colors.textPrimary,
       fontWeight: 400,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      minHeight: '100vh',
+      minHeight: '100dvh',
     }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
       <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -1000,7 +1000,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: colors.accent, fontSize: typo.small, textTransform: 'uppercase', letterSpacing: '2px' }}>
@@ -1065,7 +1065,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px', fontSize: typo.heading }}>Make Your Prediction</h2>
 
@@ -1160,7 +1160,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>
             Reflection Playground
@@ -1263,7 +1263,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     const wasCorrect = prediction === 'b';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)',
@@ -1328,7 +1328,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px', fontSize: typo.heading }}>
             The Corner Reflector Twist
@@ -1423,7 +1423,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px', fontSize: typo.heading }}>
             Corner Reflector Lab
@@ -1474,7 +1474,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     const wasCorrect = twistPrediction === 'b';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)',
@@ -1550,7 +1550,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     const allAppsCompleted = completedApps.every(c => c);
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
@@ -1741,7 +1741,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+        <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1783,7 +1783,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading, margin: 0 }}>Knowledge Test</h2>
@@ -1919,7 +1919,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   // =============================================================================
   if (phase === 'mastery') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>
             <span role="img" aria-label="trophy">MASTERY</span>

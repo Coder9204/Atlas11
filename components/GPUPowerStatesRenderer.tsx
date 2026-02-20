@@ -1194,7 +1194,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1248,9 +1248,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Why Does Your GPU Idle at Low Power?
@@ -1301,9 +1301,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>How Do GPUs Manage Power?</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1348,9 +1348,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>GPU Power Lab</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1509,9 +1509,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1607,9 +1607,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Power vs Thermal Limits</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1700,9 +1700,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Find the Limiting Factor</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1817,9 +1817,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1928,9 +1928,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
 
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
@@ -2040,9 +2040,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     if (testSubmitted) {
       const passed = testScore >= 7; // 70% threshold
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{
               background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -2131,9 +2131,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     const allAnswered = testAnswers.every(a => a !== null);
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
@@ -2283,9 +2283,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

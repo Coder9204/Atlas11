@@ -457,7 +457,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -527,7 +527,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',
@@ -627,7 +627,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
@@ -765,7 +765,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1076,7 +1076,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1205,7 +1205,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
@@ -1332,7 +1332,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1619,7 +1619,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1745,7 +1745,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1910,7 +1910,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
     const canGoBack = currentIndex > 0;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1972,7 +1972,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           overflow: 'hidden',
         }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{
@@ -2036,7 +2036,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -2242,7 +2242,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

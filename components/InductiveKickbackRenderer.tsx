@@ -1903,19 +1903,15 @@ export default function InductiveKickbackRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Inductive Kickback"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            playSound={playSound}
+          conceptName="Inductive Kickback"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return null;
@@ -1924,7 +1920,7 @@ export default function InductiveKickbackRenderer({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: 'linear-gradient(180deg, #0a0f1a 0%, #0a1628 50%, #0a0f1a 100%)',
       color: 'white',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, SF Pro, sans-serif',
@@ -1960,7 +1956,7 @@ export default function InductiveKickbackRenderer({
       </nav>
 
       {/* Main content */}
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto', maxHeight: '100vh', flex: 1, lineHeight: '1.6', fontSize: '16px' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto', maxHeight: '100dvh', flex: 1, lineHeight: '1.6', fontSize: '16px' }}>
         <div style={{ maxWidth: '672px', margin: '0 auto', width: '100%', overflowY: 'auto', maxWidth: '768px' }}>
           {renderContent()}
         </div>
@@ -1970,7 +1966,7 @@ export default function InductiveKickbackRenderer({
       {phase !== 'mastery' && (
         <div
           style={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             left: 0,
             right: 0,

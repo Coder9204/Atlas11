@@ -675,7 +675,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
         </div>
         {/* Back / Next buttons - the fixed footer */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -750,7 +750,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -766,7 +766,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
 
@@ -830,7 +830,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -842,7 +842,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
@@ -928,7 +928,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -940,7 +940,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1118,7 +1118,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1130,7 +1130,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1215,7 +1215,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1227,7 +1227,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
@@ -1311,7 +1311,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1323,7 +1323,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1448,7 +1448,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1460,7 +1460,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1548,7 +1548,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1560,7 +1560,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1761,7 +1761,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1773,7 +1773,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             overflowY: 'auto',
             padding: '24px',
             paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             textAlign: 'center',
           }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -1827,7 +1827,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1839,7 +1839,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
@@ -2004,7 +2004,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2020,7 +2020,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
 

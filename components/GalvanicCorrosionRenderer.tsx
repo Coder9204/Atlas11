@@ -742,7 +742,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
   // to avoid React reconciliation issues (inline components cause unmount/remount on every render)
   const wrapPage = (children: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -753,7 +753,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {children}
       </div>

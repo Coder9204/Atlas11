@@ -666,7 +666,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     const hasNext = currentIndex < phaseOrder.length - 1;
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -727,7 +727,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -808,7 +808,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -953,7 +953,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1177,7 +1177,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1291,7 +1291,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1419,7 +1419,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1551,7 +1551,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1560,7 +1560,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
         {renderProgressBar()}
         {renderBottomNav()}
 
-        <div style={{ flex: 1, padding: '24px', paddingTop: '80px', paddingBottom: '80px', overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: '24px', paddingTop: '80px', paddingBottom: '16px', overflowY: 'auto' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Heatsink Design Optimization
@@ -1649,7 +1649,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1663,7 +1663,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '80px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1845,7 +1845,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1905,7 +1905,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2075,7 +2075,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

@@ -1081,7 +1081,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string, showBack: boolean = false) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1165,7 +1165,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '120px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
@@ -1217,7 +1217,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1271,7 +1271,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Network Latency</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1379,7 +1379,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1442,7 +1442,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1503,7 +1503,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Speed of Light Limit</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1610,7 +1610,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1680,7 +1680,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '120px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto', padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: 700 }}>
               Real-World Applications
@@ -1818,7 +1818,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1857,7 +1857,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1972,7 +1972,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>-</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -2013,7 +2013,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   // Default fallback - render hook phase for unrecognized phases
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
           <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>

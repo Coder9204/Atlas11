@@ -731,7 +731,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     if (phase === 'hook') {
       return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center"
-          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+          style={{ minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-orange-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
@@ -783,7 +783,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // INTRO
     if (phase === 'intro') {
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', flex: 1 }}>
           <div className="flex flex-col items-center justify-center px-6 py-8" style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 className="text-3xl font-black text-white mb-6 text-center">Understanding Wave Speed</h2>
             <div className="space-y-6 w-full">
@@ -837,7 +837,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', flex: 1 }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
@@ -907,7 +907,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // LAB (play)
     if (phase === 'play') {
       return (
-        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
+        <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', flex: 1 }}>
           <div className="flex-1 flex flex-col items-center p-4">
 
             {/* Side-by-side layout */}
@@ -1030,7 +1030,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // REVIEW
     if (phase === 'review') {
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-2xl mx-auto w-full">
               <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Understanding</p>
@@ -1102,7 +1102,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       ];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-violet-400 mb-2 uppercase tracking-widest">New Variable</p>
@@ -1172,7 +1172,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST LAB (twist_play)
     if (phase === 'twist_play') {
       return (
-        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
           <div className="flex-1 flex flex-col items-center p-4">
 
             {/* Side-by-side layout */}
@@ -1293,7 +1293,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TWIST REVIEW
     if (phase === 'twist_review') {
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
           <div className="flex flex-col px-6 py-8">
             <div className="max-w-xl mx-auto w-full">
               <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Deep Insight</p>
@@ -1370,7 +1370,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const allAppsCompleted = completedApps.size === realWorldApps.length;
 
       return (
-        <div className="flex flex-col flex-1" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+        <div className="flex flex-col flex-1" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
           <div className="flex items-center justify-center gap-3 py-4 bg-slate-900/80 border-b border-slate-800">
             <span className="text-sm text-slate-400">
               Application {activeApp + 1} of {realWorldApps.length}
@@ -1623,7 +1623,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         const passed = percentage >= 70;
 
         return (
-          <div className="flex flex-col flex-1 overflow-y-auto items-center justify-center px-6 text-center" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
+          <div className="flex flex-col flex-1 overflow-y-auto items-center justify-center px-6 text-center" style={{ paddingTop: '48px', paddingBottom: '16px' }}>
             <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/30"
               style={{ background: 'linear-gradient(135deg, #f59e0b, #10b981)' }}>
               <span className="text-5xl">{passed ? '🏆' : '📚'}</span>
@@ -1666,7 +1666,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       const selected = testAnswers[testIndex];
 
       return (
-        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto' }}>
+        <div className="flex flex-col flex-1 overflow-y-auto" style={{ paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
           <div className="flex flex-col px-6 py-8 flex-1">
             <div className="max-w-xl mx-auto w-full flex-1">
               <div className="flex justify-between items-center mb-6">
@@ -1820,7 +1820,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     if (phase === 'mastery') {
       return (
         <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden"
-          style={{ minHeight: '100vh', paddingTop: '48px', paddingBottom: '100px' }}>
+          style={{ minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
           {/* Confetti */}
           {[...Array(50)].map((_, i) => (
             <div
@@ -1940,7 +1940,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       </nav>
 
       {/* Main content */}
-      <div className="relative flex-1 flex flex-col" style={{ paddingTop: '64px', paddingBottom: '80px' }}>{renderPhase()}</div>
+      <div className="relative flex-1 flex flex-col" style={{ paddingTop: '64px', paddingBottom: '16px' }}>{renderPhase()}</div>
 
       {/* Bottom navigation bar */}
       <nav aria-label="game navigation" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(30,41,59,1)', padding: '12px 24px' }}>

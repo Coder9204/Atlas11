@@ -452,7 +452,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
 
   const NavigationBar: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -784,9 +784,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
   // ========== HOOK PHASE ==========
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             {/* Hero */}
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -909,9 +909,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1024,9 +1024,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
   // ========== PLAY PHASE ==========
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: isMobile ? '640px' : '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1224,9 +1224,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     const optimalDeltaV = isp * g * Math.log(optimalMassRatio);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1379,9 +1379,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1493,9 +1493,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
   // ========== TWIST PLAY PHASE ==========
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: isMobile ? '640px' : '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -1721,9 +1721,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     const lh2DV = lh2Isp * g * Math.log(1 / (compFraction + compPayload));
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -1873,9 +1873,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     const app = realWorldApps[selectedApp];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
@@ -2147,9 +2147,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
 
     if (!testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
             <div style={{ maxWidth: '640px', margin: '0 auto' }}>
               {currentQuestion === 0 && !testAnswers[0] && (
                 <>
@@ -2307,9 +2307,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
 
     // Test results
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{
@@ -2438,9 +2438,9 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     ];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '640px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div style={{

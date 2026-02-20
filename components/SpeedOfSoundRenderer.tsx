@@ -483,7 +483,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
   // Bottom bar navigation
   const renderBottomBar = (canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -827,20 +827,6 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
       case 'twist_predict': return twistPrediction !== null;
       case 'twist_play': return true;
       case 'twist_review': return true;
-      if (phase === 'transfer') {
-        return (
-          <TransferPhaseView
-            conceptName="Speed Of Sound"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
-          />
-        );
-      }
-
       case 'transfer': return completedApps.every(c => c);
       case 'test': return false; // handled separately
       case 'mastery': return false;
@@ -2052,7 +2038,17 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
+      case 'transfer': return (
+          <TransferPhaseView
+          conceptName="Speed Of Sound"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
+          />
+        );
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2061,7 +2057,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -2069,7 +2065,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
       lineHeight: 1.6,
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
         {renderPhaseContent()}
         {renderNavDots()}
       </div>

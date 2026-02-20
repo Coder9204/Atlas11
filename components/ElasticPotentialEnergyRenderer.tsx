@@ -1885,7 +1885,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             </button>
           </div>
         ) : (
-          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
               <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Excellent!' : 'Keep Learning'}</div>
               <h3 className="text-2xl font-bold mb-2" style={{ color: '#f1f5f9' }}>
@@ -2024,7 +2024,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1a', color: '#ffffff', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: '#ffffff', position: 'relative', overflow: 'hidden' }}>
       {/* Premium Background Layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/50 via-transparent to-teal-950/50" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-transparent to-transparent" />
@@ -2079,7 +2079,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
       {/* Bottom navigation bar */}
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -2134,7 +2134,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
       </div>
 
       {/* Main content with proper padding for fixed nav */}
-      <div style={{ position: 'relative', zIndex: 10, paddingTop: '56px', paddingBottom: '80px', overflowY: 'auto', flex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 10, paddingTop: '56px', paddingBottom: '16px', overflowY: 'auto', flex: 1 }}>
         {phase === 'hook' && renderHook()}
         {phase === 'predict' && renderPredict()}
         {phase === 'play' && renderPlay()}
@@ -2153,7 +2153,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransfer()}
         {phase === 'test' && renderTest()}
         {phase === 'mastery' && renderMastery()}
       </div>

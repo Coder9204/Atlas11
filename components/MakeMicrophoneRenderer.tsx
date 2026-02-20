@@ -418,7 +418,7 @@ export default function MakeMicrophoneRenderer({
     const canGoNext = currentIndex < PHASES.length - 1 && !isActiveTest;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -869,7 +869,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -880,7 +880,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',
@@ -942,7 +942,7 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -953,7 +953,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1083,7 +1083,7 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1094,7 +1094,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1283,7 +1283,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1294,7 +1294,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1396,7 +1396,7 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1407,7 +1407,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1518,7 +1518,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1529,7 +1529,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1637,7 +1637,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1648,7 +1648,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1755,7 +1755,7 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1766,7 +1766,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1937,7 +1937,7 @@ export default function MakeMicrophoneRenderer({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1948,7 +1948,7 @@ export default function MakeMicrophoneRenderer({
             flex: 1,
             overflowY: 'auto',
             paddingTop: '64px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -2001,7 +2001,7 @@ export default function MakeMicrophoneRenderer({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2012,7 +2012,7 @@ export default function MakeMicrophoneRenderer({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '64px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2205,7 +2205,7 @@ export default function MakeMicrophoneRenderer({
   if (currentPhase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

@@ -752,7 +752,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   // Fixed bottom navigation bar
   const renderNavDots = () => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -872,14 +872,14 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
         flex: 1,
@@ -949,10 +949,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1071,10 +1071,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1330,10 +1330,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     const predictionCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1458,10 +1458,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1558,10 +1558,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1689,10 +1689,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1805,10 +1805,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -1979,10 +1979,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           overflowY: 'auto',
           flex: 1,
           paddingTop: '48px',
@@ -2084,10 +2084,10 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
@@ -2257,14 +2257,14 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
         flex: 1,

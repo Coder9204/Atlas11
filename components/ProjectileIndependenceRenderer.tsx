@@ -1672,20 +1672,16 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Projectile Independence"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            playSound={playSound}
+          conceptName="Projectile Independence"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1693,7 +1689,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
       {renderProgressBar()}
 
       {/* Header */}
@@ -1707,7 +1703,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

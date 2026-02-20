@@ -668,7 +668,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -738,7 +738,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -749,7 +749,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -831,7 +831,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -853,7 +853,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -864,7 +864,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1070,7 +1070,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1089,7 +1089,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1100,7 +1100,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1187,7 +1187,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1212,7 +1212,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1223,7 +1223,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1343,7 +1343,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1366,7 +1366,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1377,7 +1377,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1566,7 +1566,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1585,7 +1585,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1596,7 +1596,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1677,7 +1677,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1713,7 +1713,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1724,7 +1724,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1888,7 +1888,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1909,7 +1909,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1920,7 +1920,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
             flex: 1,
             overflowY: 'auto',
             paddingTop: '60px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -2009,7 +2009,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           </div>
 
           <div style={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             left: 0,
             right: 0,
@@ -2028,7 +2028,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2039,7 +2039,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2196,7 +2196,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
         </div>
 
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2215,7 +2215,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

@@ -835,7 +835,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     ];
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '16px' }}>
         {renderProgressBar()}
 
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
@@ -951,7 +951,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
 
   function renderPlayPhase() {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '16px' }}>
         {renderProgressBar()}
 
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
@@ -2446,7 +2446,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     }
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', paddingBottom: '16px' }}>
         {renderProgressBar()}
 
         <div style={{
@@ -2675,7 +2675,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
 
   // Main render
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(51, 65, 85, 0.5)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', maxWidth: '896px', margin: '0 auto' }}>
@@ -2709,7 +2709,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', maxWidth: '800px', margin: '0 auto', width: '100%', padding: '48px 16px 100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', maxWidth: '800px', margin: '0 auto', width: '100%', padding: '48px 16px 100px' }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}
@@ -2728,7 +2728,6 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}
       </div>

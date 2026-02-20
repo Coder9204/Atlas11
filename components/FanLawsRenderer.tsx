@@ -722,7 +722,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -734,7 +734,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -804,7 +804,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -816,7 +816,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -916,7 +916,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -928,7 +928,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1085,7 +1085,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1097,7 +1097,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1210,7 +1210,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1222,7 +1222,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1477,7 +1477,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1489,7 +1489,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1632,7 +1632,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1644,7 +1644,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1739,7 +1739,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1751,7 +1751,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1943,7 +1943,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1955,7 +1955,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
             flex: 1,
             overflowY: 'auto',
             paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
           }}>
@@ -2002,7 +2002,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2014,7 +2014,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -2172,7 +2172,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2184,7 +2184,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

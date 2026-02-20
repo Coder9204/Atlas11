@@ -632,7 +632,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
       flexDirection: 'column',
       background: colors.bgPrimary,
       color: colors.textPrimary,
-      minHeight: '100vh',
+      minHeight: '100dvh',
     }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
       <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px' }}>
@@ -875,7 +875,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: colors.accent, fontSize: typo.small, textTransform: 'uppercase', letterSpacing: '2px' }}>Satellite Communications</span>
@@ -921,7 +921,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px', fontSize: typo.heading }}>Make Your Prediction</h2>
 
@@ -977,7 +977,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Link Budget Calculator</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>
@@ -1045,7 +1045,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const wasCorrect = prediction === 'antenna';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1105,7 +1105,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px', fontSize: typo.heading }}>The Frequency Trade-off</h2>
 
@@ -1155,7 +1155,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px', fontSize: typo.heading }}>Frequency vs Data Rate Trade-off</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>
@@ -1234,7 +1234,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const wasCorrect = twistPrediction === 'more_loss';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1299,7 +1299,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const app = realWorldApps[selectedApp];
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
@@ -1447,7 +1447,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+        <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1485,7 +1485,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
 
     const currentQ = testQuestions[currentTestQuestion];
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading }}>Knowledge Test</h2>
@@ -1615,7 +1615,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   // MASTERY PHASE
   if (phase === 'mastery') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>
             🏆

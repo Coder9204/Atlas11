@@ -1027,7 +1027,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
       <nav
         aria-label="Game navigation"
         style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -1112,8 +1112,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // HOOK PHASE
   if (currentPhase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Sound Dead Spots
@@ -1162,8 +1162,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // PREDICT PHASE
   if (currentPhase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1219,8 +1219,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // PLAY PHASE
   if (currentPhase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore Sound Interference</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1305,8 +1305,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
     const wasCorrect = prediction === 'dead_spots';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1378,8 +1378,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // TWIST PREDICT PHASE
   if (currentPhase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1441,8 +1441,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // TWIST PLAY PHASE
   if (currentPhase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Frequency Changes</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1525,8 +1525,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
     const wasCorrect = twistPrediction === 'move';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1598,8 +1598,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   if (currentPhase === 'transfer') {
     const allAppsCompleted = transferCompleted.size >= realWorldApps.length;
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1715,8 +1715,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   if (currentPhase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1757,8 +1757,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1802,8 +1802,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   // MASTERY PHASE
   if (currentPhase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1837,8 +1837,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
 
   // Fallback - should never reach here since we validate phase above, but just in case
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
           <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
             Sound Dead Spots

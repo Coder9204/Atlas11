@@ -505,7 +505,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
     const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -561,7 +561,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
   // Wrapper: outer overflow:hidden + inner overflowY:auto + flex:1
   const renderPageWrapper = (children: React.ReactNode, onNext?: () => void, nextLabel?: string, nextDisabled?: boolean) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -572,7 +572,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {children}
       </div>

@@ -2034,21 +2034,17 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="L C Resonance"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="L C Resonance"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2089,7 +2085,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       backgroundColor: colors.bgDeep,

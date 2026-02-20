@@ -425,7 +425,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -761,8 +761,8 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
-        height: '100vh',
+        minHeight: '100dvh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -779,7 +779,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
           <div style={{
@@ -839,7 +839,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -847,7 +847,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -944,7 +944,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -952,7 +952,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Tube Simulator
@@ -1152,7 +1152,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1160,7 +1160,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Physics of the Venturi Effect
@@ -1253,7 +1253,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1261,7 +1261,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1363,7 +1363,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'twist_play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1371,7 +1371,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Flow Meter
@@ -1507,7 +1507,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1515,7 +1515,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               How Venturi Meters Measure Flow
@@ -1630,7 +1630,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1638,7 +1638,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1834,7 +1834,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       const passed = testScore >= 7;
       return (
         <div style={{
-          height: '100vh',
+          height: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1842,7 +1842,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
               <div style={{
                 fontSize: '80px',
@@ -1883,7 +1883,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1891,7 +1891,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -2055,7 +2055,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   if (phase === 'mastery') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2072,7 +2072,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
           <div style={{

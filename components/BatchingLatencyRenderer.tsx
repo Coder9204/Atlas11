@@ -800,7 +800,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // Fixed footer with navigation buttons
   const renderFooter = (prevLabel?: string, nextLabel?: string, onNext?: () => void, showPrev: boolean = true) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -846,7 +846,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // Scrollable content wrapper render function (NOT a component - prevents remounting)
   const renderScrollableContent = (children: React.ReactNode, paddingTop: string = '60px') => (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
@@ -856,7 +856,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
         flex: 1,
         overflowY: 'auto',
         paddingTop,
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {children}
       </div>
@@ -921,7 +921,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -987,7 +987,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1079,7 +1079,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // PLAY PHASE - Interactive Batching Simulation
   if (phase === 'play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1305,7 +1305,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1383,7 +1383,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     ];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1473,7 +1473,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // TWIST PLAY PHASE - Dynamic Batching
   if (phase === 'twist_play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1688,7 +1688,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1786,7 +1786,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -1952,7 +1952,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
           {renderNavBar()}
           {renderProgressBar()}
           {renderScrollableContent(
@@ -1994,7 +1994,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(
@@ -2160,7 +2160,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         {renderNavBar()}
         {renderProgressBar()}
         {renderScrollableContent(

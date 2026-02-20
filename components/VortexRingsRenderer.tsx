@@ -1374,7 +1374,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     const isFirstPhase = currentIndex === 0;
     return (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1432,7 +1432,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(false, true, 'Make a Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Vortex Rings
@@ -1486,7 +1486,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, !!prediction, 'Test My Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1541,7 +1541,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Continue to Review')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Vortex Rings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1670,7 +1670,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Next: A Twist!')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1740,7 +1740,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, !!twistPrediction, 'Test My Prediction')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1800,7 +1800,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'See the Explanation')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Fog Visualization</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1871,7 +1871,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Apply This Knowledge')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1936,7 +1936,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, transferCompleted.size >= 4, 'Take the Test')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -2018,7 +2018,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -2058,7 +2058,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, false, 'Submit')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -2098,7 +2098,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar(true, true, 'Complete Game')}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '90px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

@@ -810,7 +810,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               MOSFET Switching Losses
@@ -861,7 +861,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {renderVisualization()}
 
           <div style={{
@@ -914,7 +914,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Switching Losses</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1006,7 +1006,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1063,7 +1063,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1124,7 +1124,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Find the Optimal Frequency</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1202,7 +1202,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1267,7 +1267,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1325,7 +1325,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
       return (
         <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1365,7 +1365,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1406,7 +1406,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     return (
       <div style={{ minHeight: '100px', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

@@ -1209,7 +1209,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1286,7 +1286,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark, position: 'relative' }}>
         {renderNavDots()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Hero header */}
           <div style={{ padding: '28px 24px 20px', textAlign: 'center' }}>
             {/* Category badge */}
@@ -1390,7 +1390,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Header */}
           <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
             <span style={{
@@ -1469,7 +1469,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Header */}
           <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
             <span style={{
@@ -1627,7 +1627,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     const wasCorrect = prediction === 'curved';
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Result banner */}
           <div style={{
             background: wasCorrect
@@ -1759,7 +1759,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Header */}
           <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
             <span style={{
@@ -1843,7 +1843,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Header */}
           <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
             <span style={{
@@ -1910,7 +1910,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     const wasCorrect = twistPrediction === 'tilt';
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Result banner */}
           <div style={{
             background: wasCorrect
@@ -2014,7 +2014,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Header */}
           <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
             <span style={{
@@ -2161,7 +2161,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
             {/* Score banner */}
             <div style={{
               background: testScore >= 8
@@ -2237,7 +2237,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '20px 16px' }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -2401,7 +2401,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {/* Hero celebration */}
           <div style={{ padding: '32px 24px 24px', textAlign: 'center' }}>
             {/* Trophy with glow effect */}

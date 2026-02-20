@@ -1131,7 +1131,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: '#0a0f1a',
             fontFamily: design.font.sans,
             position: 'relative',
@@ -1318,12 +1318,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '16px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1465,12 +1465,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', padding: '16px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', padding: '16px' }}>
                {/* Side-by-side layout */}
                <div style={{
                   display: 'flex',
@@ -1740,12 +1740,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '16px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -1867,12 +1867,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '16px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -2025,12 +2025,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', padding: '16px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', padding: '16px' }}>
                {/* Side-by-side layout */}
                <div style={{
                   display: 'flex',
@@ -2261,12 +2261,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '80px', paddingTop: '44px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '32px 24px', paddingBottom: '16px', paddingTop: '44px' }}>
                <p style={{
                   fontSize: '12px',
                   fontWeight: 700,
@@ -2424,7 +2424,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
@@ -2481,7 +2481,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                </div>
 
                {/* Content area - scrollable with proper padding */}
-               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '100px', paddingTop: '48px' }}>
+               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
                   {/* App header */}
                   <div style={{
                      display: 'flex',
@@ -2726,12 +2726,12 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: design.colors.bgPrimary,
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '24px', paddingBottom: '80px', paddingTop: '44px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '24px', paddingBottom: '16px', paddingTop: '44px' }}>
                {/* Question header */}
                <div style={{
                   display: 'flex',
@@ -2925,7 +2925,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            minHeight: '100vh',
+            minHeight: '100dvh',
             background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, #0a0a12 100%)`,
             fontFamily: design.font.sans,
             position: 'relative',

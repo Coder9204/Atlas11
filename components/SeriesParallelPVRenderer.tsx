@@ -707,7 +707,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -823,7 +823,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -949,7 +949,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -960,7 +960,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
         {renderProgressBar()}
@@ -1052,7 +1052,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1064,7 +1064,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1252,7 +1252,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1264,7 +1264,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1359,7 +1359,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1371,7 +1371,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
@@ -1477,7 +1477,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1489,7 +1489,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1687,7 +1687,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1699,7 +1699,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1808,7 +1808,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1820,7 +1820,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2014,7 +2014,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -2026,7 +2026,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             flex: 1,
             overflowY: 'auto',
             paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
           }}>
           <div style={{ padding: '0 24px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
@@ -2116,7 +2116,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2128,7 +2128,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
@@ -2291,7 +2291,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

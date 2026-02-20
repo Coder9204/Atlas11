@@ -2960,21 +2960,17 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Antenna Polarization"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Antenna Polarization"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2987,7 +2983,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgDeep,
       color: colors.textPrimary,
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -3052,7 +3048,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       </nav>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderContent()}
       </div>
     </div>

@@ -642,13 +642,13 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
   const PhaseWrapper = useMemo(() =>
     ({ children, nav }: { children: React.ReactNode; nav: React.ReactNode }) => (
       <div style={{
-        minHeight: '100vh', background: colors.bgPrimary,
+        minHeight: '100dvh', background: colors.bgPrimary,
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         {renderProgressBar()}
         <div style={{
           flex: '1 1 0%', overflowY: 'auto',
-          paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px',
+          paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px',
         }}>
           {children}
         </div>
@@ -2115,9 +2115,8 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
       return renderTwistPlay();
     case 'twist_review':
       return renderTwistReview();
-    if (phase === 'transfer') {
-      return (
-        <TransferPhaseView
+    case 'transfer': return (
+          <TransferPhaseView
           conceptName="E L O N_ Space Comms"
           applications={realWorldApps}
           onComplete={() => goToPhase('test')}
@@ -2125,12 +2124,8 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
           colors={colors}
           typo={typo}
           playSound={playSound}
-        />
-      );
-    }
-
-    case 'transfer':
-      return renderTransfer();
+          />
+        );
     case 'test':
       return renderTest();
     case 'mastery':

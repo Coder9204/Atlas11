@@ -1624,73 +1624,18 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
               </div>
             </div>
           </>
-        );
+        );
 
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="P V I V Curve"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="P V I V Curve"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
-        );
-      }
-
-      case 'transfer':
-        return (
-          <>
-            <div style={{ padding: '16px' }}>
-              <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-                Real-World Applications
-              </h2>
-              <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-                I-V curve knowledge is essential for solar system design
-              </p>
-              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-                Complete all 4 applications to unlock the test
-              </p>
-            </div>
-            {transferApplications.map((app, index) => (
-              <div
-                key={index}
-                style={{
-                  background: colors.bgCard,
-                  margin: '16px',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-                </div>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-                </div>
-                {!transferCompleted.has(index) ? (
-                  <button
-                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: `linear-gradient(135deg, ${colors.accent}, ${colors.warning})`, color: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 700, width: '100%' }}
-                  >
-                    Got It →
-                  </button>
-                ) : (
-                  <>
-                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}`, marginBottom: '8px' }}>
-                      <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                    </div>
-                    <span style={{ color: colors.success, fontSize: '13px', fontWeight: 600 }}>✓ Got It</span>
-                  </>
-                )}
-              </div>
-            ))}
-          </>
         );
 
       case 'test':

@@ -684,7 +684,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     const nextDisabled = currentIndex >= phaseOrder.length - 1 || isTestPhase;
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -785,7 +785,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -796,7 +796,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           flex: '1',
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',
@@ -869,14 +869,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', padding: '24px', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', padding: '24px', paddingTop: '80px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress indicator */}
           <div style={{
@@ -1024,14 +1024,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Electromigration Simulator
@@ -1350,14 +1350,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Black's Equation: Predicting Chip Lifetime
@@ -1494,14 +1494,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <div style={{
             background: `${colors.error}22`,
@@ -1613,14 +1613,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Temperature vs. Chip Lifetime
@@ -1749,14 +1749,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Thermal Management = Reliability
@@ -1858,14 +1858,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '20px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
@@ -2091,14 +2091,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
         }}>
           {renderNavigationBar()}
           {renderProgressBar()}
-          <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '20px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -2150,14 +2150,14 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
-        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: '1', overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '20px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -2318,7 +2318,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2329,7 +2329,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
           flex: '1',
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',

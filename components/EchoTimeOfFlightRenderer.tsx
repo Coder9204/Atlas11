@@ -2769,7 +2769,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   // ==================== MAIN RENDER ====================
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
@@ -2824,7 +2824,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         position: 'relative'
       }}>
         <div className="max-w-4xl mx-auto px-4">
@@ -2846,7 +2846,6 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               playSound={playSound}
             />
           )}
-          {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}
         </div>
@@ -2854,7 +2853,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
 
       {/* Bottom Navigation Bar */}
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

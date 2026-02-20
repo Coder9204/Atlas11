@@ -2596,7 +2596,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   // Main render
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)',
       color: 'white',
       position: 'relative',
@@ -2703,7 +2703,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
       </nav>
 
       {/* Main content */}
-      <div style={{ overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', flex: 1 }}>
+      <div style={{ overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', flex: 1 }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl }}>
           {phase === 'hook' && renderHookPhase()}
           {phase === 'predict' && renderPredictPhase()}
@@ -2723,7 +2723,6 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
               playSound={playSound}
             />
           )}
-          {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}
         </div>

@@ -594,9 +594,9 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Wrapper for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary, color: colors.textPrimary, display: 'flex', flexDirection: 'column', fontWeight: 400 }}>
+    <div style={{ minHeight: '100dvh', background: colors.bgPrimary, color: colors.textPrimary, display: 'flex', flexDirection: 'column', fontWeight: 400 }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '56px', paddingBottom: '80px' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '56px', paddingBottom: '16px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -996,7 +996,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: colors.accent, fontSize: typo.small, textTransform: 'uppercase', letterSpacing: '2px' }}>Chip Physics</span>
@@ -1077,7 +1077,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px', fontSize: typo.heading }}>Make Your Prediction</h2>
 
@@ -1121,7 +1121,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: typo.heading }}>Explore Power Breakdown</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
@@ -1181,7 +1181,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     const predictionLabel = predictions.find(p => p.id === prediction)?.label || 'your prediction';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1245,7 +1245,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px', fontSize: typo.heading }}>The Power-Saving Twist</h2>
 
@@ -1328,7 +1328,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '8px', fontSize: typo.heading }}>Power-Saving Modes</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '24px', fontSize: typo.body }}>
@@ -1377,7 +1377,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     const wasCorrect = twistPrediction === 'power_gating';
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1454,7 +1454,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     const allCompleted = transferCompleted.size >= totalApps;
 
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '4px', fontSize: typo.heading }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: colors.textMuted, marginBottom: '8px', fontSize: typo.body }}>
@@ -1624,7 +1624,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+        <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1662,7 +1662,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: typo.heading }}>Knowledge Test</h2>
@@ -1785,7 +1785,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return wrapPhaseContent(
-      <div style={{ padding: typo.pagePadding, paddingBottom: '100px' }}>
+      <div style={{ padding: typo.pagePadding, paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{
             fontSize: '64px',

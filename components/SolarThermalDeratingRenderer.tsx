@@ -444,7 +444,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -761,12 +761,12 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -884,10 +884,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -983,7 +983,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -997,7 +997,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
           paddingTop: '48px',
           paddingLeft: '24px',
           paddingRight: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1164,10 +1164,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -1305,10 +1305,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -1430,10 +1430,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -1610,10 +1610,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -1741,10 +1741,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -1920,10 +1920,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
         }}>
@@ -2048,10 +2048,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>
@@ -2224,10 +2224,10 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
       }}>

@@ -1106,7 +1106,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1183,7 +1183,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Rolling Race
@@ -1233,7 +1233,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -1285,7 +1285,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Race the Rollers!</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1380,7 +1380,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1480,7 +1480,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1539,7 +1539,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test with Coins!</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1575,7 +1575,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1683,7 +1683,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1749,7 +1749,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
             <div style={{ textAlign: 'center', padding: '16px', color: colors.textMuted, fontSize: '13px' }}>
               Mastery Test Results
             </div>
@@ -1793,7 +1793,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1832,7 +1832,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

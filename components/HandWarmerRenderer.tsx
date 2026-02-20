@@ -618,7 +618,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -955,7 +955,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -966,7 +966,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',
@@ -1030,10 +1030,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const predictHeight = isMobile ? 180 : 200;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -1142,10 +1142,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Phase Change Hand Warmer Lab
@@ -1301,10 +1301,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const reviewHeight = isMobile ? 150 : 180;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {userPrediction && (
             <div style={{
@@ -1427,10 +1427,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const twistPredictHeight = isMobile ? 150 : 180;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1515,10 +1515,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Iron Oxidation vs Phase Change
@@ -1711,10 +1711,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Why Chemical Warmers Last Longer
@@ -1817,10 +1817,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
@@ -1992,10 +1992,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderNavBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🎉' : '📚'}
@@ -2044,10 +2044,10 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderNavBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {/* Progress */}
           <div style={{
@@ -2209,7 +2209,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2220,7 +2220,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           display: 'flex',

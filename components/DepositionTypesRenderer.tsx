@@ -1337,7 +1337,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1391,9 +1391,9 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
 
   // Wrapper for consistent layout
   const renderWrapper = (content: React.ReactNode, canProceed: boolean, nextLabel: string = 'Next') => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '56px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '56px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar(canProceed, nextLabel)}

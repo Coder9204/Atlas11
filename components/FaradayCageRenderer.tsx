@@ -1341,7 +1341,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2483,7 +2483,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   // ─── Main Render ───────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #0f172a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #0f172a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
       {/* Progress bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #f59e0b, #d97706)', zIndex: 60, transition: 'width 0.5s ease' }} />
 
@@ -2513,7 +2513,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhaseContent()}
       </div>
 

@@ -705,7 +705,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     const canGoNext = currentIndex < phaseOrder.length - 1 && !isActiveTest;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -775,14 +775,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -847,14 +847,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
@@ -974,7 +974,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -982,7 +982,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Poisson&apos;s Ratio Simulator
@@ -1162,7 +1162,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1170,7 +1170,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Prediction result */}
           <div style={{
@@ -1279,14 +1279,14 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
@@ -1398,7 +1398,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1406,7 +1406,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Auxetic Materials
@@ -1517,7 +1517,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1525,7 +1525,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Prediction result */}
           <div style={{
@@ -1644,7 +1644,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1652,7 +1652,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, margin: 0 }}>
@@ -1839,7 +1839,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1847,7 +1847,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -1901,7 +1901,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1909,7 +1909,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{
@@ -2073,7 +2073,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

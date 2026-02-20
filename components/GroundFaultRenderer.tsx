@@ -685,7 +685,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -759,7 +759,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -902,7 +902,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -910,7 +910,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             GFCI Circuit Simulator
@@ -1091,7 +1091,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     const predictionCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1192,7 +1192,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1318,7 +1318,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1521,7 +1521,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1632,7 +1632,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1822,7 +1822,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '84px',
@@ -1881,7 +1881,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -2054,7 +2054,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

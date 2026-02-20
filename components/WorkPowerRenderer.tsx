@@ -1220,8 +1220,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   // Premium wrapper for all phase renders
   const PremiumWrapper = ({ children }: { children: React.ReactNode }) => (
     <div style={{
-      minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',
+      height: '100dvh',
       background: '#0a0f1a',
       color: 'white',
       position: 'relative',
@@ -1293,7 +1293,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
         overflowY: 'auto',
         overflowX: 'hidden',
         paddingTop: '64px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         fontFamily: typography.fontFamily,
         transition: 'all 0.3s ease',
       }}>
@@ -1488,8 +1488,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
 
     return (
       <div style={{
-        minHeight: '100vh',
-        height: '100vh',
+        minHeight: '100dvh',
+        height: '100dvh',
         background: '#0a0f1a',
         color: 'white',
         position: 'relative',
@@ -1561,7 +1561,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
           overflowY: 'auto',
           overflowX: 'hidden',
           paddingTop: '64px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           fontFamily: typography.fontFamily,
           transition: 'all 0.3s ease',
         }}>

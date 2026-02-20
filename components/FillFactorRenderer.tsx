@@ -953,7 +953,7 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1011,9 +1011,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>
               Fill Factor
@@ -1059,9 +1059,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', fontWeight: 'normal' }}>
               Step 1 of 2: Make your prediction
@@ -1105,9 +1105,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold' }}>Explore Fill Factor</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1208,9 +1208,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     const userPredictionLabel = predictions.find(p => p.id === prediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{
             background: 'rgba(59, 130, 246, 0.15)',
             margin: '16px',
@@ -1279,9 +1279,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary, fontWeight: 'normal' }}>
@@ -1343,9 +1343,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 'bold' }}>Test Temperature Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 'normal' }}>
@@ -1434,9 +1434,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     const userTwistPredictionLabel = twistPredictions.find(p => p.id === twistPrediction)?.label || 'No prediction made';
 
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{
             background: 'rgba(59, 130, 246, 0.15)',
             margin: '16px',
@@ -1515,9 +1515,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     const currentApp = realWorldApps[currentTransferApp];
 
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1631,9 +1631,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1678,9 +1678,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: 'bold' }}>Knowledge Test</h2>
@@ -1790,9 +1790,9 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 'bold' }}>Mastery Achieved!</h1>

@@ -447,7 +447,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // Navigation bar
   const NavigationBar = ({ children }: { children: React.ReactNode }) => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -644,9 +644,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== HOOK PHASE =====
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '20px' }}>{'\u2604\uFE0F'}</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
@@ -685,9 +685,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== PREDICT PHASE =====
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Make Your Prediction
@@ -744,9 +744,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== PLAY PHASE =====
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Adjust Radiator Temperature
@@ -841,9 +841,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== REVIEW PHASE =====
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
               Understanding Radiator Physics
@@ -895,9 +895,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== TWIST PREDICT PHASE =====
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               New Variable: Eclipse Entry
@@ -954,9 +954,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== TWIST PLAY PHASE =====
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Eclipse Thermal Challenge
@@ -1077,9 +1077,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   // ===== TWIST REVIEW PHASE =====
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
               Eclipse Thermal Management
@@ -1141,9 +1141,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1264,9 +1264,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+          <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                 {passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}
@@ -1316,9 +1316,9 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: '1 1 0%', overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Test: Space Radiator
@@ -1468,7 +1468,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -1480,7 +1480,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',

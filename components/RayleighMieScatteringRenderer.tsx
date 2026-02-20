@@ -584,7 +584,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   function BottomNav({ children }: { children: React.ReactNode }) {
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1289,7 +1289,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   // ============================================================================
   if (phase === 'hook') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bg, position: 'relative', fontFamily: typography.fontFamily }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bg, position: 'relative', fontFamily: typography.fontFamily }}>
         {/* Premium background gradient */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #1E293B 0%, #0a1628 50%, #1E293B 100%)', zIndex: 0 }} />
         <div style={{ position: 'absolute', top: 0, left: '25%', width: 384, height: 384, background: 'rgba(56, 189, 248, 0.05)', borderRadius: '50%', filter: 'blur(96px)', zIndex: 0 }} />
@@ -1385,7 +1385,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1395,7 +1395,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -1520,7 +1520,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1530,7 +1530,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -1755,7 +1755,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1765,7 +1765,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -1943,7 +1943,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -1953,7 +1953,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -2121,7 +2121,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -2131,7 +2131,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -2261,7 +2261,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -2271,7 +2271,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -2425,7 +2425,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>
@@ -2521,7 +2521,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           flex: 1,
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingTop: '48px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -2847,7 +2847,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bg,
         fontFamily: typography.fontFamily
       }}>

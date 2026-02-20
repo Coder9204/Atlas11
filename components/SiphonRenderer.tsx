@@ -1081,9 +1081,9 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         <div style={{ padding: isMobile ? '16px' : '24px' }}>
           {renderProgressBar()}
@@ -1098,7 +1098,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           overflowY: 'auto',
           paddingLeft: isMobile ? '16px' : '24px',
           paddingRight: isMobile ? '16px' : '24px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingTop: '44px'
         }}>
           <div style={{
@@ -1849,9 +1849,9 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         <div style={{ padding: isMobile ? '16px' : '24px' }}>
           {renderProgressBar()}
@@ -1863,7 +1863,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           overflowY: 'auto',
           paddingLeft: isMobile ? '16px' : '24px',
           paddingRight: isMobile ? '16px' : '24px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingTop: '44px'
         }}>
 
@@ -2378,9 +2378,9 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       paddingTop: '48px',
-      paddingBottom: '100px'
+      paddingBottom: '16px'
     }}>
       <div style={{ padding: isMobile ? '16px' : '24px' }}>
         {renderProgressBar()}
@@ -2392,7 +2392,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         overflowY: 'auto',
         paddingLeft: isMobile ? '16px' : '24px',
         paddingRight: isMobile ? '16px' : '24px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         paddingTop: '44px'
       }}>
         <div style={{
@@ -2896,21 +2896,17 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Siphon"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Siphon"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2953,7 +2949,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-24" style={{ overflowY: 'auto', minHeight: '100vh' }}>
+      <div className="relative pt-16 pb-24" style={{ overflowY: 'auto', minHeight: '100dvh' }}>
         <div style={{
           maxWidth: '800px',
           margin: '0 auto',

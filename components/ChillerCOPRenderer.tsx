@@ -699,7 +699,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -716,7 +716,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
           <div style={{
@@ -780,7 +780,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -793,7 +793,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -883,7 +883,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -896,7 +896,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1066,7 +1066,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1079,7 +1079,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1165,7 +1165,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1178,7 +1178,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
@@ -1303,7 +1303,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1316,7 +1316,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1539,7 +1539,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1552,7 +1552,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1645,7 +1645,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1658,7 +1658,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1850,7 +1850,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1863,7 +1863,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             overflowY: 'auto',
             padding: '24px',
             paddingTop: '90px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -1909,7 +1909,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1922,7 +1922,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{
@@ -2078,7 +2078,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2095,7 +2095,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
           justifyContent: 'center',
           padding: '24px',
           paddingTop: '90px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
           <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>

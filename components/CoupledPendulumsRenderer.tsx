@@ -1092,9 +1092,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   // HOOK PHASE
   if (currentPhase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               The Sympathetic Swings
@@ -1144,9 +1144,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const totalQuestions = 1;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           {/* Progress indicator */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1204,9 +1204,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   // PLAY PHASE
   if (currentPhase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Coupled Oscillations</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1328,9 +1328,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const wasCorrect = prediction === 'transfer';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1389,9 +1389,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const totalQuestions = 1;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1451,9 +1451,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   // TWIST PLAY PHASE
   if (currentPhase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test the Coupling Strength</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1541,9 +1541,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const wasCorrect = twistPrediction === 'faster';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1612,9 +1612,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const isCurrentCompleted = transferCompleted.has(transferAppIndex);
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1787,9 +1787,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   if (currentPhase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavigationBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1916,9 +1916,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const displayAnswer = answerConfirmed ? currentAnswer : pendingAnswer;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -2141,9 +2141,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   // MASTERY PHASE
   if (currentPhase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavigationBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -2191,9 +2191,9 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
 
   // Default fallback - should never reach here
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderNavigationBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '80px', textAlign: 'center' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', textAlign: 'center' }}>
         <p style={{ color: colors.textSecondary }}>Loading...</p>
       </div>
     </div>

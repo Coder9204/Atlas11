@@ -2109,21 +2109,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Convection"
-            applications={applications}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Convection"
+          applications={applications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2137,7 +2133,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const canGoNext = !isLast && (!isTestPhase || quizComplete);
 
   return (
-    <div style={{ height: '100vh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#f97316' }}>Convection</span>

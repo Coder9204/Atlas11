@@ -790,9 +790,9 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
 
   // Render wrapper
   const renderPageWrapper = (children: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderTopNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {children}
         </div>

@@ -653,7 +653,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -725,7 +725,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -818,7 +818,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -996,7 +996,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1109,7 +1109,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1196,7 +1196,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1365,7 +1365,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1479,7 +1479,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1674,7 +1674,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1782,7 +1782,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1971,7 +1971,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2060,8 +2060,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }; // end renderPhaseContent
 
   return (
-    <div style={{ minHeight: '100vh', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

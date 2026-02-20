@@ -754,7 +754,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>💧</div>
@@ -799,7 +799,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -855,7 +855,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -946,7 +946,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', padding: '24px', background: wasCorrect ? `${colors.success}15` : `${colors.primary}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${wasCorrect ? colors.success : colors.primary}40` }}>
@@ -1011,7 +1011,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1105,7 +1105,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', padding: '24px', background: `${colors.success}15`, borderRadius: '16px', marginBottom: '24px', border: `1px solid ${colors.success}40` }}>
@@ -1232,7 +1232,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1336,7 +1336,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ marginBottom: '20px' }}>
@@ -1421,7 +1421,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🏆' : '📚'}</div>

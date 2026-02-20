@@ -1049,9 +1049,9 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
 
   // Page wrapper as inline function (not a component, to avoid remount on re-render)
   const wrapPage = (children: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '80px', transition: 'all 0.3s ease' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px', transition: 'all 0.3s ease' }}>
         {children}
       </div>
     </div>

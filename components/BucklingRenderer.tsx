@@ -2542,7 +2542,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         lineHeight: '1.6',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh'
+        minHeight: '100dvh'
       }}
     >
       {/* Premium background gradient */}
@@ -2660,7 +2660,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       {/* Main content */}
       <div
         className="relative pt-16 pb-12"
-        style={{ position: 'relative', paddingTop: '48px', paddingBottom: '100px', flex: 1, overflowY: 'auto' }}
+        style={{ position: 'relative', paddingTop: '48px', paddingBottom: '16px', flex: 1, overflowY: 'auto' }}
       >
         {renderPhase()}
       </div>
@@ -2668,7 +2668,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       {/* Bottom navigation bar */}
       <div
         style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,

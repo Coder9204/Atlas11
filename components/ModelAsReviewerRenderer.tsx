@@ -780,7 +780,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
   // Shared scroll container wrapper
   const renderPhaseWrapper = (children: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -792,7 +792,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         overflowY: 'auto',
         overflowX: 'hidden',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           {children}

@@ -763,7 +763,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -955,7 +955,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1056,7 +1056,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Straw Instrument Lab
@@ -1245,7 +1245,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
 
           {/* Connect to prediction */}
@@ -1361,7 +1361,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1500,7 +1500,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Your Straw Pan Flute
@@ -1624,7 +1624,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Musical Math: The Equal Temperament Scale
@@ -1721,7 +1721,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -1951,7 +1951,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
       }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
@@ -2121,7 +2121,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '100px',

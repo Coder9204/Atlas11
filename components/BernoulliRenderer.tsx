@@ -425,7 +425,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{ minHeight: '100vh',
+      <div style={{ minHeight: '100dvh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -1971,21 +1971,17 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Bernoulli"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Bernoulli"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2000,7 +1996,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   const renderBottomBar = () => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2084,7 +2080,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // Main render
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
       background: 'linear-gradient(180deg, #0a0a0f 0%, #12121a 100%)',
       display: 'flex',
@@ -2111,7 +2107,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       </div>
 
       {/* Main content - scrollable */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

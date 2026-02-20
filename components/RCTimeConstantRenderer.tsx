@@ -2735,7 +2735,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: '#0a0f1a',
       color: 'white',
       position: 'relative',
@@ -2801,7 +2801,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         <div style={{
           maxWidth: 900,
@@ -2826,7 +2826,6 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               playSound={playSound}
             />
           )}
-          {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}
         </div>
@@ -2834,7 +2833,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
 
       {/* Fixed bottom bar */}
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

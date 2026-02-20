@@ -2137,7 +2137,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
     };
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
 
         {/* Header */}
@@ -2220,7 +2220,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: `0 ${premiumDesign.spacing.md}px` }}>
             {/* App header */}
@@ -2777,8 +2777,8 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
   return (
     <div style={{
-      minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',
+      height: '100dvh',
       background: 'linear-gradient(180deg, #0f172a 0%, #0c0a09 50%, #0f172a 100%)',
       display: 'flex',
       flexDirection: 'column',
@@ -2811,7 +2811,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
         overflowY: 'auto',
         overflowX: 'hidden',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: isMobile ? '16px' : '24px',
         paddingRight: isMobile ? '16px' : '24px',
       }}>
@@ -2834,7 +2834,6 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
               playSound={playSound}
             />
           )}
-          {phase === 'transfer' && renderTransferPhase()}
           {phase === 'test' && renderTestPhase()}
           {phase === 'mastery' && renderMasteryPhase()}
         </div>
@@ -2842,7 +2841,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
       {/* Fixed bottom navigation bar */}
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

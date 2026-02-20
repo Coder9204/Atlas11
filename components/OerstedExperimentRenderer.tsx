@@ -903,7 +903,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   // Content area must have padding-bottom to not be hidden behind it
   const renderBottomBar = (showBack: boolean, showNext: boolean, nextLabel: string, nextAction?: () => void, nextColor?: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -980,7 +980,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -993,7 +993,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>🧭⚡🔬</div>
@@ -1134,7 +1134,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1148,7 +1148,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1258,7 +1258,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1273,7 +1273,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           WebkitOverflowScrolling: 'touch',
           padding: '20px',
           paddingTop: '60px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
@@ -1431,7 +1431,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1444,7 +1444,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -1559,7 +1559,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1572,7 +1572,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1624,7 +1624,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1638,7 +1638,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           WebkitOverflowScrolling: 'touch',
           padding: '20px',
           paddingTop: '60px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
@@ -1743,7 +1743,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1756,7 +1756,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -1836,7 +1836,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -1915,7 +1915,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           padding: '20px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1990,7 +1990,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
         {/* Footer */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2079,7 +2079,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       const passed = score >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -2091,7 +2091,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             overflowY: 'auto',
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -2117,7 +2117,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {/* Fixed bottom bar */}
           <div style={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             left: 0,
             right: 0,
@@ -2176,7 +2176,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -2190,7 +2190,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
           paddingTop: '48px',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>
             {/* Progress */}
@@ -2344,7 +2344,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
         {/* FIXED Navigation bar */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2405,7 +2405,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`,
@@ -2417,7 +2417,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -2437,7 +2437,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
         {/* Fixed bottom bar */}
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,

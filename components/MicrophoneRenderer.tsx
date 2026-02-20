@@ -389,7 +389,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
       overflow: 'hidden',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       zIndex: 100,
-      minHeight: '100vh'
+      minHeight: '100dvh'
     }}>
       {/* Background gradient */}
       <div style={{
@@ -493,7 +493,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
         overflowX: 'hidden',
         position: 'relative',
         paddingTop: '48px',
-        paddingBottom: '100px'
+        paddingBottom: '16px'
       }}>
         {children}
       </div>
@@ -501,7 +501,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
       {/* Footer - fixed bottom navigation */}
       {footer && (
         <nav style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,

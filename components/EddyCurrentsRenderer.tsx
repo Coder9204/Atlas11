@@ -2658,7 +2658,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
   // Main render
   return (
-    <div style={{ minHeight: '100vh', boxShadow: '0 0 40px rgba(99, 102, 241, 0.15)' }} className="bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{ minHeight: '100dvh', boxShadow: '0 0 40px rgba(99, 102, 241, 0.15)' }} className="bg-[#0a0f1a] text-white relative overflow-hidden">
       {/* Premium background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
@@ -2722,7 +2722,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
       </nav>
 
       {/* Main content */}
-      <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', paddingTop: '48px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', minHeight: '100vh', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', minHeight: '100dvh', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}
@@ -2741,7 +2741,6 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}
       </div>

@@ -733,7 +733,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'hook') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -811,7 +811,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -912,7 +912,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1113,7 +1113,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1200,7 +1200,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1349,7 +1349,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1503,7 +1503,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1622,7 +1622,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1848,7 +1848,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
       const passed = testScore >= 7;
       return (
         <div style={{
-          height: '100vh',
+          height: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           background: colors.bgPrimary,
@@ -1961,7 +1961,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -2213,7 +2213,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'mastery') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,

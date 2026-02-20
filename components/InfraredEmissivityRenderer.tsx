@@ -983,7 +983,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -991,7 +991,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         justifyContent: 'center',
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -1058,11 +1058,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1195,12 +1195,12 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
@@ -1390,11 +1390,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1469,11 +1469,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1601,11 +1601,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1708,11 +1708,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -1829,11 +1829,11 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderNavBar()}
@@ -2034,7 +2034,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -2090,7 +2090,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2256,7 +2256,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

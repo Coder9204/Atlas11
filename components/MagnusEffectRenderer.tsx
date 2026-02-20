@@ -595,7 +595,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     const canGoBack = currentIndex > 0;
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -696,7 +696,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -706,7 +706,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         paddingTop: '80px',
         textAlign: 'center',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
       }}>
         {renderProgressBar()}
@@ -770,11 +770,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -884,11 +884,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1131,11 +1131,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1255,11 +1255,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1385,11 +1385,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1582,11 +1582,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1693,11 +1693,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -1887,11 +1887,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           overflowY: 'auto',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           flex: 1,
           paddingTop: '48px',
         }}>
@@ -2002,11 +2002,11 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
         paddingTop: '48px',
       }}>
@@ -2175,7 +2175,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2185,7 +2185,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         paddingTop: '80px',
         textAlign: 'center',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         flex: 1,
       }}>
         {renderProgressBar()}

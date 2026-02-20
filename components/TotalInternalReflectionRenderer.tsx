@@ -2797,13 +2797,13 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      minHeight: '100vh', height: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
+      minHeight: '100dvh', height: '100dvh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
       color: '#f8fafc', position: 'relative', overflow: 'hidden',
       fontFamily: defined.typography.fontFamily, fontWeight: 400,
     }}>
       {/* Main content area */}
       <div style={{
-        position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '80px',
+        position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '16px',
         maxWidth: '900px', margin: '0 auto', width: '100%', padding: '16px 16px 80px',
         overflowY: 'auto',
       }}>
@@ -2825,7 +2825,6 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransfer()}
         {phase === 'test' && testComplete && (
           <div style={{ textAlign: 'center', padding: '24px', fontFamily: defined.typography.fontFamily }}>
             <h2 style={{ color: defined.colors.success, marginBottom: '8px' }}>

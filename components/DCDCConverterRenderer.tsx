@@ -1034,25 +1034,19 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
         break;
       case 'twist_review':
         nextLabel = 'Real World Applications';
-        break;
-      if (phase === 'transfer') {
-        return (
+        break;
+
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="D C D C Converter"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="D C D C Converter"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer':
-        canProceed = completedApps.every(c => c);
-        nextLabel = 'Take the Test';
-        break;
       case 'test':
         if (!testSubmitted) {
           canProceed = !testAnswers.includes(null);
@@ -1082,7 +1076,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -2090,7 +2084,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -2098,7 +2092,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
       color: colors.textPrimary,
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {renderPhaseContent()}
         </div>

@@ -526,7 +526,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -601,7 +601,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
       color: colors.textPrimary,
       fontWeight: 400,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
     }}>
       {renderProgressBar()}

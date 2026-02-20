@@ -501,7 +501,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -980,7 +980,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'hook') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
                 Electromagnetic Interference (EMI)
@@ -1030,7 +1030,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             {renderVisualization(false)}
 
             {/* Progress indicator */}
@@ -1102,7 +1102,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore EMI Protection</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1207,7 +1207,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1280,7 +1280,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
               <p style={{ color: colors.textSecondary }}>
@@ -1359,7 +1359,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'twist_play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Twisted Pair Cancellation</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1452,7 +1452,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1519,7 +1519,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'transfer') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
                 Real-World Applications
@@ -1672,7 +1672,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       if (testSubmitted) {
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
               <div style={{
                 background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
@@ -1715,7 +1715,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
       const currentQ = testQuestions[currentTestQuestion];
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1841,7 +1841,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     if (phase === 'mastery') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1884,7 +1884,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,

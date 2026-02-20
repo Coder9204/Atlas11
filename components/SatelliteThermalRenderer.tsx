@@ -1639,78 +1639,17 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               See Real Applications
             </button>
           </div>
-        );
+        );
 
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Satellite Thermal"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Satellite Thermal"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          typo={typo}
+          playSound={playSound}
           />
-        );
-      }
-
-      case 'transfer':
-        return (
-          <div className="flex flex-col items-center p-6" style={{ minHeight: '400px', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
-            <h2 className="text-2xl font-bold text-green-400 mb-2" style={{ fontWeight: 800, lineHeight: 1.3 }}>Real-World Applications</h2>
-            <p className="text-slate-400 text-sm mb-4" style={{ lineHeight: 1.6 }}>Explore how satellite thermal control principles appear in real missions and technology.</p>
-
-            <div style={{ overflowY: 'scroll', width: '100%', maxHeight: '60vh', paddingRight: '4px' }} className="transfer-scroll-container">
-              {realWorldApps.map((app, index) => (
-                <div key={index} className="app-card bg-slate-800 rounded-xl mb-4 overflow-hidden border border-slate-700" style={{ border: '1px solid #334155' }}>
-                  <div style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(234,179,8,0.1) 100%)', borderBottom: '1px solid #334155' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '28px' }}>{app.icon}</span>
-                      <div>
-                        <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', lineHeight: 1.3 }}>{app.title}</h3>
-                        <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.4 }}>{app.tagline}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ padding: '16px' }}>
-                    <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6, marginBottom: '12px' }}>{app.description}</p>
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      {app.stats.map((stat, i) => (
-                        <div key={i} style={{ background: '#1e293b', padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
-                          <div style={{ fontSize: '18px', marginBottom: '2px' }}>{stat.icon}</div>
-                          <div style={{ color: '#f97316', fontWeight: 700, fontSize: '13px' }}>{stat.value}</div>
-                          <div style={{ color: '#64748b', fontSize: '11px' }}>{stat.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ background: '#1e293b', padding: '10px', borderRadius: '8px', marginBottom: '10px' }}>
-                      <p style={{ color: '#fb923c', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>Connection to Physics:</p>
-                      <p style={{ color: '#94a3b8', fontSize: '12px', lineHeight: 1.5 }}>{app.connection}</p>
-                    </div>
-                    <button
-                      onClick={() => handleAppComplete(index)}
-                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease', width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 700, fontSize: '14px', border: 'none', cursor: 'pointer', background: completedApps.has(index) ? '#166534' : '#16a34a', color: '#ffffff' }}
-                    >
-                      {completedApps.has(index) ? '✓ Understood' : 'Mark as Understood'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: '16px', textAlign: 'center', width: '100%' }}>
-              <p className="text-slate-400 mb-3" style={{ lineHeight: 1.5 }}>Completed: {completedApps.size} / {realWorldApps.length}</p>
-
-              {completedApps.size >= 3 && (
-                <button
-                  onClick={() => goToPhase('test')}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10, transition: 'all 0.2s ease', background: 'linear-gradient(135deg, #ea580c 0%, #ca8a04 100%)', color: '#ffffff', padding: '12px 32px', borderRadius: '12px', fontWeight: 700, fontSize: '16px', border: 'none', cursor: 'pointer' }}
-                >
-                  Take the Test
-                </button>
-              )}
-            </div>
-          </div>
         );
 
       case 'test':

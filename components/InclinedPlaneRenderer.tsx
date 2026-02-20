@@ -833,7 +833,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       <div
         data-theme-colors="#9CA3AF #6B7280"
         style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -905,7 +905,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         display: 'flex',
@@ -1053,7 +1053,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         display: 'flex',
@@ -1231,7 +1231,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1335,7 +1335,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1437,7 +1437,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1606,7 +1606,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1729,7 +1729,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         display: 'flex',
@@ -1904,7 +1904,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -2047,7 +2047,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2213,7 +2213,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

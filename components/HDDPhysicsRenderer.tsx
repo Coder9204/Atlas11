@@ -1215,7 +1215,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'hook') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
                 Hard Drive Read Physics
@@ -1283,7 +1283,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             {renderVisualization(false)}
 
             <div style={{
@@ -1336,7 +1336,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore HDD Mechanics</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1429,7 +1429,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1483,7 +1483,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'twist_predict') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
               <p style={{ color: colors.textSecondary }}>
@@ -1543,7 +1543,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'twist_play') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '16px', textAlign: 'center' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>Head Crash Physics</h2>
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>
@@ -1637,7 +1637,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1704,7 +1704,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'transfer') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontWeight: 700 }}>
                 Real-World Applications
@@ -1825,7 +1825,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
       if (testSubmitted) {
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
               <div style={{
                 background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
@@ -1868,7 +1868,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
       const currentQ = testQuestions[currentTestQuestion];
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>Knowledge Test</h2>
@@ -1999,7 +1999,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     if (phase === 'mastery') {
       return (
         <>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ padding: '24px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
               <h1 style={{ color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Mastery Achieved!</h1>

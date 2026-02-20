@@ -1575,20 +1575,16 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Radiation Effects"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            playSound={playSound}
+          conceptName="Radiation Effects"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return null;
@@ -1600,7 +1596,7 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   // ============================================================
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -1614,7 +1610,7 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderPhaseContent()}
       </div>

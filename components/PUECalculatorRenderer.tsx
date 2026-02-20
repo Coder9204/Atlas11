@@ -736,9 +736,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
         <div style={{
           fontSize: '64px',
@@ -826,9 +826,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -945,9 +945,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             PUE Calculator Lab
@@ -1103,9 +1103,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const wasCorrect = prediction === 'b';
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1206,9 +1206,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.secondary}22`,
@@ -1335,9 +1335,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Free Cooling Demonstration
@@ -1469,9 +1469,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const wasCorrect = twistPrediction === 'a';
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1571,9 +1571,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
@@ -1780,9 +1780,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
@@ -1831,9 +1831,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
@@ -1992,9 +1992,9 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
 
         <div style={{

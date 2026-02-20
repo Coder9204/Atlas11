@@ -297,9 +297,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary, minHeight: '100vh' }}>
+    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary, minHeight: '100dvh' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', marginTop: '60px', marginBottom: bottomBarContent ? '70px' : 0, paddingBottom: '100px', paddingTop: '48px', transition: 'opacity 0.3s ease' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', marginTop: '60px', marginBottom: bottomBarContent ? '70px' : 0, paddingBottom: '16px', paddingTop: '48px', transition: 'opacity 0.3s ease' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -1508,9 +1508,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
               Create Your Vortex Street!
@@ -1662,9 +1662,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     const isCorrect = selectedPrediction?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '\u2713' : '!'}
@@ -1790,9 +1790,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // TWIST_PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
               Plot Twist!
@@ -1864,9 +1864,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // TWIST_PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
               The Resonance Problem
@@ -1948,9 +1948,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     const isCorrect = selectedTwist?.correct === true;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '\u2713' : '!'}
@@ -2053,9 +2053,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
 
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Real-World Applications
@@ -2165,9 +2165,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
       const score = Math.round((correctCount / testQuestions.length) * 100);
 
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
                 {score >= 80 ? '🏆' : score >= 60 ? 'Good' : 'Try Again'}
@@ -2236,7 +2236,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     // Show confirm dialog
     if (showConfirm) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', marginTop: '60px' }}>
             <div style={{
@@ -2300,9 +2300,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     const isLastQuestion = currentQuestion >= testQuestions.length - 1;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Knowledge Check
@@ -2357,7 +2357,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           )}
         </div>
         <div style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -2438,9 +2438,9 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>{renderProgressBar()}</div>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px', marginTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', marginTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>

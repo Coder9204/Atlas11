@@ -1497,7 +1497,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
         <div
           className="space-y-4 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-slate-800"
-          style={{ maxHeight: '60vh', paddingTop: '44px', paddingBottom: '80px', flex: 1, overflowY: 'auto' }}
+          style={{ maxHeight: '60vh', paddingTop: '44px', paddingBottom: '16px', flex: 1, overflowY: 'auto' }}
         >
           <div
             className="rounded-xl p-6 border-2 transition-all duration-300"
@@ -1984,7 +1984,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col overflow-hidden" style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col overflow-hidden" style={{ minHeight: '100dvh', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
       <div className="flex-1 overflow-y-auto p-6" style={{ flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
         <div className="max-w-4xl mx-auto" style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
           {renderProgressBar()}
@@ -1997,7 +1997,6 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             {phase === 'twist_predict' && renderTwistPredict()}
             {phase === 'twist_play' && renderTwistPlay()}
             {phase === 'twist_review' && renderTwistReview()}
-            {phase === 'transfer' && renderTransfer()}
             {phase === 'test' && renderTest()}
             {phase === 'mastery' && renderMastery()}
 

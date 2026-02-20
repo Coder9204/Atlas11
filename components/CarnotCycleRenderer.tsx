@@ -540,8 +540,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({
     container: {
       display: 'flex',
       flexDirection: 'column' as const,
-      minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',
+      height: '100dvh',
       background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
       color: '#f8fafc',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -588,7 +588,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       flex: 1,
       overflowY: 'auto' as const,
       paddingTop: '72px',
-      paddingBottom: '80px'
+      paddingBottom: '16px'
     },
     bottomNav: {
       position: 'fixed' as const,
@@ -1722,19 +1722,15 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Carnot Cycle"
-            applications={realWorldApplications}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            playSound={playSound}
+          conceptName="Carnot Cycle"
+          applications={realWorldApplications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();

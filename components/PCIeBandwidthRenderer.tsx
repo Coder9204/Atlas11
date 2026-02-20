@@ -734,7 +734,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -828,7 +828,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -940,7 +940,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1119,7 +1119,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1132,7 +1132,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           paddingTop: '44px',
           paddingLeft: '24px',
           paddingRight: '24px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1240,7 +1240,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1352,7 +1352,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1485,7 +1485,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1498,7 +1498,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           paddingTop: '44px',
           paddingLeft: '24px',
           paddingRight: '24px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1602,7 +1602,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1615,7 +1615,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
           paddingTop: '44px',
           paddingLeft: '24px',
           paddingRight: '24px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>
@@ -1820,7 +1820,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1833,7 +1833,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             paddingTop: '44px',
             paddingLeft: '24px',
             paddingRight: '24px',
-            paddingBottom: '80px',
+            paddingBottom: '16px',
           }}>
           <div style={{ maxWidth: '600px', margin: '16px auto 0', textAlign: 'center' }}>
             <div style={{
@@ -1915,7 +1915,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2081,7 +2081,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

@@ -2631,7 +2631,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
   // Main render
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: '#0a0f1a',
       color: 'white',
       position: 'relative',
@@ -2723,7 +2723,6 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}
       </div>

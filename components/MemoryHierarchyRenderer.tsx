@@ -790,7 +790,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -871,7 +871,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -965,7 +965,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1105,7 +1105,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1227,7 +1227,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1342,7 +1342,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1448,7 +1448,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1561,7 +1561,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1748,7 +1748,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1892,7 +1892,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2126,7 +2126,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

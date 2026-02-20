@@ -1226,9 +1226,9 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
   // Render wrapper with progress bar and bottom navigation
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}

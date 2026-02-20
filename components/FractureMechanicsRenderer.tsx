@@ -514,7 +514,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   // Layout wrapper render function for consistent scroll structure
   const renderLayout = (children: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
@@ -525,7 +525,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {children}
       </div>

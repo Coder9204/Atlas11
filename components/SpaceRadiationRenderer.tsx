@@ -771,7 +771,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -846,14 +846,14 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingTop: '48px',
         textAlign: 'center',
         overflowY: 'auto',
@@ -921,7 +921,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -934,7 +934,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{
@@ -1077,7 +1077,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1090,7 +1090,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1504,7 +1504,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1517,7 +1517,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
@@ -1708,7 +1708,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1721,7 +1721,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
@@ -1860,7 +1860,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -1873,7 +1873,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -2147,7 +2147,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -2160,7 +2160,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -2310,7 +2310,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
@@ -2323,7 +2323,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
@@ -2492,7 +2492,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
       const passed = testScore >= 7;
       return (
         <div style={{
-          height: '100vh',
+          height: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           background: colors.bgPrimary,
@@ -2505,7 +2505,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             flex: 1,
             overflowY: 'auto',
             paddingTop: '60px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
           }}>
             <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -2630,7 +2630,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2797,7 +2797,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

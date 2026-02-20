@@ -753,7 +753,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showBack: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -815,7 +815,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
 
   // ==================== OUTER WRAPPER ====================
   const outerStyle: React.CSSProperties = {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -828,7 +828,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     flex: 1,
     overflowY: 'auto' as const,
     paddingTop: '48px',
-    paddingBottom: '100px',
+    paddingBottom: '16px',
   };
 
   // ==================== PHASE RENDERERS ====================

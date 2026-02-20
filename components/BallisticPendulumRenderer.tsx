@@ -965,7 +965,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 700 }}>🎯 Catch That Bullet!</h1>
             <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 400 }}>Game 115: Ballistic Pendulum</p>
@@ -992,7 +992,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           {/* Progress indicator */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <span style={{ color: colors.textMuted, fontSize: '14px' }}>Step 1 of 3: Make Your Prediction</span>
@@ -1027,7 +1027,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700 }}>🔬 Fire Away!</h2>
           </div>
@@ -1079,7 +1079,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
             <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '24px', fontWeight: 700 }}>
@@ -1114,7 +1114,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
           </div>
@@ -1153,7 +1153,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
           </div>
@@ -1248,7 +1248,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px' }}>🌀 Energy Mystery!</h2>
           </div>
@@ -1285,7 +1285,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px' }}>🌍 Real Applications</h2>
             {/* Progress indicator */}
@@ -1342,7 +1342,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px' }}>{correctCount >= 8 ? '🏆' : '📚'}</div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: 700 }}>Score: {correctCount}/10 ({Math.round(correctCount / 10 * 100)}%)</h2>
@@ -1388,7 +1388,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px' }}>
             {/* Question progress */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1516,7 +1516,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>Ballistics Master!</h1>
@@ -1540,7 +1540,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {renderProgressBar()}
       {renderNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '100px', padding: '20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '70px', paddingBottom: '16px', padding: '20px' }}>
         <p style={{ color: colors.textSecondary }}>Loading: {phase}</p>
       </div>
     </div>

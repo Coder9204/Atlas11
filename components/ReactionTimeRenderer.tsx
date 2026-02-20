@@ -2389,7 +2389,6 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
                 playSound={playSound}
               />
             )}
-            {phase === 'transfer' && renderTransfer()}
             {phase === 'test' && renderTest()}
             {phase === 'mastery' && renderMastery()}
           </div>
@@ -2398,7 +2397,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
       {/* Bottom Navigation Bar */}
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,

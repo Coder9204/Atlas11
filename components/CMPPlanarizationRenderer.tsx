@@ -517,7 +517,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Next') => (
     <div
       style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1026,7 +1026,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   const renderPageWrapper = (children: React.ReactNode) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
         {children}
       </div>
     </div>
@@ -1144,7 +1144,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
           <div style={{ textAlign: 'center', marginBottom: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore CMP Planarization</h2>
             <p style={{ color: colors.textSecondary, fontSize: typo.small }}>

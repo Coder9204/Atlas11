@@ -681,7 +681,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
     const currentIdx = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -743,8 +743,8 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
 
   // ── Phase container ─────────────────────────────────────────────────────
   const renderPhaseContainer = (children: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {children}
       </div>
       {renderNavBar()}

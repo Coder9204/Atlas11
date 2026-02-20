@@ -2127,21 +2127,17 @@ export default function FloatingPaperclipRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Floating Paperclip"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Floating Paperclip"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2154,7 +2150,7 @@ export default function FloatingPaperclipRenderer({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: 'linear-gradient(180deg, #0a0f1a 0%, #0a1628 100%)',
       display: 'flex',
       flexDirection: 'column',
@@ -2208,7 +2204,7 @@ export default function FloatingPaperclipRenderer({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         position: 'relative'
       }}>
         {renderPhase()}

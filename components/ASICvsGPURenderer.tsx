@@ -719,7 +719,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
     nextDisabled = false,
   }) => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -940,13 +940,13 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>
@@ -1013,10 +1013,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -1117,14 +1117,14 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         background: colors.bgPrimary,
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1327,10 +1327,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -1461,10 +1461,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -1559,10 +1559,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -1802,10 +1802,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -1928,10 +1928,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -2092,10 +2092,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           overflowY: 'auto',
         }}>
           {renderProgressBar()}
@@ -2141,10 +2141,10 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto',
       }}>
         {renderProgressBar()}
@@ -2313,13 +2313,13 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         padding: '24px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
       }}>

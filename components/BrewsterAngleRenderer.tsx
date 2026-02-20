@@ -1289,7 +1289,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   // Main layout wrapper
   const renderLayout = (content: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -1301,7 +1301,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '70px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
       }}>
         {content}
       </div>

@@ -2149,21 +2149,17 @@ export default function ElectromagnetRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Electromagnet"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Electromagnet"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2174,7 +2170,7 @@ export default function ElectromagnetRenderer({
 
   // ─── Main Render ───────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #1a1a2e 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #1a1a2e 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
       {/* Progress bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #a855f7, #3b82f6)', zIndex: 60, transition: 'width 0.5s ease' }} />
 
@@ -2204,7 +2200,7 @@ export default function ElectromagnetRenderer({
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

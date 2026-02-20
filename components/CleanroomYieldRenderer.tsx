@@ -368,7 +368,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1038,7 +1038,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1050,7 +1050,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>
@@ -1112,7 +1112,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1123,7 +1123,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -1203,7 +1203,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1214,7 +1214,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Explore Yield Physics</h2>
@@ -1320,7 +1320,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1331,7 +1331,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1406,7 +1406,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1417,7 +1417,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -1491,7 +1491,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1502,7 +1502,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Redundancy</h2>
@@ -1552,7 +1552,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1563,7 +1563,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1656,7 +1656,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1667,7 +1667,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1754,7 +1754,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -1765,7 +1765,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             flex: 1,
             overflowY: 'auto',
             paddingTop: '48px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
           }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1809,7 +1809,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1820,7 +1820,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -2006,7 +2006,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -2017,7 +2017,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
@@ -2054,7 +2054,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // Default fallback to hook phase
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
@@ -2065,7 +2065,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

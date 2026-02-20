@@ -927,9 +927,9 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   );
 
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Continue') => (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}

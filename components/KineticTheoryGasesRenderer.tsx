@@ -686,7 +686,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -759,7 +759,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -909,7 +909,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1075,7 +1075,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1168,7 +1168,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1310,7 +1310,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1443,7 +1443,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1555,7 +1555,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1776,7 +1776,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -1832,7 +1832,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1982,7 +1982,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2087,7 +2087,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   }; // end renderPhaseContent
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px' }}>
         {renderPhaseContent()}
       </div>

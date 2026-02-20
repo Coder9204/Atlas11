@@ -1159,7 +1159,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}
@@ -1723,7 +1723,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>

@@ -745,10 +745,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '24px' }}>⚡🔄</div>
           <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>Metastability in Flip-Flops</h1>
           <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
@@ -780,10 +780,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const pW = isMobile ? 300 : 400;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ background: `${colors.accent}22`, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.accent}44` }}>
               <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>Make Your Prediction</p>
@@ -833,10 +833,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>Observe Metastability in Action</h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '8px' }}>
@@ -916,10 +916,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
   if (phase === 'review') {
     const predCorrect = prediction === 'b';
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             {prediction && (
               <div style={{ background: predCorrect ? `${colors.success}22` : `${colors.warning}22`, border: `1px solid ${predCorrect ? colors.success : colors.warning}`, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
@@ -985,10 +985,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
       { id: 'c', text: 'It cancels out the metastability through signal inversion' },
     ];
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ background: `${colors.warning}22`, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.warning}44` }}>
               <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>New Concept: Synchronizer Chains</p>
@@ -1052,10 +1052,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>Design Your Synchronizer</h2>
             <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
@@ -1137,10 +1137,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>The Science of Reliable Synchronization</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1202,10 +1202,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const completedCount = completedApps.filter(c => c).length;
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>Real-World Applications</h2>
             <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
@@ -1277,10 +1277,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
           {renderNavBar()}
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
             <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1334,10 +1334,10 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const selectedAnswer = testAnswers[currentQuestion];
 
     return (
-      <div style={{ minHeight: '100vh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <span style={{ ...typo.small, color: colors.textSecondary }}>Question {currentQuestion + 1} of 10</span>
@@ -1417,11 +1417,11 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100dvh', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`, display: 'flex', flexDirection: 'column' }}>
         {renderNavBar()}
         {renderProgressBar()}
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>🏆</div>
           <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>Metastability Master!</h1>
           <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>

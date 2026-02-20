@@ -897,12 +897,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -968,12 +968,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1083,12 +1083,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1233,12 +1233,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     const predictionCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1316,12 +1316,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1436,12 +1436,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1545,12 +1545,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1634,12 +1634,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -1781,12 +1781,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
           {renderNavigationBar()}
           {renderProgressBar()}
@@ -1873,12 +1873,12 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
@@ -2004,14 +2004,14 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         padding: '24px',
         textAlign: 'center',
       }}>

@@ -1661,106 +1661,18 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               See Real Applications
             </button>
           </div>
-        );
+        );
 
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Coriolis Effect"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Coriolis Effect"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
-        );
-      }
-
-      case 'transfer':
-        return (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginBottom: '24px' }}>Real-World Applications</h2>
-
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {transferApps.map((app, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveAppTab(index)}
-                  style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: activeAppTab === index ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : '#334155', color: activeAppTab === index ? 'white' : '#cbd5e1' }}
-                >
-                  {completedApps.has(index) && 'Done '}{app.short}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ border: '1px solid #3b82f6', borderRadius: '12px', width: '100%', maxWidth: '640px' }}>
-              <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ width: '80px', height: '80px', flexShrink: 0 }}>
-                    {transferApps[activeAppTab].icon}
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'white', marginBottom: '4px' }}>{transferApps[activeAppTab].title}</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>{transferApps[activeAppTab].tagline}</p>
-                  </div>
-                </div>
-
-                <p style={{ color: '#cbd5e1', marginBottom: '16px', lineHeight: '1.6' }}>{transferApps[activeAppTab].description}</p>
-
-                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
-                  <h4 style={{ color: '#38bdf8', fontWeight: 700, marginBottom: '8px' }}>Physics Connection</h4>
-                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].connection}</p>
-                </div>
-
-                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
-                  <h4 style={{ color: '#06b6d4', fontWeight: 700, marginBottom: '8px' }}>How It Works</h4>
-                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].howItWorks}</p>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
-                  {transferApps[activeAppTab].stats.map((stat, i) => (
-                    <div key={i} style={{ background: '#1e293b', padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
-                      <div style={{ color: 'white', fontWeight: 700, fontSize: '18px' }}>{stat.value}</div>
-                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ marginBottom: '16px' }}>
-                  <h4 style={{ color: '#4ade80', fontWeight: 700, marginBottom: '8px', fontSize: '14px' }}>Applications</h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {transferApps[activeAppTab].examples.map((ex, i) => (
-                      <span key={i} style={{ background: '#1e293b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1' }}>{ex}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '16px' }}>
-                  <h4 style={{ color: '#f59e0b', fontWeight: 700, marginBottom: '8px', fontSize: '14px' }}>Industry Leaders</h4>
-                  <p style={{ color: '#94a3b8', fontSize: '13px' }}>{transferApps[activeAppTab].companies.join(', ')}</p>
-                </div>
-
-                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
-                  <h4 style={{ color: '#a855f7', fontWeight: 700, marginBottom: '8px' }}>Future Impact</h4>
-                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].futureImpact}</p>
-                </div>
-
-                {!completedApps.has(activeAppTab) && (
-                  <button
-                    onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ width: '100%', padding: '12px', background: '#16a34a', color: 'white', fontWeight: 700, borderRadius: '8px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease' }}
-                  >
-                    Mark as Understood
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <p style={{ color: '#94a3b8', marginTop: '16px' }}>
-              Completed: {completedApps.size} / {transferApps.length}
-            </p>
-          </div>
         );
 
       case 'test': {
@@ -1926,7 +1838,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   );
 
   return (
-    <div style={{ height: '100vh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#3b82f6' }}>Coriolis Effect</span>

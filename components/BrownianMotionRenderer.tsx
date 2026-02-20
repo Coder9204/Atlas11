@@ -372,7 +372,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // Navigation bar component
   const renderNavBar = (showBack: boolean = true) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1240,13 +1240,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgDark} 100%)`,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>🔬</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
@@ -1299,13 +1299,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1379,13 +1379,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center', marginTop: '20px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>Explore Brownian Motion</h2>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
@@ -1481,13 +1481,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
             margin: '24px 16px 16px',
@@ -1593,13 +1593,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1679,13 +1679,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '16px', textAlign: 'center', marginTop: '20px' }}>
             <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px' }}>Test Temperature Effects</h2>
             <p style={{ ...typo.body, color: colors.textSecondary }}>
@@ -1763,13 +1763,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{
             background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
             margin: '24px 16px 16px',
@@ -1861,13 +1861,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '24px 16px 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -2037,13 +2037,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
         }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
             <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
                 {passed ? '🏆' : '📚'}
@@ -2069,7 +2069,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
                 <div style={{
                   maxHeight: '400px',
                   overflowY: 'auto',
-                  paddingBottom: '100px',
+                  paddingBottom: '16px',
                   flex: 1,
                   paddingTop: '48px',
                   borderRadius: '12px',
@@ -2160,13 +2160,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             {/* Progress indicator */}
             <div style={{
@@ -2336,13 +2336,13 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgDark} 100%)`,
         display: 'flex',
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
           <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
             <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -2392,7 +2392,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   // Default fallback - should not reach here
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',

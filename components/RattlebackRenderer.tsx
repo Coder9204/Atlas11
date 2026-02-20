@@ -942,7 +942,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   // DOM element references stable across re-renders.
   const wrapPage = (children: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bgPrimary,
@@ -955,7 +955,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {children}
       </div>

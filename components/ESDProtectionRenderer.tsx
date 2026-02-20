@@ -914,7 +914,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -984,7 +984,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
   // Layout wrapper
   const renderLayout = (children: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -996,7 +996,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
         flex: 1,
         overflowY: 'auto',
         paddingTop: '68px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         padding: '68px 24px 100px 24px',
       }}>
         {children}

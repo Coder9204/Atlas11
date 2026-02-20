@@ -1100,7 +1100,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const renderWrapper = (content: React.ReactNode, footer: React.ReactNode) => (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '52px', paddingBottom: '100px', transition: 'all 0.3s ease' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '52px', paddingBottom: '16px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {footer}

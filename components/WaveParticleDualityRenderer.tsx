@@ -552,7 +552,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
       <div
          className="absolute inset-0 flex flex-col"
-         style={{ backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100vh' }}
+         style={{ backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100dvh' }}
       >
          {/* Subtle background gradient - purely decorative */}
          <div style={{

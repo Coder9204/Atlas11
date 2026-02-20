@@ -1820,20 +1820,16 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Damping"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            playSound={playSound}
+          conceptName="Damping"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1841,7 +1837,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
       {renderProgressBar()}
 
       {/* Header */}
@@ -1855,7 +1851,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
       </div>
 
       {/* Main content with overflow-y for scrolling (L.2) */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
         {renderPhase()}
       </div>
 

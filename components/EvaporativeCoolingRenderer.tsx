@@ -774,7 +774,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   // Fixed bottom footer with navigation
   const renderBottomNav = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -796,7 +796,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -876,7 +876,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -990,7 +990,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1192,7 +1192,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1312,7 +1312,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1421,7 +1421,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1569,7 +1569,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1685,7 +1685,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1939,7 +1939,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          height: '100vh',
+          height: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -2004,7 +2004,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2183,7 +2183,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

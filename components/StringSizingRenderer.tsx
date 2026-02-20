@@ -2077,84 +2077,75 @@ export default function StringSizingRenderer({
       case 'hook':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderHook()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderHook()}</div>
             {renderBottomBar(false, true, 'Start Learning')}
           </>
         );
       case 'predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderPredict()}</div>
             {renderBottomBar(true, showPredictionFeedback, 'Continue')}
           </>
         );
       case 'play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderPlay()}</div>
             {renderBottomBar(true, hasExperimented, 'Continue')}
           </>
         );
       case 'review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderReview()}</div>
             {renderBottomBar(true, true, 'Next: The Twist')}
           </>
         );
       case 'twist_predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistPredict()}</div>
             {renderBottomBar(true, showTwistFeedback, 'Continue')}
           </>
         );
       case 'twist_play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistPlay()}</div>
             {renderBottomBar(true, hasExploredTwist, 'Continue')}
           </>
         );
       case 'twist_review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTwistReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistReview()}</div>
             {renderBottomBar(true, true, 'Applications')}
           </>
-        );
-      if (phase === 'transfer') {
-        return (
-          <TransferPhaseView
-            conceptName="String Sizing"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
-          />
-        );
-      }
+        );
 
-      case 'transfer':
-        return (
-          <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTransfer()}</div>
-            {renderBottomBar(true, completedApps.size >= 4, 'Take Test')}
-          </>
+      case 'transfer': return (
+          <TransferPhaseView
+          conceptName="String Sizing"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
+          />
         );
       case 'test':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderTest()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTest()}</div>
             {testSubmitted && renderBottomBar(true, true, 'Complete')}
           </>
         );
       case 'mastery':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>{renderMastery()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderMastery()}</div>
           </>
         );
       default:
@@ -2165,7 +2156,7 @@ export default function StringSizingRenderer({
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         position: 'absolute',
         inset: 0,
         display: 'flex',
@@ -2182,7 +2173,7 @@ export default function StringSizingRenderer({
         flexDirection: 'column',
         overflow: 'hidden',
         overflowY: 'auto',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingTop: '48px',
         maxWidth: '600px',
         width: '100%',

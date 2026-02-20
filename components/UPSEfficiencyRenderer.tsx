@@ -644,9 +644,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
         <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>🔋⚡</div>
 
@@ -687,9 +687,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{ background: `${colors.accent}22`, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.accent}44` }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>Make Your Prediction</p>
@@ -750,9 +750,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   // PLAY PHASE - Interactive I²R Simulation
   if (phase === 'play') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Voltage vs Cable Losses
@@ -924,9 +924,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The I²R Revelation
@@ -1029,9 +1029,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     ];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1158,9 +1158,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     const savingsPerYear = leadLossPerYear - lithiumLossPerYear;
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Battery Efficiency Comparison
@@ -1373,9 +1373,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Complete Picture
@@ -1477,9 +1477,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     const allAppsCompleted = completedApps.every(c => c);
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -1646,9 +1646,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🎉' : '📚'}
@@ -1697,9 +1697,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <div style={{
             display: 'flex',
@@ -1855,9 +1855,9 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
         <div style={{
           fontSize: '100px',

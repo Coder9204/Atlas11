@@ -2448,21 +2448,17 @@ export default function ChromaticAberrationRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Chromatic Aberration"
-            applications={realWorldApps}
-            onComplete={() => setPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Chromatic Aberration"
+          applications={realWorldApps}
+          onComplete={() => setPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2515,7 +2511,7 @@ export default function ChromaticAberrationRenderer({
   // Render the fixed bottom navigation bar
   const renderBottomBar = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2580,7 +2576,7 @@ export default function ChromaticAberrationRenderer({
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: defined.colors.background.primary,
@@ -2628,7 +2624,7 @@ export default function ChromaticAberrationRenderer({
       </div>
 
       {/* Scrollable Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

@@ -1118,7 +1118,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: '#ffffff', fontSize: '28px', marginBottom: '8px' }}>
               Why Does RAM Forget Everything?
@@ -1172,7 +1172,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>How Does DRAM Store Data?</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1238,7 +1238,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>DRAM Refresh Lab</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1401,7 +1401,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1488,7 +1488,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Speed Paradox</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1591,7 +1591,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Speed vs Power Trade-off</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1713,7 +1713,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1827,7 +1827,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1957,7 +1957,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
               {/* Score Summary */}
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -2207,7 +2207,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
             {/* Header */}
             <div style={{ marginBottom: '24px' }}>
@@ -2381,7 +2381,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{'\uD83C\uDFC6'}</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

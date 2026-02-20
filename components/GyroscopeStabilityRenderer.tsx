@@ -1700,21 +1700,17 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Gyroscope Stability"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Gyroscope Stability"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1731,7 +1727,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
+      height: '100dvh',
       backgroundColor: colors.background,
       overflow: 'hidden',
       position: 'relative'
@@ -1808,7 +1804,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         flex: 1,
         overflowY: 'auto',
         paddingTop: '100px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         position: 'relative',
         zIndex: 1
       }}>
@@ -1820,7 +1816,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
       {/* Fixed Bottom Navigation Bar */}
       <nav
         style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,

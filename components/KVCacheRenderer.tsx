@@ -813,7 +813,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -948,7 +948,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1053,7 +1053,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1297,7 +1297,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1396,7 +1396,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1518,7 +1518,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1783,7 +1783,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1898,7 +1898,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2077,7 +2077,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -2142,7 +2142,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2320,7 +2320,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

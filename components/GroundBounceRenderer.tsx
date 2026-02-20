@@ -803,7 +803,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -856,7 +856,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -864,7 +864,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         justifyContent: 'center',
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto' as const,
       }}>
@@ -956,11 +956,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         overflowY: 'auto' as const,
       }}>
         {renderNavigationBar()}
@@ -1113,18 +1113,18 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Ground Bounce Simulator
           </h2>
@@ -1342,18 +1342,18 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const predictionWasCorrect = prediction === 'b';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '16px' }}>
           {/* Reference user's prediction */}
           <div style={{
             background: predictionWasCorrect ? `${colors.success}22` : `${colors.warning}22`,
@@ -1469,11 +1469,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -1621,11 +1621,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -1799,11 +1799,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -1911,11 +1911,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -2107,11 +2107,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '80px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           overflowY: 'auto',
           flex: 1,
         }}>
@@ -2168,11 +2168,11 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
-        paddingBottom: '80px',
+        paddingBottom: '16px',
         overflowY: 'auto',
         flex: 1,
       }}>
@@ -2340,7 +2340,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

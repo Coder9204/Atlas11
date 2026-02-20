@@ -420,7 +420,7 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '12px 16px',
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -468,9 +468,9 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
 
   // Wrapper for phase content - outer container + scroll + fixed nav
   const renderPhaseContent = (content: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0f172a', color: '#f8fafc' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0f172a', color: '#f8fafc' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ padding: '0 24px 24px 24px' }}>
           {content}
         </div>

@@ -1415,7 +1415,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: design.colors.gradientBg,
           overflow: 'auto',
         }}>
@@ -1660,10 +1660,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: design.colors.bgDeep, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: design.colors.bgDeep, overflow: 'hidden' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Side-by-side layout */}
             <div style={{
@@ -1969,7 +1969,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '16px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '16px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Side-by-side layout */}
             <div style={{
@@ -2747,7 +2747,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: design.colors.gradientBg,
       overflow: 'auto',
       alignItems: 'center',

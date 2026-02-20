@@ -442,7 +442,7 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0, left: 0, right: 0,
         display: 'flex',
         justifyContent: 'space-between',
@@ -498,9 +498,9 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
 
   // Wrapper
   const renderWrapper = (content: React.ReactNode, footer?: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '68px', paddingBottom: '80px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '68px', paddingBottom: '16px' }}>
         {content}
         {renderNavDots()}
       </div>

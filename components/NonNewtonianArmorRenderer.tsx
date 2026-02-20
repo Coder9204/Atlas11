@@ -838,7 +838,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         role="navigation"
         aria-label="Game navigation"
         style={{
-          position: 'fixed',
+          position: 'sticky',
           bottom: 0,
           left: 0,
           right: 0,
@@ -931,7 +931,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             {/* Hook visual */}
@@ -1030,7 +1030,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Header */}
@@ -1170,7 +1170,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Header */}
@@ -1398,7 +1398,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Result feedback */}
@@ -1563,7 +1563,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1690,7 +1690,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1895,7 +1895,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Result */}
@@ -2034,7 +2034,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Header */}
@@ -2276,7 +2276,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Progress */}
@@ -2446,7 +2446,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
         {/* Bottom bar */}
         {showExplanation ? (
           <div style={{
-            position: 'fixed',
+            position: 'sticky',
             bottom: 0,
             left: 0,
             right: 0,
@@ -2517,7 +2517,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '100px'
+          paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             {/* Result celebration */}

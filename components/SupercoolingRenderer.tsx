@@ -1643,7 +1643,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1713,7 +1713,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -1803,7 +1803,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
 
@@ -1898,7 +1898,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Supercooling Lab</h2>
           <p style={{ color: '#94a3b8', marginBottom: '8px', fontSize: '16px', textAlign: 'center', maxWidth: '600px' }}>
@@ -2036,7 +2036,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>The Science of Supercooling</h2>
 
@@ -2081,7 +2081,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Hand Warmer Twist</h2>
 
@@ -2167,7 +2167,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Sodium Acetate Hand Warmer</h2>
           <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Click the metal disc to trigger crystallization!</p>
@@ -2240,7 +2240,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>Supercooling in Action: Hand Warmers</h2>
 
@@ -2290,7 +2290,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
 
@@ -2365,7 +2365,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     if (showTestResults) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <div style={{
               background: score >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -2439,7 +2439,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
             <h2 style={{ color: 'white', fontSize: '20px' }}>Knowledge Test</h2>
@@ -2549,7 +2549,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', background: '#0a0f1a', color: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
           <div style={{
             background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2), rgba(249, 115, 22, 0.2))',

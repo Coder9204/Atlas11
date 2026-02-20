@@ -1358,7 +1358,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               SRAM Cell Stability
@@ -1406,7 +1406,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -1459,7 +1459,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore SRAM Cell Operation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1541,7 +1541,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1627,7 +1627,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist: Stability Challenges</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -1689,7 +1689,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Inducing Read Disturb</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1771,7 +1771,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
             margin: '16px',
@@ -1867,7 +1867,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1922,7 +1922,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1962,7 +1962,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -2005,7 +2005,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

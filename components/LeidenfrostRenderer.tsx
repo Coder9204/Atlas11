@@ -1345,7 +1345,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Fixed footer navigation
   const renderFooter = (canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1400,7 +1400,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render hook phase
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{
           display: 'flex',
@@ -1530,7 +1530,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render predict phase
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
@@ -1595,9 +1595,9 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render play phase
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '100px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Leidenfrost Lab</h2>
           <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Adjust the surface temperature and drop water to see the effect! Observe how the droplet behavior changes versus the baseline.</p>
           <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px', fontStyle: 'italic' }}>
@@ -1737,7 +1737,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render review phase
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>The Science of the Leidenfrost Effect</h2>
@@ -1783,7 +1783,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist predict phase
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Temperature Paradox</h2>
@@ -1860,7 +1860,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist play phase
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Evaporation Time Comparison</h2>
@@ -1937,7 +1937,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render twist review phase
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Leidenfrost Paradox Explained</h2>
@@ -1987,7 +1987,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   if (phase === 'transfer') {
     const currentApp = realWorldApps[activeAppTab];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Real-World Applications</h2>
@@ -2106,7 +2106,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
     if (showTestResults) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+        <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
           {renderNavBar()}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
             <div style={{
@@ -2165,7 +2165,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', width: '100%', maxWidth: '640px' }}>
@@ -2326,7 +2326,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   // Render mastery phase
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', paddingBottom: '100px', paddingTop: '80px' }}>
+      <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center', overflowY: 'auto' }}>
           <div style={{

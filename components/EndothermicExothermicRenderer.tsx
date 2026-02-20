@@ -462,14 +462,14 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     <div
       data-muted-colors="rgba(148,163,184,0.7) #94a3b8 #64748b"
       style={{
-        display: 'flex', flexDirection: 'column', minHeight: '100vh',
+        display: 'flex', flexDirection: 'column', minHeight: '100dvh',
         background: design.bg, overflow: 'hidden',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         color: design.textPrimary,
       }}
     >
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column' }}>
         {children}
       </div>
       {renderBottomNav(canNext, nextLabel)}

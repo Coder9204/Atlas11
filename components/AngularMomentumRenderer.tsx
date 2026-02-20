@@ -629,7 +629,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
 
     return (
       <nav style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -816,7 +816,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
 
@@ -895,7 +895,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1025,7 +1025,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1036,7 +1036,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1214,7 +1214,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1321,7 +1321,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
@@ -1462,7 +1462,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1630,7 +1630,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1746,7 +1746,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1967,7 +1967,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             flex: 1,
             overflowY: 'auto',
             padding: '24px',
-            paddingBottom: '100px',
+            paddingBottom: '16px',
           }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
@@ -2032,7 +2032,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
@@ -2210,7 +2210,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           textAlign: 'center',
         }}>
 

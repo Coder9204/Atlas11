@@ -1334,177 +1334,18 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               {renderButton('Continue', goNext)}
             </div>
           </div>
-        );
+        );
 
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Snells Law"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Snells Law"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
-        );
-      }
-
-      case 'transfer':
-        const app = realWorldApps[activeApp];
-        return (
-          <div style={{ padding: typo.pagePadding, }}>
-            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '8px' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px' }}>
-              Explore how Snell's Law is used in industry and everyday technology. These examples connect physics principles to real applications.
-            </p>
-
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
-              {realWorldApps.map((a, idx) => (
-                <button
-                  key={a.id}
-                  onClick={() => {
-                    setActiveApp(idx);
-                    setCompletedApps(new Set([...completedApps, idx]));
-                    emitEvent('app_explored', { app: a.id });
-                  }}
-                  style={{
-                    padding: '12px 16px',
-                    background: activeApp === idx ? app.color : design.colors.bgCard,
-                    color: design.colors.textPrimary,
-                    border: completedApps.has(idx) ? `2px solid ${design.colors.success}` : `1px solid ${design.colors.border}`,
-                    borderRadius: design.radius.sm,
-                    cursor: 'pointer',
-                    fontSize: typo.small,
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {a.icon} {a.title}
-                </button>
-              ))}
-            </div>
-
-            <div style={{
-              background: design.colors.bgCard,
-              padding: '24px',
-              borderRadius: design.radius.lg,
-              border: `1px solid ${design.colors.border}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '40px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 600, color: design.colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                  <p style={{ fontSize: typo.small, color: design.colors.textMuted, margin: 0 }}>{app.subtitle}</p>
-                </div>
-              </div>
-
-              <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '16px' }}>
-                {app.description}
-              </p>
-
-              <div style={{
-                background: design.colors.bgElevated,
-                padding: '16px',
-                borderRadius: design.radius.sm,
-                marginBottom: '16px'
-              }}>
-                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.accentPrimary, marginBottom: '8px' }}>
-                  CONNECTION TO SNELL'S LAW:
-                </h4>
-                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
-                  {app.connection}
-                </p>
-              </div>
-
-              <div style={{
-                background: design.colors.bgElevated,
-                padding: '16px',
-                borderRadius: design.radius.sm,
-                marginBottom: '16px'
-              }}>
-                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.cyan, marginBottom: '8px' }}>
-                  HOW IT WORKS:
-                </h4>
-                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
-                  {app.howItWorks}
-                </p>
-              </div>
-
-              <div style={{
-                background: design.colors.bgElevated,
-                padding: '16px',
-                borderRadius: design.radius.sm,
-                marginBottom: '16px'
-              }}>
-                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.success, marginBottom: '8px' }}>
-                  FUTURE IMPACT:
-                </h4>
-                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
-                  {app.futureImpact}
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                <span style={{
-                  padding: '8px 12px',
-                  background: `${app.color}20`,
-                  color: app.color,
-                  borderRadius: design.radius.sm,
-                  fontSize: typo.small,
-                  fontWeight: 600
-                }}>
-                  {app.stat}
-                </span>
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.textMuted, marginBottom: '8px' }}>
-                  EXAMPLES:
-                </h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {app.examples.map((ex, i) => (
-                    <span key={i} style={{
-                      padding: '6px 10px',
-                      background: design.colors.bgElevated,
-                      color: design.colors.textSecondary,
-                      borderRadius: design.radius.sm,
-                      fontSize: typo.label
-                    }}>
-                      {ex}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.textMuted, marginBottom: '8px' }}>
-                  COMPANIES:
-                </h4>
-                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
-                  {app.companies.join(' | ')}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              {activeApp < realWorldApps.length - 1 ? (
-                renderButton(`Next Application →`, () => {
-                  const nextApp = activeApp + 1;
-                  setActiveApp(nextApp);
-                  setCompletedApps(new Set([...completedApps, nextApp]));
-                  emitEvent('app_explored', { app: realWorldApps[nextApp].id });
-                })
-              ) : (
-                renderButton('Continue to Test', goNext)
-              )}
-            </div>
-            <p style={{ textAlign: 'center', fontSize: typo.small, color: design.colors.textMuted, marginTop: '8px' }}>
-              Application {activeApp + 1} of {realWorldApps.length}
-            </p>
-          </div>
         );
 
       case 'test':
@@ -1840,7 +1681,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,

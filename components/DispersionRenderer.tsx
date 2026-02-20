@@ -768,9 +768,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: isMobile ? '80px' : '120px', marginBottom: '20px' }}>🌈</div>
@@ -818,9 +818,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -866,9 +866,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -981,9 +981,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1071,9 +1071,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     ];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1157,9 +1157,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1239,9 +1239,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1327,9 +1327,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const app = realWorldApps[selectedApp];
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -1433,9 +1433,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const isCorrect = selectedAnswer === currentQ.options.find(o => (o as any).correct)?.id;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <div style={{ marginBottom: '20px' }}>
@@ -1518,9 +1518,9 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const passed = percentage >= 70;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: `linear-gradient(180deg, ${colors.bgGradientStart} 0%, ${colors.bgGradientEnd} 100%)`, overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
           {renderNavDots()}
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', textAlign: 'center' as const }}>
             <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🌈' : '📚'}</div>

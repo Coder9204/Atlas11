@@ -2194,21 +2194,17 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Magnetic Field"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Magnetic Field"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -2222,7 +2218,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const canNext = !isLastP && (!isTestP || testSubmitted);
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Magnetic Fields</span>
@@ -2233,7 +2229,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         </div>
         <span style={{ fontSize: '14px', color: '#64748b' }}>{pidx + 1}/10</span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingTop: '48px', paddingBottom: '16px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((pidx + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

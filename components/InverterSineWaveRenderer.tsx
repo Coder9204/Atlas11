@@ -809,7 +809,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
     const canGoBack = currentIndex > 0;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -901,7 +901,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         overflow: 'hidden',
       }}>
@@ -911,7 +911,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: isMobile ? '16px' : '24px',
           paddingRight: isMobile ? '16px' : '24px',
           display: 'flex',
@@ -976,7 +976,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1098,13 +1098,13 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         overflow: 'hidden',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1249,7 +1249,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1347,7 +1347,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1452,7 +1452,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1562,7 +1562,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1687,7 +1687,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -1862,7 +1862,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '80px 24px 24px',
           overflowY: 'auto',
@@ -1920,7 +1920,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '80px 24px 24px',
         overflowY: 'auto',
@@ -2088,7 +2088,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

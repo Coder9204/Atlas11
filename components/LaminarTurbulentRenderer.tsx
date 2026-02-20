@@ -596,7 +596,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -608,7 +608,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '48px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -807,7 +807,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -816,7 +816,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '72px 24px 100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress indicator */}
           <div style={{
@@ -937,7 +937,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -946,7 +946,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', padding: '72px 24px 100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Reynolds Number Lab
@@ -1281,7 +1281,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     const userPredictedCorrect = prediction === 'a';
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1372,7 +1372,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1485,7 +1485,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1676,7 +1676,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1774,7 +1774,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1942,7 +1942,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '80px',
@@ -2000,7 +2000,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -2172,7 +2172,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

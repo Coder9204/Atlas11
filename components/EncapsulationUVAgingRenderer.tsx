@@ -775,11 +775,11 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
 
   // ── Phase shell ──
   const outerStyle: React.CSSProperties = {
-    minHeight: '100vh', display: 'flex', flexDirection: 'column',
+    minHeight: '100dvh', display: 'flex', flexDirection: 'column',
     overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
   };
   const scrollStyle: React.CSSProperties = {
-    flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px',
+    flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px',
   };
 
   // ── HOOK ──

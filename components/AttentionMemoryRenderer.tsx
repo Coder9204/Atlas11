@@ -786,7 +786,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   // Scroll wrapper - memoized to prevent remounting children on re-render
   const ScrollWrapper = useCallback(({ children }: { children: React.ReactNode }) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -796,7 +796,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
         overflowY: 'auto',
         flex: 1,
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
       }}>
@@ -815,7 +815,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -1913,7 +1913,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

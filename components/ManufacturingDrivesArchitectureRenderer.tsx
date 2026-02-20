@@ -523,7 +523,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
   // Wrapper for phase content
   const renderPhaseContent = (content: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0f172a', color: '#f8fafc', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#0f172a', color: '#f8fafc', overflow: 'hidden' }}>
       {renderProgressBar()}
       <div style={{ flex: 1, padding: '48px 24px 100px 24px', overflowY: 'auto' }}>
         {content}

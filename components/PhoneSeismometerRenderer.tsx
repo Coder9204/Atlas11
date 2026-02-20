@@ -809,7 +809,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -891,7 +891,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -903,7 +903,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{
             maxWidth: '600px',
@@ -992,7 +992,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1004,7 +1004,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <div style={{
@@ -1088,7 +1088,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1100,7 +1100,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1300,7 +1300,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1312,7 +1312,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1400,7 +1400,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1412,7 +1412,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <div style={{
@@ -1492,7 +1492,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1504,7 +1504,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1640,7 +1640,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1652,7 +1652,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -1738,7 +1738,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1750,7 +1750,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1932,7 +1932,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1944,7 +1944,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
             flex: 1,
             overflowY: 'auto',
             paddingTop: '60px',
-            paddingBottom: '120px',
+            paddingBottom: '16px',
           }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>
@@ -2044,7 +2044,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2056,7 +2056,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             {/* Progress */}
@@ -2278,7 +2278,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2290,7 +2290,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
           flex: 1,
           overflowY: 'auto',
           paddingTop: '60px',
-          paddingBottom: '120px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '100px', marginBottom: '24px' }}>

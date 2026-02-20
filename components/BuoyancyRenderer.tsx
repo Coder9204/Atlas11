@@ -713,7 +713,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -795,7 +795,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -946,7 +946,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1314,7 +1314,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1427,7 +1427,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1565,7 +1565,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1784,7 +1784,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1894,7 +1894,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2124,7 +2124,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -2194,7 +2194,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2440,7 +2440,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

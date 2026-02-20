@@ -502,7 +502,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
     const nextDisabled = !canGoNext || isTestPhase;
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -572,7 +572,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   // Main container wrapper with scroll
   const renderWithScrollContainer = (content: React.ReactNode) => (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.bgPrimary,
       display: 'flex',
       flexDirection: 'column',
@@ -582,7 +582,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         flex: 1,
         overflowY: 'auto',
         paddingTop: '48px',
-        paddingBottom: '100px',
+        paddingBottom: '16px',
       }}>
         {content}
       </div>

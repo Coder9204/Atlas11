@@ -461,7 +461,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   // Fixed navigation bar component
   const NavigationBar = ({ children }: { children: React.ReactNode }) => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -808,7 +808,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -820,7 +820,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',
@@ -914,7 +914,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -926,7 +926,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1075,7 +1075,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   if (phase === 'play') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1087,7 +1087,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1271,7 +1271,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   if (phase === 'review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1283,7 +1283,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1407,7 +1407,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1419,7 +1419,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1543,7 +1543,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1555,7 +1555,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1691,7 +1691,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   if (phase === 'twist_review') {
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1703,7 +1703,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1784,7 +1784,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1796,7 +1796,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -1921,7 +1921,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
@@ -1933,7 +1933,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
             flex: '1 1 0%',
             overflowY: 'auto',
             paddingTop: '44px',
-            paddingBottom: '80px',
+            paddingBottom: '16px',
             paddingLeft: '16px',
             paddingRight: '16px',
           }}>
@@ -1987,7 +1987,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
 
     return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1999,7 +1999,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
         }}>
@@ -2167,7 +2167,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -2179,7 +2179,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
           flex: '1 1 0%',
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
           display: 'flex',

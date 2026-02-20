@@ -2297,7 +2297,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           flex: 1,
           overflowY: 'auto',
           paddingTop: '44px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
           <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
             <h2 style={{
@@ -2742,7 +2742,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
   // Main render
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: '#0a0f1a',
       color: premiumDesign.colors.text.primary,
       fontFamily: premiumDesign.typography.fontFamily,
@@ -2805,7 +2805,6 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
             playSound={playSound}
           />
         )}
-        {phase === 'transfer' && renderTransferPhase()}
         {phase === 'test' && renderTestPhase()}
         {phase === 'mastery' && renderMasteryPhase()}
       </div>

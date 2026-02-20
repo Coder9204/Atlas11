@@ -3184,21 +3184,17 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Wireless Charging"
-            applications={realWorldApps}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
-            colors={colors}
-            typo={typo}
-            playSound={playSound}
+          conceptName="Wireless Charging"
+          applications={realWorldApps}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
+          colors={colors}
+          typo={typo}
+          playSound={playSound}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -3216,7 +3212,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
   const renderBottomBar = () => (
     <nav style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -3303,7 +3299,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
   return (
     <div style={{
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
       background: colors.bgDeep,
       display: 'flex',
@@ -3330,7 +3326,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
       </div>
 
       {/* Main content - scrollable */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
         {renderContent()}
       </div>
 

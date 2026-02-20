@@ -449,7 +449,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     const idx = phaseOrder.indexOf(phase);
 
     return (
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100vh' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', backgroundColor: colors.bgDark, color: colors.textPrimary, minHeight: '100dvh' }}>
         {/* Animated background orbs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '10%', left: '20%', width: '300px', height: '300px', background: `radial-gradient(circle, ${colors.primary}10 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(40px)' }} />

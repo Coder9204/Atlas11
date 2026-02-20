@@ -1810,18 +1810,14 @@ export default function CableSizingRenderer({
       case 'twist_predict': return renderTwistPredict();
       case 'twist_play': return renderTwistPlay();
       case 'twist_review': return renderTwistReview();
-      if (phase === 'transfer') {
-        return (
+      case 'transfer': return (
           <TransferPhaseView
-            conceptName="Cable Sizing"
-            applications={applications}
-            onComplete={() => goToPhase('test')}
-            isMobile={isMobile}
+          conceptName="Cable Sizing"
+          applications={applications}
+          onComplete={() => goToPhase('test')}
+          isMobile={isMobile}
           />
         );
-      }
-
-      case 'transfer': return renderTransfer();
       case 'test': return renderTest();
       case 'mastery': return renderMastery();
       default: return renderHook();
@@ -1829,9 +1825,9 @@ export default function CableSizingRenderer({
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', fontWeight: 400, fontSize: '16px', lineHeight: 1.6 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', fontWeight: 400, fontSize: '16px', lineHeight: 1.6 }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
     </div>

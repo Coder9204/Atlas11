@@ -938,7 +938,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1084,7 +1084,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -1151,7 +1151,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1309,7 +1309,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1321,7 +1321,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '84px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1528,7 +1528,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1623,7 +1623,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -1743,7 +1743,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1755,7 +1755,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '84px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1922,7 +1922,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '84px',
@@ -2020,7 +2020,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -2032,7 +2032,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
           overflowY: 'auto',
           padding: '24px',
           paddingTop: '84px',
-          paddingBottom: '80px',
+          paddingBottom: '16px',
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
@@ -2234,7 +2234,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
         }}>
@@ -2290,7 +2290,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -2456,7 +2456,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

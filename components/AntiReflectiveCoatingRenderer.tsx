@@ -1075,7 +1075,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>
               Anti-Reflective Coatings
@@ -1111,7 +1111,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Step 1 of 2</p>
           </div>
@@ -1156,7 +1156,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore AR Coatings</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1261,7 +1261,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1352,7 +1352,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Step 2 of 2</p>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -1413,7 +1413,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Tune for Different Colors</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -1503,7 +1503,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -1602,7 +1602,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1738,7 +1738,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1777,7 +1777,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1849,7 +1849,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '80px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '100px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>

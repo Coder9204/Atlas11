@@ -708,7 +708,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   // Bottom navigation bar
   const renderBottomBar = (canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -777,7 +777,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
@@ -788,7 +788,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
           textAlign: 'center',
@@ -855,7 +855,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -867,7 +867,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -950,7 +950,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     const metrics = calculateMetrics();
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -961,7 +961,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1163,7 +1163,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1174,7 +1174,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1260,7 +1260,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1367,7 +1367,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
@@ -1378,7 +1378,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           flex: 1,
           overflowY: 'auto',
           paddingTop: '80px',
-          paddingBottom: '100px',
+          paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
         }}>
@@ -1544,7 +1544,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1654,7 +1654,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -1827,7 +1827,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           background: colors.bgPrimary,
           padding: '24px',
           paddingTop: '80px',
@@ -1885,7 +1885,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
         paddingTop: '80px',
@@ -2053,7 +2053,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',

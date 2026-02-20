@@ -1054,7 +1054,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -1204,9 +1204,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '999px', marginBottom: '32px' }}>
               <span style={{ width: '8px', height: '8px', background: '#22d3ee', borderRadius: '50%' }} />
@@ -1367,9 +1367,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1793,9 +1793,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Simulator</h2>
 
@@ -2024,9 +2024,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // REVIEW PHASE
   if (phase === 'review') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Your Finger Is a Capacitor Plate!</h2>
 
@@ -2541,9 +2541,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">Twist: The Glove Problem</h2>
             <p className="text-slate-400 mb-4 text-center">Now observe what changes when we introduce a new variable</p>
@@ -2601,9 +2601,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Multi-Touch & Gesture Recognition</h2>
 
@@ -2822,9 +2822,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-amber-400 mb-6">Making Gloves Work</h2>
             <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl space-y-4">
@@ -2885,9 +2885,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   if (phase === 'transfer') {
     const currentApp = realWorldApps[activeAppTab];
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
             <p className="text-slate-400 text-center max-w-2xl mb-6">
@@ -3004,9 +3004,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   if (phase === 'test') {
     if (showTestResults) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '672px', margin: '0 auto', padding: '24px' }}>
               <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '24px', textAlign: 'center', marginBottom: '24px' }}>
                 <div style={{ fontSize: '60px', marginBottom: '16px' }}>{testScore >= 7 ? '🎉' : testScore >= 5 ? '👍' : '📚'}</div>
@@ -3063,9 +3063,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     const hasAnswered = testAnswers[currentQuestionIndex] !== null;
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Knowledge Assessment</h2>
             <p style={{ color: '#cbd5e1', marginBottom: '16px' }}>Question {currentQuestionIndex + 1} of {testQuestions.length}</p>
@@ -3161,9 +3161,9 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '80px', paddingBottom: '16px' }}>
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
             <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
               <div className="text-8xl mb-6">📱</div>

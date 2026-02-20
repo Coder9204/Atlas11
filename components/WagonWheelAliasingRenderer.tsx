@@ -993,7 +993,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     const effectiveDisabled = isTestPhase ? true : (disabled && !canProceed);
     return (
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -1034,7 +1034,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
   // Common page wrapper
   const pageStyle: React.CSSProperties = {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -1046,7 +1046,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   const scrollStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    paddingBottom: '100px',
+    paddingBottom: '16px',
     paddingTop: '56px',
   };
 

@@ -665,7 +665,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         backgroundColor: colors.bgCard,
         gap: '12px',
         flexShrink: 0,
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -714,7 +714,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
   };
 
   const renderPremiumWrapper = (children: React.ReactNode, footer?: React.ReactNode) => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: colors.bgDark, color: '#ffffff', overflow: 'hidden', fontWeight: 400, transition: 'all 0.3s ease' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', backgroundColor: colors.bgDark, color: '#ffffff', overflow: 'hidden', fontWeight: 400, transition: 'all 0.3s ease' }}>
       {/* Header */}
       <nav style={{
         flexShrink: 0,

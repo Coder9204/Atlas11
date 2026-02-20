@@ -1902,7 +1902,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   const renderBottomBar = (canProceed: boolean, buttonText: string) => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       bottom: 0,
       left: 0,
       right: 0,
@@ -2020,9 +2020,9 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a', lineHeight: 1.6 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a', lineHeight: 1.6 }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
         {renderPhaseContent()}
         {renderNavDots()}
       </div>

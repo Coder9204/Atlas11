@@ -329,7 +329,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary, overflow: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary, overflow: 'hidden' }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
       <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '60px', paddingBottom: bottomBarContent ? '100px' : '24px' }}>
         {content}
@@ -772,7 +772,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Hardware Architecture</span>
@@ -804,7 +804,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -853,7 +853,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Compare TPU and GPU Performance</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -944,7 +944,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     const wasCorrect = prediction === 'matrix';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -990,7 +990,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '16px' }}>
@@ -1043,7 +1043,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Workload Matching</h2>
 
@@ -1129,7 +1129,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     const wasCorrect = twistPrediction === 'depends';
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1189,7 +1189,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     const allCompleted = transferCompleted.size >= transferApplications.length;
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: '24px' }}>
@@ -1339,7 +1339,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return wrapPhaseContent(
-        <div style={{ padding: '24px', paddingBottom: '100px' }}>
+        <div style={{ padding: '24px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1408,7 +1408,7 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
     const allAnswered = testAnswers.every(a => a !== null);
 
     return wrapPhaseContent(
-      <div style={{ padding: '24px', paddingBottom: '100px' }}>
+      <div style={{ padding: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
