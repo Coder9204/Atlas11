@@ -1685,8 +1685,18 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Shielding Effectiveness Chart - primary SVG */}
-            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', width: '100%' }}>
               <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="280">
                 <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
 
@@ -1763,12 +1773,14 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             </div>
 
             {/* Cage Visualization */}
-            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', maxWidth: '640px', width: '100%' }}>
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', width: '100%' }}>
               {renderInteractiveFaradayCage()}
             </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Control Panel */}
-            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '24px', maxWidth: '640px', width: '100%' }}>
+            <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '24px', width: '100%' }}>
               <h3 style={{ color: '#f59e0b', fontWeight: 700, fontSize: '18px', marginBottom: '16px' }}>Control Panel</h3>
 
               {/* Cage Toggle */}
@@ -1871,6 +1883,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   )}
                 </p>
               </div>
+            </div>
+            </div>
             </div>
           </div>
     );
@@ -2018,13 +2032,25 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           <div className="flex flex-col items-center p-4">
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Mesh Size vs Wavelength</h2>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Visualization */}
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+            <div className="bg-slate-800/50 rounded-2xl p-4 w-full">
               {renderTwistVisualization()}
             </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Control Panel */}
-            <div className="bg-slate-800/50 rounded-2xl p-6 w-full max-w-2xl">
+            <div className="bg-slate-800/50 rounded-2xl p-6 w-full">
 
               {/* Cage Shape Selector */}
               <div className="mb-6">
@@ -2159,6 +2185,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   <span className="font-bold">Golden Rule:</span> Mesh opening must be much smaller than the wavelength for effective shielding!
                 </p>
               </div>
+            </div>
+            </div>
             </div>
           </div>
     );

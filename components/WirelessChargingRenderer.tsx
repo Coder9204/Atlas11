@@ -1430,11 +1430,18 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         WebkitOverflowScrolling: 'touch',
         touchAction: 'pan-y'
       }}>
-        {/* GRAPHIC SECTION - Clear boundary, no text overlay */}
+        {/* Side-by-side layout */}
         <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           padding: isMobile ? '20px' : '28px',
-          background: colors.bgDeep
+          background: colors.bgDeep,
         }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+        {/* GRAPHIC SECTION - Clear boundary, no text overlay */}
           {/* Charging status - above graphic, not overlaid */}
           <div style={{
             maxWidth: '550px',
@@ -1524,12 +1531,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         </div>
 
         {/* CONTROLS SECTION - Clear header, grouped together */}
-        <div style={{
-          padding: isMobile ? '20px' : '28px',
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgElevated}`,
-          borderBottom: `1px solid ${colors.bgElevated}`
-        }}>
+        <div style={{ width: isMobile ? '100%' : '320px', flexShrink: 0 }}>
           <div style={{ maxWidth: '550px', margin: '0 auto' }}>
             {/* Section header */}
             <div style={{
@@ -1689,6 +1691,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* WHY SECTION - Prominent, separate from controls */}
@@ -1998,11 +2001,18 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         WebkitOverflowScrolling: 'touch',
         touchAction: 'pan-y'
       }}>
-        {/* GRAPHIC SECTION */}
+        {/* Side-by-side layout */}
         <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           padding: isMobile ? '20px' : '28px',
-          background: colors.bgDeep
+          background: colors.bgDeep,
         }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+        {/* GRAPHIC SECTION */}
           {/* Status meter - above graphic */}
           <div style={{
             maxWidth: '550px',
@@ -2081,13 +2091,14 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         </div>
 
         {/* CONTROLS SECTION */}
-        <div style={{
-          padding: isMobile ? '20px' : '28px',
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgElevated}`,
-          borderBottom: `1px solid ${colors.bgElevated}`
-        }}>
-          <div style={{ maxWidth: '550px', margin: '0 auto' }}>
+        <div style={{ width: isMobile ? '100%' : '320px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgSurface,
+            borderRadius: '12px',
+            padding: '20px',
+            border: `1px solid ${colors.bgElevated}`
+          }}>
+          <div>
             {/* Section header */}
             <div style={{
               display: 'flex',
@@ -2173,6 +2184,8 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
               </div>
             </div>
           </div>
+          </div>
+        </div>
         </div>
 
         {/* WHY SECTION */}

@@ -1017,157 +1017,169 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             Observe: Watch the eddy currents form and how temperature changes with different materials and frequencies.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderInductionCooktop(panMaterial, temperature, isHeating, fieldPhase, frequency)}
-            </div>
-
-            {/* Material selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Pan Material</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
-                  <button
-                    key={mat}
-                    onClick={() => {
-                      playSound('click');
-                      setPanMaterial(mat);
-                      setTemperature(25);
-                      setMaterialJustChanged(true);
-                      setTimeout(() => setMaterialJustChanged(false), 100);
-                    }}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: `2px solid ${panMaterial === mat ? colors.accent : colors.border}`,
-                      background: panMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
-                      color: colors.textPrimary,
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      textTransform: 'capitalize',
-                      filter: panMaterial === mat ? `drop-shadow(0 0 6px ${colors.accentGlow})` : 'none',
-                      transform: (panMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
-                      transition: 'all 0.1s ease',
-                    }}
-                  >
-                    {mat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Frequency slider */}
-            <div style={{ marginBottom: '20px', position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency — controls eddy current intensity and skin depth</span>
-                <span style={{
-                  ...typo.small,
-                  color: colors.accent,
-                  fontWeight: 600,
-                  transform: sliderJustChanged ? 'scale(1.2)' : 'scale(1)',
-                  transition: 'transform 0.1s ease',
-                  filter: sliderJustChanged ? `drop-shadow(0 0 8px ${colors.accent})` : 'none',
-                }}>
-                  {frequency} kHz
-                </span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="50"
-                value={frequency}
-                onChange={(e) => {
-                  setFrequency(parseInt(e.target.value));
-                  setSliderJustChanged(true);
-                  setTimeout(() => setSliderJustChanged(false), 100);
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 kHz (Low frequency, deeper heating)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>50 kHz (High frequency, surface heating)</span>
-              </div>
-            </div>
-
-            {/* Power button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setIsHeating(!isHeating);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isHeating ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                {isHeating ? 'Turn Off' : 'Turn On'}
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderInductionCooktop(panMaterial, temperature, isHeating, fieldPhase, frequency)}
+                </div>
+
+                {/* Stats display */}
                 <div style={{
-                  ...typo.h3,
-                  color: temperature > 200 ? '#ef4444' : temperature > 100 ? colors.accent : temperature > 50 ? colors.warning : temperature > 35 ? colors.textMuted : '#3b82f6'
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '16px',
                 }}>
-                  {temperature.toFixed(0)}°C
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: temperature > 200 ? '#ef4444' : temperature > 100 ? colors.accent : temperature > 50 ? colors.warning : temperature > 35 ? colors.textMuted : '#3b82f6'
+                    }}>
+                      {temperature.toFixed(0)}°C
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Temperature</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).magnetic ? colors.success : colors.error }}>
+                      {getMaterialProperties(panMaterial).magnetic ? 'Yes' : 'No'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Magnetic</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).heatingRate > 0.5 ? colors.success : getMaterialProperties(panMaterial).heatingRate > 0 ? colors.warning : colors.error }}>
+                      {getMaterialProperties(panMaterial).heatingRate > 0.5 ? 'Fast' : getMaterialProperties(panMaterial).heatingRate > 0 ? 'Slow' : 'None'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Heating Rate</div>
+                  </div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Temperature</div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).magnetic ? colors.success : colors.error }}>
-                  {getMaterialProperties(panMaterial).magnetic ? 'Yes' : 'No'}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Material selector */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pan Material</span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Magnetic</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
+                    <button
+                      key={mat}
+                      onClick={() => {
+                        playSound('click');
+                        setPanMaterial(mat);
+                        setTemperature(25);
+                        setMaterialJustChanged(true);
+                        setTimeout(() => setMaterialJustChanged(false), 100);
+                      }}
+                      style={{
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: `2px solid ${panMaterial === mat ? colors.accent : colors.border}`,
+                        background: panMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
+                        color: colors.textPrimary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                        filter: panMaterial === mat ? `drop-shadow(0 0 6px ${colors.accentGlow})` : 'none',
+                        transform: (panMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
+                        transition: 'all 0.1s ease',
+                      }}
+                    >
+                      {mat}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).heatingRate > 0.5 ? colors.success : getMaterialProperties(panMaterial).heatingRate > 0 ? colors.warning : colors.error }}>
-                  {getMaterialProperties(panMaterial).heatingRate > 0.5 ? 'Fast' : getMaterialProperties(panMaterial).heatingRate > 0 ? 'Slow' : 'None'}
+
+              {/* Frequency slider */}
+              <div style={{ marginBottom: '20px', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
+                  <span style={{
+                    ...typo.small,
+                    color: colors.accent,
+                    fontWeight: 600,
+                    transform: sliderJustChanged ? 'scale(1.2)' : 'scale(1)',
+                    transition: 'transform 0.1s ease',
+                    filter: sliderJustChanged ? `drop-shadow(0 0 8px ${colors.accent})` : 'none',
+                  }}>
+                    {frequency} kHz
+                  </span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Heating Rate</div>
+                <input
+                  type="range"
+                  min="10"
+                  max="50"
+                  value={frequency}
+                  onChange={(e) => {
+                    setFrequency(parseInt(e.target.value));
+                    setSliderJustChanged(true);
+                    setTimeout(() => setSliderJustChanged(false), 100);
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10 kHz</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>50 kHz</span>
+                </div>
+              </div>
+
+              {/* Power button */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => {
+                    setIsHeating(!isHeating);
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '14px 32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isHeating ? colors.error : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                  }}
+                >
+                  {isHeating ? 'Turn Off' : 'Turn On'}
+                </button>
               </div>
             </div>
           </div>
@@ -1489,82 +1501,94 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
             Compare how different materials respond to induction heating
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {/* Material selector */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              {(['steel', 'aluminum', 'glass'] as const).map(mat => (
-                <button
-                  key={mat}
-                  onClick={() => {
-                    playSound('click');
-                    setTwistMaterial(mat);
-                    setMaterialJustChanged(true);
-                    setTimeout(() => setMaterialJustChanged(false), 100);
-                  }}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: `2px solid ${twistMaterial === mat ? materialProps[mat].color : colors.border}`,
-                    background: twistMaterial === mat ? `${materialProps[mat].color}22` : colors.bgSecondary,
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                    filter: twistMaterial === mat ? `drop-shadow(0 0 6px ${materialProps[mat].color}44)` : 'none',
-                    transform: (twistMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
-                    transition: 'all 0.1s ease',
-                  }}
-                >
-                  {mat}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderInductionCooktop(twistMaterial, 25, true, fieldPhase)}
-            </div>
-
-            {/* Result display */}
-            <div style={{
-              background: props.heats ? `${props.color}22` : '#1e3a5f',
-              border: `2px solid ${props.color}`,
-              borderRadius: '12px',
-              padding: '20px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h2, color: props.color, marginBottom: '8px' }}>
-                Heating: {props.rate}
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ textTransform: 'capitalize' }}>{twistMaterial}:</strong> {props.reason}
-              </p>
-            </div>
-          </div>
-
-          {/* Material comparison */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {Object.entries(materialProps).map(([mat, p]) => (
-              <div key={mat} style={{
-                background: mat === twistMaterial ? colors.bgCard : colors.bgSecondary,
-                border: `1px solid ${mat === twistMaterial ? p.color : colors.border}`,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600, textTransform: 'capitalize' }}>{mat}</div>
-                <div style={{ ...typo.small, color: p.color, marginTop: '4px' }}>{p.rate}</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderInductionCooktop(twistMaterial, 25, true, fieldPhase)}
+                </div>
+
+                {/* Result display */}
+                <div style={{
+                  background: props.heats ? `${props.color}22` : '#1e3a5f',
+                  border: `2px solid ${props.color}`,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h2, color: props.color, marginBottom: '8px' }}>
+                    Heating: {props.rate}
+                  </div>
+                  <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ textTransform: 'capitalize' }}>{twistMaterial}:</strong> {props.reason}
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Material selector */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                {(['steel', 'aluminum', 'glass'] as const).map(mat => (
+                  <button
+                    key={mat}
+                    onClick={() => {
+                      playSound('click');
+                      setTwistMaterial(mat);
+                      setMaterialJustChanged(true);
+                      setTimeout(() => setMaterialJustChanged(false), 100);
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `2px solid ${twistMaterial === mat ? materialProps[mat].color : colors.border}`,
+                      background: twistMaterial === mat ? `${materialProps[mat].color}22` : colors.bgSecondary,
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      textTransform: 'capitalize',
+                      filter: twistMaterial === mat ? `drop-shadow(0 0 6px ${materialProps[mat].color}44)` : 'none',
+                      transform: (twistMaterial === mat && materialJustChanged) ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.1s ease',
+                    }}
+                  >
+                    {mat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Material comparison */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginBottom: '24px',
+              }}>
+                {Object.entries(materialProps).map(([mat, p]) => (
+                  <div key={mat} style={{
+                    background: mat === twistMaterial ? colors.bgCard : colors.bgSecondary,
+                    border: `1px solid ${mat === twistMaterial ? p.color : colors.border}`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600, textTransform: 'capitalize' }}>{mat}</div>
+                    <div style={{ ...typo.small, color: p.color, marginTop: '4px' }}>{p.rate}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <button

@@ -1035,75 +1035,99 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           The visualization displays how electronics are damaged in dry climates. Drag the sliders to experiment.
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           marginBottom: '20px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <div onClick={triggerSpark} style={{ cursor: humidity < 40 ? 'pointer' : 'default', width: '100%' }}>
-              <ESDVisualization />
+          {/* Left column - SVG visualization */}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div onClick={triggerSpark} style={{ cursor: humidity < 40 ? 'pointer' : 'default', width: '100%' }}>
+                  <ESDVisualization />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Humidity slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>
-                Relative Humidity (RH) — higher RH means more water vapor to dissipate charges
-              </span>
-              <span style={{ ...typo.small, color: esdRisk.color, fontWeight: 600 }}>{humidity}%</span>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="90"
-              value={humidity}
-              onChange={(e) => setHumidity(parseInt(e.target.value))}
-              style={{
-                ...sliderStyle,
-                background: `linear-gradient(to right, ${colors.error} 0%, ${colors.warning} 30%, ${colors.success} 50%, colors.accent 100%)`,
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.error }}>Dry → High ESD Risk</span>
-              <span style={{ ...typo.small, color: colors.success }}>Optimal 40-60%</span>
-              <span style={{ ...typo.small, color: colors.accent }}>Humid</span>
-            </div>
-          </div>
+          {/* Right column - Controls */}
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}>
+              {/* Humidity slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>
+                    Relative Humidity (RH)
+                  </span>
+                  <span style={{ ...typo.small, color: esdRisk.color, fontWeight: 600 }}>{humidity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="90"
+                  value={humidity}
+                  onChange={(e) => setHumidity(parseInt(e.target.value))}
+                  style={{
+                    ...sliderStyle,
+                    background: `linear-gradient(to right, ${colors.error} 0%, ${colors.warning} 30%, ${colors.success} 50%, colors.accent 100%)`,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.error }}>Dry</span>
+                  <span style={{ ...typo.small, color: colors.success }}>40-60%</span>
+                  <span style={{ ...typo.small, color: colors.accent }}>Humid</span>
+                </div>
+              </div>
 
-          {/* Temperature slider */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>
-                Room Temperature — affects dew point calculation: Td = T − (100−RH)/5
-              </span>
-              <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{temperature}°C</span>
-            </div>
-            <input
-              type="range"
-              min="15"
-              max="30"
-              value={temperature}
-              onChange={(e) => setTemperature(parseInt(e.target.value))}
-              style={sliderStyle}
-            />
-          </div>
+              {/* Temperature slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>
+                    Room Temperature
+                  </span>
+                  <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{temperature}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="15"
+                  max="30"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseInt(e.target.value))}
+                  style={sliderStyle}
+                />
+              </div>
 
-          {/* Status panels */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: esdRisk.color }}>{esdRisk.level}</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>ESD Risk</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: esdRisk.color }}>{(esdRisk.voltage / 1000).toFixed(0)}kV</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Max Discharge</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: '#60a5fa' }}>{dewPoint.toFixed(1)}°C</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Dew Point</div>
+              {/* Status panels */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: esdRisk.color }}>{esdRisk.level}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>ESD Risk</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: esdRisk.color }}>{(esdRisk.voltage / 1000).toFixed(0)}kV</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Discharge</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: '#60a5fa' }}>{dewPoint.toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Dew Point</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1392,62 +1416,87 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
           See how humidity and cold surfaces interact. Condensation occurs when surface temp drops below the dew point.
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           marginBottom: '20px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <CondensationVisualization />
-          </div>
-
-          {/* Humidity slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Humidity</span>
-              <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{twistHumidity}%</span>
-            </div>
-            <input
-              type="range"
-              min="30"
-              max="90"
-              value={twistHumidity}
-              onChange={(e) => setTwistHumidity(parseInt(e.target.value))}
-              style={sliderStyle}
-            />
-          </div>
-
-          {/* Cold surface temperature slider */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Cold Surface Temperature</span>
-              <span style={{ ...typo.small, color: hasCondensation ? colors.error : colors.success, fontWeight: 600 }}>{coldSurfaceTemp}°C</span>
-            </div>
-            <input
-              type="range"
-              min="-5"
-              max="30"
-              value={coldSurfaceTemp}
-              onChange={(e) => setColdSurfaceTemp(parseInt(e.target.value))}
-              style={sliderStyle}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>Cold (AC coil)</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>Warm (Room temp)</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: '#60a5fa' }}>{twistDewPoint.toFixed(1)}°C</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Dew Point</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: hasCondensation ? colors.error : colors.success }}>
-                {hasCondensation ? 'YES' : 'NO'}
+          {/* Left column - SVG visualization */}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <CondensationVisualization />
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Condensation</div>
+            </div>
+          </div>
+
+          {/* Right column - Controls */}
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}>
+              {/* Humidity slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Ambient Humidity</span>
+                  <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{twistHumidity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="90"
+                  value={twistHumidity}
+                  onChange={(e) => setTwistHumidity(parseInt(e.target.value))}
+                  style={sliderStyle}
+                />
+              </div>
+
+              {/* Cold surface temperature slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Surface Temp</span>
+                  <span style={{ ...typo.small, color: hasCondensation ? colors.error : colors.success, fontWeight: 600 }}>{coldSurfaceTemp}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="-5"
+                  max="30"
+                  value={coldSurfaceTemp}
+                  onChange={(e) => setColdSurfaceTemp(parseInt(e.target.value))}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Cold</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Warm</span>
+                </div>
+              </div>
+
+              {/* Status panels */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: '#60a5fa' }}>{twistDewPoint.toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Dew Point</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: hasCondensation ? colors.error : colors.success }}>
+                    {hasCondensation ? 'YES' : 'NO'}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Condensation</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

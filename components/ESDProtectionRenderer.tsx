@@ -1238,17 +1238,35 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
           </p>
         </div>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+          marginBottom: '24px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Main visualization */}
         <div style={{
           background: colors.bgCard,
           borderRadius: '16px',
           padding: '24px',
-          marginBottom: '24px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
             {renderESDVisualization({ showTiming: false })}
           </div>
+        </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+        }}>
           {/* Protection toggle */}
           <div style={{
             display: 'flex',
@@ -1340,6 +1358,8 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
           >
             {isDischarging ? 'Discharging...' : '\u26A1 Trigger ESD Discharge'}
           </button>
+        </div>
+        </div>
         </div>
 
         {/* Observation prompts */}
@@ -1642,16 +1662,34 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
           Find the balance between protection robustness and high-speed signal quality
         </p>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+          marginBottom: '24px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div style={{
           background: colors.bgCard,
           borderRadius: '16px',
           padding: '24px',
-          marginBottom: '24px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
             {renderESDVisualization({ showTiming: true })}
           </div>
+        </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+        }}>
           {/* Response time slider */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1731,7 +1769,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
           {/* Trade-off metrics */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '12px',
           }}>
             <div style={{
@@ -1768,6 +1806,8 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
               <div style={{ ...typo.small, color: colors.textMuted }}>Balance Score</div>
             </div>
           </div>
+        </div>
+        </div>
         </div>
 
         {/* Insight card */}

@@ -845,39 +845,54 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
               Real-world impact: This issue causes random crashes in networking equipment and memory controllers.
             </p>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderFlipFlopSVG()}
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Setup Time Margin (frequency-dependent timing)</span>
-                  <span style={{ ...typo.small, color: setupTimeMargin < 0.5 ? colors.error : setupTimeMargin < 1.0 ? colors.warning : colors.success, fontWeight: 600 }}>{setupTimeMargin.toFixed(2)} ns</span>
-                </div>
-                <input type="range" min="0" max="2" step="0.05" value={setupTimeMargin} onChange={(e) => setSetupTimeMargin(parseFloat(e.target.value))} style={sliderStyle} aria-label="Setup time margin" />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.error }}>0 ns (Violation)</span>
-                  <span style={{ ...typo.small, color: colors.success }}>2 ns (Safe)</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: flipFlopOutput === 'metastable' ? colors.error : colors.accent }}>
-                    {flipFlopOutput === 'metastable' ? '???' : flipFlopOutput === 'high' ? '1' : '0'}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {renderFlipFlopSVG()}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Output State</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: showMetastable ? colors.error : colors.success }}>{showMetastable ? 'UNSTABLE' : 'STABLE'}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: setupTimeMargin < 0.5 ? colors.error : colors.warning }}>
-                    {setupTimeMargin < 0.5 ? 'HIGH' : setupTimeMargin < 1.0 ? 'MED' : 'LOW'}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px' }}>
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Setup Time Margin</span>
+                      <span style={{ ...typo.small, color: setupTimeMargin < 0.5 ? colors.error : setupTimeMargin < 1.0 ? colors.warning : colors.success, fontWeight: 600 }}>{setupTimeMargin.toFixed(2)} ns</span>
+                    </div>
+                    <input type="range" min="0" max="2" step="0.05" value={setupTimeMargin} onChange={(e) => setSetupTimeMargin(parseFloat(e.target.value))} style={sliderStyle} aria-label="Setup time margin" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.error }}>0 ns</span>
+                      <span style={{ ...typo.small, color: colors.success }}>2 ns</span>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Risk Level</div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: flipFlopOutput === 'metastable' ? colors.error : colors.accent }}>
+                        {flipFlopOutput === 'metastable' ? '???' : flipFlopOutput === 'high' ? '1' : '0'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Output State</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: showMetastable ? colors.error : colors.success }}>{showMetastable ? 'UNSTABLE' : 'STABLE'}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: setupTimeMargin < 0.5 ? colors.error : colors.warning }}>
+                        {setupTimeMargin < 0.5 ? 'HIGH' : setupTimeMargin < 1.0 ? 'MED' : 'LOW'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Risk Level</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1046,57 +1061,60 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
               Adjust synchronizer stages and clock frequency to meet MTBF requirements
             </p>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderSynchronizerSVG()}
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Synchronizer Stages (resolution time factor)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{syncStages} stages</span>
-                </div>
-                <input type="range" min="1" max="4" step="1" value={syncStages} onChange={(e) => setSyncStages(parseInt(e.target.value))} style={sliderStyle} aria-label="Synchronizer stages" />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1 (Unsafe)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>4 (Very Safe)</span>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Clock Frequency</span>
-                  <span style={{ ...typo.small, color: colors.clock, fontWeight: 600 }}>{clockFrequency} MHz</span>
-                </div>
-                <input type="range" min="50" max="500" step="10" value={clockFrequency} onChange={(e) => setClockFrequency(parseInt(e.target.value))} style={sliderStyle} aria-label="Clock frequency" />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50 MHz</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>500 MHz</span>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>MTBF Requirement (years)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{mtbfRequirement} years</span>
-                </div>
-                <input type="range" min="1" max="1000" step="10" value={mtbfRequirement} onChange={(e) => setMtbfRequirement(parseInt(e.target.value))} style={sliderStyle} aria-label="MTBF requirement" />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1 year</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1000 years</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: mtbfMeetsRequirement ? colors.success : colors.error }}>
-                    {calculatedMTBF > 1e9 ? '> 1B yrs' : calculatedMTBF > 1e6 ? `${(calculatedMTBF / 1e6).toFixed(0)}M yrs` : calculatedMTBF > 1000 ? `${(calculatedMTBF / 1000).toFixed(0)}K yrs` : `${calculatedMTBF.toFixed(0)} yrs`}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {renderSynchronizerSVG()}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Calculated MTBF</div>
                 </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: mtbfMeetsRequirement ? colors.success : colors.error }}>{mtbfMeetsRequirement ? 'PASS ✓' : 'FAIL ✗'}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Requirement Status</div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px' }}>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Sync Stages</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{syncStages}</span>
+                    </div>
+                    <input type="range" min="1" max="4" step="1" value={syncStages} onChange={(e) => setSyncStages(parseInt(e.target.value))} style={sliderStyle} aria-label="Synchronizer stages" />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Clock Freq</span>
+                      <span style={{ ...typo.small, color: colors.clock, fontWeight: 600 }}>{clockFrequency} MHz</span>
+                    </div>
+                    <input type="range" min="50" max="500" step="10" value={clockFrequency} onChange={(e) => setClockFrequency(parseInt(e.target.value))} style={sliderStyle} aria-label="Clock frequency" />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>MTBF Req</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{mtbfRequirement} yrs</span>
+                    </div>
+                    <input type="range" min="1" max="1000" step="10" value={mtbfRequirement} onChange={(e) => setMtbfRequirement(parseInt(e.target.value))} style={sliderStyle} aria-label="MTBF requirement" />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: mtbfMeetsRequirement ? colors.success : colors.error }}>
+                        {calculatedMTBF > 1e9 ? '> 1B yrs' : calculatedMTBF > 1e6 ? `${(calculatedMTBF / 1e6).toFixed(0)}M yrs` : calculatedMTBF > 1000 ? `${(calculatedMTBF / 1000).toFixed(0)}K yrs` : `${calculatedMTBF.toFixed(0)} yrs`}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Calculated MTBF</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: mtbfMeetsRequirement ? colors.success : colors.error }}>{mtbfMeetsRequirement ? 'PASS' : 'FAIL'}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Requirement Status</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

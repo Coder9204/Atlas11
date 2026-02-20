@@ -1016,17 +1016,35 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               </p>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <MemoryVisualization />
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <MemoryVisualization />
+                  </div>
+                </div>
               </div>
-
-              {renderControls()}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {renderControls()}
+                </div>
+              </div>
             </div>
 
             {/* Discovery prompts */}
@@ -1345,17 +1363,35 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
               Explore why LLM inference is memory-bound
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <MemoryVisualization />
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <MemoryVisualization />
+                  </div>
+                </div>
               </div>
-
-              {renderControls()}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {renderControls()}
+                </div>
+              </div>
             </div>
 
             <div style={{

@@ -931,115 +931,126 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderCircuitVisualization()}
-            </div>
-
-            {/* Leakage current slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Fault Leakage</span>
-                <span style={{
-                  ...typo.small,
-                  color: leakageCurrent >= 5 ? colors.error : leakageCurrent > 0 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {leakageCurrent} mA {leakageCurrent >= 5 && '(TRIP!)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={leakageCurrent}
-                onChange={(e) => !gfciTripped && setLeakageCurrent(parseInt(e.target.value))}
-                disabled={gfciTripped}
-                style={{
-                  ...sliderStyle,
-                  cursor: gfciTripped ? 'not-allowed' : 'pointer',
-                  opacity: gfciTripped ? 0.5 : 1,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>0 mA (Safe)</span>
-                <span style={{ ...typo.small, color: colors.error }}>5 mA (Trip Threshold)</span>
-                <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>10 mA</span>
-              </div>
-            </div>
-
-            {/* Load current slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Current</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="15"
-                value={hotCurrent}
-                onChange={(e) => setHotCurrent(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Reset button */}
-            {gfciTripped && (
-              <button
-                onClick={() => {
-                  setGfciTripped(false);
-                  setLeakageCurrent(0);
-                  playSound('click');
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: `2px solid ${colors.error}`,
-                  background: 'transparent',
-                  color: colors.error,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginBottom: '16px',
-                  minHeight: '44px',
-                }}
-              >
-                Reset GFCI
-              </button>
-            )}
-
-            {/* Status display */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.hot }}>{gfciTripped ? '0' : hotCurrent.toFixed(3)} A</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Hot Current</div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderCircuitVisualization()}
+                </div>
+
+                {/* Status display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.hot }}>{gfciTripped ? '0' : hotCurrent.toFixed(3)} A</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Hot Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.neutral }}>{gfciTripped ? '0' : neutralCurrent.toFixed(3)} A</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Neutral Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: gfciStatus.color }}>{gfciStatus.status}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>GFCI Status</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.neutral }}>{gfciTripped ? '0' : neutralCurrent.toFixed(3)} A</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Neutral Current</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: gfciStatus.color }}>{gfciStatus.status}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>GFCI Status</div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Leakage current slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Fault Leakage</span>
+                    <span style={{
+                      ...typo.small,
+                      color: leakageCurrent >= 5 ? colors.error : leakageCurrent > 0 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {leakageCurrent} mA {leakageCurrent >= 5 && '(TRIP!)'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={leakageCurrent}
+                    onChange={(e) => !gfciTripped && setLeakageCurrent(parseInt(e.target.value))}
+                    disabled={gfciTripped}
+                    style={{
+                      ...sliderStyle,
+                      cursor: gfciTripped ? 'not-allowed' : 'pointer',
+                      opacity: gfciTripped ? 0.5 : 1,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>0 mA (Safe)</span>
+                    <span style={{ ...typo.small, color: colors.error }}>5 mA (Trip)</span>
+                  </div>
+                </div>
+
+                {/* Load current slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Load Current</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="15"
+                    value={hotCurrent}
+                    onChange={(e) => setHotCurrent(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Reset button */}
+                {gfciTripped && (
+                  <button
+                    onClick={() => {
+                      setGfciTripped(false);
+                      setLeakageCurrent(0);
+                      playSound('click');
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '10px',
+                      border: `2px solid ${colors.error}`,
+                      background: 'transparent',
+                      color: colors.error,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Reset GFCI
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1323,6 +1334,16 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             See when different protection devices can detect the fault
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Fault current vs impedance SVG */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
             <svg width="480" height="260" viewBox="0 0 480 260" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
@@ -1374,7 +1395,9 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               })()}
             </svg>
           </div>
+          </div>
 
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1476,6 +1499,8 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
                 </p>
               </div>
             )}
+          </div>
+          </div>
           </div>
 
           <button

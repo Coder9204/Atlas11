@@ -963,144 +963,161 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               When you increase flow rate, velocity increases. When area decreases, pressure drops because kinetic energy goes up. This is useful in engineering applications like carburetors and flow meters.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <VenturiVisualization />
-              </div>
-
-              {/* Flow rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  value={flowRate}
-                  onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 20) / 80) * 100}%, ${colors.border} ${((flowRate - 20) / 80) * 100}%)`,
-                    cursor: 'pointer',
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              {/* Constriction slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Constriction (% of original area)</span>
-                  <span style={{ ...typo.small, color: colors.flow, fontWeight: 600 }}>{constrictionSize}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="80"
-                  value={constrictionSize}
-                  onChange={(e) => setConstrictionSize(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.flow} ${((constrictionSize - 20) / 60) * 100}%, ${colors.border} ${((constrictionSize - 20) / 60) * 100}%)`,
-                    cursor: 'pointer',
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              {/* Toggle controls */}
-              <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={showPressure}
-                    onChange={(e) => setShowPressure(e.target.checked)}
-                    style={{ accentColor: colors.accent }}
-                  />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={showVelocity}
-                    onChange={(e) => setShowVelocity(e.target.checked)}
-                    style={{ accentColor: colors.accent }}
-                  />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Velocity</span>
-                </label>
-                <button
-                  onClick={() => setIsFlowing(!isFlowing)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: isFlowing ? colors.error : colors.success,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {isFlowing ? 'Stop Flow' : 'Start Flow'}
-                </button>
-              </div>
-
-              {/* Stats display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: '#22c55e' }}>{wideVelocity.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <VenturiVisualization />
+                  </div>
+
+                  {/* Stats display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: '#22c55e' }}>{wideVelocity.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.flow }}>{narrowVelocity.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: '#ef4444' }}>{widePressure.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>P1 (kPa)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.pressure }}>{narrowPressure.toFixed(0)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>P2 (kPa)</div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.flow }}>{narrowVelocity.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: '#ef4444' }}>{widePressure.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>P1 (kPa)</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.pressure }}>{narrowPressure.toFixed(0)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>P2 (kPa)</div>
+                  {/* Flow rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      value={flowRate}
+                      onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 20) / 80) * 100}%, ${colors.border} ${((flowRate - 20) / 80) * 100}%)`,
+                        cursor: 'pointer',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+
+                  {/* Constriction slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Constriction (% of original area)</span>
+                      <span style={{ ...typo.small, color: colors.flow, fontWeight: 600 }}>{constrictionSize}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="80"
+                      value={constrictionSize}
+                      onChange={(e) => setConstrictionSize(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        background: `linear-gradient(to right, ${colors.flow} ${((constrictionSize - 20) / 60) * 100}%, ${colors.border} ${((constrictionSize - 20) / 60) * 100}%)`,
+                        cursor: 'pointer',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+
+                  {/* Toggle controls */}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={showPressure}
+                        onChange={(e) => setShowPressure(e.target.checked)}
+                        style={{ accentColor: colors.accent }}
+                      />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={showVelocity}
+                        onChange={(e) => setShowVelocity(e.target.checked)}
+                        style={{ accentColor: colors.accent }}
+                      />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Show Velocity</span>
+                    </label>
+                    <button
+                      onClick={() => setIsFlowing(!isFlowing)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: isFlowing ? colors.error : colors.success,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {isFlowing ? 'Stop Flow' : 'Start Flow'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1362,85 +1379,103 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               Adjust the flow rate and see how pressure difference reveals flow velocity
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <VenturiMeterVisualization />
-              </div>
-
-              {/* Flow rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Actual Flow Rate</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{meterFlowRate}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  value={meterFlowRate}
-                  onChange={(e) => setMeterFlowRate(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              {/* Toggle readings */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={showMeterReadings}
-                    onChange={(e) => setShowMeterReadings(e.target.checked)}
-                    style={{ accentColor: colors.accent }}
-                  />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure Readings</span>
-                </label>
-              </div>
-
-              {/* Stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.flow }}>{meterWideVelocity.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <VenturiMeterVisualization />
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.flow }}>{meterWideVelocity.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>v1 (m/s)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: '#22d3ee' }}>{meterNarrowVelocity.toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Delta P (kPa)</div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: '#22d3ee' }}>{meterNarrowVelocity.toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>v2 (m/s)</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Delta P (kPa)</div>
+                  {/* Flow rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Actual Flow Rate</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{meterFlowRate}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      value={meterFlowRate}
+                      onChange={(e) => setMeterFlowRate(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+
+                  {/* Toggle readings */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={showMeterReadings}
+                        onChange={(e) => setShowMeterReadings(e.target.checked)}
+                        style={{ accentColor: colors.accent }}
+                      />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Show Pressure Readings</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

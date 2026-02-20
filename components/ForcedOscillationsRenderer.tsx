@@ -1112,6 +1112,16 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           </span>
         </div>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div style={{
           background: colors.bgSecondary,
           borderRadius: radius.lg,
@@ -1303,8 +1313,18 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             </span>
           </div>
 
+        </div>
+        </div>
+
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
-          <div style={{ marginTop: space.lg }}>
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: radius.lg,
+            padding: space.lg,
+            border: `1px solid ${colors.border}`,
+            marginBottom: space.lg
+          }}>
             <div style={{ marginBottom: space.md }}>
               <label style={{
                 display: 'flex',
@@ -1314,9 +1334,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 color: colors.textSecondary,
                 marginBottom: space.sm
               }}>
-                <span>Driving Frequency (w/w0):</span>
+                <span>Driving Freq (w/w0):</span>
                 <span style={{ color: getFrequencyColor(drivingFrequency), fontWeight: 700 }}>
-                  {drivingFrequency.toFixed(2)} - {getFrequencyLabel(drivingFrequency)}
+                  {drivingFrequency.toFixed(2)}
                 </span>
               </label>
               <input
@@ -1387,6 +1407,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Physics explanation */}
@@ -1674,9 +1695,19 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
         {renderSectionHeader('🔬', 'Vortex-Induced Vibration', 'How steady flow creates periodic forces')}
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gridTemplateColumns: '1fr',
           gap: space.lg,
           marginBottom: space.lg
         }}>
@@ -1784,19 +1815,21 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           </p>
         </div>
 
+        </div>
+
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Interactive Controls */}
         <div style={{
           background: colors.bgSecondary,
           borderRadius: radius.md,
           padding: space.lg,
           border: `1px solid ${colors.border}`,
-          marginTop: space.lg
         }}>
           <h3 style={{ fontSize: typo.body, color: colors.accent, marginBottom: space.md, fontWeight: 700 }}>
-            Explore Vortex Shedding: Adjust Parameters
+            Adjust Parameters
           </h3>
           <p style={{ fontSize: typo.small, color: colors.textSecondary, marginBottom: space.md }}>
-            Observe how wind velocity and bridge dimension affect vortex shedding frequency (f = St × V / D). When f matches the bridge natural frequency (~0.2 Hz), resonance occurs!
+            Adjust wind velocity and bridge dimension to explore vortex shedding frequency. When f matches ~0.2 Hz, resonance occurs!
           </p>
 
           {/* Wind Velocity slider */}
@@ -1891,6 +1924,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               }
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
       {renderBottomBar(() => goToPhase('twist_review'), 'Review Discovery')}

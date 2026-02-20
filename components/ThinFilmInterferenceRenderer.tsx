@@ -862,9 +862,21 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px', textAlign: 'center' }}>
         Adjust thickness and angle to see how colors change. When you increase thickness, the path difference changes, which affects which wavelengths interfere constructively.
       </p>
-      <ThinFilmVisualization interactive />
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        padding: '0 16px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <ThinFilmVisualization interactive />
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       {/* Inline controls for play phase - ensures proper React state updates */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
         {/* Film Thickness slider */}
         <div style={{ marginBottom: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -952,6 +964,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           >
             Reset
           </button>
+        </div>
+      </div>
         </div>
       </div>
       {/* Color-coded thickness feedback */}
@@ -1084,9 +1098,21 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px', textAlign: 'center' }}>
         Observe how polarization affects the brightness of reflections
       </p>
-      <ThinFilmVisualization interactive />
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        padding: '0 16px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <ThinFilmVisualization interactive />
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       {/* Inline controls for twist_play phase */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', margin: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
         <div style={{ marginBottom: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Film Thickness</span>
@@ -1126,6 +1152,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             <span style={{ color: colors.textSecondary, fontSize: '11px' }}>0°</span>
             <span style={{ color: colors.textSecondary, fontSize: '11px' }}>60°</span>
           </div>
+        </div>
+      </div>
         </div>
       </div>
       <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '16px', borderRadius: '12px', margin: '16px', borderLeft: `3px solid ${colors.warning}` }}>

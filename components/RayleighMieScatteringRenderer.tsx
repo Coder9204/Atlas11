@@ -1558,17 +1558,25 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               </p>
             </div>
 
-            {/* Visualization */}
-            <ScatteringTank />
-
-            {/* Controls */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: spacing.md,
-              marginTop: spacing.lg,
-              marginBottom: spacing.lg,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Visualization */}
+                <ScatteringTank />
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Controls */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: spacing.md,
+                }}>
               {/* Particle Size */}
               <div style={{
                 background: colors.bgCard,
@@ -1641,6 +1649,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: spacing.xs }}>
                   <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>10% (min)</span>
                   <span style={{ ...typography.caption, color: colors.textSecondary, fontWeight: 600 }}>100% (max)</span>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -2149,55 +2159,56 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               </p>
             </div>
 
-            {/* Visualization */}
-            <ScatteringTank />
-
-            {/* Path Length Slider - Prominent */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.xl,
-              border: `1px solid ${colors.warning}40`,
-              marginTop: spacing.lg,
-              marginBottom: spacing.lg,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: spacing.lg,
-              }}>
-                <span style={{ ...typography.body, color: colors.warning, fontWeight: 600 }}>
-                  🌅 Path Length (Atmosphere Thickness)
-                </span>
-                <span style={{ ...typography.h2, color: colors.warning }}>
-                  {pathLength}%
-                </span>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Visualization */}
+                <ScatteringTank />
               </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={pathLength}
-                onChange={(e) => setPathLength(Number(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
-              />
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: spacing.md,
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20 }}>🌞</div>
-                  <div style={{ ...typography.caption, color: colors.textTertiary }}>Noon</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20 }}>🌤️</div>
-                  <div style={{ ...typography.caption, color: colors.textTertiary }}>Afternoon</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20 }}>🌅</div>
-                  <div style={{ ...typography.caption, color: colors.warning }}>Sunset</div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Path Length Slider */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: radius.lg,
+                  padding: spacing.lg,
+                  border: `1px solid ${colors.warning}40`,
+                  marginBottom: spacing.lg,
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: spacing.md,
+                  }}>
+                    <span style={{ ...typography.bodySmall, color: colors.warning, fontWeight: 600 }}>
+                      Path Length
+                    </span>
+                    <span style={{ ...typography.h3, color: colors.warning }}>
+                      {pathLength}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={pathLength}
+                    onChange={(e) => setPathLength(Number(e.target.value))}
+                    style={{ width: '100%', cursor: 'pointer' }}
+                  />
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: spacing.sm,
+                  }}>
+                    <span style={{ ...typography.caption, color: colors.textTertiary }}>Noon</span>
+                    <span style={{ ...typography.caption, color: colors.warning }}>Sunset</span>
+                  </div>
                 </div>
               </div>
             </div>

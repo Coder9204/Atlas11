@@ -1048,112 +1048,124 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             When you increase arm extension, the moment of inertia increases, which causes the rotation to slow down. This principle is useful in practical applications from figure skating to spacecraft attitude control.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              {renderSpinningFigure()}
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  {renderSpinningFigure()}
+                </div>
 
-            {renderStatsDisplay()}
-            {renderAngularMomentumDisplay()}
-          </div>
-
-          {/* Controls */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            {/* Arm position slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.05"
-                value={armExtension}
-                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  touchAction: 'pan-y',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: colors.accent,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Tucked (Fast)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Extended (Slow)</span>
+                {renderStatsDisplay()}
+                {renderAngularMomentumDisplay()}
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                {/* Arm position slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                      {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
+                    value={armExtension}
+                    onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                    style={{
+                      width: '100%',
+                      touchAction: 'pan-y',
+                      height: '20px',
+                      borderRadius: '4px',
+                      accentColor: colors.accent,
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Tucked (Fast)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Extended (Slow)</span>
+                  </div>
+                </div>
 
-            {/* Weight toggle */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
-              marginBottom: '20px',
-            }}>
-              <button
-                onClick={() => setHasWeights(true)}
-                style={{
-                  background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
-                  border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  color: colors.textPrimary,
-                  fontWeight: 600,
-                }}
-              >
-                With Weights
-              </button>
-              <button
-                onClick={() => setHasWeights(false)}
-                style={{
-                  background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
-                  border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  color: colors.textPrimary,
-                  fontWeight: 600,
-                }}
-              >
-                Arms Only
-              </button>
+                {/* Weight toggle */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  marginBottom: '20px',
+                }}>
+                  <button
+                    onClick={() => setHasWeights(true)}
+                    style={{
+                      background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
+                      border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
+                      borderRadius: '10px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      color: colors.textPrimary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    With Weights
+                  </button>
+                  <button
+                    onClick={() => setHasWeights(false)}
+                    style={{
+                      background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
+                      border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
+                      borderRadius: '10px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      color: colors.textPrimary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Arms Only
+                  </button>
+                </div>
+
+                {/* Spin button */}
+                <button
+                  onClick={() => setIsSpinning(!isSpinning)}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: isSpinning ? colors.error : colors.success,
+                    color: 'white',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSpinning ? 'Stop Spinning' : 'Start Spinning'}
+                </button>
+              </div>
             </div>
-
-            {/* Spin button */}
-            <button
-              onClick={() => setIsSpinning(!isSpinning)}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: '12px',
-                border: 'none',
-                background: isSpinning ? colors.error : colors.success,
-                color: 'white',
-                fontSize: '18px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {isSpinning ? 'Stop Spinning' : 'Start Spinning'}
-            </button>
           </div>
 
           {/* Discovery prompt */}
@@ -1459,100 +1471,118 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             Toggle between heavy weights and arms only - watch the difference in speed gain
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {/* Weight toggle at top */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '12px',
-              marginBottom: '20px',
-            }}>
-              <button
-                onClick={() => setHasWeights(true)}
-                style={{
-                  background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
-                  border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  color: colors.textPrimary,
-                  fontWeight: 600,
-                }}
-              >
-                Heavy Weights (2 kg each)
-              </button>
-              <button
-                onClick={() => setHasWeights(false)}
-                style={{
-                  background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
-                  border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px',
-                  cursor: 'pointer',
-                  color: colors.textPrimary,
-                  fontWeight: 600,
-                }}
-              >
-                Arms Only (0.2 kg each)
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              {renderSpinningFigure()}
-            </div>
-
-            {/* Arm slider */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                  {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
-                </span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  {renderSpinningFigure()}
+                </div>
+                {renderStatsDisplay()}
+                {renderAngularMomentumDisplay()}
               </div>
-              <input
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.05"
-                value={armExtension}
-                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  touchAction: 'pan-y',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: colors.accent,
-                  cursor: 'pointer',
-                }}
-              />
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                {/* Weight toggle at top */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '12px',
+                  marginBottom: '20px',
+                }}>
+                  <button
+                    onClick={() => setHasWeights(true)}
+                    style={{
+                      background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
+                      border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
+                      borderRadius: '10px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      color: colors.textPrimary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Heavy Weights (2 kg each)
+                  </button>
+                  <button
+                    onClick={() => setHasWeights(false)}
+                    style={{
+                      background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
+                      border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
+                      borderRadius: '10px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      color: colors.textPrimary,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Arms Only (0.2 kg each)
+                  </button>
+                </div>
 
-            {renderStatsDisplay()}
-            {renderAngularMomentumDisplay()}
+                {/* Arm slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Distance (radius)</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                      {armExtension.toFixed(2)} — {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
+                    value={armExtension}
+                    onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                    style={{
+                      width: '100%',
+                      touchAction: 'pan-y',
+                      height: '20px',
+                      borderRadius: '4px',
+                      accentColor: colors.accent,
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
 
-            {/* Spin button */}
-            <button
-              onClick={() => setIsSpinning(!isSpinning)}
-              style={{
-                width: '100%',
-                padding: '14px',
-                marginTop: '16px',
-                borderRadius: '10px',
-                border: 'none',
-                background: isSpinning ? colors.error : colors.success,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {isSpinning ? 'Stop' : 'Spin'}
-            </button>
+                {/* Spin button */}
+                <button
+                  onClick={() => setIsSpinning(!isSpinning)}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    marginTop: '16px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: isSpinning ? colors.error : colors.success,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSpinning ? 'Stop' : 'Spin'}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Comparison insight */}

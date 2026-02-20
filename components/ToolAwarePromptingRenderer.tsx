@@ -988,131 +988,148 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               </p>
             </div>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <ToolAwareVisualization interactive />
-              </div>
-
-              {/* Documentation level slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Level</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={docLevel}
-                  onChange={(e) => setDocLevel(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: '#3b82f6',
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>None</span>
-                  <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>Full</span>
-                </div>
-              </div>
-
-              {/* Mode toggle */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
-                <button
-                  onClick={() => { setPromptMode('naive'); playSound('click'); }}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: `2px solid ${promptMode === 'naive' ? colors.error : colors.border}`,
-                    background: promptMode === 'naive' ? `${colors.error}22` : 'transparent',
-                    color: promptMode === 'naive' ? colors.error : '#D1D5DB',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  🚫 Naive Prompt
-                </button>
-                <button
-                  onClick={() => { setPromptMode('tool_aware'); playSound('click'); }}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: `2px solid ${promptMode === 'tool_aware' ? colors.success : colors.border}`,
-                    background: promptMode === 'tool_aware' ? `${colors.success}22` : 'transparent',
-                    color: promptMode === 'tool_aware' ? colors.success : '#D1D5DB',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ✅ Tool-Aware
-                </button>
-              </div>
-
-              {/* Feature toggles */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  color: '#D1D5DB',
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <input
-                    type="checkbox"
-                    checked={showHelp}
-                    onChange={(e) => setShowHelp(e.target.checked)}
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                  {showHelp ? '✅' : '⬜'} Instruct Claude to run --help before unknown commands
-                </label>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <ToolAwareVisualization interactive />
+                  </div>
 
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  color: '#D1D5DB',
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasClaudemd}
-                    onChange={(e) => setHasClaudemd(e.target.checked)}
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                  {hasClaudemd ? '✅' : '⬜'} Include CLAUDE.md with tool documentation
-                </label>
+                  {/* Live metrics display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginTop: '20px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.error }}>{metrics.hallucinationRisk}%</div>
+                      <div style={{ ...typo.small, color: '#D1D5DB' }}>🎲 Hallucination Risk</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{metrics.commandAccuracy}%</div>
+                      <div style={{ ...typo.small, color: '#D1D5DB' }}>✅ Command Accuracy</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{metrics.confidenceLevel}%</div>
+                      <div style={{ ...typo.small, color: '#D1D5DB' }}>🎯 Confidence Level</div>
+                    </div>
+                  </div>
+                </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Documentation level slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Level</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={docLevel}
+                      onChange={(e) => setDocLevel(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: '#3b82f6',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>None</span>
+                      <span style={{ ...typo.small, color: 'rgba(156, 163, 175, 0.8)' }}>Full</span>
+                    </div>
+                  </div>
 
-              {/* Live metrics display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginTop: '20px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.error }}>{metrics.hallucinationRisk}%</div>
-                  <div style={{ ...typo.small, color: '#D1D5DB' }}>🎲 Hallucination Risk</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{metrics.commandAccuracy}%</div>
-                  <div style={{ ...typo.small, color: '#D1D5DB' }}>✅ Command Accuracy</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{metrics.confidenceLevel}%</div>
-                  <div style={{ ...typo.small, color: '#D1D5DB' }}>🎯 Confidence Level</div>
+                  {/* Mode toggle */}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { setPromptMode('naive'); playSound('click'); }}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: `2px solid ${promptMode === 'naive' ? colors.error : colors.border}`,
+                        background: promptMode === 'naive' ? `${colors.error}22` : 'transparent',
+                        color: promptMode === 'naive' ? colors.error : '#D1D5DB',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      🚫 Naive Prompt
+                    </button>
+                    <button
+                      onClick={() => { setPromptMode('tool_aware'); playSound('click'); }}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: `2px solid ${promptMode === 'tool_aware' ? colors.success : colors.border}`,
+                        background: promptMode === 'tool_aware' ? `${colors.success}22` : 'transparent',
+                        color: promptMode === 'tool_aware' ? colors.success : '#D1D5DB',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ✅ Tool-Aware
+                    </button>
+                  </div>
+
+                  {/* Feature toggles */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      color: '#D1D5DB',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={showHelp}
+                        onChange={(e) => setShowHelp(e.target.checked)}
+                        style={{ width: '20px', height: '20px' }}
+                      />
+                      {showHelp ? '✅' : '⬜'} Instruct Claude to run --help before unknown commands
+                    </label>
+
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      color: '#D1D5DB',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={hasClaudemd}
+                        onChange={(e) => setHasClaudemd(e.target.checked)}
+                        style={{ width: '20px', height: '20px' }}
+                      />
+                      {hasClaudemd ? '✅' : '⬜'} Include CLAUDE.md with tool documentation
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1372,38 +1389,56 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               A special file that Claude reads automatically in your repository
             </p>
 
-            {/* Visualization with slider */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <ToolAwareVisualization interactive />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Coverage</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    <ToolAwareVisualization interactive />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={docLevel}
-                  onChange={(e) => setDocLevel(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: '#3b82f6',
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                  }}
-                />
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: '#D1D5DB' }}>📄 Documentation Coverage</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{docLevel}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={docLevel}
+                      onChange={(e) => setDocLevel(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: '#3b82f6',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

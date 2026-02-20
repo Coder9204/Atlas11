@@ -1234,19 +1234,31 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               </p>
             </div>
 
-            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border-2 border-slate-700/70 mb-4">
-              {renderVisualization()}
-              <div className="mt-4 p-3 bg-slate-900/70 rounded-lg border-2 border-cyan-500/40">
-                <p className="text-center text-cyan-400 font-mono text-lg mb-1">
-                  f<sub>received</sub> = f<sub>transmitted</sub> × (1 + v<sub>radial</sub>/c)
-                </p>
-                <p className="text-center text-slate-400 text-xs">
-                  Doppler shift formula: frequency shifts by the ratio of radial velocity to speed of light
-                </p>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border-2 border-slate-700/70 mb-4">
+                  {renderVisualization()}
+                  <div className="mt-4 p-3 bg-slate-900/70 rounded-lg border-2 border-cyan-500/40">
+                    <p className="text-center text-cyan-400 font-mono text-lg mb-1">
+                      f<sub>received</sub> = f<sub>transmitted</sub> × (1 + v<sub>radial</sub>/c)
+                    </p>
+                    <p className="text-center text-slate-400 text-xs">
+                      Doppler shift formula: frequency shifts by the ratio of radial velocity to speed of light
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {renderControls()}
               </div>
             </div>
-
-            {renderControls()}
 
             <div className="bg-cyan-500/10 border-2 border-cyan-500/40 rounded-xl p-4 max-w-lg mt-4">
               <p className="text-cyan-400 text-sm mb-3">
@@ -1398,38 +1410,50 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-4">LEO vs GEO Doppler Comparison</h2>
 
-            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
-              {renderVisualization()}
-            </div>
-
-            <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">
-              <p className="text-slate-300 text-sm mb-3">
-                <strong className="text-purple-400">Switch between LEO and GEO</strong> to see the dramatic difference in Doppler shift!
-              </p>
-              <div className="flex gap-4 justify-center">
-                {['LEO', 'MEO', 'GEO'].map(orbit => (
-                  <button
-                    key={orbit}
-                    onClick={() => setOrbitType(orbit as typeof orbitType)}
-                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                    className={`px-6 py-2 rounded-lg font-bold ${orbitType === orbit ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                  >
-                    {orbit}
-                  </button>
-                ))}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
+                  {renderVisualization()}
+                </div>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">
+                  <p className="text-slate-300 text-sm mb-3">
+                    <strong className="text-purple-400">Switch between LEO and GEO</strong> to see the dramatic difference in Doppler shift!
+                  </p>
+                  <div className="flex gap-4 justify-center">
+                    {['LEO', 'MEO', 'GEO'].map(orbit => (
+                      <button
+                        key={orbit}
+                        onClick={() => setOrbitType(orbit as typeof orbitType)}
+                        style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                        className={`px-6 py-2 rounded-lg font-bold ${orbitType === orbit ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                      >
+                        {orbit}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4 max-w-lg text-center">
-              <div className="bg-cyan-900/30 p-3 rounded-lg">
-                <p className="text-cyan-400 font-bold">LEO Challenge</p>
-                <p className="text-slate-400 text-xs">Must track rapidly changing frequency</p>
-                <p className="text-slate-400 text-xs">Receiver needs wide bandwidth</p>
-              </div>
-              <div className="bg-amber-900/30 p-3 rounded-lg">
-                <p className="text-amber-400 font-bold">GEO Advantage</p>
-                <p className="text-slate-400 text-xs">Fixed frequency - simple receivers</p>
-                <p className="text-slate-400 text-xs">But higher path loss!</p>
+                <div className="grid grid-cols-2 gap-4 max-w-lg text-center">
+                  <div className="bg-cyan-900/30 p-3 rounded-lg">
+                    <p className="text-cyan-400 font-bold">LEO Challenge</p>
+                    <p className="text-slate-400 text-xs">Must track rapidly changing frequency</p>
+                    <p className="text-slate-400 text-xs">Receiver needs wide bandwidth</p>
+                  </div>
+                  <div className="bg-amber-900/30 p-3 rounded-lg">
+                    <p className="text-amber-400 font-bold">GEO Advantage</p>
+                    <p className="text-slate-400 text-xs">Fixed frequency - simple receivers</p>
+                    <p className="text-slate-400 text-xs">But higher path loss!</p>
+                  </div>
+                </div>
               </div>
             </div>
 

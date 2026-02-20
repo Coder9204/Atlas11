@@ -907,8 +907,49 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           {/* Physics explanation panel */}
           <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
@@ -1035,8 +1076,49 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
         </div>
       </div>
     );

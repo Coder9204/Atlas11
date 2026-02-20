@@ -1053,12 +1053,22 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             </p>
           </div>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             {/* MTTF vs Current Density Chart */}
             {(() => {
@@ -1155,7 +1165,15 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               {renderElectromigrationVisualization()}
             </div>
+          </div>
+          </div>
 
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
             {/* Current density slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1245,7 +1263,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             {/* Stats grid */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1276,6 +1294,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                 <div style={{ ...typo.small, color: colors.textMuted }}>Hillock Growth</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Warning/discovery message */}
@@ -1608,16 +1628,34 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             See how temperature dramatically affects the Arrhenius exponential term
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               {renderElectromigrationVisualization(true)}
             </div>
+          </div>
+          </div>
 
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
             {/* Temperature slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1675,6 +1713,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
                 <div style={{ ...typo.small, color: colors.textMuted }}>vs. Room Temp (25C)</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Key insight box */}

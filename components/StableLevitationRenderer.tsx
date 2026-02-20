@@ -1108,8 +1108,22 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls(false)}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(false)}
+            </div>
+          </div>
 
           {/* Cause-effect explanation */}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.accent}` }}>
@@ -1317,8 +1331,22 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls(true)}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(true)}
+            </div>
+          </div>
 
           <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
             <h4 style={{ color: colors.warning, marginBottom: '12px' }}>Comparison: Mass vs. Stability</h4>

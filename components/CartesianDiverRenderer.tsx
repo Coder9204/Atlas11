@@ -824,7 +824,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         </div>
 
         {/* Data panel */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px' }}>
           <div style={{ background: 'rgba(15,23,42,0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: typo.label, color: '#f472b6' }}>Pressure</div>
             <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{pressure.toFixed(2)} atm</div>
@@ -974,14 +974,14 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         </div>
 
         {/* Diver labels */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px', textAlign: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px', textAlign: 'center' }}>
           <div style={{ fontSize: typo.label, color: '#22c55e', fontWeight: 600 }}>Large Bubble</div>
           <div style={{ fontSize: typo.label, color: '#3b82f6', fontWeight: 600 }}>Medium Bubble</div>
           <div style={{ fontSize: typo.label, color: '#ef4444', fontWeight: 600 }}>Small Bubble</div>
         </div>
 
         {/* Data panel */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px', textAlign: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px', textAlign: 'center' }}>
           <div style={{ background: 'rgba(34,197,94,0.1)', borderRadius: '8px', padding: '8px', border: '1px solid rgba(34,197,94,0.3)' }}>
             <div style={{ fontSize: typo.label, color: '#4ade80' }}>Bubble Size</div>
             <div style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{(bubble1Size * 100).toFixed(0)}%</div>
@@ -1115,10 +1115,20 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           Real-world relevance: Submarines control depth using ballast tanks, fish use swim bladders, and scuba divers adjust their BCD - all using the same buoyancy principles you are exploring here!
         </p>
 
-        {renderDiverSimulation()}
-
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {renderDiverSimulation()}
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls section */}
-        <div style={{ marginTop: '24px', width: '100%', maxWidth: '500px' }}>
+        <div style={{ marginTop: '0px', width: '100%' }}>
           {/* Pressure slider */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1176,6 +1186,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </button>
           </div>
         </div>
+          </div>
+        </div>
 
         <div style={{ marginTop: '24px', background: 'rgba(30,41,59,0.5)', borderRadius: '12px', padding: '16px', maxWidth: '500px', border: `1px solid ${colors.border}` }}>
           <h3 style={{ color: colors.accent, fontWeight: 600, marginBottom: '8px' }}>Boyle's Law: PV = constant</h3>
@@ -1223,7 +1235,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
         <div style={{ marginTop: '24px', background: 'linear-gradient(to right, rgba(236,72,153,0.1), rgba(168,85,247,0.1))', borderRadius: '16px', padding: '24px', maxWidth: '800px', width: '100%', border: '1px solid rgba(236,72,153,0.3)' }}>
           <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: '#f472b6', marginBottom: '16px' }}>The Cartesian Diver Connection</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
             <div style={{ background: 'rgba(15,23,42,0.5)', borderRadius: '8px', padding: '12px' }}>
               <div style={{ color: '#f472b6', fontWeight: 600, marginBottom: '4px' }}>1. Squeeze Bottle</div>
               <p style={{ fontSize: typo.small, color: colors.textSecondary }}>Pressure increases throughout the water</p>
@@ -1345,10 +1357,20 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           Three divers with different bubble sizes. Observe how they respond differently to the same pressure increase. Notice which one sinks first - this reveals the importance of buoyancy margin!
         </p>
 
-        {renderTwistSimulation()}
-
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {renderTwistSimulation()}
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls */}
-        <div style={{ marginTop: '24px', width: '100%', maxWidth: '500px' }}>
+        <div style={{ marginTop: '0px', width: '100%' }}>
           {/* Slider for twist */}
           <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1403,6 +1425,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </button>
           </div>
         </div>
+          </div>
+        </div>
 
         <div style={{ marginTop: '24px', background: 'rgba(217,119,6,0.1)', borderRadius: '12px', padding: '16px', maxWidth: '500px', border: '1px solid rgba(217,119,6,0.3)' }}>
           <h3 style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Key Insight</h3>
@@ -1421,7 +1445,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
         <div style={{ background: 'linear-gradient(to bottom right, rgba(217,119,6,0.2), rgba(234,88,12,0.2))', borderRadius: '16px', padding: '24px', maxWidth: '700px', width: '100%', marginBottom: '24px', border: '1px solid rgba(217,119,6,0.3)' }}>
           <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: '#fbbf24', marginBottom: '16px' }}>The Trapped Air Relationship</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
             <div style={{ background: 'rgba(15,23,42,0.5)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(34,197,94,0.3)' }}>
               <div style={{ color: '#4ade80', fontWeight: 600, marginBottom: '8px' }}>Large Bubble</div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: typo.small, color: colors.textSecondary }}>

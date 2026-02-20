@@ -290,6 +290,9 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const [isSwinging, setIsSwinging] = useState(false);
   const [simTime, setSimTime] = useState(0);
   const [gravity, setGravity] = useState(9.8);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
 
   const animationRef = useRef<number | null>(null);
 
@@ -581,15 +584,43 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
         <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>When you increase the length, the period increases because the pendulum has farther to travel. This is why clocks use precise pendulum lengths. When you change the mass, observe what happens to the period - this practical experiment helps engineers design timekeeping devices.</p>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px', maxWidth: '380px', width: '100%', margin: '16px auto 0' }}>
-        <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Reference (1m)</div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: colors.primary }}>{(2 * Math.PI * Math.sqrt(1 / gravity)).toFixed(2)} s</div>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(false)}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px', maxWidth: '380px', width: '100%', margin: '16px auto 0' }}>
+            <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Reference (1m)</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: colors.primary }}>{(2 * Math.PI * Math.sqrt(1 / gravity)).toFixed(2)} s</div>
+            </div>
+            <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Current ({pendulumLength} cm)</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: colors.accent }}>{(2 * Math.PI * Math.sqrt(pendulumLength / 100 / gravity)).toFixed(2)} s</div>
+            </div>
+          </div>
         </div>
-        <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-          <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>Current ({pendulumLength} cm)</div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: colors.accent }}>{(2 * Math.PI * Math.sqrt(pendulumLength / 100 / gravity)).toFixed(2)} s</div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Length (cm):</span>
+              <input type="range" min="30" max="250" step="5" value={pendulumLength} onChange={(e) => { setPendulumLength(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: colors.primary }} />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{pendulumLength} cm</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Mass (kg):</span>
+              <input type="range" min="0.5" max="5" step="0.5" value={bobMass} onChange={(e) => { setBobMass(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: colors.accent }} />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{bobMass} kg</span>
+            </div>
+            <button onClick={() => isSwinging ? stopSwing() : startSwing()} style={{ padding: '12px', fontSize: '14px', fontWeight: 700, color: isSwinging ? colors.danger : '#0a0a0f', background: isSwinging ? `${colors.danger}20` : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`, border: `2px solid ${isSwinging ? colors.danger : colors.primary}`, borderRadius: '10px', cursor: 'pointer' }}>
+              {isSwinging ? 'Stop' : 'Start Swing'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -667,14 +698,30 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const renderTwistPlay = () => (
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🔬</span><div><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Gravity Experiment</h2><p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Change gravity and observe the period change</p></div></div>
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center' }}>
-        {[{ id: 9.8, label: 'Earth (9.8)' }, { id: 3.7, label: 'Mars (3.7)' }, { id: 1.6, label: 'Moon (1.6)' }].map(m => (
-          <button key={m.id} onClick={() => { setGravity(m.id); stopSwing(); }} style={{ padding: '12px 24px', fontSize: '14px', fontWeight: gravity === m.id ? 700 : 500, color: gravity === m.id ? '#0a0a0f' : colors.textPrimary, background: gravity === m.id ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})` : colors.bgCard, border: `2px solid ${gravity === m.id ? colors.accent : colors.border}`, borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>
-            {m.label}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(false)}</div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[{ id: 9.8, label: 'Earth (9.8)' }, { id: 3.7, label: 'Mars (3.7)' }, { id: 1.6, label: 'Moon (1.6)' }].map(m => (
+              <button key={m.id} onClick={() => { setGravity(m.id); stopSwing(); }} style={{ padding: '12px 24px', fontSize: '14px', fontWeight: gravity === m.id ? 700 : 500, color: gravity === m.id ? '#0a0a0f' : colors.textPrimary, background: gravity === m.id ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})` : colors.bgCard, border: `2px solid ${gravity === m.id ? colors.accent : colors.border}`, borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => isSwinging ? stopSwing() : startSwing()} style={{ padding: '12px', fontSize: '14px', fontWeight: 700, width: '100%', color: isSwinging ? colors.danger : '#0a0a0f', background: isSwinging ? `${colors.danger}20` : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`, border: `2px solid ${isSwinging ? colors.danger : colors.primary}`, borderRadius: '10px', cursor: 'pointer' }}>
+            {isSwinging ? 'Stop' : 'Start Swing'}
           </button>
-        ))}
+        </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
     </div>
   );
 

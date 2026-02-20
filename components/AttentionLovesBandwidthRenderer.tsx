@@ -315,6 +315,14 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
     };
   }, [contextLength, modelDim, numLayers, kvBits, hbmBandwidth, computeFlops]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
@@ -906,8 +914,49 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
           Observe how context length and hardware specs affect performance
         </p>
 
-        {renderVisualization(true)}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization(true)}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
           <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Concepts</h3>
@@ -1060,8 +1109,49 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
           Toggle between FP16, INT8, and INT4 to see the impact
         </p>
 
-        {renderVisualization(true)}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization(true)}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #f59e0b' }}>
           <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Quantization Impact:</h3>

@@ -1258,122 +1258,132 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderDRAMVisualization()}
-          </div>
-
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Refresh Rate: {refreshRate}ms (every {refreshRate}ms)
-              </label>
-              <input
-                type="range"
-                min="16"
-                max="128"
-                value={refreshRate}
-                onChange={(e) => setRefreshRate(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Temperature: {temperature}C
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="85"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-              <button
-                onClick={() => setIsSimulating(!isSimulating)}
-                style={{
-                  ...buttonStyle,
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  WebkitTapHighlightColor: 'transparent',
-                  minHeight: '44px',
-                }}
-              >
-                {isSimulating ? 'Pause' : 'Start Simulation'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  ...buttonStyle,
-                  background: 'transparent',
-                  border: `1px solid ${colors.accent}`,
-                  color: colors.accent,
-                  WebkitTapHighlightColor: 'transparent',
-                  minHeight: '44px',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Comparison display: reference vs current values */}
+          <div style={{ padding: '0 16px' }}>
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              flexDirection: 'row',
-              gap: '12px',
-              marginTop: '16px',
-              marginBottom: '16px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                flex: 1,
-                background: 'rgba(34, 211, 238, 0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(34, 211, 238, 0.3)',
-              }}>
-                <p style={{ color: colors.charge, fontSize: '12px', fontWeight: 700, margin: 0 }}>Reference (25C)</p>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>0.53%/ms</p>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderDRAMVisualization()}
+                </div>
               </div>
-              <div style={{
-                flex: 1,
-                background: 'rgba(245, 158, 11, 0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-              }}>
-                <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, margin: 0 }}>Current ({temperature}C)</p>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>{getLeakageRate().toFixed(2)}%/ms</p>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Refresh Rate: {refreshRate}ms (every {refreshRate}ms)
+                  </label>
+                  <input
+                    type="range"
+                    min="16"
+                    max="128"
+                    value={refreshRate}
+                    onChange={(e) => setRefreshRate(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Temperature: {temperature}C
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="85"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    style={{
+                      ...buttonStyle,
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : 'Start Simulation'}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    style={{
+                      ...buttonStyle,
+                      background: 'transparent',
+                      border: `1px solid ${colors.accent}`,
+                      color: colors.accent,
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Comparison display: reference vs current values */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                  marginTop: '16px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    background: 'rgba(34, 211, 238, 0.1)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(34, 211, 238, 0.3)',
+                  }}>
+                    <p style={{ color: colors.charge, fontSize: '12px', fontWeight: 700, margin: 0 }}>Reference (25C)</p>
+                    <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>0.53%/ms</p>
+                  </div>
+                  <div style={{
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                  }}>
+                    <p style={{ color: colors.warning, fontSize: '12px', fontWeight: 700, margin: 0 }}>Current ({temperature}C)</p>
+                    <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, margin: '4px 0 0' }}>{getLeakageRate().toFixed(2)}%/ms</p>
+                  </div>
+                </div>
+
+                <div style={{
+                  background: colors.bgCard,
+                  padding: '16px',
+                  borderRadius: '8px',
+                  marginTop: '8px',
+                }}>
+                  <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Observations:</h4>
+                  <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px' }}>
+                    <li>Charge leaks continuously from each capacitor</li>
+                    <li>Below 50% charge, data bits flip (errors!)</li>
+                    <li>Refresh restores all cells to 100%</li>
+                    <li>Higher temperature = faster leakage</li>
+                  </ul>
+                </div>
+
+                <div style={{
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginTop: '12px',
+                  borderLeft: `3px solid ${colors.capacitor}`,
+                }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400, margin: 0 }}>
+                    <strong>Why this matters:</strong> This technology is used in every computer, phone, and server. Understanding DRAM refresh is important for engineers designing real-world applications from data centers to mobile devices.
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '8px',
-            }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Observations:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, paddingLeft: '20px' }}>
-                <li>Charge leaks continuously from each capacitor</li>
-                <li>Below 50% charge, data bits flip (errors!)</li>
-                <li>Refresh restores all cells to 100%</li>
-                <li>Higher temperature = faster leakage</li>
-              </ul>
-            </div>
-
-            <div style={{
-              background: 'rgba(59, 130, 246, 0.1)',
-              padding: '12px',
-              borderRadius: '8px',
-              marginTop: '12px',
-              borderLeft: `3px solid ${colors.capacitor}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400, margin: 0 }}>
-                <strong>Why this matters:</strong> This technology is used in every computer, phone, and server. Understanding DRAM refresh is important for engineers designing real-world applications from data centers to mobile devices.
-              </p>
             </div>
           </div>
         </div>
@@ -1601,79 +1611,91 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderDRAMVisualization()}
-          </div>
-
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Memory Speed: DDR5-{memorySpeed}
-              </label>
-              <input
-                type="range"
-                min="2400"
-                max="8000"
-                step="400"
-                value={memorySpeed}
-                onChange={(e) => setMemorySpeed(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Refresh Rate: {refreshRate}ms
-              </label>
-              <input
-                type="range"
-                min="16"
-                max="128"
-                value={refreshRate}
-                onChange={(e) => setRefreshRate(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setIsSimulating(!isSimulating)}
-                style={{
-                  ...buttonStyle,
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  WebkitTapHighlightColor: 'transparent',
-                  minHeight: '44px',
-                }}
-              >
-                {isSimulating ? 'Pause' : 'Start'}
-              </button>
-              <button
-                onClick={resetSimulation}
-                style={{
-                  ...buttonStyle,
-                  background: 'transparent',
-                  border: `1px solid ${colors.warning}`,
-                  color: colors.warning,
-                  WebkitTapHighlightColor: 'transparent',
-                  minHeight: '44px',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
+          <div style={{ padding: '0 16px' }}>
+            {/* Side-by-side layout */}
             <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '16px',
-              borderLeft: `3px solid ${colors.warning}`,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                <strong>Observation:</strong> At DDR5-{memorySpeed}, leakage rate is {getLeakageRate().toFixed(2)}%/ms.
-                {memorySpeed > 4800 && ' Faster memory needs more frequent refresh to stay stable!'}
-              </p>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderDRAMVisualization()}
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Memory Speed: DDR5-{memorySpeed}
+                  </label>
+                  <input
+                    type="range"
+                    min="2400"
+                    max="8000"
+                    step="400"
+                    value={memorySpeed}
+                    onChange={(e) => setMemorySpeed(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Refresh Rate: {refreshRate}ms
+                  </label>
+                  <input
+                    type="range"
+                    min="16"
+                    max="128"
+                    value={refreshRate}
+                    onChange={(e) => setRefreshRate(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    style={{
+                      ...buttonStyle,
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : 'Start'}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    style={{
+                      ...buttonStyle,
+                      background: 'transparent',
+                      border: `1px solid ${colors.warning}`,
+                      color: colors.warning,
+                      WebkitTapHighlightColor: 'transparent',
+                      minHeight: '44px',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.2)',
+                  padding: '16px',
+                  borderRadius: '8px',
+                  marginTop: '16px',
+                  borderLeft: `3px solid ${colors.warning}`,
+                }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                    <strong>Observation:</strong> At DDR5-{memorySpeed}, leakage rate is {getLeakageRate().toFixed(2)}%/ms.
+                    {memorySpeed > 4800 && ' Faster memory needs more frequent refresh to stay stable!'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

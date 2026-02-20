@@ -866,8 +866,49 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization()}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           {/* Why this matters */}
           <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #22c55e' }}>
@@ -1012,8 +1053,49 @@ const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization()}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
             <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>

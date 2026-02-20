@@ -1788,64 +1788,73 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </p>
           </div>
 
-          {/* Visualization */}
-          <div style={{ padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
-            {renderBeatsVisualization()}
-          </div>
-
-          {/* Controls */}
+          {/* Side-by-side layout */}
           <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             padding: design.spacing.lg,
-            background: design.colors.bgCard,
-            borderTop: `1px solid ${design.colors.border}`
           }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              {/* Freq 1 slider */}
-              <div style={{ marginBottom: design.spacing.md }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
-                  <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>Frequency 1</label>
-                  <span style={{ fontSize: '13px', color: design.colors.accentPrimary, fontWeight: 700 }}>{freq1} Hz</span>
-                </div>
-                <input
-                  type="range" min="400" max="480" value={freq1}
-                  onChange={(e) => setFreq1(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: design.colors.accentPrimary, touchAction: 'pan-y', height: '20px' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
-                </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
+                {renderBeatsVisualization()}
               </div>
-
-              {/* Freq 2 slider */}
-              <div style={{ marginBottom: design.spacing.lg }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
-                  <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>Frequency 2</label>
-                  <span style={{ fontSize: '13px', color: design.colors.cyan, fontWeight: 700 }}>{freq2} Hz</span>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                padding: design.spacing.lg,
+                background: design.colors.bgCard,
+                borderRadius: '12px',
+                border: `1px solid ${design.colors.border}`
+              }}>
+                {/* Freq 1 slider */}
+                <div style={{ marginBottom: design.spacing.md }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
+                    <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>Frequency 1</label>
+                    <span style={{ fontSize: '13px', color: design.colors.accentPrimary, fontWeight: 700 }}>{freq1} Hz</span>
+                  </div>
+                  <input
+                    type="range" min="400" max="480" value={freq1}
+                    onChange={(e) => setFreq1(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: design.colors.accentPrimary, touchAction: 'pan-y', height: '20px' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
+                  </div>
                 </div>
-                <input
-                  type="range" min="400" max="480" value={freq2}
-                  onChange={(e) => setFreq2(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
-                </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Freq 2 slider */}
+                <div style={{ marginBottom: design.spacing.lg }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
+                    <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>Frequency 2</label>
+                    <span style={{ fontSize: '13px', color: design.colors.cyan, fontWeight: 700 }}>{freq2} Hz</span>
+                  </div>
+                  <input
+                    type="range" min="400" max="480" value={freq2}
+                    onChange={(e) => setFreq2(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>400 Hz</span>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>480 Hz</span>
+                  </div>
+                </div>
+
                 <div style={{
-                  padding: '12px 20px',
+                  padding: '12px',
                   borderRadius: design.radius.md,
                   background: design.colors.bgElevated,
-                  border: `1px solid ${design.colors.border}`
+                  border: `1px solid ${design.colors.border}`,
+                  marginBottom: '12px',
+                  textAlign: 'center'
                 }}>
-                  <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Current Beat Frequency: </span>
+                  <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Beat Frequency: </span>
                   <span style={{ fontSize: '18px', fontWeight: 800, color: design.colors.warning }}>{beatFrequency} Hz</span>
-                  <span style={{ fontSize: '12px', color: design.colors.textMuted, marginLeft: '8px' }}>
-                    ({beatFrequency} pulses/sec)
-                  </span>
                 </div>
                 {renderButton(hasExperimented ? 'Continue' : 'Experiment more...', () => goToPhase('review'), 'primary', !hasExperimented)}
               </div>
@@ -2062,48 +2071,60 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       <div style={containerStyle}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
-          {/* Visualization */}
-          <div style={{ padding: design.spacing.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
-            {renderBeatsVisualization()}
-          </div>
-
-          {/* Controls */}
+          {/* Side-by-side layout */}
           <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             padding: design.spacing.lg,
-            background: design.colors.bgCard,
-            borderTop: `1px solid ${design.colors.border}`
           }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              {/* Freq 2 slider (tuning to match freq1) */}
-              <div style={{ marginBottom: design.spacing.lg }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
-                  <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>
-                    Tune Frequency 2 to match {freq1} Hz
-                  </label>
-                  <span style={{ fontSize: '13px', color: isMatched ? design.colors.success : design.colors.cyan, fontWeight: 700 }}>
-                    {freq2} Hz {isMatched ? '✓ Perfect!' : ''}
-                  </span>
-                </div>
-                <input
-                  type="range" min={freq1 - 20} max={freq1 + 20} value={freq2}
-                  onChange={(e) => setFreq2(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: isMatched ? design.colors.success : design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 - 20} Hz</span>
-                  <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 + 20} Hz</span>
-                </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '280px' }}>
+                {renderBeatsVisualization()}
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                padding: design.spacing.lg,
+                background: design.colors.bgCard,
+                borderRadius: '12px',
+                border: `1px solid ${design.colors.border}`
+              }}>
+                {/* Freq 2 slider (tuning to match freq1) */}
+                <div style={{ marginBottom: design.spacing.lg }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.xs }}>
+                    <label style={{ fontSize: '13px', color: design.colors.textSecondary, fontWeight: 600 }}>
+                      Tune Frequency 2 to match {freq1} Hz
+                    </label>
+                    <span style={{ fontSize: '13px', color: isMatched ? design.colors.success : design.colors.cyan, fontWeight: 700 }}>
+                      {freq2} Hz {isMatched ? '✓ Perfect!' : ''}
+                    </span>
+                  </div>
+                  <input
+                    type="range" min={freq1 - 20} max={freq1 + 20} value={freq2}
+                    onChange={(e) => setFreq2(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: isMatched ? design.colors.success : design.colors.cyan, touchAction: 'pan-y', height: '20px' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 - 20} Hz</span>
+                    <span style={{ fontSize: '11px', color: design.colors.textMuted }}>{freq1 + 20} Hz</span>
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{
-                  padding: '12px 20px',
+                  padding: '12px',
                   borderRadius: design.radius.md,
                   background: isMatched ? design.colors.successMuted : design.colors.bgElevated,
-                  border: `1px solid ${isMatched ? design.colors.success : design.colors.border}`
+                  border: `1px solid ${isMatched ? design.colors.success : design.colors.border}`,
+                  marginBottom: '12px',
+                  textAlign: 'center'
                 }}>
                   <span style={{ fontSize: '14px', color: isMatched ? design.colors.success : design.colors.textSecondary, fontWeight: 600 }}>
-                    {isMatched ? '🎉 No beats - perfectly tuned!' : `${beatFrequency} beats/second`}
+                    {isMatched ? 'No beats - perfectly tuned!' : `${beatFrequency} beats/second`}
                   </span>
                 </div>
                 {renderButton('Continue', () => goToPhase('twist_review'))}

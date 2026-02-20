@@ -1002,17 +1002,35 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               Watch energy transform between potential (PE) and kinetic (KE) forms. This is important for understanding how roller coasters, pendulums, and real-world engineering applications work.
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Main visualization */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <EnergyVisualization />
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Track type selector */}
               <div style={{ marginBottom: '20px' }}>
                 <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Track Shape:</p>
@@ -1121,6 +1139,8 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                   Reset
                 </button>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* Physics explanation */}
@@ -1436,16 +1456,34 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               Add friction and watch mechanical energy convert to heat
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <EnergyVisualization />
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Friction slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1510,6 +1548,8 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
                   Reset
                 </button>
               </div>
+            </div>
+            </div>
             </div>
 
             {frictionLevel > 0 && (

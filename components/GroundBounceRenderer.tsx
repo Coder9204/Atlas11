@@ -1144,153 +1144,165 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GroundBounceVisualization />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <OutputsVisualization />
-            </div>
-
-            {/* Legend Panel */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px 16px',
-              marginBottom: '20px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 600 }}>Legend:</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '20px', height: '4px', background: colors.signal, borderRadius: '2px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Output Signal</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '20px', height: '4px', background: colors.noise, borderRadius: '2px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Bounce</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '20px', height: '4px', background: colors.error, borderRadius: '2px', opacity: 0.8 }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Output</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '20px', height: '2px', background: colors.warning, borderRadius: '2px' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Logic Threshold (1.65V)</span>
-              </div>
-              </div>
-            </div>
-
-            {/* Number of outputs slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Switching Outputs</span>
-                <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="32"
-                value={numOutputs}
-                onChange={(e) => setNumOutputs(parseInt(e.target.value))}
-                style={{
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.signal} ${(numOutputs / 32) * 100}%, ${colors.border} ${(numOutputs / 32) * 100}%)`,
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: colors.signal,
-                }}
-              />
-            </div>
-
-            {/* Slew rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Slew Rate (Speed)</span>
-                <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.1"
-                value={slewRate}
-                onChange={(e) => setSlewRate(parseFloat(e.target.value))}
-                style={{
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: colors.warning,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Slow</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Fast</span>
-              </div>
-            </div>
-
-            {/* Simulate button */}
-            <button
-              onClick={() => { playSound('click'); setSwitchPhase(0); setIsSimulating(true); }}
-              disabled={isSimulating}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '10px',
-                border: 'none',
-                background: isSimulating ? colors.border : colors.signal,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: isSimulating ? 'not-allowed' : 'pointer',
-                marginBottom: '20px',
-                minHeight: '44px',
-              }}
-            >
-              {isSimulating ? 'Simulating...' : 'Trigger Switching Event'}
-            </button>
-
-            {/* Results display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.noise }}>{(bounceData.bounceVoltage * 1000).toFixed(0)}mV</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.signal }}>{bounceData.totalCurrent}mA</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Total Current</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: bounceData.isSafe ? colors.success : colors.error
-                }}>
-                  {bounceData.isSafe ? 'SAFE' : 'DANGER'}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <GroundBounceVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <OutputsVisualization />
+                </div>
+
+                {/* Legend Panel */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 600 }}>Legend:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '4px', background: colors.signal, borderRadius: '2px' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Output Signal</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '4px', background: colors.noise, borderRadius: '2px' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Ground Bounce</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '4px', background: colors.error, borderRadius: '2px', opacity: 0.8 }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Output</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '20px', height: '2px', background: colors.warning, borderRadius: '2px' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Logic Threshold (1.65V)</span>
+                  </div>
+                  </div>
+                </div>
+
+                {/* Results display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.noise }}>{(bounceData.bounceVoltage * 1000).toFixed(0)}mV</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.signal }}>{bounceData.totalCurrent}mA</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Total Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: bounceData.isSafe ? colors.success : colors.error
+                    }}>
+                      {bounceData.isSafe ? 'SAFE' : 'DANGER'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Number of outputs slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Switching Outputs</span>
+                    <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="32"
+                    value={numOutputs}
+                    onChange={(e) => setNumOutputs(parseInt(e.target.value))}
+                    style={{
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.signal} ${(numOutputs / 32) * 100}%, ${colors.border} ${(numOutputs / 32) * 100}%)`,
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: colors.signal,
+                    }}
+                  />
+                </div>
+
+                {/* Slew rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Slew Rate (Speed)</span>
+                    <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="3"
+                    step="0.1"
+                    value={slewRate}
+                    onChange={(e) => setSlewRate(parseFloat(e.target.value))}
+                    style={{
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: colors.warning,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Slow</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Fast</span>
+                  </div>
+                </div>
+
+                {/* Simulate button */}
+                <button
+                  onClick={() => { playSound('click'); setSwitchPhase(0); setIsSimulating(true); }}
+                  disabled={isSimulating}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: isSimulating ? colors.border : colors.signal,
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    cursor: isSimulating ? 'not-allowed' : 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  {isSimulating ? 'Simulating...' : 'Trigger Switching Event'}
+                </button>
               </div>
             </div>
           </div>
@@ -1635,129 +1647,136 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
-            overflowY: 'auto',
-            paddingBottom: '100px',
-            flex: 1,
-            paddingTop: '48px',
-            maxHeight: '70vh',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GroundBounceVisualization showAnimation={false} />
-            </div>
-
-            {/* Package inductance slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Package Inductance (L)</span>
-                <span style={{
-                  ...typo.small,
-                  color: packageInductance > 8 ? colors.error : packageInductance > 3 ? colors.warning : colors.success,
-                  fontWeight: 600
-                }}>
-                  {packageInductance} nH
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="15"
-                step="0.5"
-                value={packageInductance}
-                onChange={(e) => setPackageInductance(parseFloat(e.target.value))}
-                style={{
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: colors.warning,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.success }}>BGA (0.5nH)</span>
-                <span style={{ ...typo.small, color: colors.warning }}>QFP (5nH)</span>
-                <span style={{ ...typo.small, color: colors.error }}>DIP (15nH)</span>
-              </div>
-            </div>
-
-            {/* Number of outputs slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Simultaneous Switching Outputs</span>
-                <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="64"
-                value={numOutputs}
-                onChange={(e) => setNumOutputs(parseInt(e.target.value))}
-                style={{
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: colors.signal,
-                }}
-              />
-            </div>
-
-            {/* Slew rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Edge Slew Rate</span>
-                <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.1"
-                value={slewRate}
-                onChange={(e) => setSlewRate(parseFloat(e.target.value))}
-                style={{
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: colors.warning,
-                }}
-              />
-            </div>
-
-            {/* Stats */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: bounceData.isSafe ? colors.success : colors.error
-                }}>
-                  {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <GroundBounceVisualization showAnimation={false} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: bounceData.isSafe ? colors.success : colors.error
+                    }}>
+                      {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{bounceData.diDt.toFixed(1)} A/μs</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>di/dt</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{bounceData.diDt.toFixed(1)} A/μs</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>di/dt</div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Package inductance slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Package Inductance (L)</span>
+                    <span style={{
+                      ...typo.small,
+                      color: packageInductance > 8 ? colors.error : packageInductance > 3 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {packageInductance} nH
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="15"
+                    step="0.5"
+                    value={packageInductance}
+                    onChange={(e) => setPackageInductance(parseFloat(e.target.value))}
+                    style={{
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: colors.warning,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.success }}>BGA (0.5nH)</span>
+                    <span style={{ ...typo.small, color: colors.error }}>DIP (15nH)</span>
+                  </div>
+                </div>
+
+                {/* Number of outputs slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Switching Outputs</span>
+                    <span style={{ height: '20px', ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="64"
+                    value={numOutputs}
+                    onChange={(e) => setNumOutputs(parseInt(e.target.value))}
+                    style={{
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: colors.signal,
+                    }}
+                  />
+                </div>
+
+                {/* Slew rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Edge Slew Rate</span>
+                    <span style={{ height: '20px', ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="3"
+                    step="0.1"
+                    value={slewRate}
+                    onChange={(e) => setSlewRate(parseFloat(e.target.value))}
+                    style={{
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: colors.warning,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -1060,7 +1060,7 @@ export default function SoapBoatRenderer({
                   {/* Real-time Physics Display */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
                     gap: '0.5rem',
                     paddingTop: '0.75rem',
                     borderTop: '1px solid rgba(71, 85, 105, 0.5)'
@@ -1075,7 +1075,7 @@ export default function SoapBoatRenderer({
                       <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#a855f7' }}>{(reducedTension * 1000).toFixed(1)}</div>
                       <div style={{ fontSize: '0.6rem', color: '#64748b' }}>mN/m</div>
                     </div>
-                    <div style={{ textAlign: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '0.5rem' }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '0.5rem', gridColumn: 'span 2' }}>
                       <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Δγ Force</div>
                       <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#22c55e' }}>{((currentTension - reducedTension) * 1000).toFixed(1)}</div>
                       <div style={{ fontSize: '0.6rem', color: '#64748b' }}>mN/m</div>
@@ -1085,6 +1085,15 @@ export default function SoapBoatRenderer({
               )}
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
               <defs>
                 {/* Container gradient (tank walls) */}
@@ -1425,7 +1434,8 @@ export default function SoapBoatRenderer({
                 </p>
               )}
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               {waterContaminated && (
@@ -1503,6 +1513,8 @@ export default function SoapBoatRenderer({
                 </button>
               </div>
             )}
+            </div>
+            </div>
           </div>
         );
 
@@ -1886,6 +1898,15 @@ export default function SoapBoatRenderer({
               ))}
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <svg viewBox="0 0 400 170" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
               <defs>
                 {/* Container gradient */}
@@ -2029,7 +2050,8 @@ export default function SoapBoatRenderer({
             }}>
               Surface tension: <span style={{ color: colors.textSecondary, fontFamily: 'monospace' }}>{surfaceTensions[liquidType]} N/m</span>
             </p>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <button
@@ -2124,6 +2146,8 @@ export default function SoapBoatRenderer({
                 </button>
               </div>
             )}
+            </div>
+            </div>
           </div>
         );
 

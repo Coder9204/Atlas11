@@ -1051,69 +1051,81 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <ExpansionVisualization />
-              </div>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <ExpansionVisualization />
+                  </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Material selector */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Material</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {currentMaterial.name} (α = {currentMaterial.alpha} ppm/°C)
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {materials.map((mat, i) => (
+                        <button
+                          key={mat.name}
+                          onClick={() => { playSound('click'); setSelectedMaterial(i); }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: selectedMaterial === i ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                            background: selectedMaterial === i ? `${colors.accent}22` : colors.bgSecondary,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            minHeight: '44px',
+                          }}
+                        >
+                          {mat.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Material selector */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Material</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {currentMaterial.name} (α = {currentMaterial.alpha} ppm/°C)
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {materials.map((mat, i) => (
-                    <button
-                      key={mat.name}
-                      onClick={() => { playSound('click'); setSelectedMaterial(i); }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: selectedMaterial === i ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                        background: selectedMaterial === i ? `${colors.accent}22` : colors.bgSecondary,
-                        color: colors.textPrimary,
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      {mat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Temperature slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                  <span style={{ ...typo.small, color: temperature > 20 ? colors.hot : colors.cold, fontWeight: 600 }}>
-                    {temperature}°C ({temperature > 20 ? '+' : ''}{temperature - 20}°C)
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-40"
-                  max="100"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseInt(e.target.value))}
-                  onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Temperature"
-                  style={sliderStyle(colors.accent, temperature, -40, 100)}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.cold }}>-40°C</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>20°C (ref)</span>
-                  <span style={{ ...typo.small, color: colors.hot }}>100°C</span>
+                  {/* Temperature slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                      <span style={{ ...typo.small, color: temperature > 20 ? colors.hot : colors.cold, fontWeight: 600 }}>
+                        {temperature}°C ({temperature > 20 ? '+' : ''}{temperature - 20}°C)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-40"
+                      max="100"
+                      value={temperature}
+                      onChange={(e) => setTemperature(parseInt(e.target.value))}
+                      onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Temperature"
+                      style={sliderStyle(colors.accent, temperature, -40, 100)}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.cold }}>-40°C</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>20°C (ref)</span>
+                      <span style={{ ...typo.small, color: colors.hot }}>100°C</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Stats grid */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
               }}>
                 <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
@@ -1458,32 +1470,42 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
               padding: '24px',
               marginBottom: '24px',
             }}>
-              {/* SVG Visualization */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <StressVisualization />
-              </div>
-
-              {/* Bridge length slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Bridge Length</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{bridgeLength} meters</span>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  {/* SVG Visualization */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <StressVisualization />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="500"
-                  step="10"
-                  value={bridgeLength}
-                  onChange={(e) => setBridgeLength(parseInt(e.target.value))}
-                  onInput={(e) => setBridgeLength(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Bridge length"
-                  style={sliderStyle(colors.accent, bridgeLength, 50, 500)}
-                />
-              </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Bridge length slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Bridge Length</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{bridgeLength} meters</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="500"
+                      step="10"
+                      value={bridgeLength}
+                      onChange={(e) => setBridgeLength(parseInt(e.target.value))}
+                      onInput={(e) => setBridgeLength(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Bridge length"
+                      style={sliderStyle(colors.accent, bridgeLength, 50, 500)}
+                    />
+                  </div>
 
-              {/* Temperature range */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  {/* Temperature range */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ ...typo.small, color: colors.textSecondary }}>Min Temp (Winter)</span>
@@ -1515,6 +1537,8 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
                     aria-label="Maximum temperature"
                     style={sliderStyle(colors.hot, maxTemp, 20, 70)}
                   />
+                </div>
+              </div>
                 </div>
               </div>
 

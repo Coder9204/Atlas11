@@ -1036,178 +1036,197 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
               </p>
             </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <HydraulicVisualization />
-            </div>
-
-            {/* Input Force slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Input Force (F1)</span>
-                <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{inputForce} N</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="500"
-                step="10"
-                value={inputForce}
-                onChange={(e) => setInputForce(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Small Piston Area slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Small Piston Area (A1)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{smallPistonArea} cm^2</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={smallPistonArea}
-                onChange={(e) => setSmallPistonArea(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Large Piston Area slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Large Piston Area (A2)</span>
-                <span style={{ ...typo.small, color: '#ef4444', fontWeight: 600 }}>{largePistonArea} cm^2</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={largePistonArea}
-                onChange={(e) => setLargePistonArea(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Activate button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => startAnimation()}
-                disabled={isAnimating}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isAnimating ? colors.border : colors.accent,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isAnimating ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isAnimating ? 'Pumping...' : 'Activate Hydraulics'}
-              </button>
-              <button
-                onClick={() => {
-                  setAnimationProgress(0);
-                  setIsAnimating(false);
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
               <div style={{
-                background: colors.bgSecondary,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <HydraulicVisualization />
+                </div>
+              </div>
+
+              {/* Stats display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#fcd34d' }}>{pressure.toFixed(0)} N/cm^2</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Pressure (constant)</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{mechanicalAdvantage.toFixed(1)}x</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Force Multiplication</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: '#ef4444' }}>{outputForce.toFixed(0)} N</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Output Force</div>
+                </div>
+              </div>
+
+              {/* Formula explanation */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
                 borderRadius: '12px',
-                padding: '16px',
+                padding: '20px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: '#fcd34d' }}>{pressure.toFixed(0)} N/cm^2</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Pressure (constant)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{mechanicalAdvantage.toFixed(1)}x</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Force Multiplication</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#ef4444' }}>{outputForce.toFixed(0)} N</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Output Force</div>
+                <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', marginBottom: '8px' }}>
+                  F1 / A1 = F2 / A2 = P (Pressure is constant)
+                </p>
+                <p style={{ ...typo.small, color: colors.accent }}>
+                  F2 = F1 x (A2 / A1) = {inputForce} x ({largePistonArea} / {smallPistonArea}) = {outputForce.toFixed(0)} N
+                </p>
               </div>
             </div>
-          </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Input Force slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Input Force (F1)</span>
+                    <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{inputForce} N</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="500"
+                    step="10"
+                    value={inputForce}
+                    onChange={(e) => setInputForce(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                </div>
 
-          {/* Formula explanation */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', marginBottom: '8px' }}>
-              F1 / A1 = F2 / A2 = P (Pressure is constant)
-            </p>
-            <p style={{ ...typo.small, color: colors.accent }}>
-              F2 = F1 x (A2 / A1) = {inputForce} x ({largePistonArea} / {smallPistonArea}) = {outputForce.toFixed(0)} N
-            </p>
+                {/* Small Piston Area slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Small Piston Area (A1)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{smallPistonArea} cm^2</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={smallPistonArea}
+                    onChange={(e) => setSmallPistonArea(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Large Piston Area slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Large Piston Area (A2)</span>
+                    <span style={{ ...typo.small, color: '#ef4444', fontWeight: 600 }}>{largePistonArea} cm^2</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={largePistonArea}
+                    onChange={(e) => setLargePistonArea(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Activate button */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <button
+                    onClick={() => startAnimation()}
+                    disabled={isAnimating}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isAnimating ? colors.border : colors.accent,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isAnimating ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isAnimating ? 'Pumping...' : 'Activate Hydraulics'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAnimationProgress(0);
+                      setIsAnimating(false);
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button
@@ -1503,61 +1522,79 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
               </p>
             </div>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <BrakeSystemVisualization />
-            </div>
-
-            {/* Brake pedal force slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Brake Pedal Force</span>
-                <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{brakePedalForce} N</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <BrakeSystemVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="200"
-                value={brakePedalForce}
-                onChange={(e) => setBrakePedalForce(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Light press</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Emergency brake</span>
+
+              {/* Key insight */}
+              {brakePedalForce > 50 && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginTop: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                    Each caliper receives the FULL {(brakePedalForce * 10).toFixed(0)} N - not split between them!
+                    Total braking force: {(brakePedalForce * 10 * 4).toFixed(0)} N = {((brakePedalForce * 10 * 4) / 9.8).toFixed(0)} kg equivalent!
+                  </p>
+                </div>
+              )}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Brake pedal force slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Brake Pedal Force</span>
+                    <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{brakePedalForce} N</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="200"
+                    value={brakePedalForce}
+                    onChange={(e) => setBrakePedalForce(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Light press</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Emergency brake</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Key insight */}
-          {brakePedalForce > 50 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Each caliper receives the FULL {(brakePedalForce * 10).toFixed(0)} N - not split between them!
-                Total braking force: {(brakePedalForce * 10 * 4).toFixed(0)} N = {((brakePedalForce * 10 * 4) / 9.8).toFixed(0)} kg equivalent!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}

@@ -1058,68 +1058,79 @@ export default function InductiveKickbackRenderer({
         </p>
       </div>
 
-      {renderRelayCircuit()}
-
-      {/* Inductance slider control */}
-      <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Inductance (L)</span>
-            <span className="text-xs text-slate-400">Controls magnetic field energy storage</span>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderRelayCircuit()}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Inductance slider control */}
+          <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Inductance (L)</span>
+              </div>
+              <span className="text-sm font-bold text-amber-400">{inductance} mH</span>
+            </div>
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-xs text-slate-500">10</span>
+              <input
+                type="range"
+                min="10"
+                max="500"
+                value={inductance}
+                onChange={(e) => setInductance(parseInt(e.target.value))}
+                style={{
+                  accentColor: '#f59e0b',
+                  touchAction: 'none',
+                  width: '100%',
+                  flex: 1,
+                }}
+                className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+                aria-label="Adjust inductance from 10 to 500 millihenries - controls energy stored in magnetic field"
+              />
+              <span className="text-xs text-slate-500">500 mH</span>
+            </div>
           </div>
-          <span className="text-sm font-bold text-amber-400">{inductance} mH</span>
-        </div>
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-xs text-slate-500">10</span>
-          <input
-            type="range"
-            min="10"
-            max="500"
-            value={inductance}
-            onChange={(e) => setInductance(parseInt(e.target.value))}
-            style={{
-              accentColor: '#f59e0b',
-              touchAction: 'none',
-              width: '100%',
-              flex: 1,
-            }}
-            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
-            aria-label="Adjust inductance from 10 to 500 millihenries - controls energy stored in magnetic field"
-          />
-          <span className="text-xs text-slate-500">500 mH</span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4" style={{ gap: '12px', marginBottom: '16px' }}>
-        <button
-          onClick={handleSwitchToggle}
-          style={{ minHeight: '44px', cursor: 'pointer' }}
-          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-            switchOn
-              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
-              : 'bg-slate-700 text-slate-300'
-          }`}
-        >
-          {switchOn ? '&#9889; Toggle OFF (Trigger Kickback)' : '&#9889; Toggle ON (Charge Coil)'}
-        </button>
-        <button
-          onClick={handleToggleDiode}
-          style={{ minHeight: '44px', cursor: 'pointer' }}
-          className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-            hasFlybackDiode
-              ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
-              : 'bg-amber-500/20 text-amber-400 border-2 border-amber-500/30 hover:bg-amber-500/30'
-          }`}
-        >
-          {hasFlybackDiode ? '&#10003; Diode Added' : '+ Add Diode'}
-        </button>
-      </div>
+          <div className="grid grid-cols-1 gap-3 mb-4" style={{ gap: '12px', marginBottom: '16px' }}>
+            <button
+              onClick={handleSwitchToggle}
+              style={{ minHeight: '44px', cursor: 'pointer' }}
+              className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                switchOn
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+                  : 'bg-slate-700 text-slate-300'
+              }`}
+            >
+              {switchOn ? '&#9889; Toggle OFF (Trigger Kickback)' : '&#9889; Toggle ON (Charge Coil)'}
+            </button>
+            <button
+              onClick={handleToggleDiode}
+              style={{ minHeight: '44px', cursor: 'pointer' }}
+              className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                hasFlybackDiode
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-400 border-2 border-amber-500/30 hover:bg-amber-500/30'
+              }`}
+            >
+              {hasFlybackDiode ? '&#10003; Diode Added' : '+ Add Diode'}
+            </button>
+          </div>
 
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-4" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-        <p className="text-amber-300 text-sm leading-relaxed">
-          <strong>Try this:</strong> Toggle the switch OFF without the diode to see the spark.
-          Then add the diode and notice how it clamps the voltage spike!
-        </p>
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-4" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+            <p className="text-amber-300 text-sm leading-relaxed">
+              <strong>Try this:</strong> Toggle the switch OFF without the diode to see the spark.
+              Then add the diode and notice how it clamps the voltage spike!
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 mb-4" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
@@ -1337,86 +1348,96 @@ export default function InductiveKickbackRenderer({
         </div>
       </div>
 
-      {renderBoostConverter()}
-
-      {/* Input voltage slider */}
-      <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Input Voltage (Vin)</span>
-            <span className="text-xs text-slate-400">Source battery voltage</span>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderBoostConverter()}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Input voltage slider */}
+          <div className="mb-4 w-full" style={{ marginBottom: '16px', width: '100%' }}>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Input Voltage (Vin)</span>
+              </div>
+              <span className="text-sm font-bold text-amber-400">{inputVoltage} V</span>
+            </div>
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-xs text-slate-500">3</span>
+              <input
+                type="range"
+                min="3"
+                max="12"
+                value={inputVoltage}
+                onChange={(e) => setInputVoltage(parseInt(e.target.value))}
+                style={{
+                  accentColor: '#f59e0b',
+                  touchAction: 'none',
+                  width: '100%',
+                  flex: 1,
+                }}
+                className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+                aria-label="Adjust input voltage from 3 to 12 volts"
+              />
+              <span className="text-xs text-slate-500">12 V</span>
+            </div>
           </div>
-          <span className="text-sm font-bold text-amber-400">{inputVoltage} V</span>
-        </div>
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-xs text-slate-500">3</span>
-          <input
-            type="range"
-            min="3"
-            max="12"
-            value={inputVoltage}
-            onChange={(e) => setInputVoltage(parseInt(e.target.value))}
-            style={{
-              accentColor: '#f59e0b',
-              touchAction: 'none',
-              width: '100%',
-              flex: 1,
-            }}
-            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
-            aria-label="Adjust input voltage from 3 to 12 volts"
-          />
-          <span className="text-xs text-slate-500">12 V</span>
-        </div>
-      </div>
 
-      {/* Duty cycle slider */}
-      <div className="mb-6 w-full" style={{ marginBottom: '24px', width: '100%' }}>
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Duty Cycle (D)</span>
-            <span className="text-xs text-slate-400">Switch on-time percentage</span>
+          {/* Duty cycle slider */}
+          <div className="mb-6 w-full" style={{ marginBottom: '24px', width: '100%' }}>
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Duty Cycle (D)</span>
+              </div>
+              <span className="text-sm font-bold text-amber-400">{boostDutyCycle}%</span>
+            </div>
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-xs text-slate-500">10%</span>
+              <input
+                type="range"
+                min="10"
+                max="90"
+                value={boostDutyCycle}
+                onChange={(e) => setBoostDutyCycle(parseInt(e.target.value))}
+                style={{
+                  accentColor: '#f59e0b',
+                  touchAction: 'none',
+                  width: '100%',
+                  flex: 1,
+                }}
+                className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
+                aria-label="Adjust duty cycle from 10 to 90 percent"
+              />
+              <span className="text-xs text-slate-500">90%</span>
+            </div>
           </div>
-          <span className="text-sm font-bold text-amber-400">{boostDutyCycle}%</span>
-        </div>
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-xs text-slate-500">10%</span>
-          <input
-            type="range"
-            min="10"
-            max="90"
-            value={boostDutyCycle}
-            onChange={(e) => setBoostDutyCycle(parseInt(e.target.value))}
-            style={{
-              accentColor: '#f59e0b',
-              touchAction: 'none',
-              width: '100%',
-              flex: 1,
-            }}
-            className="h-2 bg-slate-700 rounded-full appearance-none cursor-pointer transition-all duration-200"
-            aria-label="Adjust duty cycle from 10 to 90 percent"
-          />
-          <span className="text-xs text-slate-500">90%</span>
-        </div>
-      </div>
 
-      <button
-        onClick={handleBoostToggle}
-        style={{ minHeight: '44px' }}
-        className={`w-full py-4 rounded-2xl font-semibold mb-4 transition-all duration-200 ${
-          boostActive
-            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
-            : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30'
-        }`}
-      >
-        {boostActive ? '&#9889; Boost Active - Click to Stop' : '&#9654; Activate Boost Converter'}
-      </button>
+          <button
+            onClick={handleBoostToggle}
+            style={{ minHeight: '44px' }}
+            className={`w-full py-4 rounded-2xl font-semibold mb-4 transition-all duration-200 ${
+              boostActive
+                ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
+                : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/30'
+            }`}
+          >
+            {boostActive ? '&#9889; Boost Active - Click to Stop' : '&#9654; Activate Boost Converter'}
+          </button>
 
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-        <p className="text-blue-300 text-sm leading-relaxed">
-          <strong>How it works:</strong> A switch rapidly turns on/off (100kHz).
-          Each time it opens, the inductor&apos;s kickback adds to the input voltage,
-          charging a capacitor to a higher level!
-        </p>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <p className="text-blue-300 text-sm leading-relaxed">
+              <strong>How it works:</strong> A switch rapidly turns on/off (100kHz).
+              Each time it opens, the inductor&apos;s kickback adds to the input voltage,
+              charging a capacitor to a higher level!
+            </p>
+          </div>
+        </div>
       </div>
 
       <button

@@ -977,6 +977,15 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             F_b = ρ × V × g
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Force comparison chart */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
             <svg viewBox="0 0 440 280" width="100%" style={{ maxWidth: '440px', background: colors.bgCard, borderRadius: '12px' }}>
@@ -1112,6 +1121,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
               {renderWaterTankVisualization(objectDensity, fluidDensity, true, hasDropped, animationProgress)}
             </div>
 
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Object Density slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1187,6 +1198,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                 style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
               />
             </div>
+            </div>
+          </div>
 
             {/* Drop button */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
@@ -1227,7 +1240,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             {/* Physics display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1581,10 +1594,20 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderWaterTankVisualization(currentObjectDensity, currentFluidDensity, true, twistHasDropped, 100)}
-            </div>
-
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderWaterTankVisualization(currentObjectDensity, currentFluidDensity, true, twistHasDropped, 100)}
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Fluid selector */}
             <div style={{ marginBottom: '20px' }}>
               <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>Select Fluid:</p>
@@ -1650,6 +1673,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                 ))}
               </div>
             </div>
+              </div>
+            </div>
 
             {/* Drop button */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
@@ -1686,7 +1711,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             {/* Results display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1976,7 +2001,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '16px',
             }}>
@@ -2484,7 +2509,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '12px',
           marginBottom: '32px',
           maxWidth: '450px',

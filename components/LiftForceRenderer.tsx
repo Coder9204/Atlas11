@@ -1007,112 +1007,124 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             When you increase airspeed, lift increases with V squared. Higher angle of attack increases Cl until stall occurs, because flow separation disrupts the pressure differential. Try each slider to observe cause and effect relationships.
           </p>
 
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AirfoilVisualization />
-            </div>
-
-            {/* Airspeed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Airspeed</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airspeed} km/h</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="300"
-                step="10"
-                value={airspeed}
-                onChange={(e) => setAirspeed(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
-
-            {/* Angle of attack slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
-                <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
-                  {angleOfAttack}deg {stalling && '(STALL!)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="-5"
-                max="20"
-                value={angleOfAttack}
-                onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
-
-            {/* Wing area slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Wing Area</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wingArea} m2</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="40"
-                value={wingArea}
-                onChange={(e) => setWingArea(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
-
-            {/* Air density slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Air Density (Altitude)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airDensity.toFixed(3)} kg/m3</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="1.5"
-                step="0.01"
-                value={airDensity}
-                onChange={(e) => setAirDensity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High Alt (0.5)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Sea Level (1.225)</span>
-              </div>
-            </div>
-
-            {/* Results */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Lift Force</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.drag }}>{(drag/1000).toFixed(2)} kN</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Drag Force</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Lift Coeff (Cl)</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: stalling ? colors.error : colors.success }}>
-                  {stalling ? 'STALL' : 'Normal'}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <AirfoilVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+
+                {/* Results */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Lift Force</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.drag }}>{(drag/1000).toFixed(2)} kN</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Drag Force</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Cl</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: stalling ? colors.error : colors.success }}>
+                      {stalling ? 'STALL' : 'Normal'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Airspeed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Airspeed</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airspeed} km/h</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="300"
+                  step="10"
+                  value={airspeed}
+                  onChange={(e) => setAirspeed(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                />
+              </div>
+
+              {/* Angle of attack slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
+                  <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
+                    {angleOfAttack}deg {stalling && '(STALL!)'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="-5"
+                  max="20"
+                  value={angleOfAttack}
+                  onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                />
+              </div>
+
+              {/* Wing area slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wing Area</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wingArea} m2</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="40"
+                  value={wingArea}
+                  onChange={(e) => setWingArea(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                />
+              </div>
+
+              {/* Air density slider */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Air Density</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airDensity.toFixed(3)} kg/m3</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.01"
+                  value={airDensity}
+                  onChange={(e) => setAirDensity(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>High Alt</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Sea Level</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1448,118 +1460,134 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
             Explore how flaps, slats, and airfoil shape affect low-speed performance
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AirfoilVisualization />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <AirfoilVisualization />
+                </div>
 
-            {/* Airfoil shape selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Airfoil Shape</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                {(['flat', 'symmetric', 'cambered'] as const).map((shape) => (
-                  <button
-                    key={shape}
-                    onClick={() => setAirfoilShape(shape)}
-                    style={{
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: airfoilShape === shape ? colors.accent : colors.bgSecondary,
-                      color: 'white',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {shape}
-                  </button>
-                ))}
+                {/* Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Lift</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Cl</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{stallAngle}deg</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Stall Angle</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* High-lift device toggles */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <button
-                onClick={() => setFlapsDeployed(!flapsDeployed)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: flapsDeployed ? colors.success : colors.bgSecondary,
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ fontSize: '18px', fontWeight: 600 }}>Flaps</div>
-                <div style={{ fontSize: '11px', opacity: 0.8 }}>{flapsDeployed ? 'Deployed (+0.5 Cl)' : 'Retracted'}</div>
-              </button>
-              <button
-                onClick={() => setSlatsDeployed(!slatsDeployed)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: slatsDeployed ? colors.success : colors.bgSecondary,
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ fontSize: '18px', fontWeight: 600 }}>Slats</div>
-                <div style={{ fontSize: '11px', opacity: 0.8 }}>{slatsDeployed ? 'Deployed (+3deg stall)' : 'Retracted'}</div>
-              </button>
-              <button
-                onClick={() => setGroundEffect(!groundEffect)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: groundEffect ? colors.warning : colors.bgSecondary,
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ fontSize: '18px', fontWeight: 600 }}>Ground</div>
-                <div style={{ fontSize: '11px', opacity: 0.8 }}>{groundEffect ? 'Effect (+20% lift)' : 'High Alt'}</div>
-              </button>
-            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Airfoil shape selector */}
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Airfoil Shape</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(['flat', 'symmetric', 'cambered'] as const).map((shape) => (
+                    <button
+                      key={shape}
+                      onClick={() => setAirfoilShape(shape)}
+                      style={{
+                        padding: '10px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: airfoilShape === shape ? colors.accent : colors.bgSecondary,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {shape}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Angle of attack */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
-                <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
-                  {angleOfAttack}deg (Stall: {stallAngle}deg)
-                </span>
+              {/* High-lift device toggles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => setFlapsDeployed(!flapsDeployed)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: flapsDeployed ? colors.success : colors.bgSecondary,
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '16px', fontWeight: 600 }}>Flaps</div>
+                  <div style={{ fontSize: '11px', opacity: 0.8 }}>{flapsDeployed ? 'Deployed (+0.5 Cl)' : 'Retracted'}</div>
+                </button>
+                <button
+                  onClick={() => setSlatsDeployed(!slatsDeployed)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: slatsDeployed ? colors.success : colors.bgSecondary,
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '16px', fontWeight: 600 }}>Slats</div>
+                  <div style={{ fontSize: '11px', opacity: 0.8 }}>{slatsDeployed ? 'Deployed (+3deg stall)' : 'Retracted'}</div>
+                </button>
+                <button
+                  onClick={() => setGroundEffect(!groundEffect)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: groundEffect ? colors.warning : colors.bgSecondary,
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ fontSize: '16px', fontWeight: 600 }}>Ground Effect</div>
+                  <div style={{ fontSize: '11px', opacity: 0.8 }}>{groundEffect ? '+20% lift' : 'High Alt'}</div>
+                </button>
               </div>
-              <input
-                type="range"
-                min="-5"
-                max="20"
-                value={angleOfAttack}
-                onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
 
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Lift</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Cl</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{stallAngle}deg</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Stall Angle</div>
+              {/* Angle of attack */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
+                  <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
+                    {angleOfAttack}deg
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="-5"
+                  max="20"
+                  value={angleOfAttack}
+                  onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                />
+                <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  Stall: {stallAngle}deg
+                </div>
               </div>
             </div>
           </div>

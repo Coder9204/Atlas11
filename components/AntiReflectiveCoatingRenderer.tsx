@@ -1175,8 +1175,49 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization()}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1391,8 +1432,49 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization()}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',

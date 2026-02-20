@@ -942,17 +942,35 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               This is why engineers design variable-speed fans for real-world HVAC and data center technology applications.
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Main chart visualization */}
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderFanLawsChart(fanSpeed)}
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Speed slider */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -972,7 +990,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               {/* Three Laws Display */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '16px',
                 marginBottom: '20px',
               }}>
@@ -1028,6 +1046,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   Speed at {fanSpeed}%: ({fanSpeed}/100){'\u00B3'} = {(speedRatio ** 3).toFixed(3)} {'\u00D7'} 100 = <span style={{ color: colors.success }}>{power.toFixed(1)}W</span>
                 </div>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* Discovery insight */}
@@ -1480,17 +1500,35 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               Observe how multiple fans at lower speeds compare to a single fan at high speed
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               {/* Chart */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderMultiFanChart()}
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Fan count selector */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1571,6 +1609,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
                   </p>
                 </div>
               )}
+            </div>
+            </div>
             </div>
 
             <button

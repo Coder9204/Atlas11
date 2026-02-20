@@ -1033,13 +1033,23 @@ const CarnotCycleRenderer: React.FC<Props> = ({
         This is why engineers designing real-world power plants focus on maximizing temperature differences.
       </p>
 
-      <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
-        {renderPVDiagram()}
-      </div>
-
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
+            {renderPVDiagram()}
+          </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '12px',
         marginBottom: '24px',
         textAlign: 'center' as const
@@ -1118,6 +1128,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({
         >
           Reset
         </button>
+      </div>
+        </div>
       </div>
 
       <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>

@@ -912,59 +912,15 @@ export default function HeliumBalloonCarRenderer({
             </p>
           </div>
 
-          {/* Controls */}
-          <div className={`grid gap-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-semibold text-emerald-400">Acceleration (inertial force)</span>
-              </div>
-              <p style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px', lineHeight: '1.5' }}>
-                When you increase acceleration, it causes a stronger pressure gradient, which results in bigger balloon tilt
-              </p>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-slate-400">1 m/s²</span>
-                <input
-                  type="range"
-                  min="1"
-                  max="15"
-                  step="0.5"
-                  value={carAcceleration}
-                  onChange={(e) => setCarAcceleration(Number(e.target.value))}
-                  style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
-                />
-                <span className="text-xs text-slate-400">15 m/s²</span>
-                <span className="text-sm font-bold text-white ml-1">{carAcceleration.toFixed(1)} m/s²</span>
-              </div>
-              <p style={{ fontSize: '11px', color: '#3b82f6' }}>
-                {carAcceleration <= 4 ? '💡 Observe: gentle acceleration — slight tilt effect' : carAcceleration <= 9 ? '🔍 Notice: moderate acceleration — noticeable pressure gradient forms' : '🎯 Key insight: strong acceleration — dramatic tilt shows equivalence principle!'}
-              </p>
-            </div>
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-semibold text-purple-400">Buoyancy (density ratio)</span>
-              </div>
-              <p style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px', lineHeight: '1.5' }}>
-                Higher buoyancy ratio leads to a lighter gas, which means more responsive to the pressure gradient
-              </p>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs text-slate-400">0.2x</span>
-                <input
-                  type="range"
-                  min="0.2"
-                  max="2.0"
-                  step="0.1"
-                  value={balloonBuoyancy}
-                  onChange={(e) => setBalloonBuoyancy(Number(e.target.value))}
-                  style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
-                />
-                <span className="text-xs text-slate-400">2.0x</span>
-                <span className="text-sm font-bold text-white ml-1">{balloonBuoyancy.toFixed(1)}x</span>
-              </div>
-              <p style={{ fontSize: '11px', color: '#3b82f6' }}>
-                {balloonBuoyancy <= 0.6 ? '💡 Observe: low buoyancy — nearly neutrally buoyant' : balloonBuoyancy <= 1.2 ? '🔍 Notice: moderate buoyancy — like helium in air' : '🎯 Key insight: high buoyancy — very responsive to acceleration!'}
-              </p>
-            </div>
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
 
           {/* Toggle buttons */}
           <div className="flex gap-3 justify-center mb-4 flex-wrap">
@@ -1136,6 +1092,56 @@ export default function HeliumBalloonCarRenderer({
               Weight: {pendulumAngle > 0 ? 'FORWARD' : pendulumAngle < 0 ? 'BACKWARD' : 'NEUTRAL'}
             </span>
           </div>
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-semibold text-emerald-400">Acceleration (inertial force)</span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px', lineHeight: '1.5' }}>
+                When you increase acceleration, it causes a stronger pressure gradient, which results in bigger balloon tilt
+              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-slate-400">1</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="15"
+                  step="0.5"
+                  value={carAcceleration}
+                  onChange={(e) => setCarAcceleration(Number(e.target.value))}
+                  style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
+                />
+                <span className="text-xs text-slate-400">15</span>
+                <span className="text-sm font-bold text-white ml-1">{carAcceleration.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50" style={{ width: '100%' }}>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-semibold text-purple-400">Buoyancy (density ratio)</span>
+              </div>
+              <p style={{ fontSize: '11px', color: 'rgba(148,163,184,0.7)', marginBottom: '4px', lineHeight: '1.5' }}>
+                Higher buoyancy ratio leads to a lighter gas, which means more responsive to the pressure gradient
+              </p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-slate-400">0.2x</span>
+                <input
+                  type="range"
+                  min="0.2"
+                  max="2.0"
+                  step="0.1"
+                  value={balloonBuoyancy}
+                  onChange={(e) => setBalloonBuoyancy(Number(e.target.value))}
+                  style={{ flex: 1, width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6', cursor: 'pointer' }}
+                />
+                <span className="text-xs text-slate-400">2.0x</span>
+                <span className="text-sm font-bold text-white ml-1">{balloonBuoyancy.toFixed(1)}x</span>
+              </div>
+            </div>
+          </div>
 
           {/* Action buttons */}
           <div className="flex gap-3 justify-center mb-4 flex-wrap">
@@ -1169,6 +1175,8 @@ export default function HeliumBalloonCarRenderer({
                 Reset
               </button>
             )}
+          </div>
+          </div>
           </div>
 
           {/* Navigation */}
@@ -1459,36 +1467,15 @@ export default function HeliumBalloonCarRenderer({
             </h2>
           </div>
 
-          {/* Mode selector */}
-          <div className="flex gap-2 justify-center mb-4 flex-wrap">
-            {(['accelerate', 'brake', 'turn_left', 'turn_right'] as const).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => {
-                  setTwistMode(mode);
-                  resetTwist();
-                  playSound('click');
-                }}
-                style={{
-                  zIndex: 10,
-                  minHeight: '44px',
-                  background: twistMode === mode ? `${mode === 'accelerate' ? '#22c55e' : mode === 'brake' ? '#ef4444' : mode === 'turn_left' ? '#3b82f6' : '#f59e0b'}20` : undefined,
-                  color: twistMode === mode ? getModeColor() : undefined,
-                  borderColor: twistMode === mode ? getModeColor() : undefined,
-                }}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all border ${
-                  twistMode === mode
-                    ? 'bg-opacity-20 border-opacity-50'
-                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-700/50'
-                }`}
-              >
-                {mode === 'accelerate' && 'Accelerate'}
-                {mode === 'brake' && 'Brake'}
-                {mode === 'turn_left' && 'Turn Left'}
-                {mode === 'turn_right' && 'Turn Right'}
-              </button>
-            ))}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
 
           {/* Visualization */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4">
@@ -1596,6 +1583,39 @@ export default function HeliumBalloonCarRenderer({
               Weight: {twistPendulumAngle > 0 ? 'Forward' : twistPendulumAngle < 0 ? 'Backward' : 'Neutral'}
             </span>
           </div>
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Mode selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+            {(['accelerate', 'brake', 'turn_left', 'turn_right'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => {
+                  setTwistMode(mode);
+                  resetTwist();
+                  playSound('click');
+                }}
+                style={{
+                  zIndex: 10,
+                  minHeight: '44px',
+                  background: twistMode === mode ? `${mode === 'accelerate' ? '#22c55e' : mode === 'brake' ? '#ef4444' : mode === 'turn_left' ? '#3b82f6' : '#f59e0b'}20` : undefined,
+                  color: twistMode === mode ? getModeColor() : undefined,
+                  borderColor: twistMode === mode ? getModeColor() : undefined,
+                }}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all border ${
+                  twistMode === mode
+                    ? 'bg-opacity-20 border-opacity-50'
+                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-700/50'
+                }`}
+              >
+                {mode === 'accelerate' && 'Accelerate'}
+                {mode === 'brake' && 'Brake'}
+                {mode === 'turn_left' && 'Turn Left'}
+                {mode === 'turn_right' && 'Turn Right'}
+              </button>
+            ))}
+          </div>
 
           {/* Action buttons */}
           <div className="flex gap-3 justify-center mb-6">
@@ -1617,6 +1637,8 @@ export default function HeliumBalloonCarRenderer({
             >
               Reset
             </button>
+          </div>
+          </div>
           </div>
 
           {/* Navigation */}

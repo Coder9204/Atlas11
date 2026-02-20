@@ -948,82 +948,94 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ThermalVisualization />
-            </div>
-
-            {/* Workload slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Workload</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{workload}%</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <ThermalVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={workload}
-                aria-label="CPU Workload"
-                onChange={(e) => setWorkload(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${workload}%, ${colors.border} ${workload}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: colors.accent,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
-              </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Workload slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Workload</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{workload}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={workload}
+                    aria-label="CPU Workload"
+                    onChange={(e) => setWorkload(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.accent} ${workload}%, ${colors.border} ${workload}%)`,
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: colors.accent,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+                  </div>
+                </div>
 
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setIsSimulating(!isSimulating);
-                  playSound('click');
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pause' : 'Start Simulation'}
-              </button>
-              <button
-                onClick={() => {
-                  resetSimulation();
-                  playSound('click');
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+                {/* Control buttons */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => {
+                      setIsSimulating(!isSimulating);
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : 'Start Simulation'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetSimulation();
+                      playSound('click');
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Stats display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1339,82 +1351,94 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ThermalVisualization showCooling={true} />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <ThermalVisualization showCooling={true} />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Workload slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Workload</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{workload}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={workload}
+                    aria-label="CPU Workload"
+                    onChange={(e) => setWorkload(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.accent }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+                  </div>
+                </div>
 
-            {/* Workload slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Workload</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{workload}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={workload}
-                aria-label="CPU Workload"
-                onChange={(e) => setWorkload(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.accent }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10%</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
-              </div>
-            </div>
+                {/* Cooling slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.cool }}>Cooling Capacity (TDP)</span>
+                    <span style={{ ...typo.small, color: colors.cool, fontWeight: 600 }}>{coolingPower}W</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="35"
+                    max="150"
+                    value={coolingPower}
+                    aria-label="Cooling Capacity (TDP)"
+                    onChange={(e) => setCoolingPower(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.cool }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Phone (35W)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Desktop (150W)</span>
+                  </div>
+                </div>
 
-            {/* Cooling slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.cool }}>Cooling Capacity (TDP)</span>
-                <span style={{ ...typo.small, color: colors.cool, fontWeight: 600 }}>{coolingPower}W</span>
+                {/* Control buttons */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <button
+                    onClick={() => { setIsSimulating(!isSimulating); playSound('click'); }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : 'Start Simulation'}
+                  </button>
+                  <button
+                    onClick={() => { resetSimulation(); playSound('click'); }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
-              <input
-                type="range"
-                min="35"
-                max="150"
-                value={coolingPower}
-                aria-label="Cooling Capacity (TDP)"
-                onChange={(e) => setCoolingPower(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: colors.cool }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Phone (35W)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Desktop (150W)</span>
-              </div>
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={() => { setIsSimulating(!isSimulating); playSound('click'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pause' : 'Start Simulation'}
-              </button>
-              <button
-                onClick={() => { resetSimulation(); playSound('click'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
             </div>
           </div>
 

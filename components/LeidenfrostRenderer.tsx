@@ -1603,115 +1603,128 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             Notice how the vapor layer forms when temperature increases above 200°C, resulting in slower evaporation. This technology is used in steel quenching, cooking, and cryogenic liquid handling industry applications. Compare current vs. reference baseline.
           </p>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderSurfaceVisualization()}
-
-            {/* Controls */}
-            <div style={{ marginTop: '16px' }}>
-              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                Surface Temperature: {surfaceTemp}C
-                <span style={{ color: surfaceTemp >= LEIDENFROST_POINT ? '#10b981' : '#f59e0b', marginLeft: '8px' }}>
-                  {surfaceTemp >= LEIDENFROST_POINT ? '(Above Leidenfrost Point!)' : '(Below Leidenfrost Point)'}
-                </span>
-              </label>
-              <input
-                type="range"
-                min="80"
-                max="350"
-                value={surfaceTemp}
-                onChange={(e) => { setSurfaceTemp(parseInt(e.target.value)); resetExperiment(); }}
-                style={{ width: '100%', accentColor: getSurfaceColor(surfaceTemp), touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                <span>80C</span>
-                <span style={{ color: '#f59e0b' }}>200C (Leidenfrost)</span>
-                <span>350C</span>
-              </div>
-            </div>
-
-            {/* Droplet Size Control */}
-            <div style={{ marginTop: '12px' }}>
-              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                Droplet Size: {dropletSize} mm
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="10"
-                step="1"
-                value={dropletSize}
-                onChange={(e) => { setDropletSize(parseInt(e.target.value)); resetExperiment(); }}
-                style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                <span>2mm (Small)</span>
-                <span>10mm (Large)</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              <button
-                onPointerDown={(e) => { e.preventDefault(); dropWater(); }}
-                disabled={isDropped && dropletRadius > 0}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: isDropped && dropletRadius > 0 ? 'not-allowed' : 'pointer',
-                  background: isDropped && dropletRadius > 0 ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-                  color: isDropped && dropletRadius > 0 ? '#94a3b8' : 'white',
-                  minHeight: '44px'
-                }}
-              >
-                Drop Water
-              </button>
-              <button
-                onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: '#374151',
-                  color: 'white',
-                  minHeight: '44px'
-                }}
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-
-          {/* Explanation panel */}
+          {/* Side-by-side layout */}
           <div style={{
-            padding: '16px',
-            borderRadius: '12px',
-            background: surfaceTemp >= LEIDENFROST_POINT ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)',
-            border: surfaceTemp >= LEIDENFROST_POINT ? '2px solid #10b981' : '2px solid #f59e0b',
-            maxWidth: '500px',
-            width: '100%'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {surfaceTemp >= LEIDENFROST_POINT ? (
-              <p style={{ color: '#10b981', fontSize: '14px' }}>
-                <strong>Leidenfrost Effect Active!</strong> The water instantly vaporizes at the bottom, creating a vapor cushion. This layer insulates the droplet and allows it to hover with almost no friction!
-              </p>
-            ) : (
-              <p style={{ color: '#f59e0b', fontSize: '14px' }}>
-                <strong>Below Leidenfrost Point:</strong> The water makes direct contact with the surface, causing rapid heat transfer and quick evaporation through sizzling and boiling.
-              </p>
-            )}
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+                {renderSurfaceVisualization()}
+              </div>
 
-          {/* Key Physics Terms */}
-          <div style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(30, 41, 59, 0.5)', maxWidth: '500px', width: '100%' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '12px' }}>Key Physics Terms</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#e2e8f0' }}>
-              <div><strong style={{ color: '#10b981' }}>Leidenfrost Point</strong> is the minimum surface temperature (~200°C for water) at which a liquid droplet levitates on its own vapor layer.</div>
-              <div><strong style={{ color: '#10b981' }}>Vapor Cushion</strong> is a thin layer of vapor that forms between the droplet and hot surface, acting as thermal insulation.</div>
-              <div><strong style={{ color: '#10b981' }}>Film Boiling</strong> is a vaporization regime where a continuous vapor film separates the liquid from the heating surface.</div>
+              {/* Explanation panel */}
+              <div style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: surfaceTemp >= LEIDENFROST_POINT ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)',
+                border: surfaceTemp >= LEIDENFROST_POINT ? '2px solid #10b981' : '2px solid #f59e0b',
+                width: '100%',
+                marginBottom: '16px',
+              }}>
+                {surfaceTemp >= LEIDENFROST_POINT ? (
+                  <p style={{ color: '#10b981', fontSize: '14px' }}>
+                    <strong>Leidenfrost Effect Active!</strong> The water instantly vaporizes at the bottom, creating a vapor cushion that insulates the droplet.
+                  </p>
+                ) : (
+                  <p style={{ color: '#f59e0b', fontSize: '14px' }}>
+                    <strong>Below Leidenfrost Point:</strong> The water makes direct contact with the surface, causing rapid heat transfer and quick evaporation.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                  Temperature: {surfaceTemp}C
+                  <span style={{ color: surfaceTemp >= LEIDENFROST_POINT ? '#10b981' : '#f59e0b', marginLeft: '8px', fontSize: '12px' }}>
+                    {surfaceTemp >= LEIDENFROST_POINT ? '(Above!)' : '(Below)'}
+                  </span>
+                </label>
+                <input
+                  type="range"
+                  min="80"
+                  max="350"
+                  value={surfaceTemp}
+                  onChange={(e) => { setSurfaceTemp(parseInt(e.target.value)); resetExperiment(); }}
+                  style={{ width: '100%', accentColor: getSurfaceColor(surfaceTemp), touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                  <span>80C</span>
+                  <span style={{ color: '#f59e0b' }}>200C</span>
+                  <span>350C</span>
+                </div>
+              </div>
+
+              {/* Droplet Size Control */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                  Droplet Size: {dropletSize} mm
+                </label>
+                <input
+                  type="range"
+                  min="2"
+                  max="10"
+                  step="1"
+                  value={dropletSize}
+                  onChange={(e) => { setDropletSize(parseInt(e.target.value)); resetExperiment(); }}
+                  style={{ width: '100%', accentColor: '#3b82f6', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                  <span>2mm</span>
+                  <span>10mm</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  onPointerDown={(e) => { e.preventDefault(); dropWater(); }}
+                  disabled={isDropped && dropletRadius > 0}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: isDropped && dropletRadius > 0 ? 'not-allowed' : 'pointer',
+                    background: isDropped && dropletRadius > 0 ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                    color: isDropped && dropletRadius > 0 ? '#94a3b8' : 'white',
+                    minHeight: '44px'
+                  }}
+                >
+                  Drop Water
+                </button>
+                <button
+                  onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: '#374151',
+                    color: 'white',
+                    minHeight: '44px'
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Key Physics Terms */}
+              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30, 41, 59, 0.5)', width: '100%' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '12px' }}>Key Physics</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: '#e2e8f0' }}>
+                  <div><strong style={{ color: '#10b981' }}>Leidenfrost Point:</strong> ~200C for water</div>
+                  <div><strong style={{ color: '#10b981' }}>Vapor Cushion:</strong> Insulating vapor layer</div>
+                  <div><strong style={{ color: '#10b981' }}>Film Boiling:</strong> Continuous vapor film</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1852,54 +1865,66 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Evaporation Time Comparison</h2>
           <p style={{ color: '#e2e8f0', marginBottom: '16px' }}>Compare how long a droplet lasts at different temperatures!</p>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderEvaporationComparison()}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+                {renderEvaporationComparison()}
+              </div>
 
-            {/* Temperature selector */}
-            <div style={{ marginTop: '16px' }}>
-              <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                Surface Temperature: {twistTemp}C
-              </label>
-              <input
-                type="range"
-                min="120"
-                max="300"
-                value={twistTemp}
-                onChange={(e) => { setTwistTemp(parseInt(e.target.value)); setIsEvaporating(false); setTwistDropletRadius(15); setEvaporationTime(0); }}
-                style={{ width: '100%', accentColor: getSurfaceColor(twistTemp), touchAction: 'pan-y' }}
-              />
+              {/* Quick comparison */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%' }}>
+                <div style={{ background: 'rgba(249, 115, 22, 0.2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <h4 style={{ color: '#f97316', fontWeight: 'bold', marginBottom: '8px' }}>150C (Below)</h4>
+                  <p style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 'bold' }}>~2-3 sec</p>
+                  <p style={{ color: '#94a3b8', fontSize: '12px' }}>Direct contact = fast evap</p>
+                </div>
+                <div style={{ background: 'rgba(16, 185, 129, 0.2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <h4 style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '8px' }}>300C (Above)</h4>
+                  <p style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 'bold' }}>~30+ sec</p>
+                  <p style={{ color: '#94a3b8', fontSize: '12px' }}>Vapor insulation = slow!</p>
+                </div>
+              </div>
             </div>
 
-            <button
-              onPointerDown={(e) => { e.preventDefault(); startTwistExperiment(); }}
-              disabled={isEvaporating}
-              style={{
-                width: '100%',
-                marginTop: '12px',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                border: 'none',
-                cursor: isEvaporating ? 'not-allowed' : 'pointer',
-                background: isEvaporating ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-                color: isEvaporating ? '#94a3b8' : 'white'
-              }}
-            >
-              {isEvaporating ? 'Evaporating...' : 'Drop & Time'}
-            </button>
-          </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature selector */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                  Temperature: {twistTemp}C
+                </label>
+                <input
+                  type="range"
+                  min="120"
+                  max="300"
+                  value={twistTemp}
+                  onChange={(e) => { setTwistTemp(parseInt(e.target.value)); setIsEvaporating(false); setTwistDropletRadius(15); setEvaporationTime(0); }}
+                  style={{ width: '100%', accentColor: getSurfaceColor(twistTemp), touchAction: 'pan-y' }}
+                />
+              </div>
 
-          {/* Quick comparison */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', maxWidth: '500px', width: '100%' }}>
-            <div style={{ background: 'rgba(249, 115, 22, 0.2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <h4 style={{ color: '#f97316', fontWeight: 'bold', marginBottom: '8px' }}>150C (Below)</h4>
-              <p style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 'bold' }}>~2-3 sec</p>
-              <p style={{ color: '#94a3b8', fontSize: '12px' }}>Direct contact = fast evap</p>
-            </div>
-            <div style={{ background: 'rgba(16, 185, 129, 0.2)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <h4 style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '8px' }}>300C (Above)</h4>
-              <p style={{ color: '#e2e8f0', fontSize: '20px', fontWeight: 'bold' }}>~30+ sec</p>
-              <p style={{ color: '#94a3b8', fontSize: '12px' }}>Vapor insulation = slow!</p>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); startTwistExperiment(); }}
+                disabled={isEvaporating}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: isEvaporating ? 'not-allowed' : 'pointer',
+                  background: isEvaporating ? '#475569' : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: isEvaporating ? '#94a3b8' : 'white'
+                }}
+              >
+                {isEvaporating ? 'Evaporating...' : 'Drop & Time'}
+              </button>
             </div>
           </div>
         </div>

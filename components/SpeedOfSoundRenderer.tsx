@@ -1016,76 +1016,88 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
         padding: '24px',
         marginBottom: '24px',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <EchoVisualization />
-        </div>
-
-        {/* Distance slider */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>Distance to Wall</span>
-            <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distance} m</span>
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <EchoVisualization />
+            </div>
           </div>
-          <input
-            type="range"
-            min="50"
-            max="500"
-            step="10"
-            value={distance}
-            onChange={(e) => { setDistance(parseInt(e.target.value)); resetMeasurement(); }}
-            disabled={measuring}
-            style={sliderStyle}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-            <span style={{ ...typo.small, color: colors.textMuted }}>50 m</span>
-            <span style={{ ...typo.small, color: colors.textMuted }}>500 m</span>
-          </div>
-        </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Distance slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Distance to Wall</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distance} m</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="500"
+                step="10"
+                value={distance}
+                onChange={(e) => { setDistance(parseInt(e.target.value)); resetMeasurement(); }}
+                disabled={measuring}
+                style={sliderStyle}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>50 m</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>500 m</span>
+              </div>
+            </div>
 
-        {/* Controls */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-          <button
-            onClick={makeSound}
-            disabled={measuring}
-            style={{
-              padding: '14px 32px',
-              borderRadius: '10px',
-              border: 'none',
-              background: measuring ? colors.border : 'linear-gradient(135deg, #F59E0B, #D97706)',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '18px',
-              cursor: measuring ? 'not-allowed' : 'pointer',
-              boxShadow: measuring ? 'none' : '0 4px 15px rgba(245, 158, 11, 0.4)',
-              minHeight: '44px',
-            }}
-          >
-            {measuring ? 'Measuring...' : '🔊 CLAP!'}
-          </button>
-          {hasMeasured && !measuring && (
-            <button
-              onClick={resetMeasurement}
-              style={{
-                padding: '14px 24px',
-                borderRadius: '10px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                fontWeight: 600,
-                cursor: 'pointer',
-                minHeight: '44px',
-              }}
-            >
-              Reset
-            </button>
-          )}
+            {/* Controls */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={makeSound}
+                disabled={measuring}
+                style={{
+                  padding: '14px 32px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: measuring ? colors.border : 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  cursor: measuring ? 'not-allowed' : 'pointer',
+                  boxShadow: measuring ? 'none' : '0 4px 15px rgba(245, 158, 11, 0.4)',
+                  minHeight: '44px',
+                }}
+              >
+                {measuring ? 'Measuring...' : '🔊 CLAP!'}
+              </button>
+              {hasMeasured && !measuring && (
+                <button
+                  onClick={resetMeasurement}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Results — comparison display */}
         {calculatedSpeed > 0 && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '16px',
           }}>
             <div style={{
@@ -1368,34 +1380,46 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
           padding: '24px',
           marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <TemperatureVisualization />
-          </div>
-
-          {/* Temperature slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-              <span style={{ ...typo.small, color: temperature > 20 ? '#EF4444' : '#3B82F6', fontWeight: 600 }}>{temperature}°C → {expectedSpeed.toFixed(0)} m/s</span>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <TemperatureVisualization />
+              </div>
             </div>
-            <input
-              type="range"
-              min="-30"
-              max="50"
-              value={temperature}
-              onChange={(e) => setTemperature(parseInt(e.target.value))}
-              style={sliderStyle}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: '#3B82F6' }}>-30°C (Arctic)</span>
-              <span style={{ ...typo.small, color: '#EF4444' }}>50°C (Desert)</span>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: temperature > 20 ? '#EF4444' : '#3B82F6', fontWeight: 600 }}>{temperature}°C → {expectedSpeed.toFixed(0)} m/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="-30"
+                  max="50"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseInt(e.target.value))}
+                  style={sliderStyle}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: '#3B82F6' }}>-30°C (Arctic)</span>
+                  <span style={{ ...typo.small, color: '#EF4444' }}>50°C (Desert)</span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Speed examples — comparison display */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '8px',
           }}>
             {[-20, 0, 20, 40].map(t => (

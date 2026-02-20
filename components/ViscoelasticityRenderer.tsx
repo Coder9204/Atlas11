@@ -283,6 +283,14 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     if (onPhaseComplete) onPhaseComplete();
   }, [phase, goToPhase, onPhaseComplete]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const phaseIndex = validPhases.indexOf(phase);
 
   // Physics calculations
@@ -824,8 +832,35 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
               simultaneously protective at high rates and compliant at low rates.
             </p>
           </div>
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+          <div style={{
+
+            display: 'flex',
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+            gap: isMobile ? '12px' : '20px',
+
+            width: '100%',
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+          }}>
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+              {renderVisualization()}
+
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+              {renderControls()}
+
+            </div>
+
+          </div>
           <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginTop: '16px' }}>
             <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>

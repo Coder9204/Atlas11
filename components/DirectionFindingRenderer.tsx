@@ -892,8 +892,35 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             Real-world relevance: Understanding sound localization helps design better hearing aids, surround sound systems, and spatial audio for virtual reality experiences.
           </p>
         </div>
-        {renderVisualization(true, true)}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+        <div style={{
+
+          display: 'flex',
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+          gap: isMobile ? '12px' : '20px',
+
+          width: '100%',
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+        }}>
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+            {renderVisualization(true, true)}
+
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+            {renderControls()}
+
+          </div>
+
+        </div>
         <div style={{ background: colors.bgCard, margin: '16px', padding: typo.cardPadding, borderRadius: '12px' }}>
           <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Key Physics Definitions:</h4>
           <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6, marginBottom: '8px' }}>

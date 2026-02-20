@@ -306,6 +306,14 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Damping simulation state
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [dampingRatio, setDampingRatio] = useState(0.1);
   const [isOscillating, setIsOscillating] = useState(false);
   const [position, setPosition] = useState(100);
@@ -578,7 +586,14 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const dampOpacity = Math.min(1, dampingRatio / 2);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}`, maxWidth: `${svgWidth}px` }}>
           <defs>
             <linearGradient id="dampBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -764,7 +779,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             <text x={8} y={18} fill="#71717a" fontSize="11" textAnchor="start" fontWeight="600">Amplitude</text>
           </g>
         </svg>
-
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {showControls && (
           <div style={{
             display: 'flex',
@@ -835,6 +851,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             </div>
           </div>
         )}
+        </div>
       </div>
     );
   };

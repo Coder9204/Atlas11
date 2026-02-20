@@ -862,32 +862,45 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Adjust Tube Radius</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderVisualization(true)}
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textMuted, fontSize: '13px' }}>Wide (0.5mm)</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Tube Radius: {tubeRadius}mm</span>
-                  <span style={{ color: colors.primary, fontSize: '13px' }}>Narrow (4mm)</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '20px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderVisualization(true)}
                 </div>
-                <input type="range" min="0.5" max="4" step="0.1" value={tubeRadius} onChange={(e) => setTubeRadius(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
-                <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
-                  Rise height: <strong style={{ color: colors.primaryLight }}>{riseHeight.toFixed(1)}mm</strong>
-                </p>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Controls</h3>
 
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textMuted, fontSize: '13px' }}>Soapy (30)</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Surface Tension: {surfaceTension} mN/m</span>
-                  <span style={{ color: colors.adhesion, fontSize: '13px' }}>Pure water (72)</span>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>Wide (0.5mm)</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Tube Radius: {tubeRadius}mm</span>
+                      <span style={{ color: colors.primary, fontSize: '13px' }}>Narrow (4mm)</span>
+                    </div>
+                    <input type="range" min="0.5" max="4" step="0.1" value={tubeRadius} onChange={(e) => setTubeRadius(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
+                    <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
+                      Rise height: <strong style={{ color: colors.primaryLight }}>{riseHeight.toFixed(1)}mm</strong>
+                    </p>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>Soapy (30)</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Surface Tension: {surfaceTension} mN/m</span>
+                      <span style={{ color: colors.adhesion, fontSize: '13px' }}>Pure water (72)</span>
+                    </div>
+                    <input type="range" min="30" max="72" value={surfaceTension} onChange={(e) => setSurfaceTension(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
+                  </div>
                 </div>
-                <input type="range" min="30" max="72" value={surfaceTension} onChange={(e) => setSurfaceTension(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
               </div>
             </div>
 
@@ -1100,55 +1113,66 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Higher surface tension = higher capillary rise</p>
             </div>
 
-            {/* Comparison SVG */}
-            <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
-              <svg viewBox="0 0 400 220" width="100%" style={{ display: 'block' }}>
-                <defs>
-                  <linearGradient id="twistPureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor={colors.waterDark} />
-                    <stop offset="100%" stopColor={colors.water} />
-                  </linearGradient>
-                  <linearGradient id="twistSoapyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#eab308" />
-                    <stop offset="100%" stopColor="#fbbf24" />
-                  </linearGradient>
-                  <filter id="resultGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <rect x="0" y="0" width="400" height="220" fill={colors.bgDark} rx="8" />
-                <text x="200" y="24" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Capillary Rise Comparison</text>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Comparison SVG */}
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
+                  <svg viewBox="0 0 400 220" width="100%" style={{ display: 'block' }}>
+                    <defs>
+                      <linearGradient id="twistPureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor={colors.waterDark} />
+                        <stop offset="100%" stopColor={colors.water} />
+                      </linearGradient>
+                      <linearGradient id="twistSoapyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#eab308" />
+                        <stop offset="100%" stopColor="#fbbf24" />
+                      </linearGradient>
+                      <filter id="resultGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <rect x="0" y="0" width="400" height="220" fill={colors.bgDark} rx="8" />
+                    <text x="200" y="24" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">Capillary Rise Comparison</text>
 
-                {/* Pure water tube - rises higher */}
-                <g>
-                  <rect x="100" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
-                  <rect x="102" y="70" width="20" height="110" fill="url(#twistPureGrad)" opacity="0.9" />
-                  <path d="M 102 75 Q 112 65 122 75" fill={colors.meniscus} filter="url(#resultGlow)" />
-                  <text x="112" y="200" textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">Pure Water</text>
-                  <text x="112" y="60" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">↑ {pureRise.toFixed(1)}mm</text>
-                  <text x="145" y="100" fill={colors.success} fontSize="24" fontWeight="bold">✓</text>
-                </g>
+                    {/* Pure water tube - rises higher */}
+                    <g>
+                      <rect x="100" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
+                      <rect x="102" y="70" width="20" height="110" fill="url(#twistPureGrad)" opacity="0.9" />
+                      <path d="M 102 75 Q 112 65 122 75" fill={colors.meniscus} filter="url(#resultGlow)" />
+                      <text x="112" y="200" textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">Pure Water</text>
+                      <text x="112" y="60" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">↑ {pureRise.toFixed(1)}mm</text>
+                      <text x="145" y="100" fill={colors.success} fontSize="24" fontWeight="bold">✓</text>
+                    </g>
 
-                {/* Soapy water tube - rises lower */}
-                <g>
-                  <rect x="276" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
-                  <rect x="278" y="100" width="20" height="80" fill="url(#twistSoapyGrad)" opacity="0.9" />
-                  <path d="M 278 105 Q 288 95 298 105" fill="#fef08a" />
-                  <text x="288" y="200" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="600">Soapy Water</text>
-                  <text x="288" y="90" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="700">↑ {soapyRise.toFixed(1)}mm</text>
-                </g>
+                    {/* Soapy water tube - rises lower */}
+                    <g>
+                      <rect x="276" y="40" width="24" height="140" fill="#64748b" opacity="0.3" rx="2" />
+                      <rect x="278" y="100" width="20" height="80" fill="url(#twistSoapyGrad)" opacity="0.9" />
+                      <path d="M 278 105 Q 288 95 298 105" fill="#fef08a" />
+                      <text x="288" y="200" textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="600">Soapy Water</text>
+                      <text x="288" y="90" textAnchor="middle" fill={colors.error} fontSize="11" fontWeight="700">↑ {soapyRise.toFixed(1)}mm</text>
+                    </g>
 
-                {/* Difference indicator */}
-                <line x1="140" y1="110" x2="260" y2="110" stroke={colors.primary} strokeWidth="2" strokeDasharray="4,4" />
-                <text x="200" y="130" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="600">Δ = {(pureRise - soapyRise).toFixed(1)}mm difference</text>
-              </svg>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                    {/* Difference indicator */}
+                    <line x1="140" y1="110" x2="260" y2="110" stroke={colors.primary} strokeWidth="2" strokeDasharray="4,4" />
+                    <text x="200" y="130" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="600">Δ = {(pureRise - soapyRise).toFixed(1)}mm difference</text>
+                  </svg>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.water}40` }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>💧</div>
@@ -1163,6 +1187,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
                   <p style={{ color: colors.warning, fontWeight: 700 }}>Soapy Water</p>
                   <p style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: 400 }}>γ = 30 mN/m</p>
                   <p style={{ color: colors.error, fontWeight: 700, marginTop: '8px' }}>Rise: {soapyRise.toFixed(1)}mm</p>
+                </div>
+              </div>
                 </div>
               </div>
             </div>

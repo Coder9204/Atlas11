@@ -1190,8 +1190,35 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Explore the Process Window</h2>
           <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 400 }}>Find the combinations of focus and dose that produce acceptable features</p>
         </div>
-        {renderVisualization(true)}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+        <div style={{
+
+          display: 'flex',
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+          gap: isMobile ? '12px' : '20px',
+
+          width: '100%',
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+        }}>
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+            {renderVisualization(true)}
+
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+            {renderControls()}
+
+          </div>
+
+        </div>
         <div style={{ background: 'rgba(139, 92, 246, 0.15)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.accent}` }}>
           <h4 style={{ color: colors.textSecondary, marginBottom: '8px', fontSize: '14px', fontWeight: 700 }}>Observe what happens:</h4>
           <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, fontWeight: 400 }}>

@@ -935,135 +935,148 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderGalvanicCellSVG(true, electrolyteStrength)}
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderGalvanicCellSVG(true, electrolyteStrength)}
+                </div>
 
-            {/* Comparison info row */}
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', marginBottom: '20px', gap: '12px' }}>
-              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Reference Voltage</div>
-                <div style={{ ...typo.h3, color: colors.warning }}>{getVoltage().toFixed(2)} V</div>
+                {/* Comparison info row */}
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around', marginBottom: '20px', gap: '12px' }}>
+                  <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Reference Voltage</div>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{getVoltage().toFixed(2)} V</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Current Rate</div>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{(getVoltage() * electrolyteStrength / 100 * 0.5).toFixed(3)} V</div>
+                  </div>
+                  <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Corrosion</div>
+                    <div style={{ ...typo.h3, color: corrosionLevel > 70 ? colors.error : corrosionLevel > 40 ? colors.warning : colors.success }}>{corrosionLevel.toFixed(0)}%</div>
+                  </div>
+                </div>
               </div>
-              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Current Rate</div>
-                <div style={{ ...typo.h3, color: colors.accent }}>{(getVoltage() * electrolyteStrength / 100 * 0.5).toFixed(3)} V</div>
-              </div>
-              <div style={{ textAlign: 'center', flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '8px' }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Corrosion</div>
-                <div style={{ ...typo.h3, color: corrosionLevel > 70 ? colors.error : corrosionLevel > 40 ? colors.warning : colors.success }}>{corrosionLevel.toFixed(0)}%</div>
-              </div>
-            </div>
 
-            {/* Anode selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Anode Metal (Active)</span>
-                <span style={{ ...typo.small, color: colors.anode, fontWeight: 600 }}>{anodeMetal}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['magnesium', 'zinc', 'aluminum'] as const).map(metal => (
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Anode selector */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Anode Metal (Active)</span>
+                    <span style={{ ...typo.small, color: colors.anode, fontWeight: 600 }}>{anodeMetal}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {(['magnesium', 'zinc', 'aluminum'] as const).map(metal => (
+                      <button
+                        key={metal}
+                        onClick={() => { setAnodeMetal(metal); setCorrosionLevel(0); }}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          borderRadius: '8px',
+                          border: `2px solid ${anodeMetal === metal ? colors.anode : colors.border}`,
+                          background: anodeMetal === metal ? `${colors.anode}22` : 'transparent',
+                          color: colors.textPrimary,
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {metal.charAt(0).toUpperCase() + metal.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cathode selector */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Cathode Metal (Noble)</span>
+                    <span style={{ ...typo.small, color: colors.cathode, fontWeight: 600 }}>{cathodeMetal}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {(['copper', 'steel', 'gold'] as const).map(metal => (
+                      <button
+                        key={metal}
+                        onClick={() => { setCathodeMetal(metal); setCorrosionLevel(0); }}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          borderRadius: '8px',
+                          border: `2px solid ${cathodeMetal === metal ? colors.cathode : colors.border}`,
+                          background: cathodeMetal === metal ? `${colors.cathode}22` : 'transparent',
+                          color: colors.textPrimary,
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {metal.charAt(0).toUpperCase() + metal.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Electrolyte slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Electrolyte Strength</span>
+                    <span style={{ ...typo.small, color: colors.electrolyte, fontWeight: 600 }}>{electrolyteStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={10}
+                    max={100}
+                    value={electrolyteStrength}
+                    onChange={(e) => setElectrolyteStrength(Number(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.electrolyte, touchAction: 'pan-y' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>10 (Min)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>100 (Max)</span>
+                  </div>
+                </div>
+
+                {/* Control buttons */}
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
-                    key={metal}
-                    onClick={() => { setAnodeMetal(metal); setCorrosionLevel(0); }}
+                    onClick={() => { setIsRunning(!isRunning); playSound('click'); }}
                     style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: `2px solid ${anodeMetal === metal ? colors.anode : colors.border}`,
-                      background: anodeMetal === metal ? `${colors.anode}22` : 'transparent',
-                      color: colors.textPrimary,
+                      padding: '14px 32px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: isRunning ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
                       cursor: 'pointer',
-                      fontSize: '13px',
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    {metal.charAt(0).toUpperCase() + metal.slice(1)}
+                    {isRunning ? 'Stop Reaction' : 'Start Reaction'}
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Cathode selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Cathode Metal (Noble)</span>
-                <span style={{ ...typo.small, color: colors.cathode, fontWeight: 600 }}>{cathodeMetal}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['copper', 'steel', 'gold'] as const).map(metal => (
                   <button
-                    key={metal}
-                    onClick={() => { setCathodeMetal(metal); setCorrosionLevel(0); }}
+                    onClick={() => { setCorrosionLevel(0); setIsRunning(false); }}
                     style={{
-                      flex: 1,
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: `2px solid ${cathodeMetal === metal ? colors.cathode : colors.border}`,
-                      background: cathodeMetal === metal ? `${colors.cathode}22` : 'transparent',
-                      color: colors.textPrimary,
+                      padding: '14px 32px',
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
                       cursor: 'pointer',
-                      fontSize: '13px',
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    {metal.charAt(0).toUpperCase() + metal.slice(1)}
+                    Reset
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
-
-            {/* Electrolyte slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Electrolyte Strength</span>
-                <span style={{ ...typo.small, color: colors.electrolyte, fontWeight: 600 }}>{electrolyteStrength}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={100}
-                value={electrolyteStrength}
-                onChange={(e) => setElectrolyteStrength(Number(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.electrolyte, touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 (Min)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100 (Max)</span>
-              </div>
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => { setIsRunning(!isRunning); playSound('click'); }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: isRunning ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {isRunning ? 'Stop Reaction' : 'Start Reaction'}
-              </button>
-              <button
-                onClick={() => { setCorrosionLevel(0); setIsRunning(false); }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Reset
-              </button>
             </div>
           </div>
 
@@ -1289,99 +1302,112 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderGalvanicCellSVG(true, areaRatio)}
-            </div>
-
-            {/* Area ratio slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Anode:Cathode Area Ratio</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{areaRatio}:{100 - areaRatio}</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="90"
-                value={areaRatio}
-                onChange={(e) => { setAreaRatio(Number(e.target.value)); setCorrosionLevel(0); }}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.warning, touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.anode }}>10 (Min)</span>
-                <span style={{ ...typo.small, color: colors.cathode }}>90 (Max)</span>
-              </div>
-            </div>
-
-            {/* Coating toggle */}
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Coating</span>
-              <button
-                onClick={() => { setHasCoating(!hasCoating); setCorrosionLevel(0); }}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: hasCoating ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s ease',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: hasCoating ? '33px' : '3px',
-                  transition: 'left 0.3s ease',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: hasCoating ? colors.success : colors.textSecondary, fontWeight: hasCoating ? 600 : 400 }}>
-                Insulating Coating
-              </span>
-            </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderGalvanicCellSVG(true, areaRatio)}
+                </div>
+              </div>
 
-            {/* Control buttons */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => { setIsRunning(!isRunning); playSound('click'); }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: isRunning ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {isRunning ? 'Stop' : 'Start'} Reaction
-              </button>
-              <button
-                onClick={() => { setCorrosionLevel(0); setIsRunning(false); }}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Reset
-              </button>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Area ratio slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Anode:Cathode Area Ratio</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{areaRatio}:{100 - areaRatio}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    value={areaRatio}
+                    onChange={(e) => { setAreaRatio(Number(e.target.value)); setCorrosionLevel(0); }}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.warning, touchAction: 'pan-y' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.anode }}>10 (Min)</span>
+                    <span style={{ ...typo.small, color: colors.cathode }}>90 (Max)</span>
+                  </div>
+                </div>
+
+                {/* Coating toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  marginBottom: '24px',
+                }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>No Coating</span>
+                  <button
+                    onClick={() => { setHasCoating(!hasCoating); setCorrosionLevel(0); }}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: hasCoating ? colors.success : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.3s ease',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: hasCoating ? '33px' : '3px',
+                      transition: 'left 0.3s ease',
+                    }} />
+                  </button>
+                  <span style={{ ...typo.small, color: hasCoating ? colors.success : colors.textSecondary, fontWeight: hasCoating ? 600 : 400 }}>
+                    Insulating Coating
+                  </span>
+                </div>
+
+                {/* Control buttons */}
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => { setIsRunning(!isRunning); playSound('click'); }}
+                    style={{
+                      padding: '14px 32px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: isRunning ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {isRunning ? 'Stop' : 'Start'} Reaction
+                  </button>
+                  <button
+                    onClick={() => { setCorrosionLevel(0); setIsRunning(false); }}
+                    style={{
+                      padding: '14px 32px',
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

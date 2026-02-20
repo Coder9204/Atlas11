@@ -774,89 +774,106 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <WireVisualization />
-            </div>
-
-            {/* Voltage slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>⚡ Distribution Voltage</label>
-                <span style={{ ...typo.small, color: colors.voltage, fontWeight: 600 }}>{voltage}V</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="48"
-                value={voltage}
-                onChange={(e) => setVoltage(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>5V (USB)</label>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>12V (Car)</label>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>48V (Data Center)</label>
-              </div>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.voltage }}>{voltage}V</div>
-                <div style={{ ...typo.small, color: colors.textPrimary }}>Voltage</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.current }}>{current.toFixed(0)}A</div>
-                <div style={{ ...typo.small, color: colors.textPrimary }}>Current</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: wireLossPercent > 5 ? colors.error : colors.warning }}>
-                  {wireLoss.toFixed(0)}W
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <WireVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textPrimary }}>Cable Loss</div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.voltage }}>{voltage}V</div>
+                    <div style={{ ...typo.small, color: colors.textPrimary }}>Voltage</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.current }}>{current.toFixed(0)}A</div>
+                    <div style={{ ...typo.small, color: colors.textPrimary }}>Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: wireLossPercent > 5 ? colors.error : colors.warning }}>
+                      {wireLoss.toFixed(0)}W
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textPrimary }}>Cable Loss</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.power }}>{(deliveredPower / 1000).toFixed(2)}kW</div>
+                    <div style={{ ...typo.small, color: colors.textPrimary }}>Delivered</div>
+                  </div>
+                </div>
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.power }}>{(deliveredPower / 1000).toFixed(2)}kW</div>
-                <div style={{ ...typo.small, color: colors.textPrimary }}>Delivered</div>
+                {/* Voltage slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>⚡ Distribution Voltage</label>
+                    <span style={{ ...typo.small, color: colors.voltage, fontWeight: 600 }}>{voltage}V</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="48"
+                    value={voltage}
+                    onChange={(e) => setVoltage(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>5V (USB)</label>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>12V (Car)</label>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>48V (Data Center)</label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1151,28 +1168,18 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             Select a battery type and adjust cycles to see the efficiency impact
           </p>
 
-          {/* Cycles per year slider */}
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ ...typo.small, color: colors.textPrimary }}>🔄 Cycles per Year</label>
-              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{cyclesPerYear} cycles</span>
-            </div>
-            <input
-              type="range"
-              min="50"
-              max="730"
-              value={cyclesPerYear}
-              onChange={(e) => { setCyclesPerYear(parseInt(e.target.value)); playSound('click'); }}
-              style={{ width: '100%', height: '20px', borderRadius: '6px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>50/yr (backup)</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>730/yr (2x/day)</span>
-            </div>
-          </div>
-
-          {/* SVG Annual Energy Loss Bar Chart */}
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* SVG Annual Energy Loss Bar Chart */}
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
             <svg width="100%" height="140" viewBox="0 0 480 140" style={{ display: 'block' }}>
               <defs>
                 <linearGradient id="leadBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1199,6 +1206,29 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
               <text x={Math.min(460, 106 + Math.max(2, (lithiumLossPerYear / 3000) * 355))} y="82" fill={colors.success} fontSize="11">{lithiumLossPerYear.toLocaleString()}kWh</text>
               <text x="280" y="125" fill={colors.accent} fontSize="11" textAnchor="middle">Savings: {savingsPerYear.toLocaleString()} kWh/year @ {cyclesPerYear} cycles</text>
             </svg>
+          </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Cycles per year slider */}
+              <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <label style={{ ...typo.small, color: colors.textPrimary }}>🔄 Cycles per Year</label>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{cyclesPerYear} cycles</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="730"
+                  value={cyclesPerYear}
+                  onChange={(e) => { setCyclesPerYear(parseInt(e.target.value)); playSound('click'); }}
+                  style={{ width: '100%', height: '20px', borderRadius: '6px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>50/yr (backup)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>730/yr (2x/day)</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div style={{

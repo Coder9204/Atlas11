@@ -1105,132 +1105,138 @@ export default function MakeMicrophoneRenderer({
               Watch how sound becomes electricity. Adjust the controls to explore.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <MicrophoneVisualization />
-              </div>
-
-              {/* Sound Frequency slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Frequency (pitch)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundFrequency * 220).toFixed(0)} Hz</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '50px' }}>220 Hz</span>
-                  <input
-                    type="range"
-                    min="1"
-                    max="4"
-                    step="0.5"
-                    value={soundFrequency}
-                    onChange={(e) => { setSoundFrequency(parseFloat(e.target.value)); handleExperiment(); }}
-                    style={{
-                      width: '100%',
-                      cursor: 'pointer',
-                      height: '20px',
-                      touchAction: 'pan-y',
-                      WebkitAppearance: 'none',
-                      accentColor: '#3b82f6'
-                    } as React.CSSProperties}
-                  />
-                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '50px', textAlign: 'right' }}>880 Hz</span>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <MicrophoneVisualization />
+                  </div>
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Sound Frequency slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Frequency</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundFrequency * 220).toFixed(0)} Hz</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="4"
+                      step="0.5"
+                      value={soundFrequency}
+                      onChange={(e) => { setSoundFrequency(parseFloat(e.target.value)); handleExperiment(); }}
+                      style={{
+                        width: '100%',
+                        cursor: 'pointer',
+                        height: '20px',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        accentColor: '#3b82f6'
+                      } as React.CSSProperties}
+                    />
+                  </div>
 
-              {/* Sound Amplitude slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Amplitude (loudness)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '40px' }}>20%</span>
-                  <input
-                    type="range"
-                    min="0.2"
-                    max="1"
-                    step="0.1"
-                    value={soundAmplitude}
-                    onChange={(e) => { setSoundAmplitude(parseFloat(e.target.value)); handleExperiment(); }}
-                    style={{
-                      width: '100%',
-                      cursor: 'pointer',
-                      height: '20px',
-                      touchAction: 'pan-y',
-                      WebkitAppearance: 'none',
-                      accentColor: '#3b82f6'
-                    } as React.CSSProperties}
-                  />
-                  <span style={{ ...typo.small, color: '#C8C8D0', minWidth: '40px', textAlign: 'right' }}>100%</span>
-                </div>
-              </div>
+                  {/* Sound Amplitude slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: '#CBD5E1' }}>Sound Amplitude</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(soundAmplitude * 100).toFixed(0)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1"
+                      step="0.1"
+                      value={soundAmplitude}
+                      onChange={(e) => { setSoundAmplitude(parseFloat(e.target.value)); handleExperiment(); }}
+                      style={{
+                        width: '100%',
+                        cursor: 'pointer',
+                        height: '20px',
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                        accentColor: '#3b82f6'
+                      } as React.CSSProperties}
+                    />
+                  </div>
 
-              {/* Microphone Type buttons */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '8px' }}>Microphone Type:</div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    onClick={() => { setMicType('dynamic'); handleExperiment(); playSound('click'); }}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: micType === 'dynamic' ? colors.accent : colors.bgSecondary,
-                      color: micType === 'dynamic' ? 'white' : colors.textSecondary,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    Dynamic (Coil)
-                  </button>
-                  <button
-                    onClick={() => { setMicType('condenser'); handleExperiment(); playSound('click'); }}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: micType === 'condenser' ? colors.accent : colors.bgSecondary,
-                      color: micType === 'condenser' ? 'white' : colors.textSecondary,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    Condenser
-                  </button>
-                </div>
-              </div>
+                  {/* Microphone Type buttons */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '8px' }}>Microphone Type:</div>
+                    <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+                      <button
+                        onClick={() => { setMicType('dynamic'); handleExperiment(); playSound('click'); }}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: micType === 'dynamic' ? colors.accent : colors.bgSecondary,
+                          color: micType === 'dynamic' ? 'white' : colors.textSecondary,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        Dynamic (Coil)
+                      </button>
+                      <button
+                        onClick={() => { setMicType('condenser'); handleExperiment(); playSound('click'); }}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: micType === 'condenser' ? colors.accent : colors.bgSecondary,
+                          color: micType === 'condenser' ? 'white' : colors.textSecondary,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        Condenser
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Comparison display - before/after relationship */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '16px',
-                marginBottom: '16px',
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-              }}>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Sound Input</div>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{(soundAmplitude * 100).toFixed(0)} dB SPL</div>
-                  <div style={{ ...typo.small, color: '#CBD5E1' }}>{(soundFrequency * 220).toFixed(0)} Hz</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', color: '#CBD5E1' }}>→</div>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Electric Output</div>
-                  <div style={{ ...typo.h3, color: '#22C55E' }}>{(soundAmplitude * (micType === 'dynamic' ? 0.8 : 1.2) * 10).toFixed(1)} mV</div>
-                  <div style={{ ...typo.small, color: '#CBD5E1' }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
+                  {/* Comparison display */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Sound Input</div>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{(soundAmplitude * 100).toFixed(0)} dB SPL</div>
+                      <div style={{ ...typo.small, color: '#CBD5E1' }}>{(soundFrequency * 220).toFixed(0)} Hz</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CBD5E1' }}>↓</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: '#CBD5E1', marginBottom: '4px' }}>Electric Output</div>
+                      <div style={{ ...typo.h3, color: '#22C55E' }}>{(soundAmplitude * (micType === 'dynamic' ? 0.8 : 1.2) * 10).toFixed(1)} mV</div>
+                      <div style={{ ...typo.small, color: '#CBD5E1' }}>{micType === 'dynamic' ? '80% sens' : '120% sens'}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1534,52 +1540,68 @@ export default function MakeMicrophoneRenderer({
               Toggle between modes to see how the same physics works both ways.
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <SpeakerMicVisualization />
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <SpeakerMicVisualization />
+                  </div>
+                </div>
               </div>
-
-              {/* Mode toggle buttons */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                <button
-                  onClick={() => { setSpeakerMode('speaker'); setHasExploredTwist(true); playSound('click'); }}
-                  style={{
-                    flex: 1,
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: speakerMode === 'speaker' ? '#3B82F6' : colors.bgSecondary,
-                    color: speakerMode === 'speaker' ? 'white' : colors.textSecondary,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  🔊 As Speaker
-                </button>
-                <button
-                  onClick={() => { setSpeakerMode('microphone'); setHasExploredTwist(true); playSound('click'); }}
-                  style={{
-                    flex: 1,
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: speakerMode === 'microphone' ? '#8B5CF6' : colors.bgSecondary,
-                    color: speakerMode === 'microphone' ? 'white' : colors.textSecondary,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  🎤 As Microphone
-                </button>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Mode toggle buttons */}
+                  <div style={{ display: 'flex', gap: '12px', flexDirection: 'column' }}>
+                    <button
+                      onClick={() => { setSpeakerMode('speaker'); setHasExploredTwist(true); playSound('click'); }}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: speakerMode === 'speaker' ? '#3B82F6' : colors.bgSecondary,
+                        color: speakerMode === 'speaker' ? 'white' : colors.textSecondary,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      🔊 As Speaker
+                    </button>
+                    <button
+                      onClick={() => { setSpeakerMode('microphone'); setHasExploredTwist(true); playSound('click'); }}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: speakerMode === 'microphone' ? '#8B5CF6' : colors.bgSecondary,
+                        color: speakerMode === 'microphone' ? 'white' : colors.textSecondary,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      🎤 As Microphone
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

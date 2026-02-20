@@ -1245,8 +1245,49 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           When you increase die size, yield drops exponentially. If power density becomes larger, thermal throttling begins. Adjust each slider to see how manufacturing constraints interact.
         </p>
 
-        {renderVisualization()}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization()}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: '4px solid #60a5fa' }}>
           <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '0' }}>
@@ -1456,8 +1497,49 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           Toggle chiplets ON and adjust count to see the yield and cost impact
         </p>
 
-        {renderVisualization()}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization()}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #22c55e' }}>
           <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Chiplet Advantages:</h3>

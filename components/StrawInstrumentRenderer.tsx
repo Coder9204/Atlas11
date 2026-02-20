@@ -1085,63 +1085,75 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <StrawVisualization />
-            </div>
-
-            {/* Length slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Straw Length</span>
-                <span style={{ ...typo.small, color: colors.pipe, fontWeight: 600 }}>{strawLength} cm</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <StrawVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="5"
-                max="30"
-                value={strawLength}
-                onChange={(e) => setStrawLength(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                } as React.CSSProperties}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>5 cm (high pitch)</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>30 cm (low pitch)</span>
-              </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Length slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Straw Length</span>
+                    <span style={{ ...typo.small, color: colors.pipe, fontWeight: 600 }}>{strawLength} cm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="30"
+                    value={strawLength}
+                    onChange={(e) => setStrawLength(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                    } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>5 cm (high pitch)</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>30 cm (low pitch)</span>
+                  </div>
+                </div>
 
-            {/* Play button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={playStraw}
-                disabled={playing}
-                style={{
-                  padding: '16px 48px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: playing ? colors.border : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  cursor: playing ? 'not-allowed' : 'pointer',
-                  boxShadow: playing ? 'none' : `0 4px 20px ${colors.accentGlow}`,
-                }}
-              >
-                {playing ? 'Playing...' : 'Blow!'}
-              </button>
+                {/* Play button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <button
+                    onClick={playStraw}
+                    disabled={playing}
+                    style={{
+                      padding: '16px 48px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: playing ? colors.border : `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: '18px',
+                      cursor: playing ? 'not-allowed' : 'pointer',
+                      boxShadow: playing ? 'none' : `0 4px 20px ${colors.accentGlow}`,
+                    }}
+                  >
+                    {playing ? 'Playing...' : 'Blow!'}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Stats display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1516,45 +1528,57 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ScaleVisualization />
-            </div>
-
-            {/* Length info */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-              marginBottom: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              {scaleStraws.slice(0, 4).map((length, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '8px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.small, color: colors.textPrimary }}>{length.toFixed(1)} cm</div>
-                  <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>{lengthToFrequency(length).toFixed(0)} Hz</div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <ScaleVisualization />
                 </div>
-              ))}
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-            }}>
-              {scaleStraws.slice(4).map((length, i) => (
-                <div key={i + 4} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '8px',
-                  textAlign: 'center',
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Length info */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                  marginBottom: '16px',
                 }}>
-                  <div style={{ ...typo.small, color: colors.textPrimary }}>{length.toFixed(1)} cm</div>
-                  <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>{lengthToFrequency(length).toFixed(0)} Hz</div>
+                  {scaleStraws.slice(0, 4).map((length, i) => (
+                    <div key={i} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '8px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.small, color: colors.textPrimary }}>{length.toFixed(1)} cm</div>
+                      <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>{lengthToFrequency(length).toFixed(0)} Hz</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                }}>
+                  {scaleStraws.slice(4).map((length, i) => (
+                    <div key={i + 4} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '8px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.small, color: colors.textPrimary }}>{length.toFixed(1)} cm</div>
+                      <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>{lengthToFrequency(length).toFixed(0)} Hz</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

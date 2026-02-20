@@ -1662,78 +1662,88 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: design.colors.bgDeep, overflow: 'hidden' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
-          <div style={{ flex: 1, position: 'relative', minHeight: isMobile ? 280 : 350 }}>
-            {renderDopplerVisualizer(false)}
-          </div>
-
-          <div style={{
-            padding: design.spacing.lg,
-            background: design.colors.bgCard,
-            borderTop: `1px solid ${design.colors.bgGlow}`,
-            borderRadius: design.radius.lg,
-            margin: design.spacing.md,
-            border: `1px solid ${design.colors.bgGlow}`,
-          }}>
-            <div style={{ maxWidth: 600, margin: '0 auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.md }}>
-                <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.textSecondary }}>
-                  Source Speed: <span style={{ color: design.colors.accentPrimary }}>{sourceSpeed} m/s</span>
-                </p>
-                {renderButton(isAnimating ? '⏸ Pause' : '▶ Play', () => setIsAnimating(!isAnimating), isAnimating ? 'ghost' : 'primary', { size: 'sm' })}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ position: 'relative', minHeight: isMobile ? 280 : 350 }}>
+                  {renderDopplerVisualizer(false)}
+                </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  padding: design.spacing.lg,
+                  background: design.colors.bgCard,
+                  borderRadius: design.radius.lg,
+                  border: `1px solid ${design.colors.bgGlow}`,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: design.spacing.md }}>
+                    <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.textSecondary }}>
+                      Source Speed: <span style={{ color: design.colors.accentPrimary }}>{sourceSpeed} m/s</span>
+                    </p>
+                    {renderButton(isAnimating ? '⏸ Pause' : '▶ Play', () => setIsAnimating(!isAnimating), isAnimating ? 'ghost' : 'primary', { size: 'sm' })}
+                  </div>
 
-              <input
-                type="range"
-                min="10"
-                max="80"
-                value={sourceSpeed}
-                onChange={(e) => setSourceSpeed(parseInt(e.target.value))}
-                onInput={(e) => setSourceSpeed(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                  accentColor: '#3b82f6',
-                  borderRadius: 4,
-                  background: `linear-gradient(to right, ${design.colors.accentPrimary} 0%, ${design.colors.accentPrimary} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} 100%)`,
-                  cursor: 'pointer',
-                }}
-              />
+                  <input
+                    type="range"
+                    min="10"
+                    max="80"
+                    value={sourceSpeed}
+                    onChange={(e) => setSourceSpeed(parseInt(e.target.value))}
+                    onInput={(e) => setSourceSpeed(parseInt((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                      accentColor: '#3b82f6',
+                      borderRadius: 4,
+                      background: `linear-gradient(to right, ${design.colors.accentPrimary} 0%, ${design.colors.accentPrimary} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} ${((sourceSpeed - 10) / 70) * 100}%, ${design.colors.bgGlow} 100%)`,
+                      cursor: 'pointer',
+                    }}
+                  />
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.sm }}>
-                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>10 m/s (slow)</span>
-                <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>80 m/s (fast)</span>
-              </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.sm }}>
+                    <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>10 m/s (slow)</span>
+                    <span style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>80 m/s (fast)</span>
+                  </div>
 
-              {/* Educational explanation */}
-              <div style={{
-                marginTop: design.spacing.lg,
-                padding: design.spacing.md,
-                background: design.colors.bgGlow,
-                borderRadius: design.radius.md,
-              }}>
-                <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.xs }}>
-                  Watch for these changes:
-                </p>
-                <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
-                  Observe how sound waves from the ambulance siren get compressed when approaching you (higher pitch) versus stretched when moving away (lower pitch). Try adjusting the source speed slider to experiment with wave compression. When you increase the speed, notice the reference frequency stays at {sourceFreq} Hz while the current observed frequency changes relative to this baseline.
-                </p>
-              </div>
-              <div style={{
-                marginTop: design.spacing.sm,
-                padding: design.spacing.md,
-                background: `${design.colors.info}15`,
-                borderRadius: design.radius.md,
-                border: `1px solid ${design.colors.info}30`,
-              }}>
-                <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.info, marginBottom: design.spacing.xs }}>
-                  Real-world applications:
-                </p>
-                <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
-                  This is exactly how police radar guns work - they emit radio waves and measure the frequency shift to calculate your speed. Weather radar uses the same principle to track storm systems at 250 km range, while medical ultrasound measures blood flow velocity in real-time.
-                </p>
+                  {/* Educational explanation */}
+                  <div style={{
+                    marginTop: design.spacing.lg,
+                    padding: design.spacing.md,
+                    background: design.colors.bgGlow,
+                    borderRadius: design.radius.md,
+                  }}>
+                    <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary, marginBottom: design.spacing.xs }}>
+                      Watch for these changes:
+                    </p>
+                    <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                      Observe how sound waves from the ambulance siren get compressed when approaching you (higher pitch) versus stretched when moving away (lower pitch). Try adjusting the source speed slider to experiment with wave compression. When you increase the speed, notice the reference frequency stays at {sourceFreq} Hz while the current observed frequency changes relative to this baseline.
+                    </p>
+                  </div>
+                  <div style={{
+                    marginTop: design.spacing.sm,
+                    padding: design.spacing.md,
+                    background: `${design.colors.info}15`,
+                    borderRadius: design.radius.md,
+                    border: `1px solid ${design.colors.info}30`,
+                  }}>
+                    <p style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.info, marginBottom: design.spacing.xs }}>
+                      Real-world applications:
+                    </p>
+                    <p style={{ fontSize: design.typography.caption.size, color: design.colors.textSecondary, lineHeight: 1.6, fontWeight: 400 }}>
+                      This is exactly how police radar guns work - they emit radio waves and measure the frequency shift to calculate your speed. Weather radar uses the same principle to track storm systems at 250 km range, while medical ultrasound measures blood flow velocity in real-time.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1958,61 +1968,67 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep, overflow: 'auto' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-          <div style={{ flex: 1, position: 'relative', minHeight: isMobile ? 280 : 350 }}>
-            {renderDopplerVisualizer(true)}
-          </div>
-
-          <div style={{
-            padding: design.spacing.lg,
-            background: design.colors.bgCard,
-            borderTop: `1px solid ${design.colors.bgGlow}`,
-          }}>
-            <div style={{ maxWidth: 600, margin: '0 auto' }}>
-              <div style={{
-                padding: design.spacing.lg,
-                borderRadius: design.radius.md,
-                background: `${design.colors.accentSecondary}15`,
-                border: `1px solid ${design.colors.accentSecondary}30`,
-                marginBottom: design.spacing.md,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.sm }}>
-                  <span style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary }}>
-                    Observer Speed (toward source)
-                  </span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: design.colors.textPrimary }}>
-                    {observerSpeed} m/s
-                  </span>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '16px', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ position: 'relative', minHeight: isMobile ? 280 : 350 }}>
+                  {renderDopplerVisualizer(true)}
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="40"
-                  value={observerSpeed}
-                  onChange={(e) => setObserverSpeed(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: 8,
-                    borderRadius: 4,
-                    background: `linear-gradient(to right, ${design.colors.accentSecondary} 0%, ${design.colors.accentSecondary} ${(observerSpeed / 40) * 100}%, ${design.colors.bgGlow} ${(observerSpeed / 40) * 100}%, ${design.colors.bgGlow} 100%)`,
-                    appearance: 'none',
-                    cursor: 'pointer',
-                  }}
-                />
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  padding: design.spacing.lg,
+                  borderRadius: design.radius.md,
+                  background: `${design.colors.accentSecondary}15`,
+                  border: `1px solid ${design.colors.accentSecondary}30`,
+                  marginBottom: design.spacing.md,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: design.spacing.sm }}>
+                    <span style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.accentSecondary }}>
+                      Observer Speed (toward source)
+                    </span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: design.colors.textPrimary }}>
+                      {observerSpeed} m/s
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="40"
+                    value={observerSpeed}
+                    onChange={(e) => setObserverSpeed(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: 8,
+                      borderRadius: 4,
+                      background: `linear-gradient(to right, ${design.colors.accentSecondary} 0%, ${design.colors.accentSecondary} ${(observerSpeed / 40) * 100}%, ${design.colors.bgGlow} ${(observerSpeed / 40) * 100}%, ${design.colors.bgGlow} 100%)`,
+                      appearance: 'none',
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: design.spacing.sm, textAlign: 'center' }}>
-                <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Approaching</p>
-                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentPrimary }}>{Math.round(observedFreqApproaching)} Hz</p>
-                </div>
-                <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Total Shift</p>
-                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.warning }}>±{Math.round(observedFreqApproaching - sourceFreq)} Hz</p>
-                </div>
-                <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
-                  <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Receding</p>
-                  <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentSecondary }}>{Math.round(observedFreqReceding)} Hz</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: design.spacing.sm, textAlign: 'center' }}>
+                  <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
+                    <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Approaching</p>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentPrimary }}>{Math.round(observedFreqApproaching)} Hz</p>
+                  </div>
+                  <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow }}>
+                    <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Total Shift</p>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.warning }}>±{Math.round(observedFreqApproaching - sourceFreq)} Hz</p>
+                  </div>
+                  <div style={{ padding: design.spacing.md, borderRadius: design.radius.sm, background: design.colors.bgGlow, gridColumn: '1 / -1' }}>
+                    <p style={{ fontSize: design.typography.micro.size, color: design.colors.textMuted }}>Receding</p>
+                    <p style={{ fontSize: 18, fontWeight: 800, color: design.colors.accentSecondary }}>{Math.round(observedFreqReceding)} Hz</p>
+                  </div>
                 </div>
               </div>
             </div>

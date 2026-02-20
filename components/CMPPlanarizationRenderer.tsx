@@ -1151,43 +1151,56 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {/* Before/After reference display */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginBottom: '8px', justifyContent: 'center' }}>
-            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Before: {(polishTime === 0 ? 150 : 0).toFixed(0)}nm Cu</span>
-            <span style={{ color: colors.textSecondary, fontSize: '12px' }}>→</span>
-            <span style={{ color: colors.accent, fontSize: '12px' }}>Current vs baseline</span>
-          </div>
-          {renderControls()}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            padding: '16px',
-            borderRadius: '12px',
-            marginTop: '16px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>What to observe:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Run CMP to 100% and observe the final state</li>
-              <li>Try to find the optimal stopping point (step = 0)</li>
-              <li>When you increase pressure, you will observe the removal rate increases</li>
-              <li>Note the relationship between copper and oxide heights</li>
-            </ul>
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
+              {/* Before/After reference display */}
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', marginBottom: '8px', justifyContent: 'center' }}>
+                <span style={{ color: colors.textMuted, fontSize: '12px' }}>Before: {(polishTime === 0 ? 150 : 0).toFixed(0)}nm Cu</span>
+                <span style={{ color: colors.textSecondary, fontSize: '12px' }}>→</span>
+                <span style={{ color: colors.accent, fontSize: '12px' }}>Current vs baseline</span>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
 
-          <div style={{
-            background: 'rgba(236, 72, 153, 0.15)',
-            padding: '16px',
-            borderRadius: '8px',
-            borderLeft: `3px solid ${colors.accent}`,
-            marginTop: '16px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.small, fontWeight: 'bold' }}>Why This Matters:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
-              This is used in real manufacturing at Intel, TSMC, and Samsung to create flat surfaces for advanced chips.
-              Without CMP, modern 5nm and 3nm processors would be impossible to manufacture.
-              Every smartphone and computer relies on this process.
-            </p>
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '12px',
+                marginTop: '16px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>What to observe:</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                  <li>Run CMP to 100% and observe the final state</li>
+                  <li>Try to find the optimal stopping point (step = 0)</li>
+                  <li>When you increase pressure, you will observe the removal rate increases</li>
+                  <li>Note the relationship between copper and oxide heights</li>
+                </ul>
+              </div>
+
+              <div style={{
+                background: 'rgba(236, 72, 153, 0.15)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+                marginTop: '16px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.small, fontWeight: 'bold' }}>Why This Matters:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0 }}>
+                  This is used in real manufacturing at Intel, TSMC, and Samsung to create flat surfaces for advanced chips.
+                  Without CMP, modern 5nm and 3nm processors would be impossible to manufacture.
+                  Every smartphone and computer relies on this process.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar(true, 'Continue')}
@@ -1357,58 +1370,71 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           </p>
         </div>
 
-        {renderVisualization(true, true)}
-        {/* State display for reactivity - ensures textContent changes with every slider */}
-        <div aria-hidden="false" style={{ fontSize: '11px', color: colors.textMuted, textAlign: 'center', marginBottom: '4px' }}>
-          Time={polishTime} Pressure={polishPressure} Sel={slurrySelectivity}
-        </div>
-        {/* Dedicated twist_play slider for polishPressure - directly linked to state */}
-        <div style={{ padding: '8px 16px', maxWidth: '550px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <label style={{ color: colors.textMuted, fontSize: '12px' }}>Pressure Control (twist)</label>
-            <span style={{ color: colors.accent, fontSize: '12px' }}>{polishPressure}%</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            defaultValue={polishPressure}
-            data-slider-name="pressure"
-            onChange={(e) => { setPolishPressure(Number(e.target.value)); }}
-            onInput={(e) => { setPolishPressure(Number((e.target as HTMLInputElement).value)); }}
-            style={{ width: '100%', accentColor: colors.accent, height: '16px', cursor: 'pointer' }}
-            aria-label={`Pressure (twist): ${polishPressure}%`}
-          />
-        </div>
-        {renderControls(true)}
-
-        {/* Live computed results panel - changes with every slider */}
-        {(() => {
-          const r = calculateCMPResult();
-          return (
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', margin: '8px 0', padding: '8px', background: 'rgba(15,23,42,0.6)', borderRadius: '8px' }}>
-              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Time: <strong style={{ color: colors.accent }}>{polishTime}%</strong></span>
-              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Pressure: <strong style={{ color: colors.warning }}>{polishPressure}%</strong></span>
-              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Selectivity: <strong style={{ color: colors.oxide }}>{slurrySelectivity}%</strong></span>
-              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Step: <strong style={{ color: r.currentStep > 5 ? colors.warning : colors.success }}>{r.currentStep.toFixed(1)} nm</strong></span>
-              <span style={{ color: colors.textSecondary, fontSize: '12px' }}>NU: <strong style={{ color: r.nonUniformity > 7 ? colors.error : colors.success }}>{r.nonUniformity.toFixed(2)}%</strong></span>
-            </div>
-          );
-        })()}
-
+        {/* Side-by-side layout */}
         <div style={{
-          background: 'rgba(245, 158, 11, 0.2)',
-          padding: '16px',
-          borderRadius: '12px',
-          borderLeft: `3px solid ${colors.warning}`,
-          marginTop: '16px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
         }}>
-          <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Key Observation:</h4>
-          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
-            Past 70% polish time, dishing and erosion increase rapidly. These defects increase
-            wire resistance (dishing) and can cause reliability failures (erosion thinning).
-          </p>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {renderVisualization(true, true)}
+            {/* State display for reactivity - ensures textContent changes with every slider */}
+            <div aria-hidden="false" style={{ fontSize: '11px', color: colors.textMuted, textAlign: 'center', marginBottom: '4px' }}>
+              Time={polishTime} Pressure={polishPressure} Sel={slurrySelectivity}
+            </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Dedicated twist_play slider for polishPressure - directly linked to state */}
+            <div style={{ padding: '8px 16px', maxWidth: '550px', margin: '0 auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <label style={{ color: colors.textMuted, fontSize: '12px' }}>Pressure Control (twist)</label>
+                <span style={{ color: colors.accent, fontSize: '12px' }}>{polishPressure}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                defaultValue={polishPressure}
+                data-slider-name="pressure"
+                onChange={(e) => { setPolishPressure(Number(e.target.value)); }}
+                onInput={(e) => { setPolishPressure(Number((e.target as HTMLInputElement).value)); }}
+                style={{ width: '100%', accentColor: colors.accent, height: '16px', cursor: 'pointer' }}
+                aria-label={`Pressure (twist): ${polishPressure}%`}
+              />
+            </div>
+            {renderControls(true)}
+
+            {/* Live computed results panel - changes with every slider */}
+            {(() => {
+              const r = calculateCMPResult();
+              return (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', margin: '8px 0', padding: '8px', background: 'rgba(15,23,42,0.6)', borderRadius: '8px' }}>
+                  <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Time: <strong style={{ color: colors.accent }}>{polishTime}%</strong></span>
+                  <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Pressure: <strong style={{ color: colors.warning }}>{polishPressure}%</strong></span>
+                  <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Selectivity: <strong style={{ color: colors.oxide }}>{slurrySelectivity}%</strong></span>
+                  <span style={{ color: colors.textSecondary, fontSize: '12px' }}>Step: <strong style={{ color: r.currentStep > 5 ? colors.warning : colors.success }}>{r.currentStep.toFixed(1)} nm</strong></span>
+                  <span style={{ color: colors.textSecondary, fontSize: '12px' }}>NU: <strong style={{ color: r.nonUniformity > 7 ? colors.error : colors.success }}>{r.nonUniformity.toFixed(2)}%</strong></span>
+                </div>
+              );
+            })()}
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.2)',
+              padding: '16px',
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.warning}`,
+              marginTop: '16px',
+            }}>
+              <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Key Observation:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
+                Past 70% polish time, dishing and erosion increase rapidly. These defects increase
+                wire resistance (dishing) and can cause reliability failures (erosion thinning).
+              </p>
+            </div>
+          </div>
         </div>
 
         {renderBottomBar(true, 'See Explanation')}

@@ -1016,67 +1016,81 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             This matters in real chips — every wire has resistance and capacitance, creating RC delay that limits performance.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RCCircuitVisualization />
-            </div>
-
-            {/* Resistance slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Resistance (R)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{resistance} ohm</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <RCCircuitVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="500"
-                step="10"
-                value={resistance}
-                onChange={(e) => setResistance(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((resistance - 10) / 490) * 100}%, ${colors.border} ${((resistance - 10) / 490) * 100}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Resistance slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Resistance (R)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{resistance} ohm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="500"
+                    step="10"
+                    value={resistance}
+                    onChange={(e) => setResistance(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
 
-            {/* Capacitance slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Capacitance (C)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{capacitance} pF</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="50"
-                value={capacitance}
-                onChange={(e) => setCapacitance(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((capacitance - 1) / 49) * 100}%, ${colors.border} ${((capacitance - 1) / 49) * 100}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
+                {/* Capacitance slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Capacitance (C)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{capacitance} pF</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="50"
+                    value={capacitance}
+                    onChange={(e) => setCapacitance(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
 
             {/* Simulate button */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
@@ -1150,6 +1164,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
               }}>
                 <div style={{ ...typo.h3, color: colors.signal }}>{(getVoltage(simulationTime) * 100).toFixed(0)}%</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Current Output</div>
+              </div>
+            </div>
               </div>
             </div>
           </div>
@@ -1416,95 +1432,107 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
             Find the optimal number of repeaters to minimize delay
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RepeaterVisualization />
-            </div>
-
-            {/* Chip size slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Wire Length (Chip Size)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{chipSize} mm</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="20"
-                value={chipSize}
-                onChange={(e) => setChipSize(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
-
-            {/* Number of repeaters slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Repeaters</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{numRepeaters}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                value={numRepeaters}
-                onChange={(e) => setNumRepeaters(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>No repeaters</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 repeaters</span>
-              </div>
-            </div>
-
-            {/* Comparison stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.error }}>
-                  {(0.69 * 10 * chipSize * 0.5 * chipSize * 1e-3).toFixed(2)} ns
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <RepeaterVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Unbuffered Delay</div>
+
+                {/* Comparison stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>
+                      {(0.69 * 10 * chipSize * 0.5 * chipSize * 1e-3).toFixed(2)} ns
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Unbuffered Delay</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>
+                      {calculateRepeaterDelay().toFixed(2)} ns
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>With Repeaters</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>
-                  {calculateRepeaterDelay().toFixed(2)} ns
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Chip size slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wire Length</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{chipSize} mm</span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>With Repeaters</div>
+                <input
+                  type="range"
+                  min="2"
+                  max="20"
+                  value={chipSize}
+                  onChange={(e) => setChipSize(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+              </div>
+
+              {/* Number of repeaters slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Repeaters</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{numRepeaters}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={numRepeaters}
+                  onChange={(e) => setNumRepeaters(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10</span>
+                </div>
               </div>
             </div>
           </div>

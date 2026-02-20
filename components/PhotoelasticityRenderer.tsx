@@ -1140,56 +1140,86 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           Observe how changing mechanical stress affects the fringe pattern between polarizers
         </p>
       </div>
-      <PhotoelasticVisualization
-        bendAmount={bendAmount}
-        polarizerEnabled={polarizerEnabled}
-        isThick={isThick}
-        interactive
-        isAnimating={isAnimating}
-        onAnimateToggle={() => setIsAnimating(!isAnimating)}
-        onReset={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
-      />
-      {renderControls()}
-
-      {/* Comparison panel */}
+      {/* Side-by-side layout */}
       <div style={{
-        margin: '0 auto 16px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
         maxWidth: '720px',
-        background: colors.bgCard,
-        padding: '16px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        margin: '0 auto 16px',
       }}>
-        <h4 style={{ color: colors.accent, marginBottom: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700 }}>
-          Comparison: Effect of Polarizers
-        </h4>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
-          <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Without Polarizers</div>
-            <div style={{
-              background: '#1a1a2e',
-              borderRadius: '8px',
-              padding: '12px',
-              border: '2px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            }}>
-              <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Clear plastic visible</div>
-              <div style={{ color: colors.error, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>No stress pattern</div>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <PhotoelasticVisualization
+            bendAmount={bendAmount}
+            polarizerEnabled={polarizerEnabled}
+            isThick={isThick}
+            interactive
+            isAnimating={isAnimating}
+            onAnimateToggle={() => setIsAnimating(!isAnimating)}
+            onReset={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
+          />
+
+          {/* Comparison panel */}
+          <div style={{
+            background: colors.bgCard,
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            marginTop: '16px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700 }}>
+              Comparison: Effect of Polarizers
+            </h4>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
+              <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Without Polarizers</div>
+                <div style={{
+                  background: '#1a1a2e',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: '2px solid rgba(255,255,255,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Clear plastic visible</div>
+                  <div style={{ color: colors.error, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>No stress pattern</div>
+                </div>
+              </div>
+              <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.success, marginBottom: '6px', fontSize: '12px' }}>With Polarizers ON</div>
+                <div style={{
+                  background: '#1a1a2e',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: `2px solid ${colors.success}`,
+                  boxShadow: `0 2px 12px rgba(16,185,129,0.2)`,
+                }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Rainbow fringes visible</div>
+                  <div style={{ color: colors.success, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Stress revealed!</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: colors.success, marginBottom: '6px', fontSize: '12px' }}>With Polarizers ON</div>
-            <div style={{
-              background: '#1a1a2e',
-              borderRadius: '8px',
-              padding: '12px',
-              border: `2px solid ${colors.success}`,
-              boxShadow: `0 2px 12px rgba(16,185,129,0.2)`,
-            }}>
-              <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Rainbow fringes visible</div>
-              <div style={{ color: colors.success, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Stress revealed!</div>
-            </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {renderControls()}
+
+          <div style={{
+            background: colors.bgCard,
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.06)',
+            marginTop: '16px',
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '10px', fontSize: '15px', fontWeight: 700 }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
+              <li>Increase bend — more fringes appear as stress increases</li>
+              <li>Turn off polarizers — fringes disappear instantly!</li>
+              <li>Notice how fringe density shows stress concentration</li>
+              <li>Watch the yellow Max Stress marker move as you adjust bend</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -1206,23 +1236,6 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
         <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
           Engineers use photoelasticity because it reveals the <strong style={{ color: colors.textPrimary }}>complete stress field</strong> — every point simultaneously. Unlike strain gauges (point measurements), this technique shows where stress concentrates near bolt holes, sharp corners, or geometric discontinuities. Understanding these patterns allows engineers to design stronger, lighter structures.
         </p>
-      </div>
-
-      <div style={{
-        background: colors.bgCard,
-        margin: '0 auto 16px',
-        maxWidth: '720px',
-        padding: '16px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
-      }}>
-        <h4 style={{ color: colors.accent, marginBottom: '10px', fontSize: '15px', fontWeight: 700 }}>Try These Experiments:</h4>
-        <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
-          <li>Increase bend — more fringes appear as stress increases</li>
-          <li>Turn off polarizers — fringes disappear instantly!</li>
-          <li>Notice how fringe density shows stress concentration</li>
-          <li>Watch the yellow Max Stress marker move as you adjust bend</li>
-        </ul>
       </div>
     </div>
   );
@@ -1404,88 +1417,100 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           Toggle specimen thickness to observe how fringe patterns change
         </p>
       </div>
-      <PhotoelasticVisualization
-        bendAmount={bendAmount}
-        polarizerEnabled={polarizerEnabled}
-        isThick={isThick}
-        interactive
-        isAnimating={isAnimating}
-        onAnimateToggle={() => setIsAnimating(!isAnimating)}
-        onReset={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
-      />
-      <div style={{ padding: '16px', maxWidth: '720px', margin: '0 auto' }}>
-        <button
-          onClick={() => setIsThick(!isThick)}
-          style={{
-            width: '100%',
-            padding: '16px',
-            borderRadius: '10px',
-            border: `2px solid ${colors.warning}`,
-            background: isThick ? 'rgba(245,158,11,0.2)' : 'transparent',
-            color: colors.textPrimary,
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            boxShadow: isThick ? '0 0 16px rgba(245,158,11,0.3)' : 'none',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          Currently: {isThick ? 'THICK' : 'THIN'} Plastic — Click to Toggle
-        </button>
-      </div>
-
-      {/* Before/After comparison */}
+      {/* Side-by-side layout */}
       <div style={{
-        margin: '0 auto 16px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
         maxWidth: '720px',
-        background: colors.bgCard,
-        padding: '16px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        margin: '0 auto 16px',
       }}>
-        <h4 style={{ color: colors.warning, marginBottom: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700 }}>
-          Comparison: Effect of Thickness
-        </h4>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
-          <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Thin Specimen</div>
-            <div style={{
-              background: '#1a1a2e', borderRadius: '8px', padding: '12px',
-              border: '2px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            }}>
-              <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Fewer fringes</div>
-              <div style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Less path length</div>
-            </div>
-          </div>
-          <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: colors.warning, marginBottom: '6px', fontSize: '12px' }}>Thick Specimen</div>
-            <div style={{
-              background: '#1a1a2e', borderRadius: '8px', padding: '12px',
-              border: `2px solid ${colors.warning}`,
-              boxShadow: `0 2px 12px rgba(245,158,11,0.2)`,
-            }}>
-              <div style={{ color: colors.textSecondary, fontSize: '13px' }}>More fringes</div>
-              <div style={{ color: colors.warning, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Greater rotation!</div>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <PhotoelasticVisualization
+            bendAmount={bendAmount}
+            polarizerEnabled={polarizerEnabled}
+            isThick={isThick}
+            interactive
+            isAnimating={isAnimating}
+            onAnimateToggle={() => setIsAnimating(!isAnimating)}
+            onReset={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
+          />
+
+          {/* Before/After comparison */}
+          <div style={{
+            background: colors.bgCard,
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            marginTop: '16px',
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '12px', textAlign: 'center', fontSize: '15px', fontWeight: 700 }}>
+              Comparison: Effect of Thickness
+            </h4>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', flexDirection: 'row' }}>
+              <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.textMuted, marginBottom: '6px', fontSize: '12px' }}>Thin Specimen</div>
+                <div style={{
+                  background: '#1a1a2e', borderRadius: '8px', padding: '12px',
+                  border: '2px solid rgba(255,255,255,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>Fewer fringes</div>
+                  <div style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Less path length</div>
+                </div>
+              </div>
+              <div style={{ flex: '1 1 160px', maxWidth: '220px', textAlign: 'center' }}>
+                <div style={{ fontWeight: 'bold', color: colors.warning, marginBottom: '6px', fontSize: '12px' }}>Thick Specimen</div>
+                <div style={{
+                  background: '#1a1a2e', borderRadius: '8px', padding: '12px',
+                  border: `2px solid ${colors.warning}`,
+                  boxShadow: `0 2px 12px rgba(245,158,11,0.2)`,
+                }}>
+                  <div style={{ color: colors.textSecondary, fontSize: '13px' }}>More fringes</div>
+                  <div style={{ color: colors.warning, fontSize: '12px', fontWeight: 'bold', marginTop: '4px' }}>Greater rotation!</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {renderControls()}
-      <div style={{
-        background: 'rgba(245,158,11,0.12)',
-        margin: '0 auto 16px',
-        maxWidth: '720px',
-        padding: '16px',
-        borderRadius: '12px',
-        borderLeft: `3px solid ${colors.warning}`,
-      }}>
-        <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: '15px', fontWeight: 700 }}>Key Observation:</h4>
-        <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
-          Thicker material means light travels through more stressed material, accumulating more polarization rotation. This creates more fringe orders — directly demonstrating that N ∝ thickness × stress.
-        </p>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              onClick={() => setIsThick(!isThick)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.warning}`,
+                background: isThick ? 'rgba(245,158,11,0.2)' : 'transparent',
+                color: colors.textPrimary,
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                boxShadow: isThick ? '0 0 16px rgba(245,158,11,0.3)' : 'none',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Currently: {isThick ? 'THICK' : 'THIN'} Plastic — Click to Toggle
+            </button>
+          </div>
+          {renderControls()}
+          <div style={{
+            background: 'rgba(245,158,11,0.12)',
+            padding: '16px',
+            borderRadius: '12px',
+            borderLeft: `3px solid ${colors.warning}`,
+            marginTop: '16px',
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: '15px', fontWeight: 700 }}>Key Observation:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>
+              Thicker material means light travels through more stressed material, accumulating more polarization rotation. This creates more fringe orders — directly demonstrating that N proportional to thickness x stress.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

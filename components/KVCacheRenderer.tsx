@@ -1114,137 +1114,148 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               </p>
             </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AttentionVisualization showCache={kvCacheEnabled} />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <AttentionVisualization showCache={kvCacheEnabled} />
+                </div>
 
-            {/* Token count slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{tokenCount} tokens</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="8"
-                step="1"
-                value={tokenCount}
-                onChange={(e) => {
-                  setTokenCount(parseInt(e.target.value));
-                  setGenerationStep(0);
-                }}
-                disabled={isGenerating}
-                style={{
-                  width: '100%',
-                  height: '24px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(tokenCount / 8) * 100}%, ${colors.border} ${(tokenCount / 8) * 100}%)`,
-                  cursor: isGenerating ? 'not-allowed' : 'pointer',
-                  opacity: isGenerating ? 0.5 : 1,
-                  WebkitAppearance: 'none',
-                  touchAction: 'pan-y',
-                  accentColor: colors.accent,
-                }}
-              />
-            </div>
-
-            {/* KV Cache toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Cache</span>
-              <button
-                onClick={() => {
-                  setKvCacheEnabled(!kvCacheEnabled);
-                  setGenerationStep(0);
-                }}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: kvCacheEnabled ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
+                {/* Compute comparison */}
                 <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: kvCacheEnabled ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: kvCacheEnabled ? colors.success : colors.textSecondary, fontWeight: kvCacheEnabled ? 600 : 400 }}>
-                KV Cache ON
-              </span>
-            </div>
-
-            {/* Generate button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setGenerationStep(0);
-                  setIsGenerating(true);
-                  playSound('click');
-                }}
-                disabled={isGenerating}
-                style={{
-                  background: isGenerating ? colors.border : colors.accent,
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: isGenerating ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                {isGenerating ? `Generating... (${generationStep}/${tokenCount})` : 'Generate Tokens'}
-              </button>
-            </div>
-
-            {/* Compute comparison */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${kvCacheEnabled ? colors.border : colors.compute}`,
-              }}>
-                <div style={{ ...typo.h3, color: colors.compute }}>{computeWithoutCache}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Without Cache (O(n^2))</div>
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    border: `2px solid ${kvCacheEnabled ? colors.border : colors.compute}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.compute }}>{computeWithoutCache}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Without Cache</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    border: `2px solid ${kvCacheEnabled ? colors.cached : colors.border}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.cached }}>{computeWithCache}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>With Cache</div>
+                  </div>
+                </div>
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Token count slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{tokenCount} tokens</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="8"
+                  step="1"
+                  value={tokenCount}
+                  onChange={(e) => {
+                    setTokenCount(parseInt(e.target.value));
+                    setGenerationStep(0);
+                  }}
+                  disabled={isGenerating}
+                  style={{
+                    width: '100%',
+                    height: '24px',
+                    borderRadius: '4px',
+                    cursor: isGenerating ? 'not-allowed' : 'pointer',
+                    opacity: isGenerating ? 0.5 : 1,
+                    WebkitAppearance: 'none',
+                    touchAction: 'pan-y',
+                    accentColor: colors.accent,
+                  }}
+                />
+              </div>
+
+              {/* KV Cache toggle */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${kvCacheEnabled ? colors.cached : colors.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '12px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.cached }}>{computeWithCache}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>With Cache (O(n))</div>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>No Cache</span>
+                <button
+                  onClick={() => {
+                    setKvCacheEnabled(!kvCacheEnabled);
+                    setGenerationStep(0);
+                  }}
+                  style={{
+                    width: '60px',
+                    height: '30px',
+                    borderRadius: '15px',
+                    border: 'none',
+                    background: kvCacheEnabled ? colors.success : colors.border,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.3s',
+                  }}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    position: 'absolute',
+                    top: '3px',
+                    left: kvCacheEnabled ? '33px' : '3px',
+                    transition: 'left 0.3s',
+                  }} />
+                </button>
+                <span style={{ ...typo.small, color: kvCacheEnabled ? colors.success : colors.textSecondary, fontWeight: kvCacheEnabled ? 600 : 400 }}>
+                  Cache ON
+                </span>
+              </div>
+
+              {/* Generate button */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => {
+                    setGenerationStep(0);
+                    setIsGenerating(true);
+                    playSound('click');
+                  }}
+                  disabled={isGenerating}
+                  style={{
+                    background: isGenerating ? colors.border : colors.accent,
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: isGenerating ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    width: '100%',
+                  }}
+                >
+                  {isGenerating ? `Generating... (${generationStep}/${tokenCount})` : 'Generate Tokens'}
+                </button>
               </div>
             </div>
           </div>
@@ -1542,69 +1553,21 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               </p>
             </div>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
           }}>
-            {/* Context length slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Context Length</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{contextLength.toLocaleString()} tokens</span>
-              </div>
-              <input
-                type="range"
-                min="128"
-                max="8192"
-                step="128"
-                value={contextLength}
-                onChange={(e) => setContextLength(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '24px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none',
-                  touchAction: 'pan-y',
-                  accentColor: colors.accent,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>128</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>8192</span>
-              </div>
-            </div>
-
-            {/* Number of layers slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Layers</span>
-                <span style={{ ...typo.small, color: colors.memory, fontWeight: 600 }}>{numLayers} layers</span>
-              </div>
-              <input
-                type="range"
-                min="6"
-                max="96"
-                step="6"
-                value={numLayers}
-                onChange={(e) => setNumLayers(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '24px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none',
-                  touchAction: 'pan-y',
-                  accentColor: colors.memory,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>6 (small)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>96 (large)</span>
-              </div>
-            </div>
 
             {/* KV Cache Memory Scaling SVG */}
             {(() => {
@@ -1746,6 +1709,59 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
                 <div style={{ ...typo.small, color: colors.textMuted }}>Seqs per GB</div>
               </div>
             </div>
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Context length slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Context Length</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{contextLength.toLocaleString()}</span>
+              </div>
+              <input
+                type="range"
+                min="128"
+                max="8192"
+                step="128"
+                value={contextLength}
+                onChange={(e) => setContextLength(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '24px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: colors.accent,
+                }}
+              />
+            </div>
+
+            {/* Number of layers slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Layers</span>
+                <span style={{ ...typo.small, color: colors.memory, fontWeight: 600 }}>{numLayers}</span>
+              </div>
+              <input
+                type="range"
+                min="6"
+                max="96"
+                step="6"
+                value={numLayers}
+                onChange={(e) => setNumLayers(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '24px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  touchAction: 'pan-y',
+                  accentColor: colors.memory,
+                }}
+              />
+            </div>
+          </div>
           </div>
 
             <button

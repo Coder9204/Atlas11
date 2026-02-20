@@ -1305,11 +1305,24 @@ export default function ElectromagnetRenderer({
           </p>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+        <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full">
           {renderElectromagnet(current, coilTurns, hasCore, paperClipPositions)}
+        </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-1 gap-4">
             <div className="bg-slate-700/50 rounded-xl p-4">
               <label className="text-sm text-yellow-400 mb-2 block font-medium">
                 Current: {current.toFixed(1)} A
@@ -1379,6 +1392,7 @@ export default function ElectromagnetRenderer({
               {hasCore && fieldStrength > 0 && <span className="text-green-400 ml-2">(Iron amplifies 1000x!)</span>}
             </p>
           </div>
+        </div>
         </div>
 
         {/* Instructions */}
@@ -1612,11 +1626,24 @@ export default function ElectromagnetRenderer({
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-pink-400 mb-4">AC vs DC: Making Motors Spin</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full">
         {renderACMotor(twistCurrent, isAC, acPhase)}
+      </div>
+      </div>
 
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* AC/DC Toggle */}
-        <div className="flex justify-center gap-4 mt-6">
+        <div className="flex justify-center gap-4">
           <button
             onClick={() => {
               playSound('click');
@@ -1659,6 +1686,7 @@ export default function ElectromagnetRenderer({
             )}
           </p>
         </div>
+      </div>
       </div>
 
       <button

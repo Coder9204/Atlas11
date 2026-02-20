@@ -1310,51 +1310,61 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Adjust Flow Rate</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderVisualization(true)}
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textMuted, fontSize: '13px' }}>Slow (20%)</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Flow Rate: {flowRate}%</span>
-                  <span style={{ color: colors.primary, fontSize: '13px' }}>Fast (100%)</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderVisualization(true)}
                 </div>
-                <input type="range" min="20" max="100" step="5" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} onInput={(e) => setFlowRate(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
-                <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
-                  {flowRate < 40 ? 'Slow flow - droplets form close together' : flowRate < 70 ? 'Medium flow - classic breakup pattern' : 'Fast flow - longer stream before breakup'}
-                </p>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
 
-            <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40`, transition: 'all 0.3s ease' }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What the Visualization Displays:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                This visualization shows how a liquid stream breaks into droplets via the Rayleigh-Plateau instability.
-                <strong style={{ color: colors.primary }}> Surface tension</strong> is defined as the energy per unit area of a liquid surface.
-                It acts like a stretched membrane, always trying to minimize surface area.
-                A cylinder has ~15% more surface area than spheres of the same total volume — so the stream <strong>spontaneously breaks up</strong>!
-                When you increase the flow rate, observe how the breakup pattern changes.
-              </p>
-            </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>Slow (20%)</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Flow Rate: {flowRate}%</span>
+                      <span style={{ color: colors.primary, fontSize: '13px' }}>Fast (100%)</span>
+                    </div>
+                    <input type="range" min="20" max="100" step="5" value={flowRate} onChange={(e) => setFlowRate(Number(e.target.value))} onInput={(e) => setFlowRate(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
+                    <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
+                      {flowRate < 40 ? 'Slow flow - droplets form close together' : flowRate < 70 ? 'Medium flow - classic breakup pattern' : 'Fast flow - longer stream before breakup'}
+                    </p>
+                  </div>
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginTop: '16px' }}>
-              <div style={{ flex: 1, background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, transition: 'all 0.3s ease' }}>
-                <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Why This Matters</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
-                  This is important because it is used in industry applications from inkjet printers to pharmaceutical manufacturing.
-                  Engineers design nozzles to control droplet size using the relationship: λ = 9 × r (most unstable wavelength equals 9 times jet radius).
-                </p>
-              </div>
-              <div style={{ flex: 1, background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, transition: 'all 0.3s ease' }}>
-                <h4 style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Current vs Reference</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
-                  Compare how higher flow rates create longer stable streams before breakup.
-                  The growth rate chart shows the relative instability at different wavelengths.
-                </p>
+                <div style={{ background: `linear-gradient(135deg, ${colors.primary}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}40`, transition: 'all 0.3s ease', marginBottom: '16px' }}>
+                  <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>👀 What the Visualization Displays:</h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                    This visualization shows how a liquid stream breaks into droplets via the Rayleigh-Plateau instability.
+                    <strong style={{ color: colors.primary }}> Surface tension</strong> is defined as the energy per unit area of a liquid surface.
+                    It acts like a stretched membrane, always trying to minimize surface area.
+                    A cylinder has ~15% more surface area than spheres of the same total volume — so the stream <strong>spontaneously breaks up</strong>!
+                    When you increase the flow rate, observe how the breakup pattern changes.
+                  </p>
+                </div>
+
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '12px' }}>
+                  <h4 style={{ color: colors.primaryLight, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Why This Matters</h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                    This is important because it is used in industry applications from inkjet printers to pharmaceutical manufacturing.
+                    Engineers design nozzles to control droplet size using the relationship: λ = 9 × r (most unstable wavelength equals 9 times jet radius).
+                  </p>
+                </div>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                  <h4 style={{ color: colors.success, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Current vs Reference</h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                    Compare how higher flow rates create longer stable streams before breakup.
+                    The growth rate chart shows the relative instability at different wavelengths.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -1491,41 +1501,51 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Water vs Honey Breakup</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderVisualization(false, true)}
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Adjust Viscosity</h3>
-
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.water, fontSize: '13px' }}>Water (1 cP)</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
-                    {viscosity <= 3 ? 'Low' : viscosity <= 6 ? 'Medium' : 'High'} Viscosity
-                  </span>
-                  <span style={{ color: colors.honey, fontSize: '13px' }}>Honey (10000 cP)</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderVisualization(false, true)}
                 </div>
-                <input type="range" min="1" max="10" value={viscosity} onChange={(e) => setViscosity(Number(e.target.value))} onInput={(e) => setViscosity(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Adjust Viscosity</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
-              <div style={{ background: `${colors.water}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.water}40` }}>
-                <h4 style={{ color: colors.water, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>💧 Low Viscosity (Water)</h4>
-                <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
-                  <li>Fast, clean breakup</li>
-                  <li>Uniform droplets</li>
-                  <li>No connecting threads</li>
-                </ul>
-              </div>
-              <div style={{ background: `${colors.honey}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.honey}40` }}>
-                <h4 style={{ color: colors.honey, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🍯 High Viscosity (Honey)</h4>
-                <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
-                  <li>Slow, complex breakup</li>
-                  <li>"Beads on a string" pattern</li>
-                  <li>Satellite droplets form</li>
-                </ul>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.water, fontSize: '13px' }}>Water (1 cP)</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                        {viscosity <= 3 ? 'Low' : viscosity <= 6 ? 'Medium' : 'High'} Viscosity
+                      </span>
+                      <span style={{ color: colors.honey, fontSize: '13px' }}>Honey (10000 cP)</span>
+                    </div>
+                    <input type="range" min="1" max="10" value={viscosity} onChange={(e) => setViscosity(Number(e.target.value))} onInput={(e) => setViscosity(Number((e.target as HTMLInputElement).value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
+                  </div>
+                </div>
+
+                <div style={{ background: `${colors.water}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.water}40`, marginBottom: '16px' }}>
+                  <h4 style={{ color: colors.water, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>💧 Low Viscosity (Water)</h4>
+                  <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
+                    <li>Fast, clean breakup</li>
+                    <li>Uniform droplets</li>
+                    <li>No connecting threads</li>
+                  </ul>
+                </div>
+                <div style={{ background: `${colors.honey}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.honey}40` }}>
+                  <h4 style={{ color: colors.honey, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>🍯 High Viscosity (Honey)</h4>
+                  <ul style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, paddingLeft: '16px', lineHeight: 1.6 }}>
+                    <li>Slow, complex breakup</li>
+                    <li>"Beads on a string" pattern</li>
+                    <li>Satellite droplets form</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

@@ -147,6 +147,14 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     };
   }, [promptTokens, outputTokens, modelSize, gpuPower, numGPUs, throughput]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const predictions = [
     { id: 'free', label: 'Longer prompts are basically free once the model is loaded' },
     { id: 'linear', label: 'Energy scales linearly with tokens - more words, more joules' },
@@ -939,8 +947,49 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           See how token count translates to real energy consumption
         </p>
 
-        {renderVisualization()}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization()}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '24px', border: '1px solid #22c55e' }}>
           <h3 style={{ color: '#22c55e', marginBottom: '8px' }}>Why This Matters in the Real World</h3>
@@ -1124,8 +1173,49 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
           Compare the energy cost of efficient vs bloated prompts
         </p>
 
-        {renderVisualization()}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization()}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #f59e0b' }}>
           <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Comparison (5x longer prompt):</h3>

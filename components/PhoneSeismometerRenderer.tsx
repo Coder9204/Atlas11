@@ -1123,149 +1123,169 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
               </p>
             </div>
 
-            {/* Main visualization */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                {renderSeismicSVG(true, svgW, svgH)}
-              </div>
-
-              {/* Sliders */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* Amplitude slider */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Amplitude</span>
-                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{vibrationAmp}% max</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={vibrationAmp}
-                    onChange={(e) => {
-                      setVibrationAmp(parseInt(e.target.value));
-                      if (onGameEvent) onGameEvent({
-                        eventType: 'slider_changed',
-                        gameType: 'phone-seismometer',
-                        gameTitle: 'Phone Seismometer',
-                        details: { slider: 'amplitude', value: e.target.value },
-                        timestamp: Date.now()
-                      });
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '20px',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      accentColor: '#3b82f6',
-                      WebkitAppearance: 'none',
-                      touchAction: 'pan-y',
-                    }}
-                  />
-                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
-                    When amplitude increases, the proof mass deflects further — higher F = ma force means larger capacitance change C = εA/d.
-                  </p>
-                </div>
-
-                {/* Frequency slider */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Frequency</span>
-                    <span style={{ ...typo.small, color: colors.wave, fontWeight: 600 }}>{vibrationFreq} Hz</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={vibrationFreq}
-                    onChange={(e) => {
-                      setVibrationFreq(parseInt(e.target.value));
-                      if (onGameEvent) onGameEvent({
-                        eventType: 'slider_changed',
-                        gameType: 'phone-seismometer',
-                        gameTitle: 'Phone Seismometer',
-                        details: { slider: 'frequency', value: e.target.value },
-                        timestamp: Date.now()
-                      });
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '20px',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      accentColor: '#3b82f6',
-                      WebkitAppearance: 'none',
-                      touchAction: 'pan-y',
-                    }}
-                  />
-                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
-                    Earthquake body waves are typically 1–10 Hz. Higher frequency results in faster oscillation of the proof mass relative to the chip housing.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Comparison reference panel */}
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              flexDirection: 'row',
-              gap: '12px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
             }}>
-              <div style={{
-                flex: 1,
-                background: colors.bgCard,
-                borderRadius: '10px',
-                padding: '14px',
-                border: `1px solid ${colors.border}`,
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{vibrationAmp}%</div>
-                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current amplitude</div>
-              </div>
-              <div style={{
-                flex: 1,
-                background: colors.bgCard,
-                borderRadius: '10px',
-                padding: '14px',
-                border: `1px solid ${colors.border}`,
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.wave }}>{vibrationFreq} Hz</div>
-                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current frequency</div>
-              </div>
-              <div style={{
-                flex: 1,
-                background: colors.bgCard,
-                borderRadius: '10px',
-                padding: '14px',
-                border: `1px solid ${colors.border}`,
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: vibrationAmp > 50 ? colors.error : colors.success }}>
-                  {vibrationAmp > 70 ? 'Earthquake' : vibrationAmp > 30 ? 'Moderate' : 'Ambient'}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Main visualization */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  marginBottom: '16px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {renderSeismicSVG(true, svgW, svgH)}
+                  </div>
                 </div>
-                <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current vs baseline</div>
-              </div>
-            </div>
 
-            {/* Physics explanation */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '10px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
-                <strong style={{ color: colors.accent }}>MEMS equation: F = ma, C = εA/d.</strong>{' '}
-                A tiny proof mass (~microgram) on silicon springs deflects when the phone accelerates. Higher amplitude causes larger equation displacement, changing capacitance between electrodes. The ratio between current amplitude and the baseline reference determines detection confidence.
-              </p>
+                {/* Comparison reference panel */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    flex: 1,
+                    background: colors.bgCard,
+                    borderRadius: '10px',
+                    padding: '14px',
+                    border: `1px solid ${colors.border}`,
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{vibrationAmp}%</div>
+                    <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current amplitude</div>
+                  </div>
+                  <div style={{
+                    flex: 1,
+                    background: colors.bgCard,
+                    borderRadius: '10px',
+                    padding: '14px',
+                    border: `1px solid ${colors.border}`,
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.wave }}>{vibrationFreq} Hz</div>
+                    <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current frequency</div>
+                  </div>
+                  <div style={{
+                    flex: 1,
+                    background: colors.bgCard,
+                    borderRadius: '10px',
+                    padding: '14px',
+                    border: `1px solid ${colors.border}`,
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: vibrationAmp > 50 ? colors.error : colors.success }}>
+                      {vibrationAmp > 70 ? 'Earthquake' : vibrationAmp > 30 ? 'Moderate' : 'Ambient'}
+                    </div>
+                    <div style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Current vs baseline</div>
+                  </div>
+                </div>
+
+                {/* Physics explanation */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: 0 }}>
+                    <strong style={{ color: colors.accent }}>MEMS equation: F = ma, C = εA/d.</strong>{' '}
+                    A tiny proof mass (~microgram) on silicon springs deflects when the phone accelerates. Higher amplitude causes larger equation displacement, changing capacitance between electrodes. The ratio between current amplitude and the baseline reference determines detection confidence.
+                  </p>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  {/* Sliders */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Amplitude slider */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Amplitude</span>
+                        <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{vibrationAmp}% max</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={vibrationAmp}
+                        onChange={(e) => {
+                          setVibrationAmp(parseInt(e.target.value));
+                          if (onGameEvent) onGameEvent({
+                            eventType: 'slider_changed',
+                            gameType: 'phone-seismometer',
+                            gameTitle: 'Phone Seismometer',
+                            details: { slider: 'amplitude', value: e.target.value },
+                            timestamp: Date.now()
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '20px',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          accentColor: '#3b82f6',
+                          WebkitAppearance: 'none',
+                          touchAction: 'pan-y',
+                        }}
+                      />
+                      <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
+                        Higher amplitude = larger proof mass deflection
+                      </p>
+                    </div>
+
+                    {/* Frequency slider */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ ...typo.small, color: '#c0c8d0' }}>Vibration Frequency</span>
+                        <span style={{ ...typo.small, color: colors.wave, fontWeight: 600 }}>{vibrationFreq} Hz</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={vibrationFreq}
+                        onChange={(e) => {
+                          setVibrationFreq(parseInt(e.target.value));
+                          if (onGameEvent) onGameEvent({
+                            eventType: 'slider_changed',
+                            gameType: 'phone-seismometer',
+                            gameTitle: 'Phone Seismometer',
+                            details: { slider: 'frequency', value: e.target.value },
+                            timestamp: Date.now()
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '20px',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          accentColor: '#3b82f6',
+                          WebkitAppearance: 'none',
+                          touchAction: 'pan-y',
+                        }}
+                      />
+                      <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', marginTop: '4px' }}>
+                        Earthquake body waves: 1-10 Hz
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1493,98 +1513,119 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
               Build a network and trigger an earthquake to see how detection improves with more phones. More phones = better triangulation, fewer false alarms, and faster warnings.
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
-              border: `1px solid ${colors.border}`,
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                <NetworkVisualization width={svgW} height={svgH} />
-              </div>
-
-              {/* Phone count slider */}
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Phones in Network</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{phoneCount} devices</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={phoneCount}
-                  onChange={(e) => {
-                    const n = parseInt(e.target.value);
-                    setPhoneCount(n);
-                    setPhoneDetections(Array(n).fill(false));
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    accentColor: '#3b82f6',
-                    WebkitAppearance: 'none',
-                    touchAction: 'pan-y',
-                  }}
-                />
-              </div>
-
-              {/* Trigger earthquake button */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <button
-                  onClick={() => {
-                    playSound('click');
-                    setEarthquakeStrength(4 + Math.random() * 3);
-                  }}
-                  disabled={earthquakeStrength > 0}
-                  style={{
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: earthquakeStrength > 0 ? colors.border : colors.error,
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    cursor: earthquakeStrength > 0 ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  {earthquakeStrength > 0 ? 'Detecting...' : 'Simulate Earthquake'}
-                </button>
-              </div>
-
-              {/* Detection results */}
-              {earthquakeStrength > 0 && (
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '12px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
                 }}>
-                  <div style={{
-                    background: colors.bgSecondary,
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center',
-                  }}>
-                    <div style={{ ...typo.h3, color: colors.accent }}>{detectionsCount}/{phoneCount}</div>
-                    <div style={{ ...typo.small, color: colors.textMuted }}>Phones Detected</div>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <NetworkVisualization width={svgW} height={svgH} />
                   </div>
-                  <div style={{
-                    background: colors.bgSecondary,
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center',
-                  }}>
-                    <div style={{ ...typo.h3, color: detectionsCount >= 3 ? colors.success : colors.warning }}>
-                      {detectionsCount >= 3 ? 'CONFIRMED' : 'UNCERTAIN'}
+
+                  {/* Detection results */}
+                  {earthquakeStrength > 0 && (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px',
+                      marginTop: '16px',
+                    }}>
+                      <div style={{
+                        background: colors.bgSecondary,
+                        borderRadius: '8px',
+                        padding: '12px',
+                        textAlign: 'center',
+                      }}>
+                        <div style={{ ...typo.h3, color: colors.accent }}>{detectionsCount}/{phoneCount}</div>
+                        <div style={{ ...typo.small, color: colors.textMuted }}>Phones Detected</div>
+                      </div>
+                      <div style={{
+                        background: colors.bgSecondary,
+                        borderRadius: '8px',
+                        padding: '12px',
+                        textAlign: 'center',
+                      }}>
+                        <div style={{ ...typo.h3, color: detectionsCount >= 3 ? colors.success : colors.warning }}>
+                          {detectionsCount >= 3 ? 'CONFIRMED' : 'UNCERTAIN'}
+                        </div>
+                        <div style={{ ...typo.small, color: colors.textMuted }}>Event Status</div>
+                      </div>
                     </div>
-                    <div style={{ ...typo.small, color: colors.textMuted }}>Event Status</div>
+                  )}
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  {/* Phone count slider */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ ...typo.small, color: 'rgba(148,163,184,0.7)' }}>Phones in Network</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{phoneCount} devices</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      value={phoneCount}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value);
+                        setPhoneCount(n);
+                        setPhoneDetections(Array(n).fill(false));
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        accentColor: '#3b82f6',
+                        WebkitAppearance: 'none',
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                  </div>
+
+                  {/* Trigger earthquake button */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        playSound('click');
+                        setEarthquakeStrength(4 + Math.random() * 3);
+                      }}
+                      disabled={earthquakeStrength > 0}
+                      style={{
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: earthquakeStrength > 0 ? colors.border : colors.error,
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '15px',
+                        cursor: earthquakeStrength > 0 ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        width: '100%',
+                      }}
+                    >
+                      {earthquakeStrength > 0 ? 'Detecting...' : 'Simulate Earthquake'}
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

@@ -1284,163 +1284,174 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderBandwidthVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderBandwidthVisualization()}
+              </div>
 
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Bus Width: {busWidth} bits
-              </label>
-              <input
-                type="range"
-                min="64"
-                max="384"
-                step="64"
-                value={busWidth}
-                onChange={(e) => setBusWidth(parseInt(e.target.value))}
-                onInput={(e) => setBusWidth(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-            </div>
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '8px',
+                marginBottom: '12px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Bandwidth Formula:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', fontFamily: 'monospace' }}>
+                  Bandwidth = Bus Width x Clock Speed x Transfers/Clock / 8
+                </p>
+                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
+                  {busWidth} bits x {clockSpeed} MHz x {memoryType === 'gddr6x' ? '4' : '2'} / 8 = {calculateBandwidth().toFixed(0)} GB/s
+                </p>
+              </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Effective Clock: {clockSpeed} MHz
-              </label>
-              <input
-                type="range"
-                min="1000"
-                max="3000"
-                step="100"
-                value={clockSpeed}
-                onChange={(e) => setClockSpeed(parseInt(e.target.value))}
-                onInput={(e) => setClockSpeed(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-            </div>
+              {/* Cause-effect explanation */}
+              <div style={{
+                background: 'rgba(6, 182, 212, 0.1)',
+                padding: '16px',
+                borderRadius: '8px',
+                marginBottom: '12px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
+                  When you increase the bus width, bandwidth increases proportionally because more data lanes transfer data in parallel.
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                  When you increase the clock speed, bandwidth increases linearly because each lane transfers data faster. Doubling either parameter doubles the total bandwidth.
+                </p>
+              </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Memory Type
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['gddr6', 'gddr6x', 'hbm2e'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setMemoryType(type)}
-                    style={{
-                      ...buttonStyle,
-                      flex: 1,
-                      padding: '10px',
-                      background: memoryType === type ? colors.accent : 'transparent',
-                      border: `1px solid ${memoryType === type ? colors.accent : 'rgba(255,255,255,0.2)'}`,
-                      color: colors.textPrimary,
-                      fontSize: '12px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {type.toUpperCase()}
-                  </button>
-                ))}
+              {/* Before/After comparison */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '12px',
+              }}>
+                <div style={{
+                  flex: 1,
+                  background: colors.bgCard,
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  border: `1px solid ${colors.memory}`,
+                }}>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>128-bit Reference</p>
+                  <p style={{ color: colors.memory, fontSize: '18px', fontWeight: 700 }}>
+                    {((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000).toFixed(0)} GB/s
+                  </p>
+                </div>
+                <div style={{
+                  flex: 1,
+                  background: colors.bgCard,
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  border: `1px solid ${colors.accent}`,
+                }}>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>Current Config</p>
+                  <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>
+                    {calculateBandwidth().toFixed(0)} GB/s
+                  </p>
+                  <p style={{ color: colors.success, fontSize: '12px', fontWeight: 600 }}>
+                    {(calculateBandwidth() / ((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000)).toFixed(1)}x faster
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
-              <button
-                onClick={() => setIsAnimating(!isAnimating)}
-                style={{
-                  ...buttonStyle,
-                  background: isAnimating ? colors.error : colors.success,
-                  color: 'white',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {isAnimating ? 'Stop Animation' : 'Animate Data Flow'}
-              </button>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '16px',
-            }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Bandwidth Formula:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', fontFamily: 'monospace' }}>
-                Bandwidth = Bus Width x Clock Speed x Transfers/Clock / 8
-              </p>
-              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
-                {busWidth} bits x {clockSpeed} MHz x {memoryType === 'gddr6x' ? '4' : '2'} / 8 = {calculateBandwidth().toFixed(0)} GB/s
-              </p>
-            </div>
-
-            {/* Cause-effect explanation */}
-            <div style={{
-              background: 'rgba(6, 182, 212, 0.1)',
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '12px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
-                When you increase the bus width, bandwidth increases proportionally because more data lanes transfer data in parallel.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
-                When you increase the clock speed, bandwidth increases linearly because each lane transfers data faster. Doubling either parameter doubles the total bandwidth.
-              </p>
-            </div>
-
-            {/* Before/After comparison */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '12px',
-              marginTop: '12px',
-            }}>
-              <div style={{
-                flex: 1,
-                background: colors.bgCard,
-                padding: '12px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                border: `1px solid ${colors.memory}`,
-              }}>
-                <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>128-bit Reference</p>
-                <p style={{ color: colors.memory, fontSize: '18px', fontWeight: 700 }}>
-                  {((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000).toFixed(0)} GB/s
-                </p>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Bus Width: {busWidth} bits
+                </label>
+                <input
+                  type="range"
+                  min="64"
+                  max="384"
+                  step="64"
+                  value={busWidth}
+                  onChange={(e) => setBusWidth(parseInt(e.target.value))}
+                  onInput={(e) => setBusWidth(parseInt((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                  }}
+                />
               </div>
-              <div style={{
-                flex: 1,
-                background: colors.bgCard,
-                padding: '12px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                border: `1px solid ${colors.accent}`,
-              }}>
-                <p style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 400, marginBottom: '4px' }}>Current Config</p>
-                <p style={{ color: colors.accent, fontSize: '18px', fontWeight: 700 }}>
-                  {calculateBandwidth().toFixed(0)} GB/s
-                </p>
-                <p style={{ color: colors.success, fontSize: '12px', fontWeight: 600 }}>
-                  {(calculateBandwidth() / ((128 * clockSpeed * (memoryType === 'gddr6x' ? 4 : 2)) / 8 / 1000)).toFixed(1)}x faster
-                </p>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Effective Clock: {clockSpeed} MHz
+                </label>
+                <input
+                  type="range"
+                  min="1000"
+                  max="3000"
+                  step="100"
+                  value={clockSpeed}
+                  onChange={(e) => setClockSpeed(parseInt(e.target.value))}
+                  onInput={(e) => setClockSpeed(parseInt((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none' as const,
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Memory Type
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['gddr6', 'gddr6x', 'hbm2e'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setMemoryType(type)}
+                      style={{
+                        ...buttonStyle,
+                        flex: 1,
+                        padding: '10px',
+                        background: memoryType === type ? colors.accent : 'transparent',
+                        border: `1px solid ${memoryType === type ? colors.accent : 'rgba(255,255,255,0.2)'}`,
+                        color: colors.textPrimary,
+                        fontSize: '12px',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      {type.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>
+                <button
+                  onClick={() => setIsAnimating(!isAnimating)}
+                  style={{
+                    ...buttonStyle,
+                    background: isAnimating ? colors.error : colors.success,
+                    color: 'white',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {isAnimating ? 'Stop Animation' : 'Animate Data Flow'}
+                </button>
               </div>
             </div>
           </div>
@@ -1658,74 +1669,85 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderBandwidthVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderBandwidthVisualization()}
+              </div>
 
-          <div style={{ padding: '16px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Compare Memory Types
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['gddr6', 'gddr6x', 'hbm2e'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      setMemoryType(type);
-                      if (type === 'hbm2e') {
-                        setClockSpeed(1600);
-                      } else {
-                        setClockSpeed(2000);
-                      }
-                    }}
-                    style={{
-                      ...buttonStyle,
-                      flex: 1,
-                      padding: '12px 8px',
-                      background: memoryType === type ? colors.warning : 'transparent',
-                      border: `1px solid ${memoryType === type ? colors.warning : 'rgba(255,255,255,0.2)'}`,
-                      color: colors.textPrimary,
-                      fontSize: '11px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    <div>{type.toUpperCase()}</div>
-                    <div style={{ fontSize: '10px', opacity: 0.7 }}>
-                      {type === 'gddr6' ? '256-bit' : type === 'gddr6x' ? '384-bit' : '1024-bit'}
-                    </div>
-                  </button>
-                ))}
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.warning}`,
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px' }}>HBM Key Insight:</h4>
+                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  HBM stacks 4-8 memory dies vertically with thousands of tiny connections (TSVs).
+                  This enables a 1024-bit or wider bus in a tiny footprint, achieving 2-3x the
+                  bandwidth of GDDR at lower power per bit transferred.
+                </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setIsAnimating(!isAnimating)}
-                style={{
-                  ...buttonStyle,
-                  background: isAnimating ? colors.error : colors.success,
-                  color: 'white',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {isAnimating ? 'Stop' : 'Animate'}
-              </button>
-            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                  Compare Memory Types
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['gddr6', 'gddr6x', 'hbm2e'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        setMemoryType(type);
+                        if (type === 'hbm2e') {
+                          setClockSpeed(1600);
+                        } else {
+                          setClockSpeed(2000);
+                        }
+                      }}
+                      style={{
+                        ...buttonStyle,
+                        flex: 1,
+                        padding: '12px 8px',
+                        background: memoryType === type ? colors.warning : 'transparent',
+                        border: `1px solid ${memoryType === type ? colors.warning : 'rgba(255,255,255,0.2)'}`,
+                        color: colors.textPrimary,
+                        fontSize: '11px',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      <div>{type.toUpperCase()}</div>
+                      <div style={{ fontSize: '10px', opacity: 0.7 }}>
+                        {type === 'gddr6' ? '256-bit' : type === 'gddr6x' ? '384-bit' : '1024-bit'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              marginTop: '16px',
-              borderLeft: `3px solid ${colors.warning}`,
-            }}>
-              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>HBM Key Insight:</h4>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                HBM stacks 4-8 memory dies vertically with thousands of tiny connections (TSVs).
-                This enables a 1024-bit or wider bus in a tiny footprint, achieving 2-3x the
-                bandwidth of GDDR at lower power per bit transferred.
-              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setIsAnimating(!isAnimating)}
+                  style={{
+                    ...buttonStyle,
+                    background: isAnimating ? colors.error : colors.success,
+                    color: 'white',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {isAnimating ? 'Stop' : 'Animate'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

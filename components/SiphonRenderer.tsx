@@ -1106,6 +1106,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
             padding: '20px',
             marginBottom: '20px'
           }}>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Siphon visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="220" viewBox="0 0 400 220">
@@ -1292,7 +1301,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
               </div>
             )}
           </div>
-
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
           <div style={{ display: 'grid', gap: '16px' }}>
             {/* Upper tank height */}
@@ -1465,6 +1475,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
             <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>
               Greater height difference = higher pressure differential = faster flow
             </p>
+          </div>
+          </div>
           </div>
         </div>
 
@@ -1860,6 +1872,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           padding: '20px',
           marginBottom: '20px'
         }}>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="200" viewBox="0 0 400 200">
@@ -2043,7 +2064,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
               </div>
             )}
           </div>
-
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
           <div style={{ display: 'grid', gap: '16px' }}>
             {/* Apex height slider */}
@@ -2179,6 +2201,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
                 <strong>Siphon breaks!</strong> At {apexHeight}m, the pressure at the apex drops below water's vapor pressure. A bubble forms, breaking the liquid chain!
               </p>
             )}
+          </div>
+          </div>
           </div>
         </div>
 

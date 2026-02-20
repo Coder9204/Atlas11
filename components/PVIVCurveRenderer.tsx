@@ -1415,8 +1415,35 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 Find the Maximum Power Point by adjusting the load
               </p>
             </div>
-            {renderVisualization(true)}
-            {renderControls()}
+            {/* Side-by-side layout: SVG left, controls right */}
+
+            <div style={{
+
+              display: 'flex',
+
+              flexDirection: isMobile ? 'column' : 'row',
+
+              gap: isMobile ? '12px' : '20px',
+
+              width: '100%',
+
+              alignItems: isMobile ? 'center' : 'flex-start',
+
+            }}>
+
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+                {renderVisualization(true)}
+
+              </div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+                {renderControls()}
+
+              </div>
+
+            </div>
             <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
               <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>What This Visualization Shows:</h4>
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, marginBottom: '10px', fontWeight: 400 }}>

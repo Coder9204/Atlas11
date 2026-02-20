@@ -909,105 +909,116 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         <div className="flex flex-col flex-1" style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '100px', flex: 1 }}>
           <div className="flex-1 flex flex-col items-center p-4">
 
-            {/* SVG visualization */}
-            <div className="w-full max-w-3xl mb-6" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
-              {renderRopeVisualization(linearDensity)}
-            </div>
-
-            <div className="w-full max-w-2xl mb-6"
-              style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
-              <p className="text-xs font-bold text-amber-400 mb-2">👀 OBSERVE</p>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Watch how changing tension force affects the wave pulse travel time. Higher tension makes the rope "snap back" faster, increasing wave speed. This is why guitar strings produce different pitches when tightened.
-              </p>
-            </div>
-
-            {/* Data readout cards */}
-            <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', transition: 'all 0.3s ease' }}>
-                <p className="text-xs font-bold text-amber-400 mb-1">CURRENT SPEED</p>
-                <p className="text-2xl font-black text-white">{waveSpeed.toFixed(1)} m/s</p>
-                <p className="text-xs text-slate-400">Wave velocity</p>
-              </div>
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
-                <p className="text-xs font-bold text-emerald-400 mb-1">TRAVEL TIME</p>
-                <p className="text-2xl font-black text-white">{(ropeLength / waveSpeed).toFixed(2)}s</p>
-                <p className="text-xs text-slate-400">For {ropeLength}m rope</p>
-              </div>
-            </div>
-
-            <div className="w-full max-w-2xl">
-              <div className="flex justify-center mb-6">
-                <button
-                  onClick={() => {
-                    if (isPulseSent) return;
-                    setPulsePosition(0);
-                    setIsPulseSent(true);
-                    setPulseComplete(false);
-                    setStopwatchTime(0);
-                    emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity, expectedSpeed: waveSpeed });
-                  }}
-                  disabled={isPulseSent}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
-                    isPulseSent
-                      ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'text-white shadow-lg shadow-amber-500/30'
-                  }`}
-                  style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
-                >
-                  {isPulseSent ? 'Traveling...' : 'Send Pulse'}
-                </button>
-              </div>
-
-              {/* Tension slider */}
-              <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-300 font-semibold">
-                    Tension Force (T) — controls how tightly the rope is stretched
-                  </label>
-                  <span className="text-sm text-amber-400 font-bold">{tension} N</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* SVG visualization */}
+                <div className="w-full mb-4" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  {renderRopeVisualization(linearDensity)}
                 </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="200"
-                  value={tension}
-                  onChange={(e) => {
-                    setTension(parseInt(e.target.value));
-                    setPulsePosition(0);
-                    setIsPulseSent(false);
-                    setPulseComplete(false);
-                    setStopwatchTime(0);
-                    emitEvent('parameter_changed', { param: 'tension', value: parseInt(e.target.value) });
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    accentColor: '#3b82f6',
-                    WebkitAppearance: 'none',
-                    touchAction: 'pan-y',
-                    cursor: 'pointer'
-                  }}
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>10 N (loose)</span>
-                  <span>200 N (tight)</span>
+
+                <div className="w-full mb-4"
+                  style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  <p className="text-xs font-bold text-amber-400 mb-2">👀 OBSERVE</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    Watch how changing tension force affects the wave pulse travel time. Higher tension makes the rope "snap back" faster, increasing wave speed. This is why guitar strings produce different pitches when tightened.
+                  </p>
+                </div>
+
+                {/* Data readout cards */}
+                <div className="w-full grid grid-cols-2 gap-4">
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', transition: 'all 0.3s ease' }}>
+                    <p className="text-xs font-bold text-amber-400 mb-1">CURRENT SPEED</p>
+                    <p className="text-2xl font-black text-white">{waveSpeed.toFixed(1)} m/s</p>
+                    <p className="text-xs text-slate-400">Wave velocity</p>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
+                    <p className="text-xs font-bold text-emerald-400 mb-1">TRAVEL TIME</p>
+                    <p className="text-2xl font-black text-white">{(ropeLength / waveSpeed).toFixed(2)}s</p>
+                    <p className="text-xs text-slate-400">For {ropeLength}m rope</p>
+                  </div>
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={() => {
+                      if (isPulseSent) return;
+                      setPulsePosition(0);
+                      setIsPulseSent(true);
+                      setPulseComplete(false);
+                      setStopwatchTime(0);
+                      emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity, expectedSpeed: waveSpeed });
+                    }}
+                    disabled={isPulseSent}
+                    className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
+                      isPulseSent
+                        ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                        : 'text-white shadow-lg shadow-amber-500/30'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
+                  >
+                    {isPulseSent ? 'Traveling...' : 'Send Pulse'}
+                  </button>
+                </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={() => { if (pulseComplete) goToPhase('review'); }}
-                  disabled={!pulseComplete}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
-                    pulseComplete
-                      ? 'text-white'
-                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                  }`}
-                  style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
-                >
-                  Understand Why
-                </button>
+                {/* Tension slider */}
+                <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-sm text-slate-300 font-semibold">
+                      Tension Force (T)
+                    </label>
+                    <span className="text-sm text-amber-400 font-bold">{tension} N</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="200"
+                    value={tension}
+                    onChange={(e) => {
+                      setTension(parseInt(e.target.value));
+                      setPulsePosition(0);
+                      setIsPulseSent(false);
+                      setPulseComplete(false);
+                      setStopwatchTime(0);
+                      emitEvent('parameter_changed', { param: 'tension', value: parseInt(e.target.value) });
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      accentColor: '#3b82f6',
+                      WebkitAppearance: 'none',
+                      touchAction: 'pan-y',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>10 N (loose)</span>
+                    <span>200 N (tight)</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => { if (pulseComplete) goToPhase('review'); }}
+                    disabled={!pulseComplete}
+                    className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
+                      pulseComplete
+                        ? 'text-white'
+                        : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
+                  >
+                    Understand Why
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1162,103 +1173,115 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       return (
         <div className="flex flex-col flex-1 overflow-auto" style={{ paddingTop: '48px', paddingBottom: '100px' }}>
           <div className="flex-1 flex flex-col items-center p-4">
-            <div className="w-full max-w-3xl mb-6" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
-              {renderRopeVisualization(twistLinearDensity)}
-            </div>
 
-            <div className="w-full max-w-2xl mb-6"
-              style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
-              <p className="text-xs font-bold text-violet-400 mb-2">👀 OBSERVE</p>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Notice how heavier ropes (higher mass density) carry waves more slowly. More inertia means the rope responds slower to disturbances.
-              </p>
-            </div>
-
-            <div className="w-full max-w-2xl grid grid-cols-2 gap-4 mb-6">
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.3)', transition: 'all 0.3s ease' }}>
-                <p className="text-xs font-bold text-violet-400 mb-1">CURRENT SPEED</p>
-                <p className="text-2xl font-black text-white">{twistWaveSpeed.toFixed(1)} m/s</p>
-                <p className="text-xs text-slate-400">Wave velocity</p>
-              </div>
-              <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
-                <p className="text-xs font-bold text-emerald-400 mb-1">COMPARISON</p>
-                <p className="text-2xl font-black text-white">{((waveSpeed - twistWaveSpeed) / waveSpeed * 100).toFixed(0)}%</p>
-                <p className="text-xs text-slate-400">vs. lighter rope</p>
-              </div>
-            </div>
-
-            <div className="w-full max-w-2xl">
-              <div className="flex justify-center mb-6">
-                <button
-                  onClick={() => {
-                    if (isPulseSent) return;
-                    setPulsePosition(0);
-                    setIsPulseSent(true);
-                    setPulseComplete(false);
-                    setStopwatchTime(0);
-                    emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity: twistLinearDensity, expectedSpeed: twistWaveSpeed });
-                  }}
-                  disabled={isPulseSent}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
-                    isPulseSent
-                      ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'text-white shadow-lg shadow-amber-500/30'
-                  }`}
-                  style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
-                >
-                  {isPulseSent ? 'Traveling...' : 'Send Pulse'}
-                </button>
-              </div>
-
-              {/* Linear density slider */}
-              <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-300 font-semibold">
-                    Linear Mass Density (μ) — mass per unit length of rope
-                  </label>
-                  <span className="text-sm text-yellow-400 font-bold">{(twistLinearDensity * 1000).toFixed(1)} g/m</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div className="w-full mb-4" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  {renderRopeVisualization(twistLinearDensity)}
                 </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="100"
-                  value={twistLinearDensity * 1000}
-                  onChange={(e) => {
-                    setTwistLinearDensity(parseInt(e.target.value) / 1000);
-                    setPulsePosition(0);
-                    setIsPulseSent(false);
-                    setPulseComplete(false);
-                    setStopwatchTime(0);
-                    emitEvent('parameter_changed', { param: 'linearDensity', value: parseInt(e.target.value) / 1000 });
-                  }}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    accentColor: '#3b82f6',
-                    WebkitAppearance: 'none',
-                    touchAction: 'pan-y',
-                    cursor: 'pointer'
-                  }}
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>5 g/m (light)</span>
-                  <span>100 g/m (heavy)</span>
+
+                <div className="w-full mb-4"
+                  style={{ padding: '20px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  <p className="text-xs font-bold text-violet-400 mb-2">👀 OBSERVE</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    Notice how heavier ropes (higher mass density) carry waves more slowly. More inertia means the rope responds slower to disturbances.
+                  </p>
+                </div>
+
+                <div className="w-full grid grid-cols-2 gap-4">
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.3)', transition: 'all 0.3s ease' }}>
+                    <p className="text-xs font-bold text-violet-400 mb-1">CURRENT SPEED</p>
+                    <p className="text-2xl font-black text-white">{twistWaveSpeed.toFixed(1)} m/s</p>
+                    <p className="text-xs text-slate-400">Wave velocity</p>
+                  </div>
+                  <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', transition: 'all 0.3s ease' }}>
+                    <p className="text-xs font-bold text-emerald-400 mb-1">COMPARISON</p>
+                    <p className="text-2xl font-black text-white">{((waveSpeed - twistWaveSpeed) / waveSpeed * 100).toFixed(0)}%</p>
+                    <p className="text-xs text-slate-400">vs. lighter rope</p>
+                  </div>
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={() => {
+                      if (isPulseSent) return;
+                      setPulsePosition(0);
+                      setIsPulseSent(true);
+                      setPulseComplete(false);
+                      setStopwatchTime(0);
+                      emitEvent('simulation_started', { action: 'send_pulse', tension, linearDensity: twistLinearDensity, expectedSpeed: twistWaveSpeed });
+                    }}
+                    disabled={isPulseSent}
+                    className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
+                      isPulseSent
+                        ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                        : 'text-white shadow-lg shadow-amber-500/30'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px', ...(isPulseSent ? {} : { background: 'linear-gradient(to right, #f59e0b, #ea580c)' }) }}
+                  >
+                    {isPulseSent ? 'Traveling...' : 'Send Pulse'}
+                  </button>
+                </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={() => { if (pulseComplete) goToPhase('twist_review'); }}
-                  disabled={!pulseComplete}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
-                    pulseComplete
-                      ? 'text-white'
-                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                  }`}
-                  style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
-                >
-                  See the Full Picture
-                </button>
+                {/* Linear density slider */}
+                <div className="mb-6 w-full" style={{ padding: '16px', borderRadius: '12px', background: 'rgba(30,41,59,0.3)', border: '1px solid rgba(71,85,105,0.5)' }}>
+                  <div className="flex justify-between mb-2">
+                    <label className="text-sm text-slate-300 font-semibold">
+                      Mass Density (u)
+                    </label>
+                    <span className="text-sm text-yellow-400 font-bold">{(twistLinearDensity * 1000).toFixed(1)} g/m</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="100"
+                    value={twistLinearDensity * 1000}
+                    onChange={(e) => {
+                      setTwistLinearDensity(parseInt(e.target.value) / 1000);
+                      setPulsePosition(0);
+                      setIsPulseSent(false);
+                      setPulseComplete(false);
+                      setStopwatchTime(0);
+                      emitEvent('parameter_changed', { param: 'linearDensity', value: parseInt(e.target.value) / 1000 });
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      accentColor: '#3b82f6',
+                      WebkitAppearance: 'none',
+                      touchAction: 'pan-y',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>5 g/m (light)</span>
+                    <span>100 g/m (heavy)</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => { if (pulseComplete) goToPhase('twist_review'); }}
+                    disabled={!pulseComplete}
+                    className={`px-6 py-2 rounded-xl font-bold transition-all duration-300 ${
+                      pulseComplete
+                        ? 'text-white'
+                        : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    }`}
+                    style={{ zIndex: 10, minHeight: '44px', ...(pulseComplete ? { background: 'linear-gradient(to right, #f59e0b, #ea580c)' } : {}) }}
+                  >
+                    See the Full Picture
+                  </button>
+                </div>
               </div>
             </div>
           </div>

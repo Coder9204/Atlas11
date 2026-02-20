@@ -1132,11 +1132,23 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
               </p>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <SpectralVisualization />
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <SpectralVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {renderControls()}
+              </div>
             </div>
-
-            {renderControls()}
 
             <div style={{
               background: `${colors.accent}11`,
@@ -1407,11 +1419,23 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
               Toggle UV and IR filters and adjust bandgap to see their effect on power output.
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <SpectralVisualization />
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <SpectralVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {renderControls()}
+              </div>
             </div>
-
-            {renderControls()}
 
             <div style={{
               background: `${colors.warning}11`,

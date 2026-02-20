@@ -1168,73 +1168,86 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             Adjust the angle and observe how incidence always equals reflection. This is why mirrors are used in everyday technology from vehicle mirrors to telescopes.
           </p>
 
-          {renderReflectionVisualization()}
-          {renderControls()}
-
-          {/* Calculated values readout */}
+          {/* Side-by-side layout */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginTop: '16px',
-            marginBottom: '16px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              padding: '12px',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
-              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Incident Angle</div>
-              <div style={{ color: colors.incident, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
-              <div style={{ color: colors.textMuted, fontSize: typo.label }}>{(incidentAngle * Math.PI / 180).toFixed(2)} rad</div>
-            </div>
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              padding: '12px',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
-              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Reflected Angle</div>
-              <div style={{ color: colors.reflected, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
-              <div style={{ color: colors.textMuted, fontSize: typo.label }}>
-                {incidentAngle === incidentAngle
-                  ? <span style={{ color: colors.success }}>Match ✓</span>
-                  : <span style={{ color: colors.error }}>Mismatch</span>
-                }
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderReflectionVisualization()}
+
+              {/* Calculated values readout */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginTop: '16px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.8)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Incident Angle</div>
+                  <div style={{ color: colors.incident, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label }}>{(incidentAngle * Math.PI / 180).toFixed(2)} rad</div>
+                </div>
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.8)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Reflected Angle</div>
+                  <div style={{ color: colors.reflected, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle}°</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+                    {incidentAngle === incidentAngle
+                      ? <span style={{ color: colors.success }}>Match</span>
+                      : <span style={{ color: colors.error }}>Mismatch</span>
+                    }
+                  </div>
+                </div>
+                <div style={{
+                  background: 'rgba(30, 41, 59, 0.8)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Deflection</div>
+                  <div style={{ color: colors.accent, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle * 2}°</div>
+                  <div
+                    data-feedback={incidentAngle >= 45 ? 'warning' : 'success'}
+                    style={{ color: incidentAngle >= 45 ? '#F59E0B' : colors.success, fontSize: typo.label }}
+                  >
+                    {incidentAngle >= 45 ? 'Wide spread' : 'Narrow output'}
+                  </div>
+                </div>
               </div>
             </div>
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              padding: '12px',
-              borderRadius: '8px',
-              textAlign: 'center',
-            }}>
-              <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Deflection ratio</div>
-              <div style={{ color: colors.accent, fontWeight: 700, fontSize: typo.bodyLarge }}>{incidentAngle * 2}°</div>
-              <div
-                data-feedback={incidentAngle >= 45 ? 'warning' : 'success'}
-                style={{ color: incidentAngle >= 45 ? '#F59E0B' : colors.success, fontSize: typo.label }}
-              >
-                {incidentAngle >= 45 ? 'Wide output spread' : 'Narrow output'}
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+
+              <div style={{
+                background: 'rgba(30, 41, 59, 0.8)',
+                padding: '20px',
+                borderRadius: '12px',
+                marginTop: '16px',
+              }}>
+                <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Experiments to Try:</h3>
+                <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.small }}>
+                  <li>Set angle to <strong>0 degrees</strong> - light bounces straight back</li>
+                  <li>Set angle to <strong>45 degrees</strong> - light turns 90 degrees</li>
+                  <li>Toggle <strong>Virtual Image</strong></li>
+                  <li>Notice angles are always <strong>equal</strong></li>
+                </ul>
               </div>
             </div>
-          </div>
-
-          <div style={{
-            background: 'rgba(30, 41, 59, 0.8)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginTop: '24px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.body }}>Experiments to Try:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.body }}>
-              <li>Set angle to <strong>0 degrees</strong> - light bounces straight back</li>
-              <li>Set angle to <strong>45 degrees</strong> - light turns 90 degrees</li>
-              <li>Toggle <strong>Virtual Image</strong> - see where the reflection appears to come from</li>
-              <li>Notice the angles are always <strong>equal</strong> on both sides of the normal</li>
-              <li><strong>When you increase</strong> the incident angle, the reflected angle increases by the same amount - they are always equal</li>
-            </ul>
           </div>
         </div>
       </div>,
@@ -1418,20 +1431,34 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             Watch how two 90 degree mirrors send light back the way it came!
           </p>
 
-          {renderCornerReflector()}
-          {renderControls()}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(244, 114, 182, 0.1)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginTop: '24px',
-            borderLeft: '4px solid #f472b6',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <h3 style={{ color: '#f472b6', marginBottom: '8px', fontSize: typo.body }}>Apollo Connection</h3>
-            <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6 }}>
-              Astronauts left corner cube reflectors on the Moon. We bounce lasers off them to measure Earth-Moon distance to within <strong>centimeters</strong>! The laser returns to Earth after traveling 770,000 km - only possible because corner reflectors send light back exactly where it came from.
-            </p>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderCornerReflector()}
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+
+              <div style={{
+                background: 'rgba(244, 114, 182, 0.1)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginTop: '16px',
+                borderLeft: '4px solid #f472b6',
+              }}>
+                <h3 style={{ color: '#f472b6', marginBottom: '8px', fontSize: typo.small }}>Apollo Connection</h3>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+                  Astronauts left corner cube reflectors on the Moon. Lasers bounce off them to measure Earth-Moon distance to within centimeters after traveling 770,000 km.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>,

@@ -897,94 +897,96 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           </p>
         </div>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
         }}>
-          {renderFlowVisualization()}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              {renderFlowVisualization()}
 
-          {/* Reynolds number display */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            margin: '20px 0',
-          }}>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning }}>
-                {Re.toFixed(0)}
+              {/* Reynolds number display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                margin: '20px 0',
+              }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning }}>
+                    {Re.toFixed(0)}
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Reynolds Number</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.laminar }}>2300</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Laminar Limit</div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.turbulent }}>4000</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Turbulent Threshold</div>
+                </div>
               </div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Reynolds Number</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: colors.laminar }}>2300</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Laminar Limit</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <div style={{ ...typo.h3, color: colors.turbulent }}>4000</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Turbulent Threshold</div>
             </div>
           </div>
-
-          {/* Sliders with inline styles */}
-          <div style={{ display: 'grid', gap: '16px' }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Velocity (v)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity.toFixed(1)} m/s</span>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Velocity (v)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity.toFixed(1)} m/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  value={flowVelocity}
+                  onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
+                />
               </div>
-              <input
-                type="range"
-                min="0.1"
-                max="5"
-                step="0.1"
-                value={flowVelocity}
-                onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', accentColor: colors.accent, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
-                ↑ Higher velocity → Higher Re → More likely turbulent
-              </p>
-            </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter (D)</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{pipeDiameter.toFixed(1)} cm</span>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Diameter (D)</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{pipeDiameter.toFixed(1)} cm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={pipeDiameter}
+                  onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: colors.success, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
+                />
               </div>
-              <input
-                type="range"
-                min="0.5"
-                max="10"
-                step="0.5"
-                value={pipeDiameter}
-                onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', accentColor: colors.success, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
-                ↑ Larger diameter → Higher Re → More room for turbulence
-              </p>
-            </div>
 
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Fluid Viscosity (relative)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x water</span>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viscosity</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="10"
+                  step="0.1"
+                  value={fluidViscosity}
+                  onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: colors.warning, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
+                />
               </div>
-              <input
-                type="range"
-                min="0.1"
-                max="10"
-                step="0.1"
-                value={fluidViscosity}
-                onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
-                style={{ width: '100%', height: '20px', accentColor: colors.warning, touchAction: 'pan-y', WebkitAppearance: 'none' as const }}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
-                ↑ Higher viscosity → Lower Re → Viscous forces resist turbulence
-              </p>
             </div>
           </div>
         </div>

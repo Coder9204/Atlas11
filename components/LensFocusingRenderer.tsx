@@ -944,151 +944,163 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             Image distance = {imageData.imageDistance.toFixed(1)} mm | Magnification factor = {imageData.magnification.toFixed(2)}×
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <LensVisualization objDist={objectDistance} fLen={focalLength} />
-            </div>
-
-            {/* Focal length slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Focal Length (f)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{focalLength} px</span>
-              </div>
-              <input
-                type="range"
-                min="40"
-                max="120"
-                value={focalLength}
-                onChange={(e) => setFocalLength(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-            </div>
-
-            {/* Object distance slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Distance (d_o)</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>
-                  {objectDistance} px
-                  {objectDistance < focalLength && <span style={{ color: colors.warning, marginLeft: '8px' }}>(Inside f!)</span>}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="30"
-                max="250"
-                value={objectDistance}
-                onChange={(e) => setObjectDistance(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-            </div>
-
-            {/* Quick preset buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
-              <button
-                onClick={() => setObjectDistance(focalLength * 2.5)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgSecondary,
-                  color: colors.textPrimary,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                }}
-              >
-                d &gt; 2f (small image)
-              </button>
-              <button
-                onClick={() => setObjectDistance(focalLength * 1.5)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgSecondary,
-                  color: colors.textPrimary,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                }}
-              >
-                f &lt; d &lt; 2f (large image)
-              </button>
-              <button
-                onClick={() => setObjectDistance(focalLength * 0.6)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.warning}`,
-                  background: colors.warning + '22',
-                  color: colors.warning,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                }}
-              >
-                d &lt; f (magnifier!)
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{imageData.imageDistance.toFixed(0)} px</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Image Distance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{imageData.magnification.toFixed(2)}x</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: imageData.isReal ? '#f472b6' : '#a855f7' }}>
-                  {imageData.isReal ? 'Real' : 'Virtual'}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <LensVisualization objDist={objectDistance} fLen={focalLength} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>
-                  {imageData.isUpright ? 'Upright' : 'Inverted'}
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{imageData.imageDistance.toFixed(0)} px</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Image Distance</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{imageData.magnification.toFixed(2)}x</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: imageData.isReal ? '#f472b6' : '#a855f7' }}>
+                      {imageData.isReal ? 'Real' : 'Virtual'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>
+                      {imageData.isUpright ? 'Upright' : 'Inverted'}
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Focal length slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Focal Length (f)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{focalLength} px</span>
+                </div>
+                <input
+                  type="range"
+                  min="40"
+                  max="120"
+                  value={focalLength}
+                  onChange={(e) => setFocalLength(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                  }}
+                />
+              </div>
+
+              {/* Object distance slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Object Dist (d_o)</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>
+                    {objectDistance} px
+                    {objectDistance < focalLength && <span style={{ color: colors.warning, marginLeft: '4px' }}>(Inside f!)</span>}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="250"
+                  value={objectDistance}
+                  onChange={(e) => setObjectDistance(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                  }}
+                />
+              </div>
+
+              {/* Quick preset buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+                <button
+                  onClick={() => setObjectDistance(focalLength * 2.5)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: colors.bgSecondary,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  d &gt; 2f (small image)
+                </button>
+                <button
+                  onClick={() => setObjectDistance(focalLength * 1.5)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: colors.bgSecondary,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  f &lt; d &lt; 2f (large image)
+                </button>
+                <button
+                  onClick={() => setObjectDistance(focalLength * 0.6)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.warning}`,
+                    background: colors.warning + '22',
+                    color: colors.warning,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                  }}
+                >
+                  d &lt; f (magnifier!)
+                </button>
               </div>
             </div>
           </div>
@@ -1359,82 +1371,98 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             Place the object inside the focal length and observe the virtual image
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <LensVisualization objDist={twistObjectDistance} fLen={focalLength} showVirtual={true} />
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <LensVisualization objDist={twistObjectDistance} fLen={focalLength} showVirtual={true} />
+                </div>
+
+                {/* Comparison stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: '#a855f7' }}>
+                      Virtual
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Image Type</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>
+                      Upright
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Orientation</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>
+                      {Math.abs(twistImageData.magnification).toFixed(1)}x
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Object distance slider (constrained to inside f) */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Distance (inside focal length)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistObjectDistance} px (f = {focalLength} px)</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max={focalLength - 5}
-                value={twistObjectDistance}
-                onChange={(e) => setTwistObjectDistance(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Close to lens</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Near focal point</span>
-              </div>
-            </div>
-
-            {/* Comparison stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#a855f7' }}>
-                  Virtual
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Object distance slider (constrained to inside f) */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Object Distance</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistObjectDistance} px</span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Image Type</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>
-                  Upright
+                <input
+                  type="range"
+                  min="20"
+                  max={focalLength - 5}
+                  value={twistObjectDistance}
+                  onChange={(e) => setTwistObjectDistance(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: '#3b82f6',
+                    touchAction: 'pan-y' as const,
+                    WebkitAppearance: 'none' as const,
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Close to lens</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Near focal pt</span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Orientation</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>
-                  {Math.abs(twistImageData.magnification).toFixed(1)}x
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                  f = {focalLength} px (inside focal length)
+                </p>
               </div>
             </div>
           </div>

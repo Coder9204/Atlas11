@@ -1097,8 +1097,18 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       {/* SVG Title */}
       <div style={{ fontSize: '16px', fontWeight: 600, color: '#f59e0b', marginBottom: '8px', textAlign: 'center' }}>Electric Potential vs Distance</div>
 
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {/* Main SVG Graph */}
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', width: '100%', maxWidth: '500px' }}>
+      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', width: '100%' }}>
         <svg viewBox="0 0 420 400" style={{ width: '100%', display: 'block' }}>
           <defs>
             <linearGradient id="epotCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1200,9 +1210,11 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           </g>
         </svg>
       </div>
+      </div>
 
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       {/* Slider controls */}
-      <div style={{ width: '100%', maxWidth: '500px', marginBottom: '16px' }}>
+      <div style={{ width: '100%', marginBottom: '16px' }}>
         <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <label htmlFor="voltageSlider" style={{ fontSize: '14px', fontWeight: 600, color: '#f59e0b' }}>Source Voltage</label>
@@ -1286,6 +1298,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <p style={{ fontSize: '14px', fontWeight: 500, lineHeight: 1.6, color: '#06b6d4', marginTop: '8px' }}>
           Formula: V = kq/r | E = -dV/dr | W = q x Delta V
         </p>
+      </div>
+      </div>
       </div>
 
       <button
@@ -1501,7 +1515,17 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         Potential Difference in Circuits
       </h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
         <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
           {/* Background */}
           <rect x="0" y="0" width="400" height="300" fill="#1e293b" rx="15" />
@@ -1549,8 +1573,10 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           <text x="140" y="200" fill="#22c55e" fontSize="11">Delta V = 4.5V</text>
         </svg>
       </div>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-4 max-w-2xl mb-6">
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+      <div className="space-y-4 mb-6">
         <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-xl p-4">
           <h3 className="text-lg font-bold text-amber-400 mb-2">Voltage = Potential Difference</h3>
           <ul className="text-sm text-slate-300 space-y-1">
@@ -1570,13 +1596,15 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
             <li>This is conservation of energy!</li>
           </ul>
         </div>
-      </div>
 
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
+      <div className="bg-slate-800/70 rounded-xl p-4">
         <h3 className="text-lg font-semibold text-cyan-400 mb-2">The Key Insight</h3>
         <p className="text-slate-300 text-sm">
           Electric potential at a single point has no physical meaning by itself - only the DIFFERENCE in potential (voltage) between two points matters. That's why we always need a reference point (like ground = 0V). A 9V battery doesn't have "9 volts" - it maintains a 9V DIFFERENCE between its terminals.
         </p>
+      </div>
+      </div>
+      </div>
       </div>
 
       <button

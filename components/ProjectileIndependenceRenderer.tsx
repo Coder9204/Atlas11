@@ -312,6 +312,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   const [thrownX, setThrownX] = useState(100);
   const [thrownY, setThrownY] = useState(50);
   const [airResistance, setAirResistance] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener("resize", c); return () => window.removeEventListener("resize", c); }, []);
 
   const animationRef = useRef<number | null>(null);
 
@@ -917,8 +919,20 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-        {renderSimulation(true)}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderSimulation(true)}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Speed controls are inside renderSimulation */}
+        </div>
       </div>
     </div>
   );
@@ -1133,41 +1147,51 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
         </div>
       </div>
 
-      {/* Air resistance toggle */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center' }}>
-        {[
-          { id: 0, label: 'No Air Resistance' },
-          { id: 1, label: 'Light Air Drag' },
-          { id: 2, label: 'Heavy Air Drag' }
-        ].map(m => (
-          <button
-            key={m.id}
-            onClick={() => {
-              setAirResistance(m.id);
-              stopSimulation();
-            }}
-            style={{
-              padding: '12px 24px',
-              fontSize: '14px',
-              fontWeight: airResistance === m.id ? 700 : 500,
-              color: airResistance === m.id ? '#0a0a0f' : colors.textPrimary,
-              background: airResistance === m.id
-                ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
-                : colors.bgCard,
-              border: `2px solid ${airResistance === m.id ? colors.accent : colors.border}`,
-              borderRadius: '12px',
-              cursor: 'pointer',
-              zIndex: 10,
-              position: 'relative' as const
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-        {renderSimulation(true)}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderSimulation(true)}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Air resistance toggle */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+            {[
+              { id: 0, label: 'No Air Resistance' },
+              { id: 1, label: 'Light Air Drag' },
+              { id: 2, label: 'Heavy Air Drag' }
+            ].map(m => (
+              <button
+                key={m.id}
+                onClick={() => {
+                  setAirResistance(m.id);
+                  stopSimulation();
+                }}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  fontWeight: airResistance === m.id ? 700 : 500,
+                  color: airResistance === m.id ? '#0a0a0f' : colors.textPrimary,
+                  background: airResistance === m.id
+                    ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
+                    : colors.bgCard,
+                  border: `2px solid ${airResistance === m.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  position: 'relative' as const
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

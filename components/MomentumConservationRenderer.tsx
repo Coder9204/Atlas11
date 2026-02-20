@@ -934,82 +934,97 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             Watch how changing the mass affects each cart's velocity. Notice that the total momentum (shown in the display) remains constant - this is why momentum conservation matters in the real world.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CartVisualization />
-            </div>
-
-            {/* Mass sliders */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.accent }}>Left Cart Mass</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{massLeft} kg</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CartVisualization />
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={massLeft}
-                  onChange={(e) => { setMassLeft(parseInt(e.target.value)); resetExperiment(); }}
-                  disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
-                />
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.accentSecondary }}>Right Cart Mass</span>
-                  <span style={{ ...typo.small, color: colors.accentSecondary, fontWeight: 600 }}>{massRight} kg</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={massRight}
-                  onChange={(e) => { setMassRight(parseInt(e.target.value)); resetExperiment(); }}
-                  disabled={isAnimating}
-                  style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accentSecondary, background: colors.bgSecondary, touchAction: 'pan-y' }}
-                />
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Mass sliders */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.accent }}>Left Cart Mass</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{massLeft} kg</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={massLeft}
+                    onChange={(e) => { setMassLeft(parseInt(e.target.value)); resetExperiment(); }}
+                    disabled={isAnimating}
+                    style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
+                  />
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.accentSecondary }}>Right Cart Mass</span>
+                    <span style={{ ...typo.small, color: colors.accentSecondary, fontWeight: 600 }}>{massRight} kg</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={massRight}
+                    onChange={(e) => { setMassRight(parseInt(e.target.value)); resetExperiment(); }}
+                    disabled={isAnimating}
+                    style={{ width: '100%', cursor: isAnimating ? 'not-allowed' : 'pointer', accentColor: colors.accentSecondary, background: colors.bgSecondary, touchAction: 'pan-y' }}
+                  />
+                </div>
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={releaseCarts}
-                disabled={isAnimating || !isCompressed}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: isCompressed && !isAnimating ? colors.success : colors.border,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isCompressed && !isAnimating ? 'pointer' : 'not-allowed',
-                }}
-              >
-                {isCompressed ? 'Release Spring' : 'Running...'}
-              </button>
-              <button
-                onClick={resetExperiment}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+                {/* Action buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button
+                    onClick={releaseCarts}
+                    disabled={isAnimating || !isCompressed}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: isCompressed && !isAnimating ? colors.success : colors.border,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isCompressed && !isAnimating ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {isCompressed ? 'Release Spring' : 'Running...'}
+                  </button>
+                  <button
+                    onClick={resetExperiment}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1262,85 +1277,102 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             Toggle friction and observe what happens to the momentum
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CartVisualization />
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CartVisualization />
+                </div>
+              </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Friction toggle */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  marginBottom: '20px',
+                }}>
+                  <button
+                    onClick={() => { setHasFriction(false); resetExperiment(); }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `2px solid ${!hasFriction ? colors.accent : colors.border}`,
+                      background: !hasFriction ? `${colors.accent}22` : 'transparent',
+                      color: !hasFriction ? colors.accent : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Frictionless Track
+                  </button>
+                  <button
+                    onClick={() => { setHasFriction(true); resetExperiment(); }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `2px solid ${hasFriction ? colors.warning : colors.border}`,
+                      background: hasFriction ? `${colors.warning}22` : 'transparent',
+                      color: hasFriction ? colors.warning : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Rough Surface
+                  </button>
+                </div>
 
-            {/* Friction toggle */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '16px',
-              marginBottom: '24px',
-              flexWrap: 'wrap',
-            }}>
-              <button
-                onClick={() => { setHasFriction(false); resetExperiment(); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `2px solid ${!hasFriction ? colors.accent : colors.border}`,
-                  background: !hasFriction ? `${colors.accent}22` : 'transparent',
-                  color: !hasFriction ? colors.accent : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Frictionless Track
-              </button>
-              <button
-                onClick={() => { setHasFriction(true); resetExperiment(); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `2px solid ${hasFriction ? colors.warning : colors.border}`,
-                  background: hasFriction ? `${colors.warning}22` : 'transparent',
-                  color: hasFriction ? colors.warning : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Rough Surface
-              </button>
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={releaseCarts}
-                disabled={isAnimating || !isCompressed}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: isCompressed && !isAnimating ? colors.success : colors.border,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isCompressed && !isAnimating ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Release Spring
-              </button>
-              <button
-                onClick={resetExperiment}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+                {/* Action buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button
+                    onClick={releaseCarts}
+                    disabled={isAnimating || !isCompressed}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: isCompressed && !isAnimating ? colors.success : colors.border,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isCompressed && !isAnimating ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    Release Spring
+                  </button>
+                  <button
+                    onClick={resetExperiment}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -1017,119 +1017,130 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               <strong>Real-world relevance:</strong> This same DVFS mechanism operates in gaming GPUs, smartphones, and data center hardware — balancing performance against thermal and power constraints. The thermal time constant is calculated as tau = R_th × C_th.
             </p>
 
-            {/* Interactive SVG */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                {renderDVFSSVG(powerLimit, thermalLimit, thermalResistance)}
-              </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    {renderDVFSSVG(powerLimit, thermalLimit, thermalResistance)}
+                  </div>
 
-              {/* Current vs reference comparison */}
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Reference (baseline)</div>
-                  <div style={{ ...typo.body, color: colors.clock, fontWeight: 600 }}>2400 MHz at 300W</div>
+                  {/* Charts */}
+                  <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
+                  <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
+                  <SimulationChart data={powerHistory} color={colors.power} label="Power" unit="W" maxVal={350} />
                 </div>
-                <div style={{ flex: 1, background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Current output</div>
-                  <div style={{ ...typo.body, color: gpuState.clock < 2200 ? colors.warning : colors.success, fontWeight: 600 }}>
-                    {gpuState.clock} MHz at {gpuState.power}W
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Current vs reference comparison */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Reference (baseline)</div>
+                    <div style={{ ...typo.body, color: colors.clock, fontWeight: 600 }}>2400 MHz at 300W</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '2px' }}>Current output</div>
+                    <div style={{ ...typo.body, color: gpuState.clock < 2200 ? colors.warning : colors.success, fontWeight: 600 }}>
+                      {gpuState.clock} MHz at {gpuState.power}W
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Control sliders */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Power Limit</span>
-                  <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{powerLimit}W</span>
+                {/* Control sliders */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Power Limit</span>
+                    <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{powerLimit}W</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="150"
+                    max="350"
+                    value={powerLimit}
+                    onChange={(e) => setPowerLimit(Number(e.target.value))}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>150W</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>350W</span>
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="150"
-                  max="350"
-                  value={powerLimit}
-                  onChange={(e) => setPowerLimit(Number(e.target.value))}
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>150W</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>350W</span>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Thermal Limit</span>
+                    <span style={{ ...typo.small, color: colors.temp, fontWeight: 600 }}>{thermalLimit}C</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="70"
+                    max="95"
+                    value={thermalLimit}
+                    onChange={(e) => { setThermalLimit(Number(e.target.value)); resetSimulation(); }}
+                    onInput={(e) => { setThermalLimit(Number((e.target as HTMLInputElement).value)); resetSimulation(); }}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>70C</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>95C</span>
+                  </div>
+                </div>
+
+                {/* Simulation controls */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Observation guidance */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  border: `1px solid ${colors.accent}33`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '24px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: colors.accent }}>What to observe:</strong> Start the simulation and watch how clock speed, temperature, and power interact over time. Try adjusting power and thermal limits to see their effects on GPU performance.
+                  </p>
                 </div>
               </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Thermal Limit</span>
-                  <span style={{ ...typo.small, color: colors.temp, fontWeight: 600 }}>{thermalLimit}C</span>
-                </div>
-                <input
-                  type="range"
-                  min="70"
-                  max="95"
-                  value={thermalLimit}
-                  onChange={(e) => { setThermalLimit(Number(e.target.value)); resetSimulation(); }}
-                  onInput={(e) => { setThermalLimit(Number((e.target as HTMLInputElement).value)); resetSimulation(); }}
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>70C</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>95C</span>
-                </div>
-              </div>
-
-              {/* Simulation controls */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-                <button
-                  onClick={() => setIsSimulating(!isSimulating)}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: isSimulating ? colors.error : colors.success,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
-                </button>
-                <button
-                  onClick={resetSimulation}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.border}`,
-                    background: 'transparent',
-                    color: colors.textSecondary,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Reset
-                </button>
-              </div>
-
-              {/* Charts */}
-              <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
-              <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
-              <SimulationChart data={powerHistory} color={colors.power} label="Power" unit="W" maxVal={350} />
-            </div>
-
-            {/* Observation guidance */}
-            <div style={{
-              background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>What to observe:</strong> Start the simulation and watch how clock speed, temperature, and power interact over time. Try adjusting power and thermal limits to see their effects on GPU performance.
-              </p>
             </div>
 
             <button
@@ -1440,87 +1451,96 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               Adjust fan speed to reduce thermal resistance and sustain higher clocks
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                {renderDVFSSVG(powerLimit, thermalLimit, effectiveTR)}
-              </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    {renderDVFSSVG(powerLimit, thermalLimit, effectiveTR)}
+                  </div>
 
-              {/* Fan speed slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
-                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{fanSpeed}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="100"
-                  value={fanSpeed}
-                  onChange={handleFanChange}
-                  onInput={handleFanChange}
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>30% Quiet</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>100% Aggressive</span>
+                  {/* Charts */}
+                  <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
+                  <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Fan speed slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
+                    <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{fanSpeed}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="30"
+                    max="100"
+                    value={fanSpeed}
+                    onChange={handleFanChange}
+                    onInput={handleFanChange}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>30% Quiet</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>100% Aggressive</span>
+                  </div>
+                </div>
 
-              {/* Thermal resistance display */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '20px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Effective Thermal Resistance:</span>
-                <span style={{ ...typo.body, color: colors.success, fontWeight: 600 }}>
-                  {effectiveTR.toFixed(3)} C/W
-                </span>
+                {/* Thermal resistance display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>Effective Thermal Resistance:</div>
+                  <div style={{ ...typo.body, color: colors.success, fontWeight: 600 }}>
+                    {effectiveTR.toFixed(3)} C/W
+                  </div>
+                </div>
+
+                {/* Simulation controls */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
-
-              {/* Simulation controls */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-                <button
-                  onClick={() => setIsSimulating(!isSimulating)}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: isSimulating ? colors.error : colors.success,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {isSimulating ? 'Pause' : simulationTime > 0 ? 'Resume' : 'Start Load'}
-                </button>
-                <button
-                  onClick={resetSimulation}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: `1px solid ${colors.border}`,
-                    background: 'transparent',
-                    color: colors.textSecondary,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Reset
-                </button>
-              </div>
-
-              {/* Charts */}
-              <SimulationChart data={clockHistory} color={colors.clock} label="Clock Speed" unit=" MHz" maxVal={2500} />
-              <SimulationChart data={tempHistory} color={colors.temp} label="Temperature" unit="C" maxVal={100} />
             </div>
 
             <button

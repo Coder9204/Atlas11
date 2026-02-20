@@ -1602,174 +1602,180 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               </p>
             </div>
 
-            {/* Visualization */}
-            <StaircaseVisualization />
-
-            {/* Sliders - Each slider with value in same parent */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: spacing.md,
-              marginTop: spacing.lg,
-              marginBottom: spacing.lg,
-            }}>
-              {/* Mass Slider */}
-              <div style={{
-                background: colors.bgCard,
-                borderRadius: radius.md,
-                padding: spacing.lg,
-                border: `1px solid ${colors.border}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary }}>MASS</span>
-                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{personMass} kg</span>
-                </div>
-                <input
-                  type="range"
-                  min="40"
-                  max="120"
-                  value={personMass}
-                  onChange={(e) => setPersonMass(Number(e.target.value))}
-                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.brand }}
-                  aria-label="Mass slider"
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>40 (Min)</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>120 (Max)</span>
-                </div>
-              </div>
-
-              {/* Height Slider */}
-              <div style={{
-                background: colors.bgCard,
-                borderRadius: radius.md,
-                padding: spacing.lg,
-                border: `1px solid ${colors.border}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary }}>HEIGHT</span>
-                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{stairHeight} m</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  step="0.5"
-                  value={stairHeight}
-                  onChange={(e) => { setStairHeight(Number(e.target.value)); resetClimb(); }}
-                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.success }}
-                  aria-label="Height slider"
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>1 (Min)</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>10 (Max)</span>
-                </div>
-              </div>
-
-              {/* Time Slider */}
-              <div style={{
-                background: colors.bgCard,
-                borderRadius: radius.md,
-                padding: spacing.lg,
-                border: `1px solid ${colors.border}`,
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
-                  <span style={{ ...typography.caption, color: colors.textSecondary }}>TIME</span>
-                  <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{climbTime} s</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="20"
-                  value={climbTime}
-                  onChange={(e) => { setClimbTime(Number(e.target.value)); resetClimb(); }}
-                  style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.power }}
-                  aria-label="Time slider"
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>2 (Min)</span>
-                  <span style={{ ...typography.caption, color: colors.textTertiary }}>20 (Max)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Controls */}
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              gap: spacing.md,
-              justifyContent: 'center',
-              marginBottom: spacing.lg,
-            }}>
-              <button
-                onClick={startClimb}
-                disabled={isClimbing}
-                style={{
-                  padding: '12px 32px',
-                  borderRadius: radius.md,
-                  border: 'none',
-                  background: isClimbing ? colors.bgHover : colors.success,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: isClimbing ? 'default' : 'pointer',
-                  fontFamily: typography.fontFamily,
-                  zIndex: 10,
-                }}
-              >
-                {isClimbing ? `Climbing... ${(climbProgress * 100).toFixed(0)}%` : '▶ Climb Stairs'}
-              </button>
-              <button
-                onClick={resetClimb}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.border}`,
-                  background: colors.bgCard,
-                  color: colors.textSecondary,
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: typography.fontFamily,
-                  zIndex: 10,
-                }}
-              >
-                ↺ Reset
-              </button>
-            </div>
-
-            {/* Formula Display */}
-            <div style={{
-              padding: spacing.lg,
-              background: colors.bgElevated,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: spacing.xl,
             }}>
-              <div style={{ ...typography.label, color: colors.brand, marginBottom: spacing.md }}>
-                THE FORMULA
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Visualization */}
+                <StaircaseVisualization />
+
+                {/* Formula Display */}
+                <div style={{
+                  padding: spacing.lg,
+                  background: colors.bgElevated,
+                  borderRadius: radius.lg,
+                  border: `1px solid ${colors.border}`,
+                  marginTop: spacing.lg,
+                }}>
+                  <div style={{ ...typography.label, color: colors.brand, marginBottom: spacing.md }}>
+                    THE FORMULA
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: spacing.md,
+                    flexWrap: 'wrap',
+                    ...typography.h3,
+                    color: colors.textPrimary,
+                  }}>
+                    <span style={{ color: '#f59e0b', fontWeight: 700 }}>P</span>
+                    <span>=</span>
+                    <span style={{ color: colors.work }}>Work</span>
+                    <span>/</span>
+                    <span style={{ color: colors.textSecondary }}>Time</span>
+                    <span>=</span>
+                    <span style={{ color: '#3b82f6', fontWeight: 700 }}>m</span>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>g</span>
+                    <span style={{ color: '#8b5cf6', fontWeight: 700 }}>h</span>
+                    <span>/</span>
+                    <span style={{ color: '#ef4444', fontWeight: 700 }}>t</span>
+                    <span>=</span>
+                    <span style={{ color: colors.power }}>{values.power.toFixed(0)} W</span>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: spacing.md,
-                flexWrap: 'wrap',
-                ...typography.h3,
-                color: colors.textPrimary,
-              }}>
-                <span style={{ color: '#f59e0b', fontWeight: 700 }}>P</span>
-                <span>=</span>
-                <span style={{ color: colors.work }}>Work</span>
-                <span>/</span>
-                <span style={{ color: colors.textSecondary }}>Time</span>
-                <span>=</span>
-                <span style={{ color: '#3b82f6', fontWeight: 700 }}>m</span>
-                <span style={{ color: '#10b981', fontWeight: 700 }}>g</span>
-                <span style={{ color: '#8b5cf6', fontWeight: 700 }}>h</span>
-                <span>/</span>
-                <span style={{ color: '#ef4444', fontWeight: 700 }}>t</span>
-                <span>=</span>
-                <span style={{ color: colors.power }}>{values.power.toFixed(0)} W</span>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Sliders */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md, marginBottom: spacing.lg }}>
+                  {/* Mass Slider */}
+                  <div style={{
+                    background: colors.bgCard,
+                    borderRadius: radius.md,
+                    padding: spacing.lg,
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <span style={{ ...typography.caption, color: colors.textSecondary }}>MASS</span>
+                      <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{personMass} kg</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="40"
+                      max="120"
+                      value={personMass}
+                      onChange={(e) => setPersonMass(Number(e.target.value))}
+                      style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.brand }}
+                      aria-label="Mass slider"
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>40 (Min)</span>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>120 (Max)</span>
+                    </div>
+                  </div>
+
+                  {/* Height Slider */}
+                  <div style={{
+                    background: colors.bgCard,
+                    borderRadius: radius.md,
+                    padding: spacing.lg,
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <span style={{ ...typography.caption, color: colors.textSecondary }}>HEIGHT</span>
+                      <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{stairHeight} m</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="0.5"
+                      value={stairHeight}
+                      onChange={(e) => { setStairHeight(Number(e.target.value)); resetClimb(); }}
+                      style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.success }}
+                      aria-label="Height slider"
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>1 (Min)</span>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>10 (Max)</span>
+                    </div>
+                  </div>
+
+                  {/* Time Slider */}
+                  <div style={{
+                    background: colors.bgCard,
+                    borderRadius: radius.md,
+                    padding: spacing.lg,
+                    border: `1px solid ${colors.border}`,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                      <span style={{ ...typography.caption, color: colors.textSecondary }}>TIME</span>
+                      <span style={{ height: '20px', ...typography.h3, color: colors.textPrimary, fontWeight: 600 }}>{climbTime} s</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="2"
+                      max="20"
+                      value={climbTime}
+                      onChange={(e) => { setClimbTime(Number(e.target.value)); resetClimb(); }}
+                      style={{ touchAction: 'pan-y', width: '100%', height: '20px', cursor: 'pointer', accentColor: colors.power }}
+                      aria-label="Time slider"
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>2 (Min)</span>
+                      <span style={{ ...typography.caption, color: colors.textTertiary }}>20 (Max)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div style={{
+                  display: 'flex',
+                  gap: spacing.md,
+                  justifyContent: 'center',
+                }}>
+                  <button
+                    onClick={startClimb}
+                    disabled={isClimbing}
+                    style={{
+                      padding: '12px 32px',
+                      borderRadius: radius.md,
+                      border: 'none',
+                      background: isClimbing ? colors.bgHover : colors.success,
+                      color: '#FFFFFF',
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: isClimbing ? 'default' : 'pointer',
+                      fontFamily: typography.fontFamily,
+                      zIndex: 10,
+                    }}
+                  >
+                    {isClimbing ? `Climbing... ${(climbProgress * 100).toFixed(0)}%` : '▶ Climb Stairs'}
+                  </button>
+                  <button
+                    onClick={resetClimb}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: radius.md,
+                      border: `1px solid ${colors.border}`,
+                      background: colors.bgCard,
+                      color: colors.textSecondary,
+                      fontSize: 15,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: typography.fontFamily,
+                      zIndex: 10,
+                    }}
+                  >
+                    ↺ Reset
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2156,57 +2162,25 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               </h2>
             </div>
 
-            {/* Backpack Weight Slider */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.xl,
-              border: `1px solid ${colors.border}`,
-              marginBottom: spacing.lg,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: spacing.xl,
             }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: spacing.lg,
-              }}>
-                <div>
-                  <span style={{ ...typography.body, color: colors.textPrimary, fontWeight: 600 }}>
-                    🎒 Backpack Weight
-                  </span>
-                </div>
-                <span style={{ ...typography.h2, color: colors.warning }}>
-                  {backpackWeight} kg
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="70"
-                value={backpackWeight}
-                onChange={(e) => setBackpackWeight(Number(e.target.value))}
-                style={{ height: '20px', touchAction: 'pan-y', width: '100%', cursor: 'pointer', accentColor: colors.warning }}
-                aria-label="Backpack weight slider"
-              />
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: spacing.sm,
-              }}>
-                <span style={{ ...typography.caption, color: colors.textTertiary }}>0 (Min)</span>
-                <span style={{ ...typography.caption, color: colors.textTertiary }}>70 (Max)</span>
-              </div>
-            </div>
-
-            {/* Interactive SVG - Power vs Mass chart */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: radius.lg,
-              padding: spacing.lg,
-              marginBottom: spacing.lg,
-              border: `1px solid ${colors.border}`,
-            }}>
-              <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Interactive SVG - Power vs Mass chart */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: radius.lg,
+                  padding: spacing.lg,
+                  marginBottom: spacing.lg,
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
                 <defs>
                   <linearGradient id="twPlayPowerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                     <stop offset="0%" stopColor="#1e40af" />
@@ -2296,7 +2270,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: spacing.lg,
-              marginBottom: spacing.xl,
+              marginBottom: spacing.lg,
             }}>
               <div style={{
                 padding: spacing.lg,
@@ -2340,7 +2314,6 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               borderRadius: radius.lg,
               padding: spacing.lg,
               border: `1px solid ${colors.border}`,
-              marginBottom: spacing.xl,
             }}>
               <div style={{ ...typography.label, color: colors.textTertiary, marginBottom: spacing.md }}>
                 POWER COMPARISON
@@ -2380,6 +2353,50 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                     background: colors.power,
                     transition: 'width 0.3s ease',
                   }} />
+                </div>
+              </div>
+            </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Backpack Weight Slider */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: radius.lg,
+                  padding: spacing.xl,
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: spacing.lg,
+                  }}>
+                    <div>
+                      <span style={{ ...typography.body, color: colors.textPrimary, fontWeight: 600 }}>
+                        🎒 Backpack Weight
+                      </span>
+                    </div>
+                    <span style={{ ...typography.h2, color: colors.warning }}>
+                      {backpackWeight} kg
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="70"
+                    value={backpackWeight}
+                    onChange={(e) => setBackpackWeight(Number(e.target.value))}
+                    style={{ height: '20px', touchAction: 'pan-y', width: '100%', cursor: 'pointer', accentColor: colors.warning }}
+                    aria-label="Backpack weight slider"
+                  />
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: spacing.sm,
+                  }}>
+                    <span style={{ ...typography.caption, color: colors.textTertiary }}>0 (Min)</span>
+                    <span style={{ ...typography.caption, color: colors.textTertiary }}>70 (Max)</span>
+                  </div>
                 </div>
               </div>
             </div>

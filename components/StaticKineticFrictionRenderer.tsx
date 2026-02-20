@@ -1079,51 +1079,63 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             padding: '24px',
             marginBottom: '16px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FrictionVisualization />
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  resetExperiment();
-                  startPulling();
-                  playSound('click');
-                }}
-                disabled={isSimulating}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isSimulating ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pulling...' : 'Start Pulling!'}
-              </button>
-              <button
-                onClick={resetExperiment}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <FrictionVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Control buttons */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => {
+                      resetExperiment();
+                      startPulling();
+                      playSound('click');
+                    }}
+                    disabled={isSimulating}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isSimulating ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pulling...' : 'Start Pulling!'}
+                  </button>
+                  <button
+                    onClick={resetExperiment}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Stats display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1478,79 +1490,91 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FrictionVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <FrictionVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Surface selector */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                  {(['wood', 'rubber', 'ice'] as Surface[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        if (!isSimulating) {
+                          setSurface(s);
+                          resetExperiment();
+                          playSound('click');
+                        }
+                      }}
+                      style={{
+                        padding: '12px 20px',
+                        borderRadius: '8px',
+                        border: surface === s ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                        background: surface === s ? `${surfaceProperties[s].color}` : colors.bgSecondary,
+                        color: surface === s ? 'white' : colors.textSecondary,
+                        fontWeight: 600,
+                        cursor: isSimulating ? 'not-allowed' : 'pointer',
+                        opacity: isSimulating ? 0.5 : 1,
+                      }}
+                    >
+                      {surfaceProperties[s].name}
+                    </button>
+                  ))}
+                </div>
 
-            {/* Surface selector */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              {(['wood', 'rubber', 'ice'] as Surface[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    if (!isSimulating) {
-                      setSurface(s);
+                {/* Control buttons */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => {
                       resetExperiment();
+                      startPulling();
                       playSound('click');
-                    }
-                  }}
-                  style={{
-                    padding: '12px 20px',
-                    borderRadius: '8px',
-                    border: surface === s ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                    background: surface === s ? `${surfaceProperties[s].color}` : colors.bgSecondary,
-                    color: surface === s ? 'white' : colors.textSecondary,
-                    fontWeight: 600,
-                    cursor: isSimulating ? 'not-allowed' : 'pointer',
-                    opacity: isSimulating ? 0.5 : 1,
-                  }}
-                >
-                  {surfaceProperties[s].name}
-                </button>
-              ))}
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  resetExperiment();
-                  startPulling();
-                  playSound('click');
-                }}
-                disabled={isSimulating}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSimulating ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isSimulating ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isSimulating ? 'Pulling...' : 'Pull!'}
-              </button>
-              <button
-                onClick={resetExperiment}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+                    }}
+                    disabled={isSimulating}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSimulating ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isSimulating ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isSimulating ? 'Pulling...' : 'Pull!'}
+                  </button>
+                  <button
+                    onClick={resetExperiment}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Comparison stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{

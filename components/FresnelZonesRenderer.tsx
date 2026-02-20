@@ -963,89 +963,108 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             </p>
           </div>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderFresnelVisualization(true)}
-            </div>
-
-            {/* Obstacle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Obstacle Height (% of 1st zone)</span>
-                <span style={{ ...typo.small, color: obstacleHeight > 60 ? colors.error : obstacleHeight > 0 ? colors.warning : colors.success, fontWeight: 600 }}>
-                  {obstacleHeight}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={obstacleHeight}
-                onChange={(e) => setObstacleHeight(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Clear</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60% (Minimum clearance)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Full block</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderFresnelVisualization(true)}
+                </div>
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+              }}>
+                {/* Obstacle slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Obstacle Height</span>
+                    <span style={{ ...typo.small, color: obstacleHeight > 60 ? colors.error : obstacleHeight > 0 ? colors.warning : colors.success, fontWeight: 600 }}>
+                      {obstacleHeight}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={obstacleHeight}
+                    onChange={(e) => setObstacleHeight(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Clear</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Full</span>
+                  </div>
+                </div>
 
-            {/* Distance slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Link Distance</span>
-                <span style={{ ...typo.small, color: colors.zone1, fontWeight: 600 }}>{distance} m</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="5000"
-                step="100"
-                value={distance}
-                onChange={(e) => setDistance(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
+                {/* Distance slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Link Distance</span>
+                    <span style={{ ...typo.small, color: colors.zone1, fontWeight: 600 }}>{distance} m</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="5000"
+                    step="100"
+                    value={distance}
+                    onChange={(e) => setDistance(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
 
-            {/* Metrics */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.zone1 }}>{fresnelRadius1.toFixed(1)} m</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>1st Zone Radius</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: signalStatus.color }}>{signalLoss.toFixed(1)} dB</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Signal Loss</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: signalStatus.color }}>{signalStatus.status}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Link Quality</div>
+                {/* Metrics */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.zone1, fontSize: '16px' }}>{fresnelRadius1.toFixed(1)} m</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>1st Zone</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '10px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: signalStatus.color, fontSize: '16px' }}>{signalLoss.toFixed(1)} dB</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Loss</div>
+                  </div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: signalStatus.color, fontSize: '16px' }}>{signalStatus.status}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Link Quality</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1313,92 +1332,100 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             Compare how different frequencies affect zone size over the same distance
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderFresnelVisualization(true)}
-            </div>
-
-            {/* Frequency slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency.toFixed(1)} GHz</span>
-              </div>
-              <input
-                type="range"
-                min="0.9"
-                max="80"
-                step="0.1"
-                value={frequency}
-                onChange={(e) => setFrequency(parseFloat(e.target.value))}
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>900 MHz (4G)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>2.4 GHz (WiFi)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60+ GHz (5G mmWave)</span>
-              </div>
-            </div>
-
-            {/* Zones toggle */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Visible Zones</span>
-                <span style={{ ...typo.small, color: colors.zone2, fontWeight: 600 }}>{showZones}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="3"
-                step="1"
-                value={showZones}
-                onChange={(e) => setShowZones(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Comparison cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                borderLeft: `3px solid ${colors.zone1}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <h4 style={{ ...typo.small, color: colors.zone1, fontWeight: 600, marginBottom: '8px' }}>
-                  Low Frequency (900 MHz)
-                </h4>
-                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                  R1 = {Math.sqrt(0.333 * 1000 / 4).toFixed(1)} m at 1 km
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                  Large zones, harder to clear
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {renderFresnelVisualization(true)}
+                </div>
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                borderLeft: `3px solid ${colors.zone2}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
               }}>
-                <h4 style={{ ...typo.small, color: colors.zone2, fontWeight: 600, marginBottom: '8px' }}>
-                  High Frequency (60 GHz)
-                </h4>
-                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                  R1 = {Math.sqrt(0.005 * 1000 / 4).toFixed(1)} m at 1 km
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                  Small zones, easy to clear
-                </p>
+                {/* Frequency slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency.toFixed(1)} GHz</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.9"
+                    max="80"
+                    step="0.1"
+                    value={frequency}
+                    onChange={(e) => setFrequency(parseFloat(e.target.value))}
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>4G</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>WiFi</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>mmWave</span>
+                  </div>
+                </div>
+
+                {/* Zones toggle */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Visible Zones</span>
+                    <span style={{ ...typo.small, color: colors.zone2, fontWeight: 600 }}>{showZones}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="1"
+                    value={showZones}
+                    onChange={(e) => setShowZones(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Comparison cards */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  borderLeft: `3px solid ${colors.zone1}`,
+                  marginBottom: '8px',
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.zone1, fontWeight: 600, marginBottom: '4px' }}>
+                    Low Freq (900 MHz)
+                  </h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    R1 = {Math.sqrt(0.333 * 1000 / 4).toFixed(1)} m at 1 km
+                  </p>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  borderLeft: `3px solid ${colors.zone2}`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.zone2, fontWeight: 600, marginBottom: '4px' }}>
+                    High Freq (60 GHz)
+                  </h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    R1 = {Math.sqrt(0.005 * 1000 / 4).toFixed(1)} m at 1 km
+                  </p>
+                </div>
               </div>
             </div>
           </div>

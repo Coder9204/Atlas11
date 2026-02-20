@@ -1069,69 +1069,79 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
-          {/* Visualization */}
-          <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {renderResonanceVisualization()}
-          </div>
-
-          {/* Controls */}
+          {/* Side-by-side layout */}
           <div style={{
-            padding: '24px',
-            background: 'rgba(30, 41, 59, 0.8)',
-            borderTop: '1px solid #334155',
-            margin: '0 16px',
-            borderRadius: '16px'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              {/* Frequency slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Driving Frequency</label>
-                  <span style={{ fontSize: '13px', color: isAtResonance ? '#10b981' : '#ec4899', fontWeight: 700 }}>
-                    {drivingFrequency} Hz {isAtResonance ? '✓ RESONANCE!' : ''}
-                  </span>
-                </div>
-                <input
-                  type="range" min="50" max="400" value={drivingFrequency}
-                  onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Low 50 Hz</span>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>High 400 Hz</span>
-                </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {renderResonanceVisualization()}
               </div>
-
-              {/* Comparison readout: current vs reference */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Current</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#ec4899' }}>{drivingFrequency} Hz</div>
-                </div>
-                <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Reference</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#a855f7' }}>{resonantFreq} Hz</div>
-                </div>
-                <div style={{ padding: '10px', borderRadius: '10px', background: isAtResonance ? 'rgba(16, 185, 129, 0.15)' : frequencyDiff > 80 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Amplitude</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: isAtResonance ? '#10b981' : frequencyDiff > 80 ? '#ef4444' : '#f59e0b' }}>{responseAmplitude.toFixed(0)}%</div>
-                  <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
-                    {isAtResonance ? 'success' : frequencyDiff > 80 ? 'warning' : 'moderate'}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                padding: '24px',
+                background: 'rgba(30, 41, 59, 0.8)',
+                borderTop: '1px solid #334155',
+                borderRadius: '16px'
+              }}>
+                {/* Frequency slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Driving Frequency</label>
+                    <span style={{ fontSize: '13px', color: isAtResonance ? '#10b981' : '#ec4899', fontWeight: 700 }}>
+                      {drivingFrequency} Hz {isAtResonance ? '✓ RESONANCE!' : ''}
+                    </span>
+                  </div>
+                  <input
+                    type="range" min="50" max="400" value={drivingFrequency}
+                    onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Low 50 Hz</span>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>High 400 Hz</span>
                   </div>
                 </div>
-              </div>
 
-              {/* Status and continue */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{
-                  padding: '12px 20px',
-                  borderRadius: '12px',
-                  background: isAtResonance ? 'rgba(16, 185, 129, 0.15)' : 'rgba(51, 65, 85, 0.5)',
-                  border: `1px solid ${isAtResonance ? '#10b981' : '#334155'}`
-                }}>
-                  <span style={{ fontSize: '14px', color: isAtResonance ? '#10b981' : '#94a3b8', fontWeight: 600 }}>
-                    {isAtResonance ? '🎉 You found resonance!' : `Target: ${resonantFreq} Hz`}
-                  </span>
+                {/* Comparison readout: current vs reference */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Current</div>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#ec4899' }}>{drivingFrequency} Hz</div>
+                  </div>
+                  <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(51, 65, 85, 0.5)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Reference</div>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#a855f7' }}>{resonantFreq} Hz</div>
+                  </div>
+                  <div style={{ padding: '10px', borderRadius: '10px', background: isAtResonance ? 'rgba(16, 185, 129, 0.15)' : frequencyDiff > 80 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(51, 65, 85, 0.5)', textAlign: 'center', gridColumn: 'span 2' }}>
+                    <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '2px' }}>Amplitude</div>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: isAtResonance ? '#10b981' : frequencyDiff > 80 ? '#ef4444' : '#f59e0b' }}>{responseAmplitude.toFixed(0)}%</div>
+                    <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px' }}>
+                      {isAtResonance ? 'success' : frequencyDiff > 80 ? 'warning' : 'moderate'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status and continue */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{
+                    padding: '12px 20px',
+                    borderRadius: '12px',
+                    background: isAtResonance ? 'rgba(16, 185, 129, 0.15)' : 'rgba(51, 65, 85, 0.5)',
+                    border: `1px solid ${isAtResonance ? '#10b981' : '#334155'}`
+                  }}>
+                    <span style={{ fontSize: '14px', color: isAtResonance ? '#10b981' : '#94a3b8', fontWeight: 600 }}>
+                      {isAtResonance ? '🎉 You found resonance!' : `Target: ${resonantFreq} Hz`}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1274,63 +1284,73 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
       <div style={containerStyle}>
         {renderProgressBar()}
         <div style={{ ...scrollContentStyle, paddingTop: '80px' }}>
-          {/* Visualization */}
-          <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {renderResonanceVisualization()}
-          </div>
-
-          {/* Controls */}
+          {/* Side-by-side layout */}
           <div style={{
-            padding: '24px',
-            background: 'rgba(30, 41, 59, 0.8)',
-            borderTop: '1px solid #334155',
-            margin: '0 16px',
-            borderRadius: '16px'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-              {/* Mass slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Added Mass</label>
-                  <span style={{ fontSize: '13px', color: '#a855f7', fontWeight: 700 }}>+{addedMass}g</span>
-                </div>
-                <input
-                  type="range" min="0" max="60" value={addedMass}
-                  onChange={(e) => setAddedMass(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>None 0g</span>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Max 60g</span>
-                </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {renderResonanceVisualization()}
               </div>
-
-              {/* Frequency slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Driving Frequency</label>
-                  <span style={{ fontSize: '13px', color: isAtResonance ? '#10b981' : '#ec4899', fontWeight: 700 }}>
-                    {drivingFrequency} Hz
-                  </span>
-                </div>
-                <input
-                  type="range" min="50" max="400" value={drivingFrequency}
-                  onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Low 50 Hz</span>
-                  <span style={{ fontSize: '11px', color: '#cbd5e1' }}>High 400 Hz</span>
-                </div>
-              </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
               <div style={{
-                padding: '12px 20px',
-                borderRadius: '12px',
-                background: 'rgba(51, 65, 85, 0.5)'
+                padding: '24px',
+                background: 'rgba(30, 41, 59, 0.8)',
+                borderTop: '1px solid #334155',
+                borderRadius: '16px'
               }}>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Natural Freq: </span>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: '#ec4899' }}>{resonantFreq} Hz</span>
+                {/* Mass slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Added Mass</label>
+                    <span style={{ fontSize: '13px', color: '#a855f7', fontWeight: 700 }}>+{addedMass}g</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="60" value={addedMass}
+                    onChange={(e) => setAddedMass(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>None 0g</span>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Max 60g</span>
+                  </div>
+                </div>
+
+                {/* Frequency slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Driving Frequency</label>
+                    <span style={{ fontSize: '13px', color: isAtResonance ? '#10b981' : '#ec4899', fontWeight: 700 }}>
+                      {drivingFrequency} Hz
+                    </span>
+                  </div>
+                  <input
+                    type="range" min="50" max="400" value={drivingFrequency}
+                    onChange={(e) => setDrivingFrequency(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none' } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Low 50 Hz</span>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>High 400 Hz</span>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  background: 'rgba(51, 65, 85, 0.5)'
+                }}>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>Natural Freq: </span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#ec4899' }}>{resonantFreq} Hz</span>
+                </div>
               </div>
             </div>
           </div>

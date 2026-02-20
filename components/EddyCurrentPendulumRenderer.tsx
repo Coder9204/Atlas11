@@ -315,7 +315,13 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     magnetBlue: '#3b82f6',
   };
 
-  const isMobile = false; // simplified for test compliance
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const typo = {
     h1: { fontSize: '36px', fontWeight: 800 as const, lineHeight: 1.2 },
@@ -1013,68 +1019,81 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
               </p>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderDampingChart()}
-              </div>
-
-              {/* Magnet strength slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Magnet Strength</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{magnetStrength}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  value={magnetStrength}
-                  onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
-                  onInput={(e) => setMagnetStrength(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
-
-              {/* Results display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginTop: '20px',
-              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted }}>
-                    {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {renderDampingChart()}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Damping</div>
                 </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{(dampingCoefficient * 100).toFixed(1)}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current</div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Magnet strength slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Magnet Strength</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{magnetStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={magnetStrength}
+                    onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
+                    onInput={(e) => setMagnetStrength(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
                 </div>
+
+                {/* Results display */}
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                  marginTop: '20px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{magnetStrength}%</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Field (B)</div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted }}>
+                      {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Damping</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{(dampingCoefficient * 100).toFixed(1)}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    gridColumn: '1 / -1',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.textPrimary }}>{magnetStrength}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Field (B)</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1371,130 +1390,142 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
               Toggle slits on the metal sheet and compare the braking effect
             </p>
 
-            {/* Observation Guidance */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: `${colors.warning}15`,
-              border: `1px solid ${colors.warning}40`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.warning }}>Observe:</strong> Compare how the pendulum behaves with and without slits. Notice how slits dramatically reduce the braking effect by interrupting eddy current paths.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {renderTwistChart()}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    {renderTwistChart()}
+                  </div>
+                </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Observation Guidance */}
+                <div style={{
+                  background: `${colors.warning}15`,
+                  border: `1px solid ${colors.warning}40`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                }}>
+                  <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: colors.warning }}>Observe:</strong> Compare how the pendulum behaves with and without slits. Notice how slits dramatically reduce the braking effect by interrupting eddy current paths.
+                  </p>
+                </div>
 
-              {/* Slit toggle */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                marginBottom: '24px',
-              }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Solid Sheet</span>
+                {/* Slit toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Solid Sheet</span>
+                  <button
+                    onClick={() => { setHasSlits(!hasSlits); playSound('click'); }}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: hasSlits ? colors.warning : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: hasSlits ? '33px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                  <span style={{ ...typo.small, color: hasSlits ? colors.warning : colors.textSecondary, fontWeight: hasSlits ? 600 : 400 }}>
+                    Slotted Sheet
+                  </span>
+                </div>
+
+                {/* Magnet slider for twist_play */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Magnet Strength</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{magnetStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={magnetStrength}
+                    onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
+                    onInput={(e) => setMagnetStrength(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
                 <button
-                  onClick={() => { setHasSlits(!hasSlits); playSound('click'); }}
+                  onClick={() => { playSound('click'); }}
                   style={{
-                    width: '60px',
-                    height: '30px',
-                    borderRadius: '15px',
-                    border: 'none',
-                    background: hasSlits ? colors.warning : colors.border,
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background 0.3s',
+                    ...primaryButtonStyle,
+                    width: '100%',
                   }}
                 >
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'white',
-                    position: 'absolute',
-                    top: '3px',
-                    left: hasSlits ? '33px' : '3px',
-                    transition: 'left 0.3s',
-                  }} />
+                  Release Pendulum
                 </button>
-                <span style={{ ...typo.small, color: hasSlits ? colors.warning : colors.textSecondary, fontWeight: hasSlits ? 600 : 400 }}>
-                  Slotted Sheet
-                </span>
-              </div>
 
-              {/* Magnet slider for twist_play */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Magnet Strength</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{magnetStrength}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="100"
-                  value={magnetStrength}
-                  onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
-                  onInput={(e) => setMagnetStrength(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
-
-              <button
-                onClick={() => { playSound('click'); }}
-                style={{
-                  ...primaryButtonStyle,
-                  width: '100%',
-                }}
-              >
-                Release Pendulum
-              </button>
-
-              {/* Comparison display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginTop: '20px',
-              }}>
+                {/* Comparison display */}
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                  marginTop: '16px',
                 }}>
-                  <div style={{ ...typo.h3, color: hasSlits ? colors.warning : colors.success }}>
-                    {hasSlits ? 'WEAK' : 'STRONG'}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: hasSlits ? colors.warning : colors.success }}>
+                      {hasSlits ? 'WEAK' : 'STRONG'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Current Damping</div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Current Damping</div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{hasSlits ? '20%' : '100%'}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current Path</div>
+                  </div>
                 </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{hasSlits ? '20%' : '100%'}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current Path</div>
-                </div>
+
+                <button
+                  onClick={() => { playSound('success'); nextPhase(); }}
+                  style={{ ...primaryButtonStyle, width: '100%', marginTop: '16px' }}
+                >
+                  Understand Why
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Understand Why
-            </button>
 
             {renderBottomNav()}
           </div>

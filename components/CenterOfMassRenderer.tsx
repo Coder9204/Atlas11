@@ -834,6 +834,15 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             When you increase the pivot height, the system becomes more stable because the COM stays below the pivot. This is important in real-world engineering - it's why race cars sit low and why ships carry ballast at the bottom.
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
@@ -882,6 +891,9 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 Show COM
               </span>
             </div>
+          </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Pivot height slider */}
             <div style={{ marginBottom: '20px' }}>
@@ -927,6 +939,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
               <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
                 <strong style={{ color: colors.success }}>Key Observation:</strong> The red dot (center of mass) is <strong>below</strong> the green pivot point!
               </p>
+            </div>
             </div>
           </div>
 
@@ -1196,13 +1209,22 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             Slide the weight along the toothpick to see how it affects stability
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               {renderForkVisualization({
                 showWeight: true,
                 weightPos: twistPosition,
@@ -1210,7 +1232,14 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 clayWeight: twistWeight,
               })}
             </div>
-
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
             {/* Position slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1281,6 +1310,8 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                 <div style={{ ...typo.small, color: colors.textMuted }}>Experiments</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Insight */}
@@ -1536,7 +1567,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '16px',
             }}>

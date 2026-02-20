@@ -963,7 +963,15 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             Try adjusting each slider to observe how it affects the Reynolds number. Experiment with viscosity: watch how increasing it calms turbulent flow. Notice how diameter and velocity both affect the transition threshold.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1122,13 +1130,15 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                 <div style={{ ...typo.small, color: colors.textMuted }}>Turbulent Threshold</div>
               </div>
             </div>
-
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Sliders */}
             <div style={{ display: 'grid', gap: '16px' }}>
               {/* Velocity slider */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Velocity (v)</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Velocity (v)</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity.toFixed(1)} m/s</span>
                 </div>
                 <input
@@ -1145,7 +1155,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               {/* Diameter slider */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter (D)</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Diameter (D)</span>
                   <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{pipeDiameter.toFixed(1)} cm</span>
                 </div>
                 <input
@@ -1162,8 +1172,8 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               {/* Viscosity slider */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fluid Viscosity (mu)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x water</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viscosity (mu)</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x</span>
                 </div>
                 <input
                   type="range"
@@ -1174,11 +1184,6 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                   onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
                   style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
-                  <span>Water</span>
-                  <span>Oil</span>
-                  <span>Honey</span>
-                </div>
               </div>
 
               {/* Dye toggle */}
@@ -1198,6 +1203,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                 {showDyeInjection ? 'Dye Injection: ON' : 'Dye Injection: OFF'}
               </button>
             </div>
+          </div>
           </div>
 
           {/* Legend panel */}
@@ -1494,34 +1500,21 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             Explore why dimples reduce drag on blunt objects.
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
           }}>
-            {/* Shape selector */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-              {(['sphere', 'streamlined', 'flat'] as const).map(shape => (
-                <button
-                  key={shape}
-                  onClick={() => setObjectShape(shape)}
-                  style={{
-                    padding: '10px 20px',
-                    background: objectShape === shape ? colors.accent : colors.bgSecondary,
-                    color: objectShape === shape ? colors.bgPrimary : colors.textSecondary,
-                    border: `1px solid ${objectShape === shape ? colors.accent : colors.border}`,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: objectShape === shape ? '600' : '400',
-                    minHeight: '44px',
-                  }}
-                >
-                  {shape === 'sphere' ? 'Sphere (Golf Ball)' : shape === 'streamlined' ? 'Streamlined' : 'Flat Plate'}
-                </button>
-              ))}
-            </div>
 
             {/* Visualization */}
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
@@ -1637,6 +1630,32 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                 )}
               </p>
             </div>
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Shape selector */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {(['sphere', 'streamlined', 'flat'] as const).map(shape => (
+                <button
+                  key={shape}
+                  onClick={() => setObjectShape(shape)}
+                  style={{
+                    padding: '10px 20px',
+                    background: objectShape === shape ? colors.accent : colors.bgSecondary,
+                    color: objectShape === shape ? colors.bgPrimary : colors.textSecondary,
+                    border: `1px solid ${objectShape === shape ? colors.accent : colors.border}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: objectShape === shape ? '600' : '400',
+                    minHeight: '44px',
+                  }}
+                >
+                  {shape === 'sphere' ? 'Sphere (Golf Ball)' : shape === 'streamlined' ? 'Streamlined' : 'Flat Plate'}
+                </button>
+              ))}
+            </div>
+          </div>
           </div>
 
           <button

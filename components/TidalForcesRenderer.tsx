@@ -1149,93 +1149,106 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TidalVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <TidalVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Moon position slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Moon Position (angle): {(moonAngle * 180 / Math.PI).toFixed(0)}°
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="3.14"
+                    step="0.1"
+                    value={moonAngle}
+                    onChange={(e) => {
+                      playSound('click');
+                      setMoonAngle(parseFloat(e.target.value));
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      touchAction: 'pan-y',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
 
-            {/* Moon position slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Moon Position (angle): {(moonAngle * 180 / Math.PI).toFixed(0)}°
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="3.14"
-                step="0.1"
-                value={moonAngle}
-                onChange={(e) => {
-                  playSound('click');
-                  setMoonAngle(parseFloat(e.target.value));
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  touchAction: 'pan-y',
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
-
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setShowVectors(!showVectors);
-                  if (!showVectors) setShowDifferential(false);
-                }}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showVectors ? colors.accent : colors.bgSecondary,
-                  color: showVectors ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {showVectors ? '✓' : '○'} Gravity Vectors
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setShowDifferential(!showDifferential);
-                  if (!showDifferential) setShowVectors(false);
-                }}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showDifferential ? colors.ocean : colors.bgSecondary,
-                  color: showDifferential ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {showDifferential ? '✓' : '○'} Net Tidal Force
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setIsAnimating(!isAnimating);
-                }}
-                style={{
-                  padding: '12px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isAnimating ? '#8B5CF6' : colors.bgSecondary,
-                  color: isAnimating ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isAnimating ? '⏸ Pause' : '▶ Animate'}
-              </button>
+                {/* Control buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setShowVectors(!showVectors);
+                      if (!showVectors) setShowDifferential(false);
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: showVectors ? colors.accent : colors.bgSecondary,
+                      color: showVectors ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showVectors ? '✓' : '○'} Gravity Vectors
+                  </button>
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setShowDifferential(!showDifferential);
+                      if (!showDifferential) setShowVectors(false);
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: showDifferential ? colors.ocean : colors.bgSecondary,
+                      color: showDifferential ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showDifferential ? '✓' : '○'} Net Tidal Force
+                  </button>
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      setIsAnimating(!isAnimating);
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isAnimating ? '#8B5CF6' : colors.bgSecondary,
+                      color: isAnimating ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isAnimating ? '⏸ Pause' : '▶ Animate'}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Explanation based on current view */}
@@ -1574,71 +1587,84 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TidalLockingVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <TidalLockingVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Orbital position slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                    Orbital Position: {(moonAngle * 180 / Math.PI).toFixed(0)}°
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="3.14"
+                    step="0.1"
+                    value={moonAngle}
+                    onChange={(e) => {
+                      playSound('click');
+                      setMoonAngle(parseFloat(e.target.value));
+                      if (isTidallyLocked) {
+                        setMoonRotation(parseFloat(e.target.value));
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none' as const,
+                      touchAction: 'pan-y',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
 
-            {/* Orbital position slider */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Orbital Position: {(moonAngle * 180 / Math.PI).toFixed(0)}°
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="3.14"
-                step="0.1"
-                value={moonAngle}
-                onChange={(e) => {
-                  playSound('click');
-                  setMoonAngle(parseFloat(e.target.value));
-                  if (isTidallyLocked) {
-                    setMoonRotation(parseFloat(e.target.value));
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none' as const,
-                  touchAction: 'pan-y',
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
-
-            {/* Toggle buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => { playSound('click'); setIsTidallyLocked(true); }}
-                style={{
-                  padding: '14px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isTidallyLocked ? colors.success : colors.bgSecondary,
-                  color: isTidallyLocked ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                🔒 Tidally Locked
-              </button>
-              <button
-                onClick={() => { playSound('click'); setIsTidallyLocked(false); }}
-                style={{
-                  padding: '14px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: !isTidallyLocked ? colors.error : colors.bgSecondary,
-                  color: !isTidallyLocked ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                🔓 Not Locked
-              </button>
+                {/* Toggle buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => { playSound('click'); setIsTidallyLocked(true); }}
+                    style={{
+                      padding: '14px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isTidallyLocked ? colors.success : colors.bgSecondary,
+                      color: isTidallyLocked ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Tidally Locked
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setIsTidallyLocked(false); }}
+                    style={{
+                      padding: '14px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: !isTidallyLocked ? colors.error : colors.bgSecondary,
+                      color: !isTidallyLocked ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Not Locked
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Explanation */}

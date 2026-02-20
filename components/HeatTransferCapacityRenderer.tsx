@@ -1056,6 +1056,16 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Main visualization */}
             <div style={{
               background: colors.bgCard,
@@ -1063,14 +1073,34 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <HeatConductionViz />
               </div>
 
+              {/* Time display */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '24px',
+                marginTop: '20px',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{elapsedTime.toFixed(1)}s</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(barTemperatures[barTemperatures.length - 1])}C</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Cold End Temp</div>
+                </div>
+              </div>
+            </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Material selector */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Select Material:</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                   {Object.entries(materials).map(([key, mat]) => (
                     <button
                       key={key}
@@ -1101,7 +1131,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               {/* Heat source slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Heat Source Temperature</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Source Temperature</span>
                   <span style={{
                     height: '20px',
                     ...typo.small,
@@ -1128,23 +1158,6 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
                   <span style={{ ...typo.small, color: colors.textMuted }}>50°C</span>
                   <span style={{ ...typo.small, color: colors.textMuted }}>200°C</span>
-                </div>
-              </div>
-
-              {/* Time display */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '24px',
-                marginBottom: '20px',
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{elapsedTime.toFixed(1)}s</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(barTemperatures[barTemperatures.length - 1])}C</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Cold End Temp</div>
                 </div>
               </div>
 
@@ -1183,6 +1196,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
                   🔄 Reset
                 </button>
               </div>
+            </div>
             </div>
 
             {/* Discovery prompt */}
@@ -1506,11 +1520,20 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <HeatCapacityViz />
@@ -1519,9 +1542,8 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
               {/* Temperature readouts */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
-                marginBottom: '24px',
               }}>
                 {Object.entries(specificHeats).map(([key, data]) => {
                   const temp = substanceTemps[key];
@@ -1543,9 +1565,12 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
                   );
                 })}
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Control buttons */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <button
                   onClick={() => {
                     playSound('click');
@@ -1578,6 +1603,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
                   🔄 Reset
                 </button>
               </div>
+            </div>
             </div>
 
             {/* Winner announcement */}

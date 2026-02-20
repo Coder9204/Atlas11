@@ -1109,7 +1109,17 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       <div className="flex flex-col items-center p-4 md:p-6">
         <h2 className="text-2xl font-bold text-white mb-4">Electric Field Lab</h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full">
           <svg
             ref={svgRef}
             viewBox="0 0 500 400"
@@ -1359,7 +1369,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             Drag the test charge (q) to explore the field
           </p>
         </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Configuration selector */}
         <div className="flex gap-2 mb-4 flex-wrap justify-center">
           {[
@@ -1471,6 +1483,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           <p className="text-slate-500 text-sm mt-2">
             E = kQ/r^2 for point charges | E = V/d for parallel plates
           </p>
+        </div>
+        </div>
         </div>
 
         <button
@@ -1730,7 +1744,17 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-4">Dipole Field Visualization</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
         <svg viewBox="0 0 500 300" className="w-full">
           <defs>
             {/* Premium positive charge gradient */}
@@ -1874,7 +1898,10 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <p className="text-center text-slate-400 mt-1" style={{ fontSize: typo.small }}>
           Fields from both charges reinforce at the midpoint
         </p>
+      </div>
+      </div>
 
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         <div className="mt-4 space-y-3 text-slate-300">
           <div className="flex items-start gap-3">
             <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">1</div>
@@ -1893,6 +1920,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             <p>The total field is DOUBLED, not cancelled - superposition at work!</p>
           </div>
         </div>
+      </div>
       </div>
 
       <button

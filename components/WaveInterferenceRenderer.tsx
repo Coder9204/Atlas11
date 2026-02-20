@@ -1066,97 +1066,114 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
               When wavelength increases, the interference fringes spread apart because the same path difference represents fewer wavelengths. This is important for real-world applications in noise-canceling technology and radar systems.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <WaveInterferenceVisualization interactive={true} />
-              </div>
-
-              {/* Wavelength slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wavelength (lambda)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wavelength} px</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="80"
-                  value={wavelength}
-                  onChange={(e) => setWavelength(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: '#3b82f6',
-                    background: colors.bgSecondary,
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none',
-                  } as React.CSSProperties}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>20 (short)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>80 (long)</span>
-                </div>
-              </div>
-
-              {/* Real-time calculated values */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px 16px',
-                marginBottom: '16px',
-                display: 'flex',
-                justifyContent: 'space-around',
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Path Diff</div>
-                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{pathDiff.toFixed(1)} px</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Ratio</div>
-                  <div style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>{pathDiffInWavelengths.toFixed(2)} lambda</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: '#e2e8f0' }}>Amplitude Factor</div>
-                  <div style={{ ...typo.body, color: interferenceAmplitude > 0 ? colors.success : colors.error, fontWeight: 600 }}>{(Math.abs(interferenceAmplitude) * 2).toFixed(2)}x</div>
-                </div>
-              </div>
-
-              {/* Discovery trackers */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: hasFoundConstructive ? `${colors.success}22` : colors.bgSecondary,
-                  border: `2px solid ${hasFoundConstructive ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundConstructive ? '✓' : '○'}</div>
-                  <div style={{ ...typo.small, color: hasFoundConstructive ? colors.success : colors.textMuted, fontWeight: 600 }}>
-                    {hasFoundConstructive ? 'FOUND' : 'FIND'} CONSTRUCTIVE
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <WaveInterferenceVisualization interactive={true} />
+                  </div>
+
+                  {/* Real-time calculated values */}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: '#e2e8f0' }}>Path Diff</div>
+                      <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{pathDiff.toFixed(1)} px</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: '#e2e8f0' }}>Ratio</div>
+                      <div style={{ ...typo.body, color: colors.accent, fontWeight: 600 }}>{pathDiffInWavelengths.toFixed(2)} lambda</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: '#e2e8f0' }}>Amplitude Factor</div>
+                      <div style={{ ...typo.body, color: interferenceAmplitude > 0 ? colors.success : colors.error, fontWeight: 600 }}>{(Math.abs(interferenceAmplitude) * 2).toFixed(2)}x</div>
+                    </div>
                   </div>
                 </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                 <div style={{
-                  background: hasFoundDestructive ? `${colors.error}22` : colors.bgSecondary,
-                  border: `2px solid ${hasFoundDestructive ? colors.error : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  marginBottom: '16px',
                 }}>
-                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundDestructive ? '✓' : '○'}</div>
-                  <div style={{ ...typo.small, color: hasFoundDestructive ? colors.error : colors.textMuted, fontWeight: 600 }}>
-                    {hasFoundDestructive ? 'FOUND' : 'FIND'} DESTRUCTIVE
+                  {/* Wavelength slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Wavelength (lambda)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wavelength} px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="80"
+                      value={wavelength}
+                      onChange={(e) => setWavelength(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: '#3b82f6',
+                        background: colors.bgSecondary,
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none',
+                      } as React.CSSProperties}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>20 (short)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>80 (long)</span>
+                    </div>
+                  </div>
+
+                  {/* Discovery trackers */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: hasFoundConstructive ? `${colors.success}22` : colors.bgSecondary,
+                      border: `2px solid ${hasFoundConstructive ? colors.success : colors.border}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundConstructive ? '✓' : '○'}</div>
+                      <div style={{ ...typo.small, color: hasFoundConstructive ? colors.success : colors.textMuted, fontWeight: 600 }}>
+                        {hasFoundConstructive ? 'FOUND' : 'FIND'} CONSTRUCTIVE
+                      </div>
+                    </div>
+                    <div style={{
+                      background: hasFoundDestructive ? `${colors.error}22` : colors.bgSecondary,
+                      border: `2px solid ${hasFoundDestructive ? colors.error : colors.border}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasFoundDestructive ? '✓' : '○'}</div>
+                      <div style={{ ...typo.small, color: hasFoundDestructive ? colors.error : colors.textMuted, fontWeight: 600 }}>
+                        {hasFoundDestructive ? 'FOUND' : 'FIND'} DESTRUCTIVE
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1478,54 +1495,72 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
             Adjust film thickness to see how colors change
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ThinFilmVisualization />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <ThinFilmVisualization />
+                </div>
 
-            {/* Thickness slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Film Thickness</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{filmThickness} nm</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="700"
-                value={filmThickness}
-                onChange={(e) => setFilmThickness(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
+                <div style={{
                   background: colors.bgSecondary,
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                } as React.CSSProperties}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100 nm (thin)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>700 nm (thick)</span>
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    Watch how the resulting color changes as you adjust the thickness. Different thicknesses cause different wavelengths to interfere constructively!
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                Watch how the resulting color changes as you adjust the thickness. Different thicknesses cause different wavelengths to interfere constructively!
-              </p>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Thickness slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Film Thickness</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{filmThickness} nm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="700"
+                    value={filmThickness}
+                    onChange={(e) => setFilmThickness(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      background: colors.bgSecondary,
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                    } as React.CSSProperties}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>100 nm (thin)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>700 nm (thick)</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

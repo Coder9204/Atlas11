@@ -1372,153 +1372,163 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Cloud Lab</h2>
       <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Squeeze and release to make clouds!</p>
 
-      {/* Saturation curve chart */}
-      <div style={{ marginBottom: '16px', width: '100%', maxWidth: '400px' }}>
-        {renderSaturationChart()}
-      </div>
-
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        {renderBottleVisualization()}
-      </div>
-
-      {/* Controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
-        {/* Squeeze/Release buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
-            disabled={isSqueezing}
-            style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: isSqueezing ? 'default' : 'pointer',
-              background: isSqueezing ? 'rgba(251, 191, 36, 0.5)' : 'linear-gradient(to right, #f59e0b, #d97706)',
-              color: 'white',
-              transition: 'all 0.3s'
-            }}
-          >
-            ✊ Squeeze
-          </button>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
-            style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              background: !isSqueezing ? 'rgba(59, 130, 246, 0.3)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-              color: 'white',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            ✋ Release
-          </button>
-        </div>
-
-        {/* Add smoke button */}
-        <button
-          onPointerDown={(e) => { e.preventDefault(); addSmoke(); }}
-          style={{
-            padding: '12px',
-            borderRadius: '12px',
-            fontWeight: 600,
-            border: hasNuclei ? '2px solid #22c55e' : '2px solid #64748b',
-            cursor: 'pointer',
-            background: hasNuclei ? 'rgba(34, 197, 94, 0.2)' : 'rgba(71, 85, 105, 0.5)',
-            color: hasNuclei ? '#22c55e' : '#94a3b8',
-            transition: 'all 0.3s'
-          }}
-        >
-          {hasNuclei ? '💨 Nuclei Present' : '💨 Add Smoke (Nuclei)'}
-        </button>
-
-        {/* Humidity slider */}
-        <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Humidity</span>
-            <span style={{ height: '20px', color: '#3b82f6', fontWeight: 600, fontSize: '14px' }}>{humidity}%</span>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Saturation curve chart */}
+          <div style={{ marginBottom: '16px', width: '100%', maxWidth: '400px' }}>
+            {renderSaturationChart()}
           </div>
-          <input
-            type="range"
-            min="40"
-            max="100"
-            value={humidity}
-            onChange={(e) => setHumidity(Number(e.target.value))}
-            style={{ touchAction: 'pan-y',
-              width: '100%',
-              height: '20px',
-              borderRadius: '4px',
-              background: `linear-gradient(to right, #3b82f6 ${(humidity - 40) / 60 * 100}%, #475569 ${(humidity - 40) / 60 * 100}%)`,
-              cursor: 'pointer',
-              WebkitAppearance: 'none',
-              appearance: 'none'
-            }}
-          />
-          <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Higher humidity means easier cloud formation</p>
-        </div>
 
-        {/* Temperature slider */}
-        <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Temperature</span>
-            <span style={{ height: '20px', color: '#ef4444', fontWeight: 600, fontSize: '14px' }}>{temperature}°C</span>
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            {renderBottleVisualization()}
           </div>
-          <input
-            type="range"
-            min="10"
-            max="35"
-            value={temperature}
-            onChange={(e) => setTemperature(Number(e.target.value))}
-            style={{ touchAction: 'pan-y',
-              width: '100%',
-              height: '20px',
-              borderRadius: '4px',
-              background: `linear-gradient(to right, #ef4444 ${(temperature - 10) / 25 * 100}%, #475569 ${(temperature - 10) / 25 * 100}%)`,
-              cursor: 'pointer',
-              WebkitAppearance: 'none',
-              appearance: 'none'
-            }}
-          />
-          <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Lower temperature reduces dew point margin</p>
         </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+            {/* Squeeze/Release buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
+                disabled={isSqueezing}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: isSqueezing ? 'default' : 'pointer',
+                  background: isSqueezing ? 'rgba(251, 191, 36, 0.5)' : 'linear-gradient(to right, #f59e0b, #d97706)',
+                  color: 'white',
+                  transition: 'all 0.3s'
+                }}
+              >
+                ✊ Squeeze
+              </button>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: !isSqueezing ? 'rgba(59, 130, 246, 0.3)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: 'white',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                ✋ Release
+              </button>
+            </div>
 
-        {/* Toggle nuclei */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
-          <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Condensation Nuclei</span>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(!hasNuclei); }}
-            style={{
-              width: '48px',
-              height: '24px',
-              borderRadius: '12px',
-              border: 'none',
-              cursor: 'pointer',
-              background: hasNuclei ? '#22c55e' : '#475569',
-              position: 'relative',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: '2px',
-              left: hasNuclei ? '26px' : '2px',
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              background: 'white',
-              transition: 'all 0.3s ease'
-            }} />
-          </button>
-        </div>
-      </div>
+            {/* Add smoke button */}
+            <button
+              onPointerDown={(e) => { e.preventDefault(); addSmoke(); }}
+              style={{
+                padding: '12px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                border: hasNuclei ? '2px solid #22c55e' : '2px solid #64748b',
+                cursor: 'pointer',
+                background: hasNuclei ? 'rgba(34, 197, 94, 0.2)' : 'rgba(71, 85, 105, 0.5)',
+                color: hasNuclei ? '#22c55e' : '#94a3b8',
+                transition: 'all 0.3s'
+              }}
+            >
+              {hasNuclei ? '💨 Nuclei Present' : '💨 Add Smoke (Nuclei)'}
+            </button>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+            {/* Humidity slider */}
+            <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Humidity</span>
+                <span style={{ height: '20px', color: '#3b82f6', fontWeight: 600, fontSize: '14px' }}>{humidity}%</span>
+              </div>
+              <input
+                type="range"
+                min="40"
+                max="100"
+                value={humidity}
+                onChange={(e) => setHumidity(Number(e.target.value))}
+                style={{ touchAction: 'pan-y',
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #3b82f6 ${(humidity - 40) / 60 * 100}%, #475569 ${(humidity - 40) / 60 * 100}%)`,
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none'
+                }}
+              />
+              <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Higher humidity means easier cloud formation</p>
+            </div>
+
+            {/* Temperature slider */}
+            <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Temperature</span>
+                <span style={{ height: '20px', color: '#ef4444', fontWeight: 600, fontSize: '14px' }}>{temperature}°C</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="35"
+                value={temperature}
+                onChange={(e) => setTemperature(Number(e.target.value))}
+                style={{ touchAction: 'pan-y',
+                  width: '100%',
+                  height: '20px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #ef4444 ${(temperature - 10) / 25 * 100}%, #475569 ${(temperature - 10) / 25 * 100}%)`,
+                  cursor: 'pointer',
+                  WebkitAppearance: 'none',
+                  appearance: 'none'
+                }}
+              />
+              <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Lower temperature reduces dew point margin</p>
+            </div>
+
+            {/* Toggle nuclei */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
+              <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Condensation Nuclei</span>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); setHasNuclei(!hasNuclei); }}
+                style={{
+                  width: '48px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: hasNuclei ? '#22c55e' : '#475569',
+                  position: 'relative',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: hasNuclei ? '26px' : '2px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  transition: 'all 0.3s ease'
+                }} />
+              </button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
         <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
           <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: '20px' }}>{cloudDensity.toFixed(0)}%</div>
           <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Cloud Density</div>
@@ -1578,6 +1588,8 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           <li>Release to expand (cools air rapidly)</li>
           <li>Cloud forms as vapor condenses on nuclei!</li>
         </ol>
+      </div>
+        </div>
       </div>
 
       <button
@@ -1778,94 +1790,106 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>With vs Without Nuclei</h2>
       <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Toggle nuclei and see the dramatic difference</p>
 
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        {renderBottleVisualization()}
-      </div>
-
-      {/* Toggle and controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
-        {/* Nuclei toggle */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(true); addSmoke(); }}
-            style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: hasNuclei ? '2px solid #22c55e' : '2px solid transparent',
-              cursor: 'pointer',
-              background: hasNuclei ? 'rgba(34, 197, 94, 0.2)' : 'rgba(51, 65, 85, 0.5)',
-              color: hasNuclei ? '#22c55e' : '#94a3b8',
-              transition: 'all 0.3s'
-            }}
-          >
-            💨 With Nuclei
-          </button>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(false); }}
-            style={{
-              flex: 1,
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: !hasNuclei ? '2px solid #ef4444' : '2px solid transparent',
-              cursor: 'pointer',
-              background: !hasNuclei ? 'rgba(239, 68, 68, 0.2)' : 'rgba(51, 65, 85, 0.5)',
-              color: !hasNuclei ? '#ef4444' : '#94a3b8',
-              transition: 'all 0.3s'
-            }}
-          >
-            🚫 Without Nuclei
-          </button>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            {renderBottleVisualization()}
+          </div>
         </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Toggle and controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+            {/* Nuclei toggle */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); setHasNuclei(true); addSmoke(); }}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: hasNuclei ? '2px solid #22c55e' : '2px solid transparent',
+                  cursor: 'pointer',
+                  background: hasNuclei ? 'rgba(34, 197, 94, 0.2)' : 'rgba(51, 65, 85, 0.5)',
+                  color: hasNuclei ? '#22c55e' : '#94a3b8',
+                  transition: 'all 0.3s'
+                }}
+              >
+                💨 With Nuclei
+              </button>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); setHasNuclei(false); }}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: !hasNuclei ? '2px solid #ef4444' : '2px solid transparent',
+                  cursor: 'pointer',
+                  background: !hasNuclei ? 'rgba(239, 68, 68, 0.2)' : 'rgba(51, 65, 85, 0.5)',
+                  color: !hasNuclei ? '#ef4444' : '#94a3b8',
+                  transition: 'all 0.3s'
+                }}
+              >
+                🚫 Without Nuclei
+              </button>
+            </div>
 
-        {/* Squeeze/Release */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
-            disabled={isSqueezing}
-            style={{
-              flex: 1,
-              padding: '12px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: isSqueezing ? 'default' : 'pointer',
-              background: isSqueezing ? 'rgba(251, 191, 36, 0.5)' : 'linear-gradient(to right, #f59e0b, #d97706)',
-              color: 'white'
-            }}
-          >
-            ✊ Squeeze
-          </button>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
-            disabled={!isSqueezing}
-            style={{
-              flex: 1,
-              padding: '12px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: !isSqueezing ? 'default' : 'pointer',
-              background: !isSqueezing ? 'rgba(59, 130, 246, 0.3)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-              color: 'white'
-            }}
-          >
-            ✋ Release
-          </button>
-        </div>
-      </div>
+            {/* Squeeze/Release */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
+                disabled={isSqueezing}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: isSqueezing ? 'default' : 'pointer',
+                  background: isSqueezing ? 'rgba(251, 191, 36, 0.5)' : 'linear-gradient(to right, #f59e0b, #d97706)',
+                  color: 'white'
+                }}
+              >
+                ✊ Squeeze
+              </button>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
+                disabled={!isSqueezing}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: !isSqueezing ? 'default' : 'pointer',
+                  background: !isSqueezing ? 'rgba(59, 130, 246, 0.3)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: 'white'
+                }}
+              >
+                ✋ Release
+              </button>
+            </div>
+          </div>
 
-      {/* Comparison info */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', maxWidth: '400px' }}>
-        <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-          <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>With Nuclei</h4>
-          <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Cloud forms at exactly dew point. Thick, visible cloud!</p>
-        </div>
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-          <h4 style={{ color: '#ef4444', fontWeight: 600, marginBottom: '8px' }}>Without Nuclei</h4>
-          <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Needs supersaturation. Weak or no visible cloud!</p>
+          {/* Comparison info */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', maxWidth: '400px' }}>
+            <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+              <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>With Nuclei</h4>
+              <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Cloud forms at exactly dew point. Thick, visible cloud!</p>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <h4 style={{ color: '#ef4444', fontWeight: 600, marginBottom: '8px' }}>Without Nuclei</h4>
+              <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Needs supersaturation. Weak or no visible cloud!</p>
+            </div>
+          </div>
         </div>
       </div>
 

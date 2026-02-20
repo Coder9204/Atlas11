@@ -929,8 +929,49 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             </p>
           </div>
 
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization()}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
             <h3 style={{ color: '#22c55e', marginBottom: '12px' }}>Key Experiments:</h3>

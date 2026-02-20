@@ -1055,125 +1055,137 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
       {/* Scrollable content */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
-        {/* Visualization */}
         <div style={{ padding: typo.pagePadding, background: colors.bgDeep }}>
+          {/* Side-by-side layout */}
           <div style={{
-            maxWidth: '500px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            maxWidth: '800px',
             margin: '0 auto',
-            background: colors.bgSurface,
-            borderRadius: '20px',
-            padding: typo.cardPadding,
-            border: `1px solid ${colors.bgHover}`
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {renderPressureTank()}
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div style={{
-          padding: typo.pagePadding,
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgHover}`,
-          borderBottom: `1px solid ${colors.bgHover}`
-        }}>
-          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-            {/* Depth slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary }}>Depth</span>
-                <span style={{ fontSize: typo.body, fontWeight: 700, color: colors.primary }}>{depth} meters</span>
-              </div>
-              <input
-                type="range"
-                role="slider"
-                aria-label="Depth control"
-                aria-valuemin={0}
-                aria-valuemax={50}
-                aria-valuenow={depth}
-                min="0"
-                max="50"
-                value={depth}
-                onChange={(e) => {
-                  setDepth(Number(e.target.value));
-                  playSound('bubble');
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: colors.bgElevated,
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y' as const
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                <span style={{ fontSize: typo.label, color: colors.textMuted }}>Surface (0m)</span>
-                <span style={{ fontSize: typo.label, color: colors.textMuted }}>50m Deep</span>
+            {/* Left column - SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgSurface,
+                borderRadius: '20px',
+                padding: typo.cardPadding,
+                border: `1px solid ${colors.bgHover}`
+              }}>
+                {renderPressureTank()}
               </div>
             </div>
 
-            {/* Fluid type selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <span style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary, display: 'block', marginBottom: '10px' }}>
-                Fluid Type
-              </span>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {[
-                  { value: 1000, label: 'Fresh Water' },
-                  { value: 1025, label: 'Salt Water' },
-                  { value: 13600, label: 'Mercury' }
-                ].map(fluid => (
-                  <button
-                    key={fluid.value}
-                    onClick={() => {
-                      setFluidDensity(fluid.value);
-                      playSound('click');
+            {/* Right column - Controls */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgSurface,
+                borderRadius: '20px',
+                padding: '20px',
+                border: `1px solid ${colors.bgHover}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}>
+                {/* Depth slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <span style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary }}>Depth</span>
+                    <span style={{ fontSize: typo.body, fontWeight: 700, color: colors.primary }}>{depth} meters</span>
+                  </div>
+                  <input
+                    type="range"
+                    role="slider"
+                    aria-label="Depth control"
+                    aria-valuemin={0}
+                    aria-valuemax={50}
+                    aria-valuenow={depth}
+                    min="0"
+                    max="50"
+                    value={depth}
+                    onChange={(e) => {
+                      setDepth(Number(e.target.value));
+                      playSound('bubble');
                     }}
                     style={{
-                      padding: '12px 20px',
-                      fontSize: typo.small,
-                      fontWeight: 600,
-                      background: fluidDensity === fluid.value ? colors.primary : colors.bgElevated,
-                      color: fluidDensity === fluid.value ? '#fff' : colors.textSecondary,
-                      border: 'none',
-                      borderRadius: '10px',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: colors.bgElevated,
                       cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y' as const
                     }}
-                  >
-                    {fluid.label}
-                  </button>
-                ))}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                    <span style={{ fontSize: typo.label, color: colors.textMuted }}>0m</span>
+                    <span style={{ fontSize: typo.label, color: colors.textMuted }}>50m</span>
+                  </div>
+                </div>
+
+                {/* Fluid type selector */}
+                <div>
+                  <span style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary, display: 'block', marginBottom: '10px' }}>
+                    Fluid Type
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { value: 1000, label: 'Fresh Water' },
+                      { value: 1025, label: 'Salt Water' },
+                      { value: 13600, label: 'Mercury' }
+                    ].map(fluid => (
+                      <button
+                        key={fluid.value}
+                        onClick={() => {
+                          setFluidDensity(fluid.value);
+                          playSound('click');
+                        }}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: typo.small,
+                          fontWeight: 600,
+                          background: fluidDensity === fluid.value ? colors.primary : colors.bgElevated,
+                          color: fluidDensity === fluid.value ? '#fff' : colors.textSecondary,
+                          border: 'none',
+                          borderRadius: '10px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {fluid.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Toggle pressure arrows */}
+                <button
+                  onClick={() => setShowPressureArrows(!showPressureArrows)}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    fontSize: typo.body,
+                    fontWeight: 600,
+                    background: showPressureArrows ? colors.success : colors.bgElevated,
+                    color: showPressureArrows ? '#fff' : colors.textSecondary,
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {showPressureArrows ? '● Arrows ON' : '○ Arrows OFF'}
+                </button>
               </div>
             </div>
-
-            {/* Toggle pressure arrows */}
-            <button
-              onClick={() => setShowPressureArrows(!showPressureArrows)}
-              style={{
-                width: '100%',
-                padding: '14px',
-                fontSize: typo.body,
-                fontWeight: 600,
-                background: showPressureArrows ? colors.success : colors.bgElevated,
-                color: showPressureArrows ? '#fff' : colors.textSecondary,
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-            >
-              {showPressureArrows ? '● Pressure Arrows ON' : '○ Pressure Arrows OFF'}
-            </button>
           </div>
-        </div>
 
-        {/* Key insight */}
-        <div style={{ padding: typo.pagePadding, background: colors.bgDeep }}>
-          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+          {/* Key insight */}
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
             <div style={{
               background: colors.successBg,
               border: `1px solid ${colors.success}40`,
@@ -1477,81 +1489,95 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         <div style={{ padding: typo.pagePadding, background: colors.bgDeep }}>
+          {/* Side-by-side layout */}
           <div style={{
-            maxWidth: '500px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            maxWidth: '800px',
             margin: '0 auto',
-            background: colors.bgSurface,
-            borderRadius: '20px',
-            padding: typo.cardPadding,
-            border: `1px solid ${colors.bgHover}`
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {renderContainerComparison()}
-          </div>
-        </div>
-
-        <div style={{
-          padding: typo.pagePadding,
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgHover}`,
-          borderBottom: `1px solid ${colors.bgHover}`
-        }}>
-          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
-            <p style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary, marginBottom: '18px' }}>
-              Select a container to measure:
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {['Wide (1000L)', 'Medium (100L)', 'Narrow (1L)'].map((label, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setSelectedContainer(i);
-                    setMeasurementCount(c => c + 1);
-                    playSound('success');
-                    emitEvent('selection_made', { container: label, measurement: measurementCount + 1 });
-                  }}
-                  style={{
-                    padding: '14px 24px',
-                    fontSize: typo.body,
-                    fontWeight: 600,
-                    background: selectedContainer === i ? colors.primary : colors.bgElevated,
-                    color: selectedContainer === i ? '#fff' : colors.textSecondary,
-                    border: 'none',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
+            {/* Left column - SVG visualization */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgSurface,
+                borderRadius: '20px',
+                padding: typo.cardPadding,
+                border: `1px solid ${colors.bgHover}`
+              }}>
+                {renderContainerComparison()}
+              </div>
             </div>
 
-            {selectedContainer !== null && (
+            {/* Right column - Controls */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                marginTop: '24px',
-                padding: '18px',
-                background: colors.successBg,
-                border: `1px solid ${colors.success}40`,
-                borderRadius: '14px',
-                textAlign: 'center'
+                background: colors.bgSurface,
+                borderRadius: '20px',
+                padding: '20px',
+                border: `1px solid ${colors.bgHover}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
               }}>
-                <p style={{ color: colors.success, fontWeight: 700, fontSize: typo.subheading, margin: '0 0 8px' }}>
-                  Pressure: {(1000 * 9.81 * 0.8 / 1000).toFixed(1)} kPa
+                <p style={{ fontSize: typo.body, fontWeight: 600, color: colors.textSecondary, margin: 0 }}>
+                  Select a container to measure:
                 </p>
-                <p style={{ color: colors.textSecondary, fontSize: typo.body, margin: 0 }}>
-                  Identical to the other containers!
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {['Wide (1000L)', 'Medium (100L)', 'Narrow (1L)'].map((label, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedContainer(i);
+                        setMeasurementCount(c => c + 1);
+                        playSound('success');
+                        emitEvent('selection_made', { container: label, measurement: measurementCount + 1 });
+                      }}
+                      style={{
+                        padding: '12px 16px',
+                        fontSize: typo.body,
+                        fontWeight: 600,
+                        background: selectedContainer === i ? colors.primary : colors.bgElevated,
+                        color: selectedContainer === i ? '#fff' : colors.textSecondary,
+                        border: 'none',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedContainer !== null && (
+                  <div style={{
+                    padding: '14px',
+                    background: colors.successBg,
+                    border: `1px solid ${colors.success}40`,
+                    borderRadius: '14px',
+                    textAlign: 'center'
+                  }}>
+                    <p style={{ color: colors.success, fontWeight: 700, fontSize: typo.subheading, margin: '0 0 8px' }}>
+                      Pressure: {(1000 * 9.81 * 0.8 / 1000).toFixed(1)} kPa
+                    </p>
+                    <p style={{ color: colors.textSecondary, fontSize: typo.body, margin: 0 }}>
+                      Identical to the other containers!
+                    </p>
+                  </div>
+                )}
+
+                <p style={{ textAlign: 'center', fontSize: typo.small, color: colors.textMuted, margin: 0 }}>
+                  Measurements taken: {measurementCount} (try all 3!)
                 </p>
               </div>
-            )}
-
-            <p style={{ textAlign: 'center', fontSize: typo.small, color: colors.textMuted, margin: '20px 0 0' }}>
-              Measurements taken: {measurementCount} (try all 3!)
-            </p>
+            </div>
           </div>
-        </div>
 
-        <div style={{ padding: typo.pagePadding, background: colors.bgDeep }}>
-          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+          {/* Key insight */}
+          <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
             <div style={{
               background: colors.warningBg,
               border: `1px solid ${colors.warning}40`,

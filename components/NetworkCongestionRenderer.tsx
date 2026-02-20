@@ -1128,178 +1128,194 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <QueueVisualization />
-            </div>
-
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <span style={{ ...typo.small, color: '#E0F2FE', fontFamily: 'monospace' }}>
-                Wait Time = 1 / (1 - Utilization)
-              </span>
-              <span style={{ ...typo.small, color: '#C4C9D4', marginLeft: '12px' }}>
-                = 1 / (1 - {utilization.toFixed(2)}) = {isFinite(theoreticalLatency) ? theoreticalLatency.toFixed(1) : '∞'}
-              </span>
-            </div>
-
-            {/* Arrival rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#D1D5DB' }}>Arrival Rate (packets/sec)</span>
-                <span style={{ ...typo.small, color: colors.packet, fontWeight: 600 }}>{arrivalRate}</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <QueueVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="95"
-                value={arrivalRate}
-                onChange={(e) => setArrivalRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Service rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#D1D5DB' }}>Service Rate (max capacity)</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{serviceRate}</span>
+              {/* Latency chart */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '16px',
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                  Real-Time Latency
+                </h3>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <LatencyChart />
+                </div>
               </div>
-              <input
-                type="range"
-                min="50"
-                max="100"
-                value={serviceRate}
-                onChange={(e) => setServiceRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
             </div>
-
-            {/* Simulation controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setIsSimulating(!isSimulating);
-                  playSound('click');
-                }}
-                style={{
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                {isSimulating ? 'Stop' : 'Start'} Simulation
-              </button>
-              <button
-                onClick={() => {
-                  resetSimulation();
-                  playSound('click');
-                }}
-                style={{
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Formula display */}
+                <div style={{
                   background: colors.bgSecondary,
-                  color: colors.textSecondary,
-                  border: `1px solid ${colors.border}`,
-                  padding: '12px 24px',
                   borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Reset
-              </button>
-            </div>
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.small, color: '#E0F2FE', fontFamily: 'monospace' }}>
+                    W = 1/(1-U)
+                  </div>
+                  <div style={{ ...typo.small, color: '#C4C9D4', marginTop: '4px' }}>
+                    = 1/(1-{utilization.toFixed(2)}) = {isFinite(theoreticalLatency) ? theoreticalLatency.toFixed(1) : '∞'}
+                  </div>
+                </div>
 
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: utilizationStatus.color }}>{(utilization * 100).toFixed(0)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Utilization</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.queue }}>{queueDepth}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Queue Depth</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{avgLatency.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{p99Latency.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>p99 Latency</div>
-              </div>
-            </div>
-          </div>
+                {/* Arrival rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#D1D5DB' }}>Arrival Rate</span>
+                    <span style={{ ...typo.small, color: colors.packet, fontWeight: 600 }}>{arrivalRate}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="95"
+                    value={arrivalRate}
+                    onChange={(e) => setArrivalRate(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
 
-          {/* Latency chart */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '16px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
-              Real-Time Latency
-            </h3>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <LatencyChart />
+                {/* Service rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#D1D5DB' }}>Service Rate</span>
+                    <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{serviceRate}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="100"
+                    value={serviceRate}
+                    onChange={(e) => setServiceRate(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Simulation controls */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => {
+                      setIsSimulating(!isSimulating);
+                      playSound('click');
+                    }}
+                    style={{
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isSimulating ? 'Stop' : 'Start'} Simulation
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetSimulation();
+                      playSound('click');
+                    }}
+                    style={{
+                      background: colors.bgSecondary,
+                      color: colors.textSecondary,
+                      border: `1px solid ${colors.border}`,
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: utilizationStatus.color }}>{(utilization * 100).toFixed(0)}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Util</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.queue }}>{queueDepth}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Queue</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{avgLatency.toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Avg Lat</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>{p99Latency.toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>p99 Lat</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1584,165 +1600,184 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
               Compare latency and jitter between small and large packets
             </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <QueueVisualization />
-            </div>
-
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <span style={{ ...typo.small, color: colors.accent, fontFamily: 'monospace' }}>
-                Latency Factor = {packetSize === 'large' ? '2x' : '1x'} × Queue Depth
-              </span>
-            </div>
-
-            {/* Packet size toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '16px',
-              marginBottom: '24px',
-            }}>
-              <button
-                onClick={() => { setPacketSize('small'); resetSimulation(); }}
-                style={{
-                  background: packetSize === 'small' ? colors.accent : colors.bgSecondary,
-                  color: packetSize === 'small' ? 'white' : colors.textSecondary,
-                  border: `2px solid ${packetSize === 'small' ? colors.accent : colors.border}`,
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Small Packets (100 bytes)
-              </button>
-              <button
-                onClick={() => { setPacketSize('large'); resetSimulation(); }}
-                style={{
-                  background: packetSize === 'large' ? colors.warning : colors.bgSecondary,
-                  color: packetSize === 'large' ? 'white' : colors.textSecondary,
-                  border: `2px solid ${packetSize === 'large' ? colors.warning : colors.border}`,
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Large Packets (1500 bytes)
-              </button>
-            </div>
-
-            {/* Traffic rate */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Traffic Load</span>
-                <span style={{ ...typo.small, color: colors.packet, fontWeight: 600 }}>{arrivalRate}%</span>
-              </div>
-              <input
-                type="range"
-                min="30"
-                max="90"
-                value={arrivalRate}
-                onChange={(e) => setArrivalRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Simulation controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setIsSimulating(!isSimulating);
-                  playSound('click');
-                }}
-                style={{
-                  background: isSimulating ? colors.error : colors.success,
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                {isSimulating ? 'Stop' : 'Start'} Simulation
-              </button>
-              <button
-                onClick={() => {
-                  resetSimulation();
-                  playSound('click');
-                }}
-                style={{
-                  background: colors.bgSecondary,
-                  color: colors.textSecondary,
-                  border: `1px solid ${colors.border}`,
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Jitter-focused stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{avgLatency.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${packetSize === 'large' ? colors.error : colors.success}`,
-              }}>
-                <div style={{ ...typo.h3, color: packetSize === 'large' ? colors.error : colors.success }}>
-                  {avgJitter.toFixed(2)}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <QueueVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Jitter (variation)</div>
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{p99Latency.toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>p99 Latency</div>
+                {/* Formula display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <span style={{ ...typo.small, color: colors.accent, fontFamily: 'monospace' }}>
+                    Latency = {packetSize === 'large' ? '2x' : '1x'} x Queue
+                  </span>
+                </div>
+
+                {/* Packet size toggle */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  marginBottom: '20px',
+                }}>
+                  <button
+                    onClick={() => { setPacketSize('small'); resetSimulation(); }}
+                    style={{
+                      background: packetSize === 'small' ? colors.accent : colors.bgSecondary,
+                      color: packetSize === 'small' ? 'white' : colors.textSecondary,
+                      border: `2px solid ${packetSize === 'small' ? colors.accent : colors.border}`,
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                    }}
+                  >
+                    Small (100B)
+                  </button>
+                  <button
+                    onClick={() => { setPacketSize('large'); resetSimulation(); }}
+                    style={{
+                      background: packetSize === 'large' ? colors.warning : colors.bgSecondary,
+                      color: packetSize === 'large' ? 'white' : colors.textSecondary,
+                      border: `2px solid ${packetSize === 'large' ? colors.warning : colors.border}`,
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                    }}
+                  >
+                    Large (1500B)
+                  </button>
+                </div>
+
+                {/* Traffic rate */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Traffic Load</span>
+                    <span style={{ ...typo.small, color: colors.packet, fontWeight: 600 }}>{arrivalRate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="30"
+                    max="90"
+                    value={arrivalRate}
+                    onChange={(e) => setArrivalRate(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Simulation controls */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => {
+                      setIsSimulating(!isSimulating);
+                      playSound('click');
+                    }}
+                    style={{
+                      background: isSimulating ? colors.error : colors.success,
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isSimulating ? 'Stop' : 'Start'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetSimulation();
+                      playSound('click');
+                    }}
+                    style={{
+                      background: colors.bgSecondary,
+                      color: colors.textSecondary,
+                      border: `1px solid ${colors.border}`,
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Jitter-focused stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '8px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{avgLatency.toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    border: `2px solid ${packetSize === 'large' ? colors.error : colors.success}`,
+                  }}>
+                    <div style={{ ...typo.h3, color: packetSize === 'large' ? colors.error : colors.success }}>
+                      {avgJitter.toFixed(2)}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Jitter</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>{p99Latency.toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>p99 Latency</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1038,59 +1038,69 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px', width: '100%', maxWidth: '700px' }}>
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-          {renderPVDiagram()}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px', width: '100%' }}>
+            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+              {renderPVDiagram()}
+            </div>
+            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+              {renderPistonVisualization()}
+            </div>
+          </div>
         </div>
-        <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-          {renderPistonVisualization()}
-        </div>
-      </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', marginBottom: '24px' }}>
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Compression Ratio</span>
+                <span style={{ height: '20px', color: '#ef4444', fontWeight: 700 }}>{compressionRatio}:1</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.5"
+                value={compressionRatio}
+                onChange={(e) => setCompressionRatio(Number(e.target.value))}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#ef4444' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>1:1</span>
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>10:1</span>
+              </div>
+            </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Compression Ratio</span>
-            <span style={{ height: '20px', color: '#ef4444', fontWeight: 700 }}>{compressionRatio}:1</span>
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Process Speed</span>
+                <span style={{ color: processSpeed > 50 ? '#ef4444' : '#3b82f6', fontWeight: 700 }}>
+                  {processSpeed > 50 ? 'Fast (Adiabatic)' : 'Slow (Isothermal)'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={processSpeed}
+                onChange={(e) => setProcessSpeed(Number(e.target.value))}
+                style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: processSpeed > 50 ? '#ef4444' : '#3b82f6' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>Slow (Isothermal)</span>
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>Fast (Adiabatic)</span>
+              </div>
+            </div>
           </div>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            step="0.5"
-            value={compressionRatio}
-            onChange={(e) => setCompressionRatio(Number(e.target.value))}
-            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#ef4444' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>1:1</span>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>10:1</span>
-          </div>
-        </div>
 
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Process Speed</span>
-            <span style={{ color: processSpeed > 50 ? '#ef4444' : '#3b82f6', fontWeight: 700 }}>
-              {processSpeed > 50 ? 'Fast (Adiabatic)' : 'Slow (Isothermal)'}
-            </span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={processSpeed}
-            onChange={(e) => setProcessSpeed(Number(e.target.value))}
-            style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: processSpeed > 50 ? '#ef4444' : '#3b82f6' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Slow (Isothermal)</span>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Fast (Adiabatic)</span>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', width: '100%', marginBottom: '24px' }}>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
           <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '24px' }}>{temperature.toFixed(0)} K</div>
           <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Temperature</div>
@@ -1102,6 +1112,8 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
           <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '24px' }}>{volume.toFixed(0)}%</div>
           <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Volume</div>
+        </div>
+      </div>
         </div>
       </div>
 
@@ -1448,31 +1460,41 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>Fast vs Slow Compression Lab</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>See how speed affects the final state</p>
 
-      {/* Interactive SVG visualization */}
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', width: '100%', maxWidth: '500px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-        {renderTwistPlayVisualization()}
-      </div>
-
-      {/* Compression ratio slider */}
-      <div style={{ width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Compression Ratio</span>
-            <span style={{ height: '20px', color: '#8b5cf6', fontWeight: 700 }}>{compressionRatio}:1</span>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Interactive SVG visualization */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', width: '100%', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+            {renderTwistPlayVisualization()}
           </div>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            step="0.5"
-            value={compressionRatio}
-            onChange={(e) => setCompressionRatio(Number(e.target.value))}
-            style={{ touchAction: 'pan-y', width: '100%', accentColor: '#8b5cf6' }}
-          />
         </div>
-      </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Compression ratio slider */}
+          <div style={{ width: '100%', marginBottom: '24px' }}>
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#e2e8f0', fontSize: '14px' }}>Compression Ratio</span>
+                <span style={{ height: '20px', color: '#8b5cf6', fontWeight: 700 }}>{compressionRatio}:1</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.5"
+                value={compressionRatio}
+                onChange={(e) => setCompressionRatio(Number(e.target.value))}
+                style={{ touchAction: 'pan-y', width: '100%', accentColor: '#8b5cf6' }}
+              />
+            </div>
+          </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '24px', width: '100%', maxWidth: '700px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '24px', width: '100%', marginBottom: '24px' }}>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
           <h3 style={{ color: '#ef4444', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>Fast (Adiabatic)</h3>
           <div style={{ display: 'grid', gap: '8px' }}>
@@ -1507,6 +1529,8 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
               <span style={{ color: '#3b82f6' }}>Lower</span>
             </div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>

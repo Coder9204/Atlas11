@@ -1102,6 +1102,15 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               This is why spacecraft engineers design radiation-hardened electronics — industry-standard protection enables missions like Voyager and Mars rovers to operate for decades in the harsh space environment.
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* SVG Visualization */}
             <div style={{
               background: colors.bgCard,
@@ -1272,7 +1281,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 </text>
               </svg>
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -1376,7 +1386,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               {/* Statistics */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
                 marginTop: '20px',
               }}>
@@ -1458,6 +1468,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                   Reset
                 </button>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* Educational Hint */}
@@ -1879,6 +1891,15 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
           }}>
             {isSimulationRunning && <CosmicRayAnimation />}
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <MemoryVisualization />
 
             {/* Process Node SVG Visualization - directly reflects processNode slider */}
@@ -1910,7 +1931,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
                 Fault rate: {effectiveFaultRate.toFixed(2)}/s
               </text>
             </svg>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Process Node Slider */}
             <div style={{ marginTop: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1982,7 +2004,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             {/* Statistics */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginTop: '20px',
             }}>
@@ -2063,6 +2085,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
               >
                 Reset
               </button>
+            </div>
+            </div>
             </div>
           </div>
 

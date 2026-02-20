@@ -1047,13 +1047,32 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
               <p style={{ fontSize: '14px', color: '#cbd5e1', marginTop: '8px' }}>This visualization shows how a spring responds to applied force. Watch how when you increase the force, the spring stretches more because the displacement is proportional to the applied force. This is important for engineers who design suspension systems and other practical applications in industry.</p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* SVG Visualization Container */}
             <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(51, 65, 85, 0.5)', marginBottom: '24px' }}>
               <SpringVisualization />
             </div>
 
+            {/* Formula Card */}
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.3)', textAlign: 'center' }}>
+              <p style={{ fontSize: '18px', fontWeight: 700, color: '#34d399', marginBottom: '4px' }}>F = kx</p>
+              <p style={{ fontSize: '14px', color: '#94a3b8' }}>Force = Spring Constant x Displacement</p>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '8px' }}>As you increase force, displacement increases proportionally. A higher spring constant means less stretch for the same force.</p>
+            </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Slider Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: '#34d399', fontWeight: 600 }}>Applied Force</span>
@@ -1086,7 +1105,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
             </div>
 
             {/* Toggle Buttons */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               <button
                 onClick={() => setShowForceArrows(!showForceArrows)}
                 style={{
@@ -1120,12 +1139,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
                 {isOscillating ? 'Stop' : 'Start'} Oscillation
               </button>
             </div>
-
-            {/* Formula Card */}
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.3)', marginBottom: '24px', textAlign: 'center' }}>
-              <p style={{ fontSize: '18px', fontWeight: 700, color: '#34d399', marginBottom: '4px' }}>F = kx</p>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>Force = Spring Constant x Displacement</p>
-              <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '8px' }}>As you increase force, displacement increases proportionally. A higher spring constant means less stretch for the same force.</p>
+            </div>
             </div>
 
             {/* Navigation */}

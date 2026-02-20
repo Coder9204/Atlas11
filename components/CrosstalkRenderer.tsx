@@ -1084,17 +1084,33 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CrosstalkVisualization showCrosstalk={true} interactive={true} />
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CrosstalkVisualization showCrosstalk={true} interactive={true} />
-            </div>
-
             {/* Trace spacing slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1158,7 +1174,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             {/* Crosstalk metrics display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1193,6 +1209,8 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Signal Quality</div>
               </div>
+            </div>
+          </div>
             </div>
           </div>
 
@@ -1475,16 +1493,32 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             Explore how frequency affects crosstalk and how to mitigate it
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CrosstalkVisualization showCrosstalk={true} />
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CrosstalkVisualization showCrosstalk={true} />
-            </div>
-
             {/* Frequency slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1619,7 +1653,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
             {/* Stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1649,6 +1683,8 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
                 <div style={{ ...typo.h3, color: signalQuality.color }}>{signalQuality.rating}</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Signal Quality</div>
               </div>
+            </div>
+          </div>
             </div>
           </div>
 

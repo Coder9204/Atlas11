@@ -20,6 +20,14 @@ interface CavitationRendererProps {
 const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, gamePhase, onPhaseComplete, onGameEvent }) => {
   const initialPhase = currentPhase ?? gamePhase ?? 'hook';
   const [phase, setPhase] = useState<Phase>(initialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const [hookStep, setHookStep] = useState(0);
   const [showCollapse, setShowCollapse] = useState(false);
   const [bubbleSize, setBubbleSize] = useState(30);
@@ -552,6 +560,15 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
           <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Observe how pressure determines cavitation intensity. Try adjusting the slider and watch how the chart demonstrates the relationship.</p>
         </div>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
           <svg width="100%" height="340" viewBox="0 0 500 340">
             <defs>
@@ -656,8 +673,11 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
             </div>
           </div>
 
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Slider */}
-          <div style={{ marginTop: '16px' }}>
+          <div style={{ marginTop: '0px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Pressure Level</span>
               <span style={{ color: stateColor, fontSize: '14px' }}>{marker.p.toFixed(1)} kPa</span>
@@ -693,6 +713,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
               Ship propellers, pumps, and turbines suffer billions of dollars in cavitation damage annually. The relationship: Higher speed = Lower pressure = More cavitation = More damage.
             </p>
           </div>
+        </div>
         </div>
 
         {renderBottomBar(() => goToNextPhase())}
@@ -863,6 +884,15 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
         <p style={{ margin: 0, color: '#cbd5e1', fontSize: '14px' }}>Watch the double impact</p>
       </div>
 
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
         <svg width="100%" height="220" viewBox="0 0 500 220">
           <defs>
@@ -955,6 +985,9 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
             </g>
           )}
         </svg>
+      </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
         <button
           onClick={triggerShrimpStrike}
@@ -973,6 +1006,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
             <li><strong>Strike 2:</strong> Bubble collapse delivers second impact!</li>
           </ol>
         </div>
+      </div>
       </div>
 
       {renderBottomBar(() => goToNextPhase())}
@@ -1210,7 +1244,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
             <div style={{ color: '#cbd5e1', fontSize: '14px' }}>Final Score</div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'left' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', textAlign: 'left' }}>
             {[
               { title: "Vapor Pressure", text: "Low pressure creates bubbles" },
               { title: "Violent Collapse", text: "5,000\u00b0C, 1,000 atm" },

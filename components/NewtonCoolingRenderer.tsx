@@ -1165,180 +1165,177 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           </p>
         </div>
 
-        {/* Main visualization */}
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <InteractiveCoolingCurve />
-          </div>
-
-          {/* What you're seeing explanation */}
-          <div style={{
-            background: colors.bgSecondary,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.textPrimary }}>What you see:</strong> The colored curve shows the coffee temperature over time. The glowing dot tracks the current temperature. As the temperature difference shrinks, so does the cooling rate — this is Newton's Law in action!
-            </p>
-          </div>
-
-          {/* Slider: Initial Temperature */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
-                Initial Temperature: <span style={{ color: colors.error }}>{initialTempSlider}°C</span>
-              </label>
-              <span style={{ ...typo.small, color: colors.textMuted }}>60–100°C</span>
-            </div>
-            <input
-              type="range"
-              min={60}
-              max={100}
-              step={1}
-              value={initialTempSlider}
-              onChange={e => {
-                setInitialTempSlider(Number(e.target.value));
-                if (onGameEvent) onGameEvent({ eventType: 'slider_changed', gameType: 'newton-cooling', gameTitle: "Newton's Law of Cooling", details: { slider: 'initialTemp', value: Number(e.target.value) }, timestamp: Date.now() });
-              }}
-              style={{
-                width: '100%',
-                height: '20px',
-                touchAction: 'pan-y',
-                WebkitAppearance: 'none',
-                appearance: 'none',
-                accentColor: '#3b82f6',
-                cursor: 'pointer',
-              }}
-              aria-label="Initial temperature slider"
-            />
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-              When initial temperature increases, it causes a larger delta T, which leads to a faster initial cooling rate (dT/dt = -k × ΔT).
-            </p>
-          </div>
-
-          {/* Slider: Cooling Coefficient */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
-                Cooling Coefficient k: <span style={{ color: colors.accent }}>{(kSlider / 100).toFixed(2)}</span>
-              </label>
-              <span style={{ ...typo.small, color: colors.textMuted }}>0.01–0.10</span>
-            </div>
-            <input
-              type="range"
-              min={1}
-              max={10}
-              step={1}
-              value={kSlider}
-              onChange={e => {
-                setKSlider(Number(e.target.value));
-                if (onGameEvent) onGameEvent({ eventType: 'slider_changed', gameType: 'newton-cooling', gameTitle: "Newton's Law of Cooling", details: { slider: 'k', value: Number(e.target.value) }, timestamp: Date.now() });
-              }}
-              style={{
-                width: '100%',
-                height: '20px',
-                touchAction: 'pan-y',
-                WebkitAppearance: 'none',
-                appearance: 'none',
-                accentColor: '#3b82f6',
-                cursor: 'pointer',
-              }}
-              aria-label="Cooling coefficient slider"
-            />
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-              When k increases, it causes faster cooling overall — this depends on material, surface area, and insulation.
-            </p>
-          </div>
-
-          {/* Stats display */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginBottom: '16px',
-          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
-              background: colors.bgPrimary,
-              borderRadius: '8px',
-              padding: '12px',
-              textAlign: 'center',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
             }}>
-              <div style={{ ...typo.h3, color: colors.error, fontSize: '18px' }}>
-                {((currentTemp - roomTemp) * getEffectiveK()).toFixed(2)} °C/min
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <InteractiveCoolingCurve />
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Cooling Rate</div>
-            </div>
-            <div style={{
-              background: colors.bgPrimary,
-              borderRadius: '8px',
-              padding: '12px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h3, color: colors.accent, fontSize: '18px' }}>
-                {(currentTemp - roomTemp).toFixed(1)} °C
-              </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Temp Difference</div>
-            </div>
-            <div style={{
-              background: colors.bgPrimary,
-              borderRadius: '8px',
-              padding: '12px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.h3, color: colors.success, fontSize: '18px' }}>
-                {Math.round(currentTemp)}°C
-              </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Current Temp</div>
             </div>
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              {/* Slider: Initial Temperature */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <label style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+                    Init Temp: <span style={{ color: colors.error }}>{initialTempSlider}°C</span>
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min={60}
+                  max={100}
+                  step={1}
+                  value={initialTempSlider}
+                  onChange={e => {
+                    setInitialTempSlider(Number(e.target.value));
+                    if (onGameEvent) onGameEvent({ eventType: 'slider_changed', gameType: 'newton-cooling', gameTitle: "Newton's Law of Cooling", details: { slider: 'initialTemp', value: Number(e.target.value) }, timestamp: Date.now() });
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Initial temperature slider"
+                />
+              </div>
 
-          {/* Simulate buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-            <button
-              onClick={() => {
-                if (!isSimulating) {
-                  resetSimulation();
-                  setIsSimulating(true);
-                } else {
-                  setIsSimulating(false);
-                }
-                playSound('click');
-              }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                background: isSimulating ? colors.warning : colors.success,
-                color: 'white',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {isSimulating ? 'Pause' : 'Start Cooling'}
-            </button>
-            <button
-              onClick={() => {
-                resetSimulation();
-                playSound('click');
-              }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Reset
-            </button>
+              {/* Slider: Cooling Coefficient */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <label style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+                    k: <span style={{ color: colors.accent }}>{(kSlider / 100).toFixed(2)}</span>
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={kSlider}
+                  onChange={e => {
+                    setKSlider(Number(e.target.value));
+                    if (onGameEvent) onGameEvent({ eventType: 'slider_changed', gameType: 'newton-cooling', gameTitle: "Newton's Law of Cooling", details: { slider: 'k', value: Number(e.target.value) }, timestamp: Date.now() });
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Cooling coefficient slider"
+                />
+              </div>
+
+              {/* Stats display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: '8px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: colors.bgPrimary,
+                  borderRadius: '8px',
+                  padding: '10px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.error, fontSize: '16px' }}>
+                    {((currentTemp - roomTemp) * getEffectiveK()).toFixed(2)} °C/min
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Cooling Rate</div>
+                </div>
+                <div style={{
+                  background: colors.bgPrimary,
+                  borderRadius: '8px',
+                  padding: '10px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent, fontSize: '16px' }}>
+                    {(currentTemp - roomTemp).toFixed(1)} °C
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Delta T</div>
+                </div>
+                <div style={{
+                  background: colors.bgPrimary,
+                  borderRadius: '8px',
+                  padding: '10px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success, fontSize: '16px' }}>
+                    {Math.round(currentTemp)}°C
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Current Temp</div>
+                </div>
+              </div>
+
+              {/* Simulate buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    if (!isSimulating) {
+                      resetSimulation();
+                      setIsSimulating(true);
+                    } else {
+                      setIsSimulating(false);
+                    }
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSimulating ? colors.warning : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSimulating ? 'Pause' : 'Start Cooling'}
+                </button>
+                <button
+                  onClick={() => {
+                    resetSimulation();
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1590,119 +1587,132 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           See how lid and stirring affect the cooling coefficient k
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <InteractiveCoolingCurve />
-          </div>
-
-          {/* Toggle controls */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <button
-              onClick={() => { setHasLid(!hasLid); playSound('click'); }}
-              style={{
-                padding: '20px',
-                borderRadius: '12px',
-                border: hasLid ? `2px solid ${colors.accent}` : `2px solid ${colors.border}`,
-                background: hasLid ? `${colors.accent}22` : colors.bgSecondary,
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{hasLid ? '🔒' : '☕'}</div>
-              <div style={{ color: hasLid ? colors.accent : colors.textSecondary, fontWeight: 600 }}>
-                Lid: {hasLid ? 'ON' : 'OFF'}
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <InteractiveCoolingCurve />
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>k × 0.5</div>
-            </button>
-            <button
-              onClick={() => { setIsStirring(!isStirring); playSound('click'); }}
-              style={{
-                padding: '20px',
-                borderRadius: '12px',
-                border: isStirring ? `2px solid ${colors.success}` : `2px solid ${colors.border}`,
-                background: isStirring ? `${colors.success}22` : colors.bgSecondary,
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{isStirring ? '🔄' : '🥄'}</div>
-              <div style={{ color: isStirring ? colors.success : colors.textSecondary, fontWeight: 600 }}>
-                Stir: {isStirring ? 'ON' : 'OFF'}
+            </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              {/* Toggle controls */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
+                marginBottom: '20px',
+              }}>
+                <button
+                  onClick={() => { setHasLid(!hasLid); playSound('click'); }}
+                  style={{
+                    padding: '16px 8px',
+                    borderRadius: '12px',
+                    border: hasLid ? `2px solid ${colors.accent}` : `2px solid ${colors.border}`,
+                    background: hasLid ? `${colors.accent}22` : colors.bgSecondary,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{hasLid ? '🔒' : '☕'}</div>
+                  <div style={{ color: hasLid ? colors.accent : colors.textSecondary, fontWeight: 600, fontSize: '13px' }}>
+                    Lid: {hasLid ? 'ON' : 'OFF'}
+                  </div>
+                </button>
+                <button
+                  onClick={() => { setIsStirring(!isStirring); playSound('click'); }}
+                  style={{
+                    padding: '16px 8px',
+                    borderRadius: '12px',
+                    border: isStirring ? `2px solid ${colors.success}` : `2px solid ${colors.border}`,
+                    background: isStirring ? `${colors.success}22` : colors.bgSecondary,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{isStirring ? '🔄' : '🥄'}</div>
+                  <div style={{ color: isStirring ? colors.success : colors.textSecondary, fontWeight: 600, fontSize: '13px' }}>
+                    Stir: {isStirring ? 'ON' : 'OFF'}
+                  </div>
+                </button>
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>k × 1.3</div>
-            </button>
-          </div>
 
-          {/* k value display */}
-          <div style={{
-            background: colors.bgSecondary,
-            borderRadius: '12px',
-            padding: '16px',
-            textAlign: 'center',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-              Effective Cooling Coefficient
-            </div>
-            <div style={{ ...typo.h2, color: colors.accent }}>
-              k = {getEffectiveK().toFixed(4)}
-            </div>
-            <div style={{ ...typo.small, color: colors.textMuted }}>
-              Base k = {kCoefficient.toFixed(2)} × lid factor × stir factor
-            </div>
-          </div>
+              {/* k value display */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '12px',
+                textAlign: 'center',
+                marginBottom: '20px',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                  Effective k
+                </div>
+                <div style={{ ...typo.h3, color: colors.accent }}>
+                  {getEffectiveK().toFixed(4)}
+                </div>
+              </div>
 
-          {/* Simulate buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-            <button
-              onClick={() => {
-                if (!isSimulating) {
-                  resetSimulation();
-                  setIsSimulating(true);
-                } else {
-                  setIsSimulating(false);
-                }
-                playSound('click');
-              }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                background: isSimulating ? colors.warning : colors.success,
-                color: 'white',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {isSimulating ? 'Pause' : 'Start Cooling'}
-            </button>
-            <button
-              onClick={() => {
-                resetSimulation();
-                playSound('click');
-              }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Reset
-            </button>
+              {/* Simulate buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    if (!isSimulating) {
+                      resetSimulation();
+                      setIsSimulating(true);
+                    } else {
+                      setIsSimulating(false);
+                    }
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isSimulating ? colors.warning : colors.success,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isSimulating ? 'Pause' : 'Start Cooling'}
+                </button>
+                <button
+                  onClick={() => {
+                    resetSimulation();
+                    playSound('click');
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -878,145 +878,160 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               Observe: Try toggling the lock off to see how different faces become visible when the Moon rotates faster than it orbits.
             </p>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ marginBottom: '16px' }}>
-                <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} staticAngle={manualAngle} />
-                {/* Formula positioned near the graphic */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '10px',
-                  marginTop: '12px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <p style={{ ...typo.small, color: colors.accent, margin: '0 0 4px' }}>
-                    <strong>Tidal Locking:</strong> ω<sub>rotation</sub> = ω<sub>orbital</sub>
-                  </p>
-                  <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-                    F_tidal ∝ M/r³ — tidal force affects rotation rate
-                  </p>
-                </div>
-              </div>
-
-              {/* Real-time calculated values */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginBottom: '20px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Orbital Period
-                  </div>
-                  <div style={{ ...typo.h3, color: colors.accent }}>
-                    {currentOrbitalPeriod.toFixed(1)} days
-                  </div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Rotation Period
-                  </div>
-                  <div style={{ ...typo.h3, color: isTidallyLocked ? colors.success : colors.warning }}>
-                    {currentRotationPeriod.toFixed(1)} days
-                  </div>
-                </div>
-              </div>
-
-              {/* Control buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
-                <button
-                  onClick={() => { playSound('click'); setIsTidallyLocked(!isTidallyLocked); }}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: `2px solid ${isTidallyLocked ? colors.success : colors.warning}`,
-                    background: isTidallyLocked ? `${colors.success}22` : `${colors.warning}22`,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
-                    {isTidallyLocked ? 'Tidally Locked' : 'Not Locked'}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textSecondary }}>
-                    {isTidallyLocked ? 'Rotation = orbital period' : 'Rotation faster than orbit'}
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => { playSound('click'); setShowTidalBulge(!showTidalBulge); }}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '12px',
-                    border: `2px solid ${showTidalBulge ? colors.accent : colors.border}`,
-                    background: showTidalBulge ? `${colors.accent}22` : colors.bgSecondary,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
-                    Tidal Bulge: {showTidalBulge ? 'ON' : 'OFF'}
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textSecondary }}>
-                    Moon stretched toward Earth
-                  </div>
-                </button>
-              </div>
-
-              {/* Time speed slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Animation Speed</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{timeScale}x</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="3"
-                  step="0.5"
-                  value={timeScale}
-                  onChange={(e) => { setTimeScale(parseFloat(e.target.value)); setManualAngle(prev => (prev + parseFloat(e.target.value) * 15) % 360); }}
-                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0.5x</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>3x</span>
-                </div>
-              </div>
-
-              {/* Play/Pause */}
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <button
-                  onClick={() => { playSound('click'); setIsAnimating(!isAnimating); }}
-                  style={{
-                    padding: '12px 32px',
+                  <MoonSystemVisualization size={isMobile ? 280 : 360} locked={isTidallyLocked} showBulge={showTidalBulge} staticAngle={manualAngle} />
+                  {/* Formula positioned near the graphic */}
+                  <div style={{
+                    background: colors.bgSecondary,
                     borderRadius: '8px',
-                    border: 'none',
-                    background: isAnimating ? colors.error : colors.success,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {isAnimating ? 'Pause' : 'Play'}
-                </button>
+                    padding: '10px',
+                    marginTop: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.accent, margin: '0 0 4px' }}>
+                      <strong>Tidal Locking:</strong> ω<sub>rotation</sub> = ω<sub>orbital</sub>
+                    </p>
+                    <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                      F_tidal ∝ M/r³ — tidal force affects rotation rate
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Real-time calculated values */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                        Orbital Period
+                      </div>
+                      <div style={{ ...typo.h3, color: colors.accent }}>
+                        {currentOrbitalPeriod.toFixed(1)} days
+                      </div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                        Rotation Period
+                      </div>
+                      <div style={{ ...typo.h3, color: isTidallyLocked ? colors.success : colors.warning }}>
+                        {currentRotationPeriod.toFixed(1)} days
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Control buttons */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setIsTidallyLocked(!isTidallyLocked); }}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: `2px solid ${isTidallyLocked ? colors.success : colors.warning}`,
+                        background: isTidallyLocked ? `${colors.success}22` : `${colors.warning}22`,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+                        {isTidallyLocked ? 'Tidally Locked' : 'Not Locked'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>
+                        {isTidallyLocked ? 'Rotation = orbital period' : 'Rotation faster than orbit'}
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { playSound('click'); setShowTidalBulge(!showTidalBulge); }}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: `2px solid ${showTidalBulge ? colors.accent : colors.border}`,
+                        background: showTidalBulge ? `${colors.accent}22` : colors.bgSecondary,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+                        Tidal Bulge: {showTidalBulge ? 'ON' : 'OFF'}
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textSecondary }}>
+                        Moon stretched toward Earth
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Time speed slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Animation Speed</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{timeScale}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="3"
+                      step="0.5"
+                      value={timeScale}
+                      onChange={(e) => { setTimeScale(parseFloat(e.target.value)); setManualAngle(prev => (prev + parseFloat(e.target.value) * 15) % 360); }}
+                      style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0.5x</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>3x</span>
+                    </div>
+                  </div>
+
+                  {/* Play/Pause */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => { playSound('click'); setIsAnimating(!isAnimating); }}
+                      style={{
+                        padding: '12px 32px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: isAnimating ? colors.error : colors.success,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {isAnimating ? 'Pause' : 'Play'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1376,135 +1391,153 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               Observe: Adjust the sliders to see how dramatically distance affects locking time (scales with distance to the 6th power!).
             </p>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              {/* Formula */}
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '16px',
-                textAlign: 'center',
-              }}>
-                <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-                  <strong>T ∝ a<sup>6</sup> / (M × Q)</strong> — Tidal Locking Time formula
-                </p>
-              </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Formula */}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                      <strong>T ∝ a<sup>6</sup> / (M × Q)</strong> — Tidal Locking Time formula
+                    </p>
+                  </div>
 
-              {/* SVG visualization that changes with sliders */}
-              <svg width="100%" height="160" viewBox="0 0 400 160" style={{ display: 'block', marginBottom: '16px' }}>
-                <defs>
-                  <radialGradient id="twistPlanetGrad" cx="40%" cy="35%" r="65%">
-                    <stop offset="0%" stopColor="#93c5fd" />
-                    <stop offset="100%" stopColor="#1e40af" />
-                  </radialGradient>
-                  <radialGradient id="twistMoonGrad" cx="40%" cy="35%" r="60%">
-                    <stop offset="0%" stopColor="#e5e7eb" />
-                    <stop offset="100%" stopColor="#4b5563" />
-                  </radialGradient>
-                  <filter id="twistGlow">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
-                {/* Background */}
-                <rect width="400" height="160" fill={colors.bgCard} rx="8" />
-                {/* Grid lines */}
-                <line x1="40" y1="80" x2="360" y2="80" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
-                <line x1="200" y1="20" x2="200" y2="140" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
-                {/* Planet at center */}
-                <circle cx="80" cy="80" r="24" fill="url(#twistPlanetGrad)" filter="url(#twistGlow)" />
-                <text x="80" y="113" textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600">Planet</text>
-                {/* Orbit path - radius scales with distance */}
-                {(() => {
-                  const orbitR = 40 + (tidalDistance / 100) * 120;
-                  const moonCx = 80 + orbitR;
-                  const moonR = Math.max(8, 18 - (bodyRigidity / 100) * 8);
-                  const tidalForce = Math.pow(50 / tidalDistance, 3);
-                  const bulgeRx = moonR * (1 + tidalForce * 0.15);
-                  return (
-                    <>
-                      <ellipse cx="80" cy="80" rx={orbitR} ry={orbitR * 0.4} fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
-                      {/* Moon with tidal bulge */}
-                      <ellipse cx={moonCx} cy="80" rx={bulgeRx} ry={moonR} fill="url(#twistMoonGrad)" filter="url(#twistGlow)" />
-                      <text x={moonCx} y={80 + moonR + 14} textAnchor="middle" fill={colors.textMuted} fontSize="12">Moon</text>
-                      {/* Tidal force arrow */}
-                      <line x1={moonCx - bulgeRx - 4} y1="80" x2="80" y2="80" stroke={colors.warning} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.6" />
-                      {/* Distance label */}
-                      <text x="260" y="30" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">d = {tidalDistance} AU</text>
-                      <text x="260" y="48" textAnchor="middle" fill={colors.warning} fontSize="12">F = {tidalForce.toFixed(2)}x</text>
-                      <text x="260" y="66" textAnchor="middle" fill={colors.textMuted} fontSize="11">T ≈ {lockingTime} yr</text>
-                    </>
-                  );
-                })()}
-              </svg>
-
-              {/* Distance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Planet (a)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {tidalDistance < 30 ? 'Very Close' : tidalDistance < 70 ? 'Moderate' : 'Far'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={tidalDistance}
-                  onChange={(e) => setTidalDistance(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Close (strong tides)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Far (weak tides)</span>
+                  {/* SVG visualization that changes with sliders */}
+                  <svg width="100%" height="160" viewBox="0 0 400 160" style={{ display: 'block', marginBottom: '16px' }}>
+                    <defs>
+                      <radialGradient id="twistPlanetGrad" cx="40%" cy="35%" r="65%">
+                        <stop offset="0%" stopColor="#93c5fd" />
+                        <stop offset="100%" stopColor="#1e40af" />
+                      </radialGradient>
+                      <radialGradient id="twistMoonGrad" cx="40%" cy="35%" r="60%">
+                        <stop offset="0%" stopColor="#e5e7eb" />
+                        <stop offset="100%" stopColor="#4b5563" />
+                      </radialGradient>
+                      <filter id="twistGlow">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                    </defs>
+                    {/* Background */}
+                    <rect width="400" height="160" fill={colors.bgCard} rx="8" />
+                    {/* Grid lines */}
+                    <line x1="40" y1="80" x2="360" y2="80" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                    <line x1="200" y1="20" x2="200" y2="140" stroke={colors.border} strokeWidth="0.5" strokeDasharray="4 4" opacity="0.3" />
+                    {/* Planet at center */}
+                    <circle cx="80" cy="80" r="24" fill="url(#twistPlanetGrad)" filter="url(#twistGlow)" />
+                    <text x="80" y="113" textAnchor="middle" fill={colors.textMuted} fontSize="12" fontWeight="600">Planet</text>
+                    {/* Orbit path - radius scales with distance */}
+                    {(() => {
+                      const orbitR = 40 + (tidalDistance / 100) * 120;
+                      const moonCx = 80 + orbitR;
+                      const moonR = Math.max(8, 18 - (bodyRigidity / 100) * 8);
+                      const tidalForce = Math.pow(50 / tidalDistance, 3);
+                      const bulgeRx = moonR * (1 + tidalForce * 0.15);
+                      return (
+                        <>
+                          <ellipse cx="80" cy="80" rx={orbitR} ry={orbitR * 0.4} fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="6 3" opacity="0.4" />
+                          {/* Moon with tidal bulge */}
+                          <ellipse cx={moonCx} cy="80" rx={bulgeRx} ry={moonR} fill="url(#twistMoonGrad)" filter="url(#twistGlow)" />
+                          <text x={moonCx} y={80 + moonR + 14} textAnchor="middle" fill={colors.textMuted} fontSize="12">Moon</text>
+                          {/* Tidal force arrow */}
+                          <line x1={moonCx - bulgeRx - 4} y1="80" x2="80" y2="80" stroke={colors.warning} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.6" />
+                          {/* Distance label */}
+                          <text x="260" y="30" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="600">d = {tidalDistance} AU</text>
+                          <text x="260" y="48" textAnchor="middle" fill={colors.warning} fontSize="12">F = {tidalForce.toFixed(2)}x</text>
+                          <text x="260" y="66" textAnchor="middle" fill={colors.textMuted} fontSize="11">T ≈ {lockingTime} yr</text>
+                        </>
+                      );
+                    })()}
+                  </svg>
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Distance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Planet (a)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {tidalDistance < 30 ? 'Very Close' : tidalDistance < 70 ? 'Moderate' : 'Far'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={tidalDistance}
+                      onChange={(e) => setTidalDistance(parseInt(e.target.value))}
+                      style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Close (strong tides)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Far (weak tides)</span>
+                    </div>
+                  </div>
 
-              {/* Rigidity slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Body Rigidity (Q factor)</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                    {bodyRigidity < 30 ? 'Icy/Fluid' : bodyRigidity < 70 ? 'Rocky' : 'Very Rigid'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={bodyRigidity}
-                  onChange={(e) => setBodyRigidity(parseInt(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Low (more friction)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>High (less friction)</span>
-                </div>
-              </div>
+                  {/* Rigidity slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Body Rigidity (Q factor)</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                        {bodyRigidity < 30 ? 'Icy/Fluid' : bodyRigidity < 70 ? 'Rocky' : 'Very Rigid'}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={bodyRigidity}
+                      onChange={(e) => setBodyRigidity(parseInt(e.target.value))}
+                      style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Low (more friction)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>High (less friction)</span>
+                    </div>
+                  </div>
 
-              {/* Real-time calculated values */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                marginBottom: '16px',
-              }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Tidal Force</div>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{tidalForceStrength}x</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Dissipation</div>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{dissipationRate}</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Lock Time</div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: colors.success }}>{lockingTime} yr</div>
+                  {/* Real-time calculated values */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Tidal Force</div>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{tidalForceStrength}x</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Dissipation</div>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{dissipationRate}</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Lock Time</div>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: colors.success }}>{lockingTime} yr</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1151,141 +1151,152 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CrashVisualization />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <CrashVisualization />
+                </div>
 
-            {/* Speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Impact Speed</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{impactSpeed} mph</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="60"
-                step="5"
-                value={impactSpeed}
-                onChange={(e) => setImpactSpeed(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: colors.accent,
-                  cursor: 'pointer',
-                  touchAction: 'none',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10 mph (min)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60 mph (max)</span>
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{stoppingTime * 1000}ms</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Stop Time</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: hasCrumpleZone ? colors.success : colors.error }}>{forceMultiplier}x</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Force Level</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{crashCount}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Tests Run</div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Crumple zone toggle */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Crumple Zone</span>
-                <button
-                  onClick={() => setHasCrumpleZone(!hasCrumpleZone)}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Speed slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Impact Speed</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{impactSpeed} mph</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="60"
+                  step="5"
+                  value={impactSpeed}
+                  onChange={(e) => setImpactSpeed(parseInt(e.target.value))}
                   style={{
-                    padding: '8px 20px',
-                    borderRadius: '20px',
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    accentColor: colors.accent,
+                    cursor: 'pointer',
+                    touchAction: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>10 mph</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>60 mph</span>
+                </div>
+              </div>
+
+              {/* Crumple zone toggle */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Crumple Zone</span>
+                  <button
+                    onClick={() => setHasCrumpleZone(!hasCrumpleZone)}
+                    style={{
+                      padding: '8px 20px',
+                      borderRadius: '20px',
+                      border: 'none',
+                      background: hasCrumpleZone ? colors.success : colors.error,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {hasCrumpleZone ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Crash button */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={startCrash}
+                  disabled={isAnimating}
+                  style={{
+                    padding: '14px 32px',
+                    borderRadius: '8px',
                     border: 'none',
-                    background: hasCrumpleZone ? colors.success : colors.error,
+                    background: isAnimating ? colors.border : colors.accent,
                     color: 'white',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    cursor: isAnimating ? 'not-allowed' : 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  {isAnimating ? 'Crashing...' : 'Run Crash Test'}
+                </button>
+                <button
+                  onClick={() => {
+                    setCarPosition(0);
+                    setCrashProgress(0);
+                    setIsAnimating(false);
+                  }}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
                     fontWeight: 600,
                     cursor: 'pointer',
                     minHeight: '44px',
                   }}
                 >
-                  {hasCrumpleZone ? 'ON' : 'OFF'}
+                  Reset
                 </button>
-              </div>
-            </div>
-
-            {/* Crash button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={startCrash}
-                disabled={isAnimating}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isAnimating ? colors.border : colors.accent,
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  cursor: isAnimating ? 'not-allowed' : 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                {isAnimating ? 'Crashing...' : 'Run Crash Test'}
-              </button>
-              <button
-                onClick={() => {
-                  setCarPosition(0);
-                  setCrashProgress(0);
-                  setIsAnimating(false);
-                }}
-                style={{
-                  padding: '14px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{stoppingTime * 1000}ms</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Stop Time</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: hasCrumpleZone ? colors.success : colors.error }}>{forceMultiplier}x</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Force Level</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{crashCount}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Tests Run</div>
               </div>
             </div>
           </div>
@@ -1571,174 +1582,174 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             Adjust masses and velocity to see how energy is lost when objects stick together
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <InelasticCollisionVisualization />
-            </div>
-
-            {/* Mass 1 slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Car 1 Mass (moving)</span>
-                <span style={{ ...typo.small, color: '#3b82f6', fontWeight: 600 }}>{mass1} kg</span>
-              </div>
-              <input
-                type="range"
-                min="500"
-                max="2000"
-                step="100"
-                value={mass1}
-                onChange={(e) => { setMass1(parseInt(e.target.value)); setTwistProgress(0); }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: '#3b82f6',
-                  cursor: 'pointer',
-                  touchAction: 'none',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>500 kg</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>2000 kg</span>
-              </div>
-            </div>
-
-            {/* Velocity slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Car 1 Velocity</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{velocity1} m/s</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="40"
-                step="1"
-                value={velocity1}
-                onChange={(e) => { setVelocity1(parseInt(e.target.value)); setTwistProgress(0); }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: colors.success,
-                  cursor: 'pointer',
-                  touchAction: 'none',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>5 m/s</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>40 m/s</span>
-              </div>
-            </div>
-
-            {/* Mass 2 slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Car 2 Mass (stationary)</span>
-                <span style={{ ...typo.small, color: '#f59e0b', fontWeight: 600 }}>{mass2} kg</span>
-              </div>
-              <input
-                type="range"
-                min="500"
-                max="2000"
-                step="100"
-                value={mass2}
-                onChange={(e) => { setMass2(parseInt(e.target.value)); setTwistProgress(0); }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  accentColor: '#f59e0b',
-                  cursor: 'pointer',
-                  touchAction: 'none',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>500 kg</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>2000 kg</span>
-              </div>
-            </div>
-
-            {/* Simulate button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={startTwistSimulation}
-                disabled={twistAnimating}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: twistAnimating ? colors.border : colors.accent,
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '16px',
-                  cursor: twistAnimating ? 'not-allowed' : 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                {twistAnimating ? 'Colliding...' : 'Run Collision'}
-              </button>
-              <button
-                onClick={() => setTwistProgress(0)}
-                style={{
-                  padding: '14px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{finalVelocity.toFixed(1)} m/s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Final Velocity</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <InelasticCollisionVisualization />
+                </div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{finalVelocity.toFixed(1)} m/s</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Final Velocity</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>{energyLostPercent.toFixed(1)}%</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>KE Lost</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{(energyLost / 1000).toFixed(1)} kJ</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Energy to Heat</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{energyLostPercent.toFixed(1)}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>KE Lost</div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Mass 1 slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Car 1 Mass</span>
+                  <span style={{ ...typo.small, color: '#3b82f6', fontWeight: 600 }}>{mass1} kg</span>
+                </div>
+                <input
+                  type="range"
+                  min="500"
+                  max="2000"
+                  step="100"
+                  value={mass1}
+                  onChange={(e) => { setMass1(parseInt(e.target.value)); setTwistProgress(0); }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    accentColor: '#3b82f6',
+                    cursor: 'pointer',
+                    touchAction: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{(energyLost / 1000).toFixed(1)} kJ</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Energy to Heat</div>
+
+              {/* Velocity slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Car 1 Velocity</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{velocity1} m/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="40"
+                  step="1"
+                  value={velocity1}
+                  onChange={(e) => { setVelocity1(parseInt(e.target.value)); setTwistProgress(0); }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    accentColor: colors.success,
+                    cursor: 'pointer',
+                    touchAction: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Mass 2 slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Car 2 Mass</span>
+                  <span style={{ ...typo.small, color: '#f59e0b', fontWeight: 600 }}>{mass2} kg</span>
+                </div>
+                <input
+                  type="range"
+                  min="500"
+                  max="2000"
+                  step="100"
+                  value={mass2}
+                  onChange={(e) => { setMass2(parseInt(e.target.value)); setTwistProgress(0); }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    accentColor: '#f59e0b',
+                    cursor: 'pointer',
+                    touchAction: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Simulate button */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={startTwistSimulation}
+                  disabled={twistAnimating}
+                  style={{
+                    padding: '14px 32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: twistAnimating ? colors.border : colors.accent,
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    cursor: twistAnimating ? 'not-allowed' : 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  {twistAnimating ? 'Colliding...' : 'Run Collision'}
+                </button>
+                <button
+                  onClick={() => setTwistProgress(0)}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Reset
+                </button>
               </div>
             </div>
           </div>

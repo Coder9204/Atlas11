@@ -935,187 +935,139 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             This matters: bees navigate using this pattern, and Vikings crossed the Atlantic with it.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <SkyDomeVisualization showAxes={true} />
-            </div>
-
-            {/* Formula display near the graphic */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              border: `1px solid ${colors.accent}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                <div>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Polarization Formula:
-                  </div>
-                  <div style={{
-                    fontFamily: 'monospace',
-                    fontSize: isMobile ? '13px' : '15px',
-                    color: colors.accent,
-                    fontWeight: 600,
-                  }}>
-                    P = P_max × sin²(θ)
-                  </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <SkyDomeVisualization showAxes={true} />
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
-                    Real-time Calculation:
-                  </div>
-                  <div style={{ ...typo.body, color: colors.success, fontWeight: 700 }}>
-                    P_max = {maxPolarizationPercent}% at 90°
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Observation guidance */}
-            <div style={{
-              background: `${colors.warning}11`,
-              border: `1px solid ${colors.warning}33`,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-            }}>
-              <div style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '6px' }}>
-                What to Watch For:
-              </div>
-              <div style={{ ...typo.small, color: colors.textSecondary, lineHeight: '1.6' }}>
-                Notice how the dashed circle (90° from sun) shows the zone of maximum polarization. Watch the polarization vectors become longest and brightest in this zone. Rotate the polarizer and observe which vectors stay visible - this simulates looking through polarized sunglasses!
-              </div>
-            </div>
-
-            {/* Real-time calculated values displayed alongside graphic */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: '10px',
-              marginBottom: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '6px',
-                padding: '10px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Sun Azimuth</div>
-                <div style={{ ...typo.h3, color: colors.accent }}>{sunAzimuth}°</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '6px',
-                padding: '10px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Sun Elevation</div>
-                <div style={{ ...typo.h3, color: colors.accent }}>{sunElevation}°</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '6px',
-                padding: '10px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Max Polarization</div>
-                <div style={{ ...typo.h3, color: colors.success }}>{maxPolarizationPercent}%</div>
-              </div>
-            </div>
-
-            {/* Slider styles */}
-            <style>{`input[type="range"].sky-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; } input[type="range"].sky-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: none; }`}</style>
-
-            {/* Sun Azimuth slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textPrimary }}>Sun Azimuth</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunAzimuth}°</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="360"
-                value={sunAzimuth}
-                onChange={(e) => setSunAzimuth(parseInt(e.target.value))}
-                className="sky-slider"
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Sun Elevation slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textPrimary }}>Sun Elevation</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunElevation}°</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="90"
-                value={sunElevation}
-                onChange={(e) => setSunElevation(parseInt(e.target.value))}
-                className="sky-slider"
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Polarizer Angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textPrimary }}>Polarizer Angle</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{polarizerAngle}°</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="180"
-                value={polarizerAngle}
-                onChange={(e) => setPolarizerAngle(parseInt(e.target.value))}
-                className="sky-slider"
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Toggle vectors button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <button
-                onClick={() => setShowVectors(!showVectors)}
-                style={{
-                  padding: '10px 20px',
+                {/* Formula display near the graphic */}
+                <div style={{
+                  background: colors.bgSecondary,
                   borderRadius: '8px',
-                  border: 'none',
-                  background: showVectors ? colors.accent : colors.bgSecondary,
-                  color: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                {showVectors ? 'Hide' : 'Show'} Polarization Vectors
-              </button>
-            </div>
+                  padding: '12px',
+                  marginBottom: '16px',
+                  border: `1px solid ${colors.accent}33`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    <div>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                        Polarization Formula:
+                      </div>
+                      <div style={{
+                        fontFamily: 'monospace',
+                        fontSize: isMobile ? '13px' : '15px',
+                        color: colors.accent,
+                        fontWeight: 600,
+                      }}>
+                        P = P_max x sin2(theta)
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>
+                        Real-time Calculation:
+                      </div>
+                      <div style={{ ...typo.body, color: colors.success, fontWeight: 700 }}>
+                        P_max = {maxPolarizationPercent}% at 90 deg
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Key observations */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                Key Observations:
-              </h4>
-              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                <li>The dashed circle shows the 90-degree zone from the sun (maximum polarization)</li>
-                <li>Vectors are longest and brightest in this zone</li>
-                <li>Rotating the polarizer changes which vectors appear bright</li>
-              </ul>
+                {/* Real-time calculated values */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px',
+                }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Sun Azimuth</div>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{sunAzimuth}°</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Sun Elevation</div>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{sunElevation}°</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Max Polarization</div>
+                    <div style={{ ...typo.h3, color: colors.success }}>{maxPolarizationPercent}%</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observation guidance */}
+              <div style={{
+                background: `${colors.warning}11`,
+                border: `1px solid ${colors.warning}33`,
+                borderRadius: '8px',
+                padding: '12px',
+              }}>
+                <div style={{ ...typo.small, color: colors.warning, fontWeight: 600, marginBottom: '6px' }}>
+                  What to Watch For:
+                </div>
+                <div style={{ ...typo.small, color: colors.textSecondary, lineHeight: '1.6' }}>
+                  Notice how the dashed circle (90 deg from sun) shows the zone of maximum polarization. Watch the polarization vectors become longest and brightest in this zone. Rotate the polarizer and observe which vectors stay visible - this simulates looking through polarized sunglasses!
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Slider styles */}
+                <style>{`input[type="range"].sky-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; } input[type="range"].sky-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: none; }`}</style>
+
+                {/* Sun Azimuth slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Sun Azimuth</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunAzimuth}°</span>
+                  </div>
+                  <input type="range" min="0" max="360" value={sunAzimuth} onChange={(e) => setSunAzimuth(parseInt(e.target.value))} className="sky-slider" style={sliderStyle} />
+                </div>
+
+                {/* Sun Elevation slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Sun Elevation</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunElevation}°</span>
+                  </div>
+                  <input type="range" min="5" max="90" value={sunElevation} onChange={(e) => setSunElevation(parseInt(e.target.value))} className="sky-slider" style={sliderStyle} />
+                </div>
+
+                {/* Polarizer Angle slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Polarizer Angle</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{polarizerAngle}°</span>
+                  </div>
+                  <input type="range" min="0" max="180" value={polarizerAngle} onChange={(e) => setPolarizerAngle(parseInt(e.target.value))} className="sky-slider" style={sliderStyle} />
+                </div>
+
+                {/* Toggle vectors button */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <button onClick={() => setShowVectors(!showVectors)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: showVectors ? colors.accent : colors.bgSecondary, color: 'white', cursor: 'pointer', width: '100%' }}>
+                    {showVectors ? 'Hide' : 'Show'} Polarization Vectors
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1405,40 +1357,26 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
             Adjust haze level to see how it destroys the polarization pattern
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SkyDomeVisualization currentHaze={twistHazeLevel} />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <SkyDomeVisualization currentHaze={twistHazeLevel} />
+                </div>
 
-            {/* Haze slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Haze / Pollution Level</span>
-                <span style={{ ...typo.small, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error, fontWeight: 600 }}>
-                  {twistHazeLevel}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={twistHazeLevel}
-                onChange={(e) => setTwistHazeLevel(parseInt(e.target.value))}
-                className="sky-slider"
-                style={sliderStyle}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.success }}>Clear Mountain</span>
-                <span style={{ ...typo.small, color: colors.error }}>Polluted City</span>
-              </div>
-            </div>
-
-            {/* Comparison stats - Before/After Display */}
+                {/* Comparison stats - Before/After Display */}
             <div style={{
               background: `${colors.sky}11`,
               border: `1px solid ${colors.sky}33`,
@@ -1481,21 +1419,53 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
               </div>
             </div>
           </div>
-
-          {twistHazeLevel > 50 && (
-            <div style={{
-              background: `${colors.error}22`,
-              border: `1px solid ${colors.error}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
-                High haze destroys the polarization pattern! Bees struggle to navigate on polluted days.
-              </p>
             </div>
-          )}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Haze slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Haze Level</span>
+                    <span style={{ ...typo.small, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error, fontWeight: 600 }}>
+                      {twistHazeLevel}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={twistHazeLevel}
+                    onChange={(e) => setTwistHazeLevel(parseInt(e.target.value))}
+                    className="sky-slider"
+                    style={sliderStyle}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.success }}>Clear</span>
+                    <span style={{ ...typo.small, color: colors.error }}>Polluted</span>
+                  </div>
+                </div>
+              </div>
+
+              {twistHazeLevel > 50 && (
+                <div style={{
+                  background: `${colors.error}22`,
+                  border: `1px solid ${colors.error}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginTop: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                    High haze destroys the polarization pattern! Bees struggle to navigate on polluted days.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}

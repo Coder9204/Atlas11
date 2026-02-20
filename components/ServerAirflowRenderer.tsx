@@ -1092,166 +1092,169 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             <span style={{ ...typo.small, color: colors.textSecondary, marginLeft: '12px', fontWeight: 400 }}>Heat removed = mass flow × specific heat × temperature difference</span>
           </div>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <DataCenterVisualization />
-            </div>
-
-            {/* Blanking panel toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '16px',
-              marginBottom: '24px',
-              padding: '16px',
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-            }}>
-              <span style={{ ...typo.body, color: colors.textSecondary }}>Blanking Panels:</span>
-              <button
-                onClick={() => setBlankingPanels(!blankingPanels)}
-                style={{
-                  width: '80px',
-                  height: '44px',
-                  borderRadius: '22px',
-                  border: 'none',
-                  background: blankingPanels ? colors.success : colors.error,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                  minHeight: '44px',
-                }}
-              >
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '4px',
-                  left: blankingPanels ? '40px' : '4px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{
-                ...typo.body,
-                color: blankingPanels ? colors.success : colors.error,
-                fontWeight: 600,
-                minWidth: '80px'
-              }}>
-                {blankingPanels ? 'Installed' : 'Missing!'}
-              </span>
-            </div>
-
-            {/* Server load slider with physics label */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
-                  Server Load: {serverLoad}%
-                </span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(serverLoad * 0.8).toFixed(0)} kW heat</span>
-              </div>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 400 }}>
-                Controls heat generation (thermal output) — higher load = more heat to remove via airflow
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={serverLoad}
-                onChange={(e) => setServerLoad(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  touchAction: 'none',
-                }}
-                aria-label="Server Load slider"
-              />
-            </div>
-
-            {/* Temperature display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '20px', width: '100%', alignItems: isMobile ? 'center' : 'flex-start' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
+                background: colors.bgCard,
+                borderRadius: '16px',
                 padding: '16px',
-                textAlign: 'center',
+                marginBottom: '12px',
               }}>
-                <div style={{ ...typo.h3, color: colors.cold }}>{metrics.coldAisleTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Cold Aisle</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.hot }}>{metrics.hotAisleTemp.toFixed(1)}°C</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Hot Aisle</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: metrics.recirculationPercent > 20 ? colors.error : colors.success
-                }}>
-                  {metrics.recirculationPercent.toFixed(0)}%
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <DataCenterVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Recirculation</div>
+              </div>
+
+              {/* Discovery prompt */}
+              {!blankingPanels && (
+                <div style={{
+                  background: `${colors.error}22`,
+                  border: `1px solid ${colors.error}`,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                    Hot air is recirculating! Cold aisle +{(metrics.coldAisleTemp - 18).toFixed(1)}°C
+                  </p>
+                </div>
+              )}
+
+              {blankingPanels && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                    Good airflow! Blanking panels prevent recirculation.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Blanking panel toggle */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px',
+                padding: '12px',
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+              }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Blanking Panels:</span>
+                <button
+                  onClick={() => setBlankingPanels(!blankingPanels)}
+                  style={{
+                    width: '64px',
+                    height: '36px',
+                    borderRadius: '18px',
+                    border: 'none',
+                    background: blankingPanels ? colors.success : colors.error,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.3s',
+                    minHeight: '36px',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    position: 'absolute',
+                    top: '4px',
+                    left: blankingPanels ? '32px' : '4px',
+                    transition: 'left 0.3s',
+                  }} />
+                </button>
+                <span style={{
+                  ...typo.small,
+                  color: blankingPanels ? colors.success : colors.error,
+                  fontWeight: 600,
+                }}>
+                  {blankingPanels ? 'ON' : 'OFF'}
+                </span>
+              </div>
+
+              {/* Server load slider with physics label */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
+                    Server Load: {serverLoad}%
+                  </span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{(serverLoad * 0.8).toFixed(0)} kW</span>
+                </div>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 400, fontSize: '12px' }}>
+                  Higher load = more heat to remove via airflow
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={serverLoad}
+                  onChange={(e) => setServerLoad(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    touchAction: 'none',
+                  }}
+                  aria-label="Server Load slider"
+                />
+              </div>
+
+              {/* Temperature display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : '1fr',
+                gap: '8px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.cold }}>{metrics.coldAisleTemp.toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Cold Aisle</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.hot }}>{metrics.hotAisleTemp.toFixed(1)}°C</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Hot Aisle</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '10px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    ...typo.h3,
+                    color: metrics.recirculationPercent > 20 ? colors.error : colors.success
+                  }}>
+                    {metrics.recirculationPercent.toFixed(0)}%
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Recirculation</div>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Discovery prompt */}
-          {!blankingPanels && (
-            <div style={{
-              background: `${colors.error}22`,
-              border: `1px solid ${colors.error}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
-                ⚠️ Hot air is recirculating! Cold aisle temperature increased by {(metrics.coldAisleTemp - 18).toFixed(1)}°C
-              </p>
-            </div>
-          )}
-
-          {blankingPanels && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                ✓ Good airflow! Blanking panels prevent hot air recirculation.
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}

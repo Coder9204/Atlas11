@@ -706,6 +706,15 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           Spinning Wheel Experiment
         </h2>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Interactive visualization */}
         <div
           style={{
@@ -714,7 +723,6 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             padding: '16px',
             marginBottom: '24px',
             width: '100%',
-            maxWidth: '576px',
             border: `1px solid ${colors.border}`
           }}
         >
@@ -835,9 +843,11 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             <span style={{ color: colors.textMuted, fontSize: '12px' }}>Angular Momentum (L)</span>
           </div>
         </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', width: '100%', maxWidth: '576px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px', width: '100%' }}>
           <button
             onClick={() => {
               setIsSpinning(!isSpinning);
@@ -895,7 +905,6 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           padding: '16px',
           marginBottom: '24px',
           width: '100%',
-          maxWidth: '576px',
           backgroundColor: colors.cardBg,
           border: `1px solid ${colors.border}`
         }}>
@@ -912,13 +921,14 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           padding: '16px',
           marginBottom: '24px',
           width: '100%',
-          maxWidth: '576px',
           backgroundColor: colors.cardBg,
           border: `1px solid ${colors.border}`
         }}>
           <p style={{ fontSize: typo.body, color: colors.textMuted, textAlign: 'center', lineHeight: '1.6' }}>
             When you increase the spin rate, higher angular momentum causes more stability because resistance to tilting grows proportionally. <strong style={{ color: colors.primaryLight }}>Angular momentum</strong> is a measure of rotational motion, calculated as L = I x omega where I is the moment of inertia and omega is the angular velocity. This principle is important in real-world applications like spacecraft attitude control and bicycle stability. Engineers design systems that rely on this relationship between spin and stability.
           </p>
+        </div>
+        </div>
         </div>
 
         <button
@@ -1125,8 +1135,17 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           Gyroscopic Precession
         </h2>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div
-          className="rounded-2xl p-4 mb-6 w-full max-w-xl"
+          className="rounded-2xl p-4 mb-6 w-full"
           style={{ backgroundColor: colors.cardBg }}
         >
           <svg viewBox="0 0 400 280" className="w-full h-64">
@@ -1191,9 +1210,11 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             </text>
           </svg>
         </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Explanation cards */}
-        <div className="flex gap-4 mb-6 w-full max-w-xl flex-wrap justify-center">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           <div className="rounded-lg px-4 py-2 border" style={{ backgroundColor: `${colors.cardBg}80`, borderColor: colors.accent }}>
             <p style={{ fontSize: typo.label, color: colors.accent }} className="font-semibold">Angular Momentum L</p>
             <p style={{ fontSize: typo.small, color: colors.textMuted }}>Points perpendicular to disc</p>
@@ -1208,10 +1229,12 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="rounded-xl p-4 mb-6 w-full max-w-xl" style={{ backgroundColor: `${colors.cardBg}80` }}>
+        <div className="rounded-xl p-4 mb-6 w-full" style={{ backgroundColor: `${colors.cardBg}80` }}>
           <p style={{ fontSize: typo.body, color: colors.textMuted }} className="text-center">
             Instead of falling, the gyroscope <strong style={{ color: colors.accent }}>precesses</strong> - rotating around the vertical axis. The angular momentum vector traces a cone!
           </p>
+        </div>
+        </div>
         </div>
 
         <button

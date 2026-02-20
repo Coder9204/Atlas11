@@ -340,6 +340,14 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   const [viewedApps, setViewedApps] = useState<Set<number>>(new Set([0]));
   const [flowVelocity, setFlowVelocity] = useState(50);
   const [dampingLevel, setDampingLevel] = useState(50);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   // Emit game events
   const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
@@ -968,6 +976,15 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 </p>
               </div>
 
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               {/* SVG Visualization */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
                 {renderPressureSVG()}
@@ -987,11 +1004,13 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                   This relationship means that when you increase velocity, the resulting pressure spike increases proportionally.
                 </p>
               </div>
+              </div>
 
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Slider Control */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500 }}>
-                  Flow Velocity: {flowVelocity}% - Adjust to control water speed
+                  Flow Velocity: {flowVelocity}%
                 </label>
                 <input
                   type="range"
@@ -1010,26 +1029,26 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                   aria-label="Flow velocity control"
                 />
                 <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
-                  {flowVelocity < 40 ? 'Low velocity: Mild water hammer effect expected' :
-                   flowVelocity < 70 ? 'Medium velocity: Moderate pressure spike expected' :
-                   'High velocity: Strong water hammer effect expected!'}
+                  {flowVelocity < 40 ? 'Low velocity: Mild effect' :
+                   flowVelocity < 70 ? 'Medium velocity: Moderate spike' :
+                   'High velocity: Strong effect!'}
                 </p>
               </div>
 
               {/* Real-world relevance */}
               <div style={{
-                marginTop: '20px',
                 padding: '16px',
                 background: colors.bgCardLight,
                 borderRadius: '12px',
                 borderLeft: `4px solid ${colors.accent}`
               }}>
-                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>Real-World Relevance</h4>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, fontWeight: 400 }}>
-                  This same principle affects plumbing in homes and buildings, hydraulic systems in heavy machinery,
-                  oil pipelines spanning thousands of miles, and even blood flow in your arteries.
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>Real-World</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, fontWeight: 400 }}>
+                  This same principle affects plumbing, hydraulic systems, oil pipelines, and even blood flow.
                   Engineers must account for fluid inertia to prevent damage and ensure safety.
                 </p>
+              </div>
+              </div>
               </div>
             </div>
           </div>
@@ -1298,11 +1317,22 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                 Watch how the oscillation changes with different damping values.
               </p>
 
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               {/* SVG Visualization */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
                 {renderDampingSVG()}
               </div>
+              </div>
 
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500 }}>
                   Damping Level: {dampingLevel}%
@@ -1330,6 +1360,8 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
                   {dampingLevel >= 30 && dampingLevel < 70 && 'Optimal damping: Fluid inertia absorbs bumps smoothly, providing a comfortable ride.'}
                   {dampingLevel >= 70 && 'High damping: Too much fluid resistance causes a stiff, harsh ride that transmits vibrations.'}
                 </p>
+              </div>
+              </div>
               </div>
             </div>
           </div>

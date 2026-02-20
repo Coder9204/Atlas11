@@ -297,6 +297,7 @@ const typo = {
 // ============================================================================
 const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhase }) => {
   const [phase, setPhase] = useState<Phase>('hook');
+  const [isMobile, setIsMobile] = useState(false);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -330,6 +331,8 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase]);
+
+  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
 
   // Initialize molecules
   useEffect(() => {
@@ -1006,88 +1009,102 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
             Adjust the volume and observe how pressure changes - this demonstrates why compressing gases takes work and releases heat.
           </p>
 
-          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
-            <div style={{ height: '220px', marginBottom: '16px' }}>
-              {renderPistonSVG()}
-            </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ ...cardStyle, width: '100%', marginBottom: '16px' }}>
+                <div style={{ height: '220px', marginBottom: '16px' }}>
+                  {renderPistonSVG()}
+                </div>
 
-            {/* Legend Section */}
-            <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '12px', marginTop: '8px' }}>
-              <p style={{ ...typo.label, color: colors.textMuted, marginBottom: '8px' }}>LEGEND</p>
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.accent }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Gas Molecules</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '16px', height: '8px', background: colors.borderLight, borderRadius: '2px' }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Piston</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '16px', height: '12px', border: `2px solid ${colors.borderLight}`, borderRadius: '2px' }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cylinder</span>
+                {/* Legend Section */}
+                <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '12px', marginTop: '8px' }}>
+                  <p style={{ ...typo.label, color: colors.textMuted, marginBottom: '8px' }}>LEGEND</p>
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: colors.accent }} />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Gas Molecules</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '16px', height: '8px', background: colors.borderLight, borderRadius: '2px' }} />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Piston</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '16px', height: '12px', border: `2px solid ${colors.borderLight}`, borderRadius: '2px' }} />
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Cylinder</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Slider control */}
-          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <label style={{ ...typo.body, color: colors.textPrimary }}>Volume</label>
-              <span style={{ ...typo.body, color: colors.accent, fontWeight: 700 }}>{volume}%</span>
-            </div>
-            <input
-              type="range"
-              min="25"
-              max="200"
-              value={volume}
-              onChange={(e) => setVolume(parseInt(e.target.value))}
-              style={{
-                width: '100%',
-                height: '20px',
-                touchAction: 'pan-y',
-                WebkitAppearance: 'none',
-                accentColor: '#3b82f6',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              <span style={{ ...typo.label, color: colors.textMuted }}>Compressed (25%)</span>
-              <span style={{ ...typo.label, color: colors.textMuted }}>Expanded (200%)</span>
-            </div>
-          </div>
+              {/* PV display */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
+                <div style={{ ...cardStyle, textAlign: 'center' }}>
+                  <div style={{ ...typo.h2, color: colors.accent }}>{pressure.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Pressure (atm)</div>
+                </div>
+                <div style={{ ...cardStyle, textAlign: 'center' }}>
+                  <div style={{ ...typo.h2, color: colors.accentAlt }}>{volume}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
+                </div>
+              </div>
 
-          {/* Cause-Effect Explanation */}
-          <div style={{ ...cardStyle, width: '100%', marginBottom: '16px', background: `${colors.accent}10` }}>
-            <p style={{ ...typo.body, color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>
-              {volume < 100 ? 'When you decrease the volume...' : volume > 100 ? 'When you increase the volume...' : 'At the baseline...'}
-            </p>
-            <p style={{ ...typo.small, color: colors.textSecondary }}>
-              {volume < 100
-                ? `The pressure increases to ${pressure.toFixed(2)} atm because the same number of molecules now collide with a smaller surface area more frequently. This causes higher pressure.`
-                : volume > 100
-                ? `The pressure decreases to ${pressure.toFixed(2)} atm because molecules now have more space to move, resulting in fewer collisions per unit area. This leads to lower pressure.`
-                : `The gas is at equilibrium with P = 1 atm and V = 100%. As you adjust the volume, the pressure will change inversely to maintain PV = constant.`
-              }
-            </p>
-          </div>
-
-          {/* PV display */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
-            <div style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ ...typo.h2, color: colors.accent }}>{pressure.toFixed(2)}</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Pressure (atm)</div>
+              {/* PV constant */}
+              <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center' }}>
+                <div style={{ ...typo.h1, color: colors.success }}>{(pressure * volume).toFixed(0)}</div>
+                <div style={{ ...typo.small, color: colors.success }}>P x V = Constant! (Boyle's Law)</div>
+              </div>
             </div>
-            <div style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ ...typo.h2, color: colors.accentAlt }}>{volume}</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
-            </div>
-          </div>
 
-          {/* PV constant */}
-          <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ ...typo.h1, color: colors.success }}>{(pressure * volume).toFixed(0)}</div>
-            <div style={{ ...typo.small, color: colors.success }}>P x V = Constant! (Boyle's Law)</div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Slider control */}
+              <div style={{ ...cardStyle, width: '100%', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ ...typo.body, color: colors.textPrimary }}>Volume</label>
+                  <span style={{ ...typo.body, color: colors.accent, fontWeight: 700 }}>{volume}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="25"
+                  max="200"
+                  value={volume}
+                  onChange={(e) => setVolume(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                  <span style={{ ...typo.label, color: colors.textMuted }}>Compressed (25%)</span>
+                  <span style={{ ...typo.label, color: colors.textMuted }}>Expanded (200%)</span>
+                </div>
+              </div>
+
+              {/* Cause-Effect Explanation */}
+              <div style={{ ...cardStyle, width: '100%', background: `${colors.accent}10` }}>
+                <p style={{ ...typo.body, color: '#ffffff', fontWeight: 600, marginBottom: '8px' }}>
+                  {volume < 100 ? 'When you decrease the volume...' : volume > 100 ? 'When you increase the volume...' : 'At the baseline...'}
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>
+                  {volume < 100
+                    ? `The pressure increases to ${pressure.toFixed(2)} atm because the same number of molecules now collide with a smaller surface area more frequently. This causes higher pressure.`
+                    : volume > 100
+                    ? `The pressure decreases to ${pressure.toFixed(2)} atm because molecules now have more space to move, resulting in fewer collisions per unit area. This leads to lower pressure.`
+                    : `The gas is at equilibrium with P = 1 atm and V = 100%. As you adjust the volume, the pressure will change inversely to maintain PV = constant.`
+                  }
+                </p>
+              </div>
+            </div>
           </div>
 
           <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
@@ -1290,54 +1307,68 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
             Adjust temperature and watch the balloon expand or contract - this explains how hot air balloons float!
           </p>
 
-          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
-            <div style={{ height: '220px', marginBottom: '16px' }}>
-              {renderBalloonSVG()}
-            </div>
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ ...cardStyle, width: '100%', marginBottom: '16px' }}>
+                <div style={{ height: '220px', marginBottom: '16px' }}>
+                  {renderBalloonSVG()}
+                </div>
+              </div>
 
-          {/* Temperature slider */}
-          <div style={{ ...cardStyle, width: '100%', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <label style={{ ...typo.body, color: colors.textPrimary }}>Temperature</label>
-              <span style={{ ...typo.body, color: colors.warning, fontWeight: 700 }}>{twistTemp} K</span>
-            </div>
-            <input
-              type="range"
-              min="200"
-              max="500"
-              value={twistTemp}
-              onChange={(e) => setTwistTemp(parseInt(e.target.value))}
-              style={{
-                width: '100%',
-                height: '20px',
-                touchAction: 'pan-y',
-                WebkitAppearance: 'none',
-                accentColor: '#3b82f6',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              <span style={{ ...typo.label, color: colors.textMuted }}>Cold (200 K / -73°C)</span>
-              <span style={{ ...typo.label, color: colors.textMuted }}>Hot (500 K / 227°C)</span>
-            </div>
-          </div>
+              {/* T and V display */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
+                <div style={{ ...cardStyle, textAlign: 'center' }}>
+                  <div style={{ ...typo.h2, color: colors.warning }}>{twistTemp}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Temperature (K)</div>
+                </div>
+                <div style={{ ...cardStyle, textAlign: 'center' }}>
+                  <div style={{ ...typo.h2, color: colors.accentAlt }}>{twistVolume.toFixed(0)}</div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
+                </div>
+              </div>
 
-          {/* T and V display */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
-            <div style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ ...typo.h2, color: colors.warning }}>{twistTemp}</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Temperature (K)</div>
+              {/* V/T constant */}
+              <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center' }}>
+                <div style={{ ...typo.h1, color: colors.success }}>{(twistVolume / twistTemp).toFixed(3)}</div>
+                <div style={{ ...typo.small, color: colors.success }}>V / T = Constant! (Charles's Law)</div>
+              </div>
             </div>
-            <div style={{ ...cardStyle, textAlign: 'center' }}>
-              <div style={{ ...typo.h2, color: colors.accentAlt }}>{twistVolume.toFixed(0)}</div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>Volume (%)</div>
-            </div>
-          </div>
 
-          {/* V/T constant */}
-          <div style={{ ...cardStyle, width: '100%', background: `${colors.success}15`, borderColor: colors.success, textAlign: 'center', marginBottom: '24px' }}>
-            <div style={{ ...typo.h1, color: colors.success }}>{(twistVolume / twistTemp).toFixed(3)}</div>
-            <div style={{ ...typo.small, color: colors.success }}>V / T = Constant! (Charles's Law)</div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{ ...cardStyle, width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ ...typo.body, color: colors.textPrimary }}>Temperature</label>
+                  <span style={{ ...typo.body, color: colors.warning, fontWeight: 700 }}>{twistTemp} K</span>
+                </div>
+                <input
+                  type="range"
+                  min="200"
+                  max="500"
+                  value={twistTemp}
+                  onChange={(e) => setTwistTemp(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                  <span style={{ ...typo.label, color: colors.textMuted }}>Cold (200 K / -73°C)</span>
+                  <span style={{ ...typo.label, color: colors.textMuted }}>Hot (500 K / 227°C)</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>

@@ -2016,128 +2016,142 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
               </p>
             </div>
 
-            {/* Interactive Visualization */}
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl" style={{ maxHeight: '50vh', overflow: 'hidden' }}>
-              {renderMagneticField(magnets, showFieldLines, showCompassGrid, true)}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              maxWidth: '672px',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '16px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Interactive Visualization */}
+                <div className="bg-slate-800/50 rounded-2xl p-4 w-full" style={{ maxHeight: '50vh', overflow: 'hidden' }}>
+                  {renderMagneticField(magnets, showFieldLines, showCompassGrid, true)}
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Control Panel */}
+                <div className="bg-slate-800/60 rounded-2xl p-4 w-full">
+                  <h3 className="text-lg font-bold text-white mb-4">Interactive Controls</h3>
+
+                  {/* Magnet Strength Slider */}
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Magnet Strength</label>
+                      <span className="text-cyan-400 text-sm font-bold">{magnetStrength}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="200"
+                      value={magnetStrength}
+                      onChange={(e) => setMagnetStrength(Number(e.target.value))}
+                      className="w-full rounded-lg appearance-none cursor-pointer"
+                      style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
+                    />
+                    <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
+                      <span>Weak</span>
+                      <span>Strong</span>
+                    </div>
+                  </div>
+
+                  {/* Distance from Magnet Slider */}
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Probe Distance</label>
+                      <span className="text-cyan-400 text-sm font-bold">{probeDistance.toFixed(0)} px</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="30"
+                      max="150"
+                      value={probeDistance}
+                      onChange={(e) => setProbeDistance(Number(e.target.value))}
+                      className="w-full rounded-lg appearance-none cursor-pointer"
+                      style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
+                    />
+                    <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
+                      <span>Close</span>
+                      <span>Far</span>
+                    </div>
+                  </div>
+
+                  {/* Field Strength Display */}
+                  <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span style={{ color: colors.textSecondary }} className="text-sm">Field at Probe (B):</span>
+                      <span className="text-yellow-400 font-bold">{fieldStrengthAtProbe.toFixed(2)} units</span>
+                    </div>
+                    <div className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                      B = mu_0 * m / (4 * pi * r^3) - Dipole field equation
+                    </div>
+                  </div>
+
+                  {/* Visualization Toggle Buttons */}
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    <button
+                      onClick={() => setShowFieldLines(!showFieldLines)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showFieldLines ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      Field Lines
+                    </button>
+                    <button
+                      onClick={() => setShowCompassGrid(!showCompassGrid)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showCompassGrid ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      Compass Grid
+                    </button>
+                    <button
+                      onClick={() => setShowHeatMap(!showHeatMap)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showHeatMap ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      Heat Map
+                    </button>
+                    <button
+                      onClick={() => addMagnet()}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className="px-4 py-2 rounded-lg font-bold text-sm bg-slate-600 text-slate-300 hover:bg-slate-500 disabled:opacity-50"
+                      disabled={magnets.length >= 3}
+                    >
+                      + Add Magnet
+                    </button>
+                  </div>
+
+                  {/* Magnet Controls when selected */}
+                  {selectedMagnet !== null && (
+                    <div className="flex justify-center gap-3 mb-4 flex-wrap">
+                      <button
+                        onClick={() => rotateMagnet(selectedMagnet, -30)}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
+                      >
+                        Rotate Left
+                      </button>
+                      <button
+                        onClick={() => rotateMagnet(selectedMagnet, 30)}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
+                      >
+                        Rotate Right
+                      </button>
+                      <button
+                        onClick={() => { setMagnets(prev => prev.filter((_, i) => i !== selectedMagnet)); setSelectedMagnet(null); }}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-
-            {/* Control Panel */}
-            <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-              <h3 className="text-lg font-bold text-white mb-4">Interactive Controls</h3>
-
-              {/* Magnet Strength Slider */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Magnet Strength</label>
-                  <span className="text-cyan-400 text-sm font-bold">{magnetStrength}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="200"
-                  value={magnetStrength}
-                  onChange={(e) => setMagnetStrength(Number(e.target.value))}
-                  className="w-full rounded-lg appearance-none cursor-pointer"
-                  style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
-                />
-                <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  <span>Weak</span>
-                  <span>Strong</span>
-                </div>
-              </div>
-
-              {/* Distance from Magnet Slider */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <label style={{ color: colors.textSecondary }} className="text-sm font-medium">Probe Distance</label>
-                  <span className="text-cyan-400 text-sm font-bold">{probeDistance.toFixed(0)} px</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="150"
-                  value={probeDistance}
-                  onChange={(e) => setProbeDistance(Number(e.target.value))}
-                  className="w-full rounded-lg appearance-none cursor-pointer"
-                  style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
-                />
-                <div className="flex justify-between text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  <span>Close</span>
-                  <span>Far</span>
-                </div>
-              </div>
-
-              {/* Field Strength Display */}
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
-                <div className="flex justify-between items-center">
-                  <span style={{ color: colors.textSecondary }} className="text-sm">Field at Probe (B):</span>
-                  <span className="text-yellow-400 font-bold">{fieldStrengthAtProbe.toFixed(2)} units</span>
-                </div>
-                <div className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  B = mu_0 * m / (4 * pi * r^3) - Dipole field equation
-                </div>
-              </div>
-            </div>
-
-            {/* Visualization Toggle Buttons */}
-            <div className="flex flex-wrap justify-center gap-2 mb-4">
-              <button
-                onClick={() => setShowFieldLines(!showFieldLines)}
-                style={{ zIndex: 10, minHeight: '44px' }}
-                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showFieldLines ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-              >
-                Field Lines
-              </button>
-              <button
-                onClick={() => setShowCompassGrid(!showCompassGrid)}
-                style={{ zIndex: 10, minHeight: '44px' }}
-                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showCompassGrid ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-              >
-                Compass Grid
-              </button>
-              <button
-                onClick={() => setShowHeatMap(!showHeatMap)}
-                style={{ zIndex: 10, minHeight: '44px' }}
-                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showHeatMap ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-              >
-                Heat Map
-              </button>
-              <button
-                onClick={() => addMagnet()}
-                style={{ zIndex: 10, minHeight: '44px' }}
-                className="px-4 py-2 rounded-lg font-bold text-sm bg-slate-600 text-slate-300 hover:bg-slate-500 disabled:opacity-50"
-                disabled={magnets.length >= 3}
-              >
-                + Add Magnet
-              </button>
-            </div>
-
-            {/* Magnet Controls when selected */}
-            {selectedMagnet !== null && (
-              <div className="flex justify-center gap-3 mb-4 flex-wrap">
-                <button
-                  onClick={() => rotateMagnet(selectedMagnet, -30)}
-                  style={{ zIndex: 10, minHeight: '44px' }}
-                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
-                >
-                  Rotate Left
-                </button>
-                <button
-                  onClick={() => rotateMagnet(selectedMagnet, 30)}
-                  style={{ zIndex: 10, minHeight: '44px' }}
-                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
-                >
-                  Rotate Right
-                </button>
-                <button
-                  onClick={() => { setMagnets(prev => prev.filter((_, i) => i !== selectedMagnet)); setSelectedMagnet(null); }}
-                  style={{ zIndex: 10, minHeight: '44px' }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
-                >
-                  Remove
-                </button>
-              </div>
-            )}
 
             {/* Comparison panel: before vs after */}
             <div style={{ maxWidth: '672px', width: '100%', marginBottom: '16px' }}>
@@ -2363,83 +2377,109 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
 
             {/* Two Magnets Mode */}
             {twistMode === 'two_magnets' && (
-              <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-                <h3 className="text-lg font-bold text-white mb-3 text-center">Magnet Interaction</h3>
-                {renderTwoMagnetField()}
-
-                {/* Polarity Control */}
-                <div className="mt-4 bg-slate-900/50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-slate-300 text-sm font-medium">Second Magnet Orientation:</span>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                maxWidth: '672px',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '16px',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div className="bg-slate-800/50 rounded-2xl p-4 w-full">
+                    <h3 className="text-lg font-bold text-white mb-3 text-center">Magnet Interaction</h3>
+                    {renderTwoMagnetField()}
                   </div>
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => setSecondMagnetPolarity('attract')}
-                      style={{ zIndex: 10, minHeight: '44px' }}
-                      className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'attract' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-                    >
-                      Attract (N-S)
-                    </button>
-                    <button
-                      onClick={() => setSecondMagnetPolarity('repel')}
-                      style={{ zIndex: 10, minHeight: '44px' }}
-                      className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'repel' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-                    >
-                      Repel (N-N)
-                    </button>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Polarity Control */}
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-slate-300 text-sm font-medium">Second Magnet Orientation:</span>
+                    </div>
+                    <div className="flex gap-3 justify-center flex-col">
+                      <button
+                        onClick={() => setSecondMagnetPolarity('attract')}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'attract' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                      >
+                        Attract (N-S)
+                      </button>
+                      <button
+                        onClick={() => setSecondMagnetPolarity('repel')}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'repel' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                      >
+                        Repel (N-N)
+                      </button>
+                    </div>
+                    <p className="text-slate-400 text-sm text-center mt-3">
+                      {secondMagnetPolarity === 'attract'
+                        ? 'Field lines connect between opposite poles - attraction!'
+                        : 'Field lines push apart between like poles - repulsion!'}
+                    </p>
                   </div>
-                  <p className="text-slate-400 text-sm text-center mt-3">
-                    {secondMagnetPolarity === 'attract'
-                      ? 'Field lines connect between opposite poles - attraction!'
-                      : 'Field lines push apart between like poles - repulsion!'}
-                  </p>
                 </div>
               </div>
             )}
 
             {/* Earth's Field Mode */}
             {twistMode === 'earth' && (
-              <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-                <h3 className="text-lg font-bold text-white mb-3 text-center">Earth&apos;s Magnetic Field</h3>
-                {renderEarthField()}
-
-                {/* Earth Field Controls */}
-                <div className="mt-4 space-y-4">
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={() => setShowEarthField(!showEarthField)}
-                      style={{ zIndex: 10, minHeight: '44px' }}
-                      className={`px-6 py-3 rounded-lg font-bold transition-all ${showEarthField ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
-                    >
-                      {showEarthField ? 'Hide Field Lines' : 'Show Field Lines'}
-                    </button>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                maxWidth: '672px',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '16px',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div className="bg-slate-800/50 rounded-2xl p-4 w-full">
+                    <h3 className="text-lg font-bold text-white mb-3 text-center">Earth&apos;s Magnetic Field</h3>
+                    {renderEarthField()}
                   </div>
-
-                  {/* Intensity Slider */}
-                  <div className="bg-slate-900/50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-slate-300 text-sm font-medium">Field Intensity</label>
-                      <span className="text-cyan-400 text-sm font-bold">{earthFieldIntensity}%</span>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Earth Field Controls */}
+                  <div className="space-y-4">
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => setShowEarthField(!showEarthField)}
+                        style={{ zIndex: 10, minHeight: '44px' }}
+                        className={`px-6 py-3 rounded-lg font-bold transition-all ${showEarthField ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                      >
+                        {showEarthField ? 'Hide Field Lines' : 'Show Field Lines'}
+                      </button>
                     </div>
-                    <input
-                      type="range"
-                      min="10"
-                      max="100"
-                      value={earthFieldIntensity}
-                      onChange={(e) => setEarthFieldIntensity(Number(e.target.value))}
-                      className="w-full rounded-lg appearance-none cursor-pointer"
-                      style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
-                    />
-                    <p className="text-slate-500 text-xs mt-2 text-center">
-                      Earth&apos;s field varies from ~25 uT (equator) to ~65 uT (poles)
-                    </p>
-                  </div>
 
-                  <div className="bg-slate-700/50 rounded-lg p-3">
-                    <p className="text-slate-300 text-center text-sm">
-                      Earth acts like a giant bar magnet! Magnetic poles are
-                      <span className="text-yellow-400 font-bold"> offset from geographic poles</span>.
-                    </p>
+                    {/* Intensity Slider */}
+                    <div className="bg-slate-900/50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-slate-300 text-sm font-medium">Field Intensity</label>
+                        <span className="text-cyan-400 text-sm font-bold">{earthFieldIntensity}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="10"
+                        max="100"
+                        value={earthFieldIntensity}
+                        onChange={(e) => setEarthFieldIntensity(Number(e.target.value))}
+                        className="w-full rounded-lg appearance-none cursor-pointer"
+                        style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
+                      />
+                      <p className="text-slate-500 text-xs mt-2 text-center">
+                        Earth&apos;s field varies from ~25 uT (equator) to ~65 uT (poles)
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-700/50 rounded-lg p-3">
+                      <p className="text-slate-300 text-center text-sm">
+                        Earth acts like a giant bar magnet! Magnetic poles are
+                        <span className="text-yellow-400 font-bold"> offset from geographic poles</span>.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2447,61 +2487,74 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
 
             {/* Electromagnet Mode */}
             {twistMode === 'electromagnet' && (
-              <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-                <h3 className="text-lg font-bold text-white mb-3 text-center">Electromagnet</h3>
-                {renderElectromagnet()}
-
-                {/* Current Control */}
-                <div className="mt-4 bg-slate-900/50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-slate-300 text-sm font-medium">Electric Current</label>
-                    <span className="text-yellow-400 text-sm font-bold">{electromagnetCurrent}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={electromagnetCurrent}
-                    onChange={(e) => setElectromagnetCurrent(Number(e.target.value))}
-                    className="w-full rounded-lg appearance-none cursor-pointer"
-                    style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>Off</span>
-                    <span>Maximum</span>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                maxWidth: '672px',
+                alignItems: isMobile ? 'center' : 'flex-start',
+                marginBottom: '16px',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div className="bg-slate-800/50 rounded-2xl p-4 w-full">
+                    <h3 className="text-lg font-bold text-white mb-3 text-center">Electromagnet</h3>
+                    {renderElectromagnet()}
                   </div>
                 </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Current Control */}
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-slate-300 text-sm font-medium">Electric Current</label>
+                      <span className="text-yellow-400 text-sm font-bold">{electromagnetCurrent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={electromagnetCurrent}
+                      onChange={(e) => setElectromagnetCurrent(Number(e.target.value))}
+                      className="w-full rounded-lg appearance-none cursor-pointer"
+                      style={{ zIndex: 10, touchAction: 'pan-y', WebkitAppearance: 'none', MozAppearance: 'none', width: '100%', height: '20px', accentColor: '#3b82f6' }}
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>Off</span>
+                      <span>Maximum</span>
+                    </div>
+                  </div>
 
-                {/* Quick Controls */}
-                <div className="flex justify-center gap-3 mt-4">
-                  <button
-                    onClick={() => setElectromagnetCurrent(0)}
-                    style={{ zIndex: 10, minHeight: '44px' }}
-                    className="px-4 py-2 bg-slate-600 text-slate-300 rounded-lg hover:bg-slate-500 transition-all"
-                  >
-                    Turn Off
-                  </button>
-                  <button
-                    onClick={() => setElectromagnetCurrent(50)}
-                    style={{ zIndex: 10, minHeight: '44px' }}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-all"
-                  >
-                    Medium
-                  </button>
-                  <button
-                    onClick={() => setElectromagnetCurrent(100)}
-                    style={{ zIndex: 10, minHeight: '44px' }}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-all"
-                  >
-                    Maximum
-                  </button>
-                </div>
+                  {/* Quick Controls */}
+                  <div className="flex flex-col gap-3 mt-4">
+                    <button
+                      onClick={() => setElectromagnetCurrent(0)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className="px-4 py-2 bg-slate-600 text-slate-300 rounded-lg hover:bg-slate-500 transition-all"
+                    >
+                      Turn Off
+                    </button>
+                    <button
+                      onClick={() => setElectromagnetCurrent(50)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-all"
+                    >
+                      Medium
+                    </button>
+                    <button
+                      onClick={() => setElectromagnetCurrent(100)}
+                      style={{ zIndex: 10, minHeight: '44px' }}
+                      className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-all"
+                    >
+                      Maximum
+                    </button>
+                  </div>
 
-                <div className="bg-slate-700/50 rounded-lg p-3 mt-4">
-                  <p className="text-slate-300 text-center text-sm">
-                    <strong className="text-yellow-400">Key Principle:</strong> Magnetic field strength (B) is
-                    proportional to current (I). No current = no magnetism!
-                  </p>
+                  <div className="bg-slate-700/50 rounded-lg p-3 mt-4">
+                    <p className="text-slate-300 text-center text-sm">
+                      <strong className="text-yellow-400">Key Principle:</strong> Magnetic field strength (B) is
+                      proportional to current (I). No current = no magnetism!
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

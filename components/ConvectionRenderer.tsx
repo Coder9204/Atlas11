@@ -1258,29 +1258,39 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <p style={{ color: '#e2e8f0', fontSize: '14px' }}>Notice how particles change color (temperature) as they move through the convection cycle. This demonstrates heat transfer through fluid motion.</p>
       </div>
 
-      {/* Simulation */}
-      <div style={{ background: 'linear-gradient(to bottom, #1f2937, #111827)', borderRadius: '16px', padding: '16px', border: '1px solid #374151' }}>
-        {renderConvectionTank()}
-      </div>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Simulation */}
+          <div style={{ background: 'linear-gradient(to bottom, #1f2937, #111827)', borderRadius: '16px', padding: '16px', border: '1px solid #374151' }}>
+            {renderConvectionTank()}
+          </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 text-center" style={{ marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(127, 29, 29, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Heat Power</p>
+              <p className="font-bold text-red-400">{heatIntensity}%</p>
+            </div>
+            <div style={{ background: 'rgba(124, 45, 18, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+              <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Hot Particles</p>
+              <p className="font-bold text-orange-400">{particles.filter(p => p.temp > 0.6).length}</p>
+            </div>
+            <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Cold Particles</p>
+              <p className="font-bold text-blue-400">{particles.filter(p => p.temp < 0.4).length}</p>
+            </div>
+          </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div style={{ background: 'rgba(127, 29, 29, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Heat Power</p>
-          <p className="font-bold text-red-400">{heatIntensity}%</p>
-        </div>
-        <div style={{ background: 'rgba(124, 45, 18, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
-          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Hot Particles</p>
-          <p className="font-bold text-orange-400">{particles.filter(p => p.temp > 0.6).length}</p>
-        </div>
-        <div style={{ background: 'rgba(30, 58, 138, 0.3)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <p style={{ fontSize: '12px', color: '#e2e8f0' }}>Cold Particles</p>
-          <p className="font-bold text-blue-400">{particles.filter(p => p.temp < 0.4).length}</p>
-        </div>
-      </div>
-
-      {/* Controls with cause-effect explanations */}
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid #475569' }}>
+          {/* Controls with cause-effect explanations */}
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '16px', border: '1px solid #475569' }}>
         <div className="space-y-3">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -1345,6 +1355,8 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <p style={{ fontFamily: 'monospace', fontSize: '18px', color: '#c4b5fd', textAlign: 'center', marginBottom: '8px' }}>Q = h × A × ΔT</p>
         <p style={{ fontSize: '13px', color: '#e2e8f0' }}>Convection heat transfer is defined as the heat flow rate (Q) equals the heat transfer coefficient (h) times the surface area (A) times the temperature difference (ΔT). This formula is essential for designing heating and cooling systems.</p>
         <p style={{ fontSize: '13px', color: '#93c5fd', marginTop: '8px' }}>This is important because convection is used in practical applications everywhere - from your home radiator to cooling your computer's CPU. Engineers use this formula to design efficient heating, ventilation, and cooling systems.</p>
+      </div>
+        </div>
       </div>
 
       <button
@@ -1527,29 +1539,39 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <p className="text-slate-400">Add a fan to dramatically increase heat transfer rate</p>
       </div>
 
-      {/* Simulation */}
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4">
-        {renderConvectionTank()}
-      </div>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Simulation */}
+          <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4">
+            {renderConvectionTank()}
+          </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 text-center" style={{ marginBottom: '12px' }}>
+            <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-500/30">
+              <p className="text-sm text-slate-400">Fan Speed</p>
+              <p className="font-bold text-purple-400">{fanSpeed}%</p>
+            </div>
+            <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
+              <p className="text-sm text-slate-400">Heat Power</p>
+              <p className="font-bold text-red-400">{heatIntensity}%</p>
+            </div>
+            <div className="bg-cyan-900/30 rounded-lg p-3 border border-cyan-500/30">
+              <p className="text-sm text-slate-400">Heat Transfer Rate</p>
+              <p className="font-bold text-cyan-400">{Math.round((5 + fanSpeed * 2.45) * 0.1 * (heatIntensity * 0.8))} W</p>
+            </div>
+          </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-500/30">
-          <p className="text-sm text-slate-400">Fan Speed</p>
-          <p className="font-bold text-purple-400">{fanSpeed}%</p>
-        </div>
-        <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
-          <p className="text-sm text-slate-400">Heat Power</p>
-          <p className="font-bold text-red-400">{heatIntensity}%</p>
-        </div>
-        <div className="bg-cyan-900/30 rounded-lg p-3 border border-cyan-500/30">
-          <p className="text-sm text-slate-400">Heat Transfer Rate</p>
-          <p className="font-bold text-cyan-400">{Math.round((5 + fanSpeed * 2.45) * 0.1 * (heatIntensity * 0.8))} W</p>
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="space-y-3">
+          {/* Controls */}
+          <div className="space-y-3">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-400">Fan Speed (Forced Convection):</span>
@@ -1619,6 +1641,8 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <p className="text-sm text-center text-purple-300 mt-3 font-medium">
           Forced convection can be 5-50x more efficient than natural!
         </p>
+      </div>
+        </div>
       </div>
 
       <button

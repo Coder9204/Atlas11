@@ -1656,15 +1656,22 @@ export default function ChromaticAberrationRenderer({
         Observe: Adjust the lens curvature slider and toggle the doublet to see how chromatic aberration changes.
       </p>
 
-      {renderChromaticVisualization()}
-
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderChromaticVisualization()}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       <div style={{
         background: defined.colors.background.card,
         borderRadius: defined.radius.lg,
         padding: defined.spacing.lg,
-        marginTop: defined.spacing.lg,
-        maxWidth: '550px',
-        margin: '0 auto',
       }}>
         <h3 style={{ color: '#e2e8f0', marginBottom: defined.spacing.sm }}>Key Observations:</h3>
         <ul style={{ color: '#e2e8f0', paddingLeft: defined.spacing.lg, lineHeight: 1.8 }}>
@@ -1689,6 +1696,8 @@ export default function ChromaticAberrationRenderer({
         <p style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, lineHeight: 1.6, fontWeight: defined.typography.weights.normal }}>
           Understanding chromatic aberration is important for engineers designing camera lenses, telescopes, and microscopes. This technology is used in everyday photography, scientific research, and medical imaging to ensure sharp, color-accurate images.
         </p>
+      </div>
+        </div>
       </div>
     </div>
   );
@@ -1915,15 +1924,22 @@ export default function ChromaticAberrationRenderer({
         Toggle between simple lens and doublet to see how combining two glass types corrects chromatic aberration.
       </p>
 
-      {renderChromaticVisualization()}
-
+      {/* Side-by-side layout */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+      {renderChromaticVisualization()}
+      </div>
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
         gap: defined.spacing.md,
-        marginTop: defined.spacing.lg,
-        maxWidth: '600px',
-        margin: '0 auto',
       }}>
         <div style={{
           background: 'rgba(239, 68, 68, 0.1)',
@@ -1951,6 +1967,8 @@ export default function ChromaticAberrationRenderer({
             <li>Professional optics</li>
           </ul>
         </div>
+      </div>
+      </div>
       </div>
     </div>
   );

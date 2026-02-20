@@ -925,142 +925,152 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         for understanding spacecraft attitude control and how engineers design self-righting robots.
       </p>
 
+      {/* Side-by-side layout */}
       <div style={{
-        backgroundColor: colors.bgCard,
-        borderRadius: '20px',
-        padding: '24px',
-        marginBottom: '24px',
-        border: `1px solid ${colors.border}`,
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          {renderCat(
-            isAnimating ? catRotation : manualRotation,
-            isAnimating ? frontLegsExtended : manualFrontExtended,
-            isAnimating ? backLegsExtended : manualBackExtended,
-            isMobile ? 220 : 280,
-            showPhaseLabels
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{
+            backgroundColor: colors.bgCard,
+            borderRadius: '20px',
+            padding: '24px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+              {renderCat(
+                isAnimating ? catRotation : manualRotation,
+                isAnimating ? frontLegsExtended : manualFrontExtended,
+                isAnimating ? backLegsExtended : manualBackExtended,
+                isMobile ? 220 : 280,
+                showPhaseLabels
+              )}
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '24px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', fontWeight: 700, color: colors.accent }}>
+                  {Math.round(180 - (isAnimating ? catRotation : manualRotation))}°
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Rotation</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', fontWeight: 700, color: colors.success }}>
+                  {isAnimating ? Math.round(fallProgress) : 0}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Fall Progress</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '16px',
+            width: '100%',
+            marginBottom: '24px',
+          }}>
+            <button
+              onClick={startAnimation}
+              disabled={isAnimating}
+              style={{
+                padding: '16px',
+                backgroundColor: colors.accent,
+                border: 'none',
+                borderRadius: '12px',
+                color: colors.textPrimary,
+                fontWeight: 600,
+                cursor: isAnimating ? 'not-allowed' : 'pointer',
+                opacity: isAnimating ? 0.6 : 1,
+              }}
+            >
+              {isAnimating ? 'Falling...' : 'Start Cat Drop'}
+            </button>
+            <button
+              onClick={() => setShowPhaseLabels(!showPhaseLabels)}
+              style={{
+                padding: '16px',
+                backgroundColor: showPhaseLabels ? colors.purple : colors.bgCard,
+                border: `1px solid ${showPhaseLabels ? colors.purple : colors.border}`,
+                borderRadius: '12px',
+                color: colors.textPrimary,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Labels: {showPhaseLabels ? 'ON' : 'OFF'}
+            </button>
+          </div>
+
+          {!isAnimating && (
+            <div style={{
+              width: '100%',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textAlign: 'center' }}>
+                Manual Controls - Try different leg configurations:
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
+                <button
+                  onClick={() => setManualFrontExtended(!manualFrontExtended)}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: manualFrontExtended ? colors.success : colors.bgCard,
+                    border: `1px solid ${manualFrontExtended ? colors.success : colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: typo.small.fontSize,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Front: {manualFrontExtended ? 'Extended' : 'Tucked'}
+                </button>
+                <button
+                  onClick={() => setManualBackExtended(!manualBackExtended)}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: manualBackExtended ? colors.success : colors.bgCard,
+                    border: `1px solid ${manualBackExtended ? colors.success : colors.border}`,
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: typo.small.fontSize,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Back: {manualBackExtended ? 'Extended' : 'Tucked'}
+                </button>
+              </div>
+              <div style={{ padding: '0 16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500, textAlign: 'center' }}>
+                  Rotation Angle Control
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="180"
+                  value={manualRotation}
+                  onChange={(e) => setManualRotation(Number(e.target.value))}
+                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: colors.accent, background: colors.bgSecondary }}
+                  aria-label="Cat rotation angle"
+                />
+                <p style={{ ...typo.label, color: colors.textSecondary, textAlign: 'center' }}>
+                  Angle: {manualRotation}° (180° = upside down)
+                </p>
+              </div>
+            </div>
           )}
         </div>
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '24px',
-          marginBottom: '16px',
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: colors.accent }}>
-              {Math.round(180 - (isAnimating ? catRotation : manualRotation))}°
-            </div>
-            <div style={{ ...typo.small, color: colors.textMuted }}>Rotation</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: colors.success }}>
-              {isAnimating ? Math.round(fallProgress) : 0}%
-            </div>
-            <div style={{ ...typo.small, color: colors.textMuted }}>Fall Progress</div>
-          </div>
-        </div>
       </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: '16px',
-        width: '100%',
-        maxWidth: '500px',
-        marginBottom: '24px',
-      }}>
-        <button
-          onClick={startAnimation}
-          disabled={isAnimating}
-          style={{
-            padding: '16px',
-            backgroundColor: colors.accent,
-            border: 'none',
-            borderRadius: '12px',
-            color: colors.textPrimary,
-            fontWeight: 600,
-            cursor: isAnimating ? 'not-allowed' : 'pointer',
-            opacity: isAnimating ? 0.6 : 1,
-          }}
-        >
-          {isAnimating ? 'Falling...' : 'Start Cat Drop'}
-        </button>
-        <button
-          onClick={() => setShowPhaseLabels(!showPhaseLabels)}
-          style={{
-            padding: '16px',
-            backgroundColor: showPhaseLabels ? colors.purple : colors.bgCard,
-            border: `1px solid ${showPhaseLabels ? colors.purple : colors.border}`,
-            borderRadius: '12px',
-            color: colors.textPrimary,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Labels: {showPhaseLabels ? 'ON' : 'OFF'}
-        </button>
-      </div>
-
-      {!isAnimating && (
-        <div style={{
-          width: '100%',
-          maxWidth: '500px',
-          marginBottom: '24px',
-        }}>
-          <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px', textAlign: 'center' }}>
-            Manual Controls - Try different leg configurations:
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
-            <button
-              onClick={() => setManualFrontExtended(!manualFrontExtended)}
-              style={{
-                padding: '10px 16px',
-                backgroundColor: manualFrontExtended ? colors.success : colors.bgCard,
-                border: `1px solid ${manualFrontExtended ? colors.success : colors.border}`,
-                borderRadius: '8px',
-                color: colors.textPrimary,
-                fontSize: typo.small.fontSize,
-                cursor: 'pointer',
-              }}
-            >
-              Front: {manualFrontExtended ? 'Extended' : 'Tucked'}
-            </button>
-            <button
-              onClick={() => setManualBackExtended(!manualBackExtended)}
-              style={{
-                padding: '10px 16px',
-                backgroundColor: manualBackExtended ? colors.success : colors.bgCard,
-                border: `1px solid ${manualBackExtended ? colors.success : colors.border}`,
-                borderRadius: '8px',
-                color: colors.textPrimary,
-                fontSize: typo.small.fontSize,
-                cursor: 'pointer',
-              }}
-            >
-              Back: {manualBackExtended ? 'Extended' : 'Tucked'}
-            </button>
-          </div>
-          <div style={{ padding: '0 16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: colors.textSecondary, fontWeight: 500, textAlign: 'center' }}>
-              Rotation Angle Control
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="180"
-              value={manualRotation}
-              onChange={(e) => setManualRotation(Number(e.target.value))}
-              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: colors.accent, background: colors.bgSecondary }}
-              aria-label="Cat rotation angle"
-            />
-            <p style={{ ...typo.label, color: colors.textSecondary, textAlign: 'center' }}>
-              Angle: {manualRotation}° (180° = upside down)
-            </p>
-          </div>
-        </div>
-      )}
 
       <div style={{
         backgroundColor: colors.bgCard,
@@ -1393,63 +1403,73 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         Astronaut Self-Rotation
       </h2>
 
+      {/* Side-by-side layout */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: '20px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
         width: '100%',
-        marginBottom: '24px',
+        alignItems: isMobile ? 'center' : 'flex-start',
       }}>
-        <div style={{
-          backgroundColor: colors.bgCard,
-          borderRadius: '16px',
-          padding: '20px',
-          border: `1px solid ${colors.border}`,
-          textAlign: 'center',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>Cat Method</h3>
-          <svg width="160" height="100" style={{ margin: '0 auto 12px' }}>
-            <ellipse cx="50" cy="50" rx="20" ry="12" fill={colors.accent} />
-            <ellipse cx="90" cy="50" rx="20" ry="12" fill={colors.accentLight} />
-            <circle cx="115" cy="50" r="10" fill={colors.accent} />
-            <polygon points="107,43 105,34 113,42" fill={colors.accent} />
-            <polygon points="123,43 125,34 117,42" fill={colors.accent} />
-            <path d="M30 50Q20 42 18 50" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" /><path d="M18 50Q16 58 24 55" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" />
-            <path d="M50,30 A20,20 0 0 1 50,70" fill="none" stroke={colors.success} strokeWidth="2" />
-            <path d="M90,70 A20,20 0 0 1 90,30" fill="none" stroke={colors.error} strokeWidth="2" />
-          </svg>
-          <p style={{ ...typo.label, color: colors.textMuted }}>Flexible spine rotation</p>
-        </div>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '20px',
+            width: '100%',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              backgroundColor: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'center',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>Cat Method</h3>
+              <svg width="160" height="100" style={{ margin: '0 auto 12px' }}>
+                <ellipse cx="50" cy="50" rx="20" ry="12" fill={colors.accent} />
+                <ellipse cx="90" cy="50" rx="20" ry="12" fill={colors.accentLight} />
+                <circle cx="115" cy="50" r="10" fill={colors.accent} />
+                <polygon points="107,43 105,34 113,42" fill={colors.accent} />
+                <polygon points="123,43 125,34 117,42" fill={colors.accent} />
+                <path d="M30 50Q20 42 18 50" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" /><path d="M18 50Q16 58 24 55" fill="none" stroke={colors.accent} strokeWidth="4" strokeLinecap="round" />
+                <path d="M50,30 A20,20 0 0 1 50,70" fill="none" stroke={colors.success} strokeWidth="2" />
+                <path d="M90,70 A20,20 0 0 1 90,30" fill="none" stroke={colors.error} strokeWidth="2" />
+              </svg>
+              <p style={{ ...typo.label, color: colors.textMuted }}>Flexible spine rotation</p>
+            </div>
 
-        <div style={{
-          backgroundColor: colors.bgCard,
-          borderRadius: '16px',
-          padding: '20px',
-          border: `1px solid ${colors.border}`,
-          textAlign: 'center',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.purple, marginBottom: '16px' }}>Astronaut Method</h3>
-          <svg width="160" height="100" style={{ margin: '0 auto 12px' }}>
-            <circle cx="80" cy="30" r="12" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-            <ellipse cx="80" cy="32" rx="8" ry="5" fill="#0891b2" opacity="0.8" />
-            <rect x="68" y="42" width="24" height="30" rx="4" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
-            <line x1="68" y1="52" x2="45" y2="35" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" />
-            <line x1="92" y1="52" x2="115" y2="70" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" />
-            <circle cx="45" cy="35" r="4" fill="#cbd5e1" />
-            <circle cx="115" cy="70" r="4" fill="#cbd5e1" />
-            <path d="M60,85 A25,25 0 0 0 100,85" fill="none" stroke={colors.purple} strokeWidth="2" />
-          </svg>
-          <p style={{ ...typo.label, color: colors.textMuted }}>Asymmetric arm circles</p>
+            <div style={{
+              backgroundColor: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'center',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.purple, marginBottom: '16px' }}>Astronaut Method</h3>
+              <svg width="160" height="100" style={{ margin: '0 auto 12px' }}>
+                <circle cx="80" cy="30" r="12" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+                <ellipse cx="80" cy="32" rx="8" ry="5" fill="#0891b2" opacity="0.8" />
+                <rect x="68" y="42" width="24" height="30" rx="4" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+                <line x1="68" y1="52" x2="45" y2="35" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" />
+                <line x1="92" y1="52" x2="115" y2="70" stroke="#e2e8f0" strokeWidth="5" strokeLinecap="round" />
+                <circle cx="45" cy="35" r="4" fill="#cbd5e1" />
+                <circle cx="115" cy="70" r="4" fill="#cbd5e1" />
+                <path d="M60,85 A25,25 0 0 0 100,85" fill="none" stroke={colors.purple} strokeWidth="2" />
+              </svg>
+              <p style={{ ...typo.label, color: colors.textMuted }}>Asymmetric arm circles</p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div style={{
-        background: `linear-gradient(135deg, ${colors.purple}20, #EC489915)`,
-        borderRadius: '20px',
-        padding: '24px',
-        border: `1px solid ${colors.purple}30`,
-        width: '100%',
-      }}>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.purple}20, #EC489915)`,
+            borderRadius: '20px',
+            padding: '24px',
+            border: `1px solid ${colors.purple}30`,
+            width: '100%',
+          }}>
         <h3 style={{ ...typo.h3, color: colors.purple, marginBottom: '16px' }}>
           Astronaut Techniques:
         </h3>
@@ -1468,6 +1488,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         <p style={{ color: colors.purple, marginTop: '16px', fontWeight: 500 }}>
           It&apos;s slower than a cat (humans are less flexible), but the physics is identical!
         </p>
+          </div>
+        </div>
       </div>
 
       <button

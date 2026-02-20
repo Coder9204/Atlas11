@@ -1493,33 +1493,43 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ padding: '0 16px' }}>
-            {renderVisualization(true)}
-          </div>
-
-          {/* Real-time calculated values display */}
+          {/* Side-by-side layout */}
           <div style={{
-            margin: '12px 16px 0',
             display: 'flex',
-            flexDirection: 'row',
-            gap: '10px',
-            gridTemplateColumns: 'repeat(3, 1fr)'
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Rotation Rate</div>
-              <div style={{ color: colors.propeller, fontSize: '20px', fontWeight: '700' }}>{rotationSpeed} Hz</div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
             </div>
-            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Distortion Factor</div>
-              <div style={{ color: colors.accent, fontSize: '20px', fontWeight: '700' }}>{(rotationSpeed / scanSpeed).toFixed(2)} ×</div>
-            </div>
-            <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
-              <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Scan Speed</div>
-              <div style={{ color: colors.scanline, fontSize: '20px', fontWeight: '700' }}>{scanSpeed}%</div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Real-time calculated values display */}
+              <div style={{
+                marginBottom: '12px',
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '10px',
+              }}>
+                <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Rotation Rate</div>
+                  <div style={{ color: colors.propeller, fontSize: '20px', fontWeight: '700' }}>{rotationSpeed} Hz</div>
+                </div>
+                <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Distortion Factor</div>
+                  <div style={{ color: colors.accent, fontSize: '20px', fontWeight: '700' }}>{(rotationSpeed / scanSpeed).toFixed(2)} ×</div>
+                </div>
+                <div style={{ flex: 1, background: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Scan Speed</div>
+                  <div style={{ color: colors.scanline, fontSize: '20px', fontWeight: '700' }}>{scanSpeed}%</div>
+                </div>
+              </div>
+
+              {renderControls()}
             </div>
           </div>
-
-          {renderControls()}
 
           {/* How It Works - Cause and Effect */}
           <div style={{
@@ -1857,11 +1867,22 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ padding: '0 16px' }}>
-            {renderVisualization(true)}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
           </div>
-
-          {renderControls()}
 
           {/* Key observation */}
           <div style={{

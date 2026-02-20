@@ -1067,26 +1067,38 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             Adjust parameters and run SPICE to see if specs are met
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            {renderPipelineSVG()}
-          </div>
-
-          {renderControls()}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(30,41,59,0.8)',
-            padding: '18px',
-            borderRadius: '12px',
-            marginTop: '16px',
-            border: '1px solid #334155',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Try These Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
-              <li>Run the simulation with default values — do they pass?</li>
-              <li>Increase capacitance to reduce ripple</li>
-              <li>Adjust feedback resistor — watch phase margin change</li>
-              <li>Count how many iterations until all specs pass</li>
-            </ul>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                {renderPipelineSVG()}
+              </div>
+
+              <div style={{
+                background: 'rgba(30,41,59,0.8)',
+                padding: '18px',
+                borderRadius: '12px',
+                marginTop: '16px',
+                border: '1px solid #334155',
+              }}>
+                <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Try These Experiments:</h3>
+                <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
+                  <li>Run the simulation with default values — do they pass?</li>
+                  <li>Increase capacitance to reduce ripple</li>
+                  <li>Adjust feedback resistor — watch phase margin change</li>
+                  <li>Count how many iterations until all specs pass</li>
+                </ul>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
           </div>
         </div>
       </div>,
@@ -1220,26 +1232,38 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
             Adjust the feedback loop and observe how phase margin changes
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-            {renderPipelineSVG()}
-          </div>
-
-          {renderControls()}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(245,158,11,0.1)',
-            padding: '18px',
-            borderRadius: '12px',
-            marginTop: '16px',
-            border: '1px solid rgba(245,158,11,0.4)',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Phase Margin Guidelines:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
-              <li><strong>&gt;60°:</strong> Overdamped, slow but very stable</li>
-              <li><strong>45–60°:</strong> Good balance of speed and stability</li>
-              <li><strong>30–45°:</strong> Acceptable but may ring on transients</li>
-              <li><strong>&lt;30°:</strong> Dangerous — oscillation likely</li>
-            </ul>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                {renderPipelineSVG()}
+              </div>
+
+              <div style={{
+                background: 'rgba(245,158,11,0.1)',
+                padding: '18px',
+                borderRadius: '12px',
+                marginTop: '16px',
+                border: '1px solid rgba(245,158,11,0.4)',
+              }}>
+                <h3 style={{ color: '#f59e0b', marginBottom: '10px', fontWeight: 700 }}>Phase Margin Guidelines:</h3>
+                <ul style={{ color: '#e2e8f0', lineHeight: 1.9, paddingLeft: '20px', fontWeight: 400 }}>
+                  <li><strong>&gt;60°:</strong> Overdamped, slow but very stable</li>
+                  <li><strong>45-60°:</strong> Good balance of speed and stability</li>
+                  <li><strong>30-45°:</strong> Acceptable but may ring on transients</li>
+                  <li><strong>&lt;30°:</strong> Dangerous -- oscillation likely</li>
+                </ul>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
           </div>
         </div>
       </div>,

@@ -1271,102 +1271,101 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch'
       }}>
-        {/* GRAPHIC SECTION */}
+        {/* Side-by-side layout */}
         <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           padding: isMobile ? '20px' : '28px',
           background: colors.bgDeep
         }}>
-          {/* Signal status - above graphic */}
-          <div style={{
-            maxWidth: '550px',
-            margin: '0 auto 20px',
-            padding: '14px 18px',
-            background: colors.bgSurface,
-            borderRadius: '12px',
-            border: `2px solid ${signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error}`
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary }}>📶 SIGNAL STRENGTH</span>
-              <span style={{
-                fontSize: isMobile ? '18px' : '22px',
-                fontWeight: 700,
-                color: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error
-              }}>
-                {signalStrength}% • {rssiValue} dBm
-              </span>
-            </div>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {/* Signal status - above graphic */}
             <div style={{
-              height: '10px',
-              background: colors.bgElevated,
-              borderRadius: '5px',
-              overflow: 'hidden',
-              marginBottom: '8px'
+              maxWidth: '550px',
+              margin: '0 auto 20px',
+              padding: '14px 18px',
+              background: colors.bgSurface,
+              borderRadius: '12px',
+              border: `2px solid ${signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error}`
             }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary }}>📶 SIGNAL STRENGTH</span>
+                <span style={{
+                  fontSize: isMobile ? '18px' : '22px',
+                  fontWeight: 700,
+                  color: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error
+                }}>
+                  {signalStrength}% • {rssiValue} dBm
+                </span>
+              </div>
               <div style={{
-                height: '100%',
-                width: `${signalStrength}%`,
-                background: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error,
+                height: '10px',
+                background: colors.bgElevated,
                 borderRadius: '5px',
-                transition: 'width 0.1s, background 0.2s'
-              }} />
-            </div>
-            <div style={{
-              fontSize: '13px',
-              color: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error,
-              fontWeight: 600,
-              textAlign: 'center'
-            }}>
-              {signalStrength > 70 ? '✓ EXCELLENT - Aligned!' :
-               signalStrength > 40 ? '⚠️ PARTIAL - Some mismatch' :
-               '✗ WEAK - Misaligned'}
-            </div>
-          </div>
-
-          {/* GRAPHIC - Clean container */}
-          <div style={{
-            width: '100%',
-            maxWidth: '550px',
-            margin: '0 auto',
-            background: colors.bgSurface,
-            borderRadius: '16px',
-            padding: isMobile ? '12px' : '16px',
-            border: `1px solid ${colors.bgElevated}`
-          }}>
-            <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
-              {renderPolarizationVisualization(true, showPolarPlot)}
-            </div>
-          </div>
-
-          {/* Toggle - below graphic */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-            <button
-              onClick={() => setShowPolarPlot(!showPolarPlot)}
-              style={{
-                padding: '10px 20px',
-                background: showPolarPlot ? colors.primary : colors.bgSurface,
-                border: `1px solid ${showPolarPlot ? colors.primary : colors.bgElevated}`,
-                borderRadius: '8px',
-                color: showPolarPlot ? 'white' : colors.textSecondary,
+                overflow: 'hidden',
+                marginBottom: '8px'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${signalStrength}%`,
+                  background: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error,
+                  borderRadius: '5px',
+                  transition: 'width 0.1s, background 0.2s'
+                }} />
+              </div>
+              <div style={{
                 fontSize: '13px',
+                color: signalStrength > 70 ? colors.success : signalStrength > 40 ? colors.warning : colors.error,
                 fontWeight: 600,
-                cursor: 'pointer',
-                minHeight: '44px',
-                transition: 'all 0.2s'
-              }}
-            >
-              {showPolarPlot ? '📊 Hide' : '📊 Show'} Signal Pattern
-            </button>
-          </div>
-        </div>
+                textAlign: 'center'
+              }}>
+                {signalStrength > 70 ? '✓ EXCELLENT - Aligned!' :
+                 signalStrength > 40 ? '⚠️ PARTIAL - Some mismatch' :
+                 '✗ WEAK - Misaligned'}
+              </div>
+            </div>
 
-        {/* CONTROLS SECTION */}
-        <div style={{
-          padding: isMobile ? '20px' : '28px',
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgElevated}`,
-          borderBottom: `1px solid ${colors.bgElevated}`
-        }}>
-          <div style={{ maxWidth: '550px', margin: '0 auto' }}>
+            {/* GRAPHIC - Clean container */}
+            <div style={{
+              width: '100%',
+              maxWidth: '550px',
+              margin: '0 auto',
+              background: colors.bgSurface,
+              borderRadius: '16px',
+              padding: isMobile ? '12px' : '16px',
+              border: `1px solid ${colors.bgElevated}`
+            }}>
+              <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
+                {renderPolarizationVisualization(true, showPolarPlot)}
+              </div>
+            </div>
+
+            {/* Toggle - below graphic */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+              <button
+                onClick={() => setShowPolarPlot(!showPolarPlot)}
+                style={{
+                  padding: '10px 20px',
+                  background: showPolarPlot ? colors.primary : colors.bgSurface,
+                  border: `1px solid ${showPolarPlot ? colors.primary : colors.bgElevated}`,
+                  borderRadius: '8px',
+                  color: showPolarPlot ? 'white' : colors.textSecondary,
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {showPolarPlot ? '📊 Hide' : '📊 Show'} Signal Pattern
+              </button>
+            </div>
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Section header */}
             <div style={{
               display: 'flex',
@@ -1395,7 +1394,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             {/* Sliders */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gridTemplateColumns: '1fr',
               gap: '16px'
             }}>
               {renderSliderControl("ANTENNA ANGLE", antennaAngle, 0, 180, "°", "Rotate receiver to align with incoming signal", setAntennaAngle, colors.antenna, {
@@ -1714,94 +1713,93 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch'
       }}>
-        {/* GRAPHIC SECTION */}
+        {/* Side-by-side layout */}
         <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
           padding: isMobile ? '20px' : '28px',
           background: colors.bgDeep
         }}>
-          {/* Absorption meter - above graphic */}
-          <div style={{
-            maxWidth: '550px',
-            margin: '0 auto 20px',
-            padding: '14px 18px',
-            background: colors.bgSurface,
-            borderRadius: '12px',
-            border: `2px solid ${handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success}`
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary }}>🖐️ BODY ABSORPTION</span>
-              <span style={{
-                fontSize: isMobile ? '18px' : '22px',
-                fontWeight: 700,
-                color: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success
-              }}>
-                {Math.round((1 - (0.3 + 0.7 * (handDistance / 100))) * 100)}% absorbed
-              </span>
-            </div>
-            <div style={{ height: '10px', background: colors.bgElevated, borderRadius: '5px', overflow: 'hidden', marginBottom: '8px' }}>
-              <div style={{
-                height: '100%',
-                width: `${(1 - (0.3 + 0.7 * (handDistance / 100))) * 100}%`,
-                background: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success,
-                transition: 'width 0.1s'
-              }} />
-            </div>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            {/* Absorption meter - above graphic */}
             <div style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success,
-              textAlign: 'center'
+              maxWidth: '550px',
+              margin: '0 auto 20px',
+              padding: '14px 18px',
+              background: colors.bgSurface,
+              borderRadius: '12px',
+              border: `2px solid ${handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success}`
             }}>
-              {handDistance < 30 ? '✗ Heavy blocking' : handDistance < 60 ? '⚠️ Moderate effect' : '✓ Minimal absorption'}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary }}>🖐️ BODY ABSORPTION</span>
+                <span style={{
+                  fontSize: isMobile ? '18px' : '22px',
+                  fontWeight: 700,
+                  color: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success
+                }}>
+                  {Math.round((1 - (0.3 + 0.7 * (handDistance / 100))) * 100)}% absorbed
+                </span>
+              </div>
+              <div style={{ height: '10px', background: colors.bgElevated, borderRadius: '5px', overflow: 'hidden', marginBottom: '8px' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(1 - (0.3 + 0.7 * (handDistance / 100))) * 100}%`,
+                  background: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success,
+                  transition: 'width 0.1s'
+                }} />
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: handDistance < 30 ? colors.error : handDistance < 60 ? colors.warning : colors.success,
+                textAlign: 'center'
+              }}>
+                {handDistance < 30 ? '✗ Heavy blocking' : handDistance < 60 ? '⚠️ Moderate effect' : '✓ Minimal absorption'}
+              </div>
             </div>
+
+            {/* GRAPHIC - Clean container */}
+            <div style={{
+              width: '100%',
+              maxWidth: '550px',
+              margin: '0 auto',
+              background: colors.bgSurface,
+              borderRadius: '16px',
+              padding: isMobile ? '12px' : '16px',
+              border: `1px solid ${colors.bgElevated}`
+            }}>
+              <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
+                {renderPolarizationVisualization(true, false, true)}
+              </div>
+            </div>
+
+            {/* Alignment button */}
+            {Math.abs(antennaAngle - waveAngle) > 20 && (
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  onClick={() => { setAntennaAngle(waveAngle); playSound('click'); }}
+                  style={{
+                    padding: '12px 20px',
+                    background: colors.bgSurface,
+                    border: `1px solid ${colors.primary}`,
+                    borderRadius: '8px',
+                    color: colors.primary,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    minHeight: '44px'
+                  }}
+                >
+                  🎯 Align Antenna (for cleaner absorption test)
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* GRAPHIC - Clean container */}
-          <div style={{
-            width: '100%',
-            maxWidth: '550px',
-            margin: '0 auto',
-            background: colors.bgSurface,
-            borderRadius: '16px',
-            padding: isMobile ? '12px' : '16px',
-            border: `1px solid ${colors.bgElevated}`
-          }}>
-            <div style={{ aspectRatio: isMobile ? '4/3' : '5/4' }}>
-              {renderPolarizationVisualization(true, false, true)}
-            </div>
-          </div>
-
-          {/* Alignment button */}
-          {Math.abs(antennaAngle - waveAngle) > 20 && (
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button
-                onClick={() => { setAntennaAngle(waveAngle); playSound('click'); }}
-                style={{
-                  padding: '12px 20px',
-                  background: colors.bgSurface,
-                  border: `1px solid ${colors.primary}`,
-                  borderRadius: '8px',
-                  color: colors.primary,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  minHeight: '44px'
-                }}
-              >
-                🎯 Align Antenna (for cleaner absorption test)
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* CONTROLS SECTION */}
-        <div style={{
-          padding: isMobile ? '20px' : '28px',
-          background: colors.bgSurface,
-          borderTop: `1px solid ${colors.bgElevated}`,
-          borderBottom: `1px solid ${colors.bgElevated}`
-        }}>
-          <div style={{ maxWidth: '550px', margin: '0 auto' }}>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Section header */}
             <div style={{
               display: 'flex',

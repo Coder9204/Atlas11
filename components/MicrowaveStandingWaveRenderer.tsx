@@ -1057,99 +1057,96 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             Adjust parameters to see how standing waves create hot spots and cold spots.
           </p>
 
-          {/* SVG Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            {renderStandingWaveSVG(true, true)}
-          </div>
-
-          {/* Controls panel */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Frequency slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Microwave Frequency</span>
-                <span style={{ ...typo.small, color: '#fcd34d', fontWeight: 600 }}>{frequency.toFixed(2)} GHz</span>
-              </div>
-              <input
-                type="range"
-                min="2.0"
-                max="3.0"
-                step="0.05"
-                value={frequency}
-                onChange={(e) => setFrequency(parseFloat(e.target.value))}
-                style={sliderStyle}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
-                <strong>Effect:</strong> When frequency increases, wavelength decreases because λ = c/f. This causes hot spots (antinodes) to move closer together.
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>2.0 GHz</span>
-                <span style={{ ...typo.small, color: '#fcd34d' }}>Standard: 2.45 GHz</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>3.0 GHz</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* SVG Visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                textAlign: 'center',
+              }}>
+                {renderStandingWaveSVG(true, true)}
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls panel */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Frequency slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
+                    <span style={{ ...typo.small, color: '#fcd34d', fontWeight: 600 }}>{frequency.toFixed(2)} GHz</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2.0"
+                    max="3.0"
+                    step="0.05"
+                    value={frequency}
+                    onChange={(e) => setFrequency(parseFloat(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
 
-            {/* Cavity length slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Cavity Length</span>
-                <span style={{ ...typo.small, color: '#93c5fd', fontWeight: 600 }}>{cavityLength} cm</span>
+                {/* Cavity length slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Cavity Length</span>
+                    <span style={{ ...typo.small, color: '#93c5fd', fontWeight: 600 }}>{cavityLength} cm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="50"
+                    step="1"
+                    value={cavityLength}
+                    onChange={(e) => setCavityLength(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Power slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Power Level</span>
+                    <span style={{ ...typo.small, color: '#86efac', fontWeight: 600 }}>{powerLevel}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="10"
+                    value={powerLevel}
+                    onChange={(e) => setPowerLevel(parseInt(e.target.value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Wavelength display */}
+                <div style={{
+                  background: `${colors.accent}22`,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  border: `1px solid ${colors.accent}44`,
+                }}>
+                  <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                    <strong>λ:</strong> {wavelength.toFixed(2)} cm<br/><strong>Spacing:</strong> {(wavelength / 2).toFixed(1)} cm
+                  </p>
+                </div>
               </div>
-              <input
-                type="range"
-                min="20"
-                max="50"
-                step="1"
-                value={cavityLength}
-                onChange={(e) => setCavityLength(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
-                <strong>Effect:</strong> Longer cavity → more standing wave modes fit → more hot spots appear inside.
-              </p>
-            </div>
-
-            {/* Power slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Power Level</span>
-                <span style={{ ...typo.small, color: '#86efac', fontWeight: 600 }}>{powerLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="10"
-                value={powerLevel}
-                onChange={(e) => setPowerLevel(parseInt(e.target.value))}
-                style={sliderStyle}
-              />
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0' }}>
-                <strong>Effect:</strong> Higher power → greater wave amplitude → hotter antinodes and stronger temperature contrast.
-              </p>
-            </div>
-
-            {/* Wavelength display */}
-            <div style={{
-              background: `${colors.accent}22`,
-              borderRadius: '8px',
-              padding: '12px',
-              border: `1px solid ${colors.accent}44`,
-            }}>
-              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
-                <strong>Wavelength:</strong> {wavelength.toFixed(2)} cm | <strong>Hot spot spacing:</strong> {(wavelength / 2).toFixed(1)} cm (lambda/2)
-              </p>
             </div>
           </div>
 
@@ -1610,74 +1607,22 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             Compare cooking with and without turntable rotation
           </p>
 
-          {/* Controls */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
-              {/* Food position */}
-              <div>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Food Position</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {(['center', 'edge', 'corner'] as const).map(pos => (
-                    <button
-                      key={pos}
-                      onClick={() => { if (!twistComparisonRunning) { setFoodPosition(pos); resetComparison(); } }}
-                      disabled={twistComparisonRunning}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: foodPosition === pos ? colors.accent : colors.bgSecondary,
-                        color: 'white',
-                        fontWeight: 500,
-                        cursor: twistComparisonRunning ? 'not-allowed' : 'pointer',
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cavity mode */}
-              <div>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Cavity Mode</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {([1, 2, 3] as const).map(mode => (
-                    <button
-                      key={mode}
-                      onClick={() => { if (!twistComparisonRunning) { setCavityMode(mode); resetComparison(); } }}
-                      disabled={twistComparisonRunning}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: cavityMode === mode ? '#3b82f6' : colors.bgSecondary,
-                        color: 'white',
-                        fontWeight: 500,
-                        cursor: twistComparisonRunning ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      Mode {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Side-by-side comparison */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Side-by-side comparison */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+              }}>
             {/* Without turntable */}
             <div style={{
               background: colors.bgCard,
@@ -1746,6 +1691,65 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
               <p style={{ ...typo.small, color: withTurntableVariance < 10 ? colors.success : colors.warning }}>
                 Variation: +/-{withTurntableVariance.toFixed(1)}C
               </p>
+            </div>
+          </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div>
+                  <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Food Position</p>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {(['center', 'edge', 'corner'] as const).map(pos => (
+                      <button
+                        key={pos}
+                        onClick={() => { if (!twistComparisonRunning) { setFoodPosition(pos); resetComparison(); } }}
+                        disabled={twistComparisonRunning}
+                        style={{
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: foodPosition === pos ? colors.accent : colors.bgSecondary,
+                          color: 'white',
+                          fontWeight: 500,
+                          cursor: twistComparisonRunning ? 'not-allowed' : 'pointer',
+                          textTransform: 'capitalize',
+                          fontSize: '13px',
+                        }}
+                      >
+                        {pos}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginTop: '16px' }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Cavity Mode</p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {([1, 2, 3] as const).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => { if (!twistComparisonRunning) { setCavityMode(mode); resetComparison(); } }}
+                        disabled={twistComparisonRunning}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: cavityMode === mode ? '#3b82f6' : colors.bgSecondary,
+                          color: 'white',
+                          fontWeight: 500,
+                          cursor: twistComparisonRunning ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        Mode {mode}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

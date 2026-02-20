@@ -933,137 +933,149 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <RefractionVisualization showControls />
-              </div>
-
-              {/* Viewing angle slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
-                </div>
-                <input
-                  type="range"
-                  min="-45"
-                  max="45"
-                  value={viewingAngle}
-                  onChange={(e) => setViewingAngle(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: colors.accent,
-                    touchAction: 'pan-y',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Left (-45°)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Straight (0°)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Right (+45°)</span>
-                </div>
-              </div>
-
-              {/* Refractive index slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Refractive Index</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                    {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1.0"
-                  max="1.6"
-                  step="0.01"
-                  value={refractiveIndex}
-                  onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: colors.accent,
-                    touchAction: 'pan-y',
-                  }}
-                />
-              </div>
-
-              {/* Water level slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Water Level</span>
-                  <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>{waterLevel}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="90"
-                  value={waterLevel}
-                  onChange={(e) => setWaterLevel(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: colors.water,
-                    touchAction: 'pan-y',
-                  }}
-                />
-              </div>
-
-              {/* Toggle ray paths */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <button
-                  onClick={() => { playSound('click'); setShowRayPaths(!showRayPaths); }}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: showRayPaths ? colors.accent : colors.bgSecondary,
-                    color: 'white',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {showRayPaths ? 'Hide Ray Paths' : 'Show Ray Paths'}
-                </button>
-              </div>
-
-              {/* Stats display */}
+              {/* Side-by-side layout */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{viewingAngle}°</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Viewing Angle</div>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <RefractionVisualization showControls />
+                  </div>
                 </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{refractiveIndex.toFixed(2)}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Refractive Index</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.warning }}>{apparentShift.toFixed(1)}px</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Apparent Shift</div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Viewing angle slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-45"
+                      max="45"
+                      value={viewingAngle}
+                      onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: colors.accent,
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Left (-45°)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Straight (0°)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Right (+45°)</span>
+                    </div>
+                  </div>
+
+                  {/* Refractive index slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Refractive Index</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                        {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="1.6"
+                      step="0.01"
+                      value={refractiveIndex}
+                      onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: colors.accent,
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                  </div>
+
+                  {/* Water level slider */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Water Level</span>
+                      <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>{waterLevel}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="90"
+                      value={waterLevel}
+                      onChange={(e) => setWaterLevel(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: colors.water,
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                  </div>
+
+                  {/* Toggle ray paths */}
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <button
+                      onClick={() => { playSound('click'); setShowRayPaths(!showRayPaths); }}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: showRayPaths ? colors.accent : colors.bgSecondary,
+                        color: 'white',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {showRayPaths ? 'Hide Ray Paths' : 'Show Ray Paths'}
+                    </button>
+                  </div>
+
+                  {/* Stats display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '16px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{viewingAngle}°</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Viewing Angle</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{refractiveIndex.toFixed(2)}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Refractive Index</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.warning }}>{apparentShift.toFixed(1)}px</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Apparent Shift</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1358,90 +1370,102 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <RefractionVisualization showControls />
-              </div>
-
-              {/* Material selector */}
+              {/* Side-by-side layout */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-                marginBottom: '24px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                {materials.map((mat) => (
-                  <button
-                    key={mat.id}
-                    onClick={() => {
-                      playSound('click');
-                      setMaterial(mat.id as typeof material);
-                      setRefractiveIndex(mat.n);
-                    }}
-                    style={{
-                      padding: '16px 8px',
-                      borderRadius: '12px',
-                      border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
-                      background: material === mat.id ? `${mat.color}22` : colors.bgSecondary,
-                      cursor: 'pointer',
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <RefractionVisualization showControls />
+                  </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Material selector */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginBottom: '24px',
+                  }}>
+                    {materials.map((mat) => (
+                      <button
+                        key={mat.id}
+                        onClick={() => {
+                          playSound('click');
+                          setMaterial(mat.id as typeof material);
+                          setRefractiveIndex(mat.n);
+                        }}
+                        style={{
+                          padding: '16px 8px',
+                          borderRadius: '12px',
+                          border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
+                          background: material === mat.id ? `${mat.color}22` : colors.bgSecondary,
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{mat.name}</div>
+                        <div style={{ ...typo.small, color: mat.color, fontWeight: 700 }}>n = {mat.n}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Viewing angle slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="-45"
+                      max="45"
+                      value={viewingAngle}
+                      onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: colors.accent,
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                  </div>
+
+                  {/* Comparison stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
                       textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{mat.name}</div>
-                    <div style={{ ...typo.small, color: mat.color, fontWeight: 700 }}>n = {mat.n}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Viewing angle slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
-                </div>
-                <input
-                  type="range"
-                  min="-45"
-                  max="45"
-                  value={viewingAngle}
-                  onChange={(e) => setViewingAngle(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: colors.accent,
-                    touchAction: 'pan-y',
-                  }}
-                />
-              </div>
-
-              {/* Comparison stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.water }}>
-                    {(Math.tan(viewingAngle * Math.PI / 180) * (1 - 1/1.33) * waterLevel * 0.5).toFixed(1)}px
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.water }}>
+                        {(Math.tan(viewingAngle * Math.PI / 180) * (1 - 1/1.33) * waterLevel * 0.5).toFixed(1)}px
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Water Shift</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: materials.find(m => m.id === material)?.color }}>
+                        {apparentShift.toFixed(1)}px
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{materials.find(m => m.id === material)?.name} Shift</div>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Water Shift</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: materials.find(m => m.id === material)?.color }}>
-                    {apparentShift.toFixed(1)}px
-                  </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{materials.find(m => m.id === material)?.name} Shift</div>
                 </div>
               </div>
             </div>

@@ -915,9 +915,20 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ marginBottom: '24px' }}>
                 {renderCOPChart()}
               </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
               {/* Condenser temperature slider */}
               <div style={{ marginBottom: '20px' }}>
@@ -982,7 +993,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
               {/* Results display */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
               }}>
                 <div style={{
@@ -1014,6 +1025,8 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 }}>
                   <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
                   <div style={{ ...typo.h3, color: colors.accent }}>{(currentCOP / 6 * 100).toFixed(0)}%</div>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -1312,14 +1325,23 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             Observe how COP varies with cooling load. Watch for the efficiency sweet spot!
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             {/* Part-load curve visualization */}
-            <div style={{ marginBottom: '24px' }}>
+            <div>
               {(() => {
                 const svgW = 400;
                 const svgH = 300;
@@ -1413,7 +1435,14 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 );
               })()}
             </div>
-
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
             {/* Load slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1440,7 +1469,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             {/* Results */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1471,6 +1500,8 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 <div style={{ ...typo.h3, color: colors.warning }}>{optimalLoad}%</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Insight */}
@@ -1710,7 +1741,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '16px',
             }}>

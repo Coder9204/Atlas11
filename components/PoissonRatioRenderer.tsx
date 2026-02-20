@@ -990,136 +990,154 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             Stretch different materials and observe how they deform
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MaterialStretchVisualization />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <MaterialStretchVisualization />
+                </div>
 
-            {/* Material selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Material</span>
+                {/* Formula explanation */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  textAlign: 'center',
+                  marginTop: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: colors.accent }}>Poisson&apos;s Ratio (v)</strong> = -(Lateral Strain) / (Axial Strain)
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', marginBottom: 0 }}>
+                    Higher v causes more lateral contraction when stretched.
+                  </p>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {[
-                  { id: 'steel', label: 'Steel (v=0.30)', color: '#6B7280' },
-                  { id: 'rubber', label: 'Rubber (v=0.49)', color: '#EC4899' },
-                  { id: 'cork', label: 'Cork (v=0.00)', color: '#D97706' },
-                ].map(mat => (
-                  <button
-                    key={mat.id}
-                    onClick={() => { playSound('click'); setMaterial(mat.id as typeof material); }}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
-                      background: material === mat.id ? `${mat.color}22` : 'transparent',
-                      color: material === mat.id ? mat.color : colors.textSecondary,
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      fontSize: '14px',
-                    }}
-                  >
-                    {mat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Stretch slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Force (Stretch %)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{stretch}%</span>
+              {/* Cause-effect & real-world relevance */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}22`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.accent }}>Why this matters:</strong> Engineers design seals, gaskets, and structural components using Poisson&apos;s ratio. When you increase stretch, it causes predictable lateral contraction — a result that affects everything from tire sidewall design to medical device engineering. Industry applications range from aircraft fuselages to biomedical implants.
+                </p>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                value={stretch}
-                onChange={(e) => setStretch(parseInt(e.target.value))}
+
+              {/* Color-coded status indicator for stretch intensity */}
+              <div
+                data-state={stretch > 30 ? 'error' : stretch > 10 ? 'warning' : 'success'}
                 style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-            </div>
+                  background: stretch > 30 ? `${colors.error}22` : stretch > 10 ? `${colors.warning}22` : `${colors.success}22`,
+                  border: `2px solid ${stretch > 30 ? '#EF4444' : stretch > 10 ? '#F59E0B' : '#10B981'}`,
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{ ...typo.small, color: stretch > 30 ? '#EF4444' : stretch > 10 ? '#F59E0B' : '#10B981', fontWeight: 600 }}>
+                  {stretch > 30 ? 'High deformation — large Poisson effect' : stretch > 10 ? 'Moderate stretch — observe lateral contraction' : 'Low stretch — minimal deformation'}
+                </span>
+              </div>
 
-            {/* Formula explanation */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Poisson&apos;s Ratio (v)</strong> = -(Lateral Strain) / (Axial Strain)
-              </p>
-              <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', marginBottom: 0 }}>
-                Higher v causes more lateral contraction when stretched. Because rubber is nearly incompressible, it must get thinner to conserve volume.
-              </p>
+              {/* Discovery prompt */}
+              {stretch > 20 && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                    Notice how rubber thins dramatically while cork barely changes width!
+                  </p>
+                </div>
+              )}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Material selector */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Material</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { id: 'steel', label: 'Steel (v=0.30)', color: '#6B7280' },
+                      { id: 'rubber', label: 'Rubber (v=0.49)', color: '#EC4899' },
+                      { id: 'cork', label: 'Cork (v=0.00)', color: '#D97706' },
+                    ].map(mat => (
+                      <button
+                        key={mat.id}
+                        onClick={() => { playSound('click'); setMaterial(mat.id as typeof material); }}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
+                          background: material === mat.id ? `${mat.color}22` : 'transparent',
+                          color: material === mat.id ? mat.color : colors.textSecondary,
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                        }}
+                      >
+                        {mat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Stretch slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Stretch %</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{stretch}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    value={stretch}
+                    onChange={(e) => setStretch(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Cause-effect & real-world relevance */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>Why this matters:</strong> Engineers design seals, gaskets, and structural components using Poisson&apos;s ratio. When you increase stretch, it causes predictable lateral contraction — a result that affects everything from tire sidewall design to medical device engineering. Industry applications range from aircraft fuselages to biomedical implants.
-            </p>
-          </div>
-
-          {/* Color-coded status indicator for stretch intensity */}
-          <div
-            data-state={stretch > 30 ? 'error' : stretch > 10 ? 'warning' : 'success'}
-            style={{
-              background: stretch > 30 ? `${colors.error}22` : stretch > 10 ? `${colors.warning}22` : `${colors.success}22`,
-              border: `2px solid ${stretch > 30 ? '#EF4444' : stretch > 10 ? '#F59E0B' : '#10B981'}`,
-              borderRadius: '8px',
-              padding: '8px 16px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <span style={{ ...typo.small, color: stretch > 30 ? '#EF4444' : stretch > 10 ? '#F59E0B' : '#10B981', fontWeight: 600 }}>
-              {stretch > 30 ? 'High deformation — large Poisson effect' : stretch > 10 ? 'Moderate stretch — observe lateral contraction' : 'Low stretch — minimal deformation'}
-            </span>
-          </div>
-
-          {/* Discovery prompt */}
-          {stretch > 20 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Notice how rubber thins dramatically while cork barely changes width!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
@@ -1396,66 +1414,85 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             Compare normal materials with auxetic structures
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <AuxeticVisualization />
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <AuxeticVisualization />
+                </div>
 
-            {/* Stretch slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Stretch Amount</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{auxeticStretch}%</span>
+                {/* Explanation */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginTop: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: '#A78BFA' }}>Auxetic materials</strong> have special re-entrant (inward-pointing) geometric structures. When pulled, these structures unfold and expand outward, creating the counterintuitive effect of getting wider when stretched!
+                  </p>
+                </div>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                value={auxeticStretch}
-                onChange={(e) => setAuxeticStretch(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                } as React.CSSProperties}
-              />
-            </div>
 
-            {/* Explanation */}
-            <div style={{
-              background: `${colors.accent}11`,
-              borderRadius: '8px',
-              padding: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: '#A78BFA' }}>Auxetic materials</strong> have special re-entrant (inward-pointing) geometric structures. When pulled, these structures unfold and expand outward, creating the counterintuitive effect of getting wider when stretched!
-              </p>
+              {auxeticStretch > 20 && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginTop: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                    The auxetic material expands laterally while normal material contracts!
+                  </p>
+                </div>
+              )}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Stretch slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Stretch Amount</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{auxeticStretch}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    value={auxeticStretch}
+                    onChange={(e) => setAuxeticStretch(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      accentColor: '#3b82f6',
+                    } as React.CSSProperties}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-
-          {auxeticStretch > 20 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                The auxetic material expands laterally while normal material contracts!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}

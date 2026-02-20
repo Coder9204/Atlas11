@@ -1015,6 +1015,15 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           padding: '20px',
           marginBottom: '20px'
         }}>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Shower visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="220" viewBox="0 0 400 220">
@@ -1293,7 +1302,8 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               </div>
             </div>
           </div>
-
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
           <div style={{ display: 'grid', gap: '16px' }}>
             {/* Water flow slider */}
@@ -1385,6 +1395,8 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               <p style={{ color: colors.primary, fontSize: '18px', fontWeight: '700', margin: 0 }}>{Math.round(flowEffect + tempEffect)}%</p>
               <p style={{ color: colors.textSecondary, fontSize: '11px', margin: '2px 0 0 0' }}>Pressure drop</p>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Physics note with detailed explanations */}
@@ -1731,29 +1743,15 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
         padding: '20px',
         marginBottom: '20px'
       }}>
-        {/* Mode selector */}
-        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px' }}>
-          {(['cold', 'hot'] as const).map(mode => (
-            <button
-              key={mode}
-              onPointerDown={() => setTempMode(mode)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: tempMode === mode ? (mode === 'hot' ? colors.accent : colors.primary) : colors.background,
-                color: tempMode === mode ? colors.background : colors.textSecondary,
-                border: `1px solid ${tempMode === mode ? (mode === 'hot' ? colors.accent : colors.primary) : '#444'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: tempMode === mode ? '600' : '400'
-              }}
-            >
-              {mode === 'cold' ? '❄️ Cold (15°C)' : '🔥 Hot (45°C)'}
-            </button>
-          ))}
-        </div>
-
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Visualization */}
         <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
           <svg width="100%" height="180" viewBox="0 0 400 180">
@@ -1938,6 +1936,30 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
             </div>
           )}
         </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+        {/* Mode selector */}
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px' }}>
+          {(['cold', 'hot'] as const).map(mode => (
+            <button
+              key={mode}
+              onPointerDown={() => setTempMode(mode)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: tempMode === mode ? (mode === 'hot' ? colors.accent : colors.primary) : colors.background,
+                color: tempMode === mode ? colors.background : colors.textSecondary,
+                border: `1px solid ${tempMode === mode ? (mode === 'hot' ? colors.accent : colors.primary) : '#444'}`,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: tempMode === mode ? '600' : '400'
+              }}
+            >
+              {mode === 'cold' ? '❄️ Cold (15°C)' : '🔥 Hot (45°C)'}
+            </button>
+          ))}
+        </div>
 
         {/* Explanation */}
         <div style={{
@@ -1969,6 +1991,8 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               </p>
             </>
           )}
+        </div>
+        </div>
         </div>
       </div>
 

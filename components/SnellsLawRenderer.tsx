@@ -1017,68 +1017,80 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               </div>
             </div>
 
-            {renderVisualization()}
-
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
-                  Incident Angle: {incidentAngle}deg
-                </label>
-                <input
-                  type="range"
-                  min="5"
-                  max="85"
-                  value={incidentAngle}
-                  onChange={(e) => {
-                    setIncidentAngle(Number(e.target.value));
-                    emitEvent('parameter_changed', { incidentAngle: Number(e.target.value) });
-                  }}
-                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
-                />
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderVisualization()}
               </div>
-
-              <div>
-                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
-                  Medium:
-                </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {(['water', 'oil', 'glass'] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMedium(m)}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        background: medium === m ? design.colors.accentPrimary : design.colors.bgCard,
-                        color: design.colors.textPrimary,
-                        border: 'none',
-                        borderRadius: design.radius.sm,
-                        cursor: 'pointer',
-                        fontSize: typo.small,
-                        transition: 'all 0.2s ease'
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                      Incident Angle: {incidentAngle}deg
+                    </label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="85"
+                      value={incidentAngle}
+                      onChange={(e) => {
+                        setIncidentAngle(Number(e.target.value));
+                        emitEvent('parameter_changed', { incidentAngle: Number(e.target.value) });
                       }}
-                    >
-                      {m.charAt(0).toUpperCase() + m.slice(1)} (n={refractiveIndices[m]})
-                    </button>
-                  ))}
+                      style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                      Medium:
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(['water', 'oil', 'glass'] as const).map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => setMedium(m)}
+                          style={{
+                            flex: 1,
+                            padding: '12px',
+                            background: medium === m ? design.colors.accentPrimary : design.colors.bgCard,
+                            color: design.colors.textPrimary,
+                            border: 'none',
+                            borderRadius: design.radius.sm,
+                            cursor: 'pointer',
+                            fontSize: typo.small,
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {m.charAt(0).toUpperCase() + m.slice(1)} (n={refractiveIndices[m]})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowMeasurements(!showMeasurements)}
+                    style={{
+                      padding: '12px 24px',
+                      background: showMeasurements ? design.colors.success : design.colors.bgCard,
+                      color: design.colors.textPrimary,
+                      border: 'none',
+                      borderRadius: design.radius.sm,
+                      cursor: 'pointer',
+                      fontSize: typo.body,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {showMeasurements ? 'Hide Formula' : 'Show Snell\'s Law Formula'}
+                  </button>
                 </div>
               </div>
-
-              <button
-                onClick={() => setShowMeasurements(!showMeasurements)}
-                style={{
-                  padding: '12px 24px',
-                  background: showMeasurements ? design.colors.success : design.colors.bgCard,
-                  color: design.colors.textPrimary,
-                  border: 'none',
-                  borderRadius: design.radius.sm,
-                  cursor: 'pointer',
-                  fontSize: typo.body,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {showMeasurements ? 'Hide Formula' : 'Show Snell\'s Law Formula'}
-              </button>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
@@ -1218,56 +1230,66 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               Switch between media and adjust the angle to see how the refractive index affects bending.
             </p>
 
-            {renderVisualization()}
-
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
-                  Incident Angle: {incidentAngle}deg
-                </label>
-                <input
-                  type="range"
-                  min="5"
-                  max="85"
-                  value={incidentAngle}
-                  onChange={(e) => setIncidentAngle(Number(e.target.value))}
-                  style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
-                />
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderVisualization()}
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                      Incident Angle: {incidentAngle}deg
+                    </label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="85"
+                      value={incidentAngle}
+                      onChange={(e) => setIncidentAngle(Number(e.target.value))}
+                      style={{ width: '100%', cursor: 'pointer', height: '20px', touchAction: 'pan-y' as any, WebkitAppearance: 'none' as any, accentColor: '#3b82f6' }}
+                    />
+                  </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => setMedium('water')}
-                  style={{
-                    flex: 1,
-                    padding: '16px',
-                    background: medium === 'water' ? design.colors.water : design.colors.bgCard,
-                    color: design.colors.textPrimary,
-                    border: 'none',
-                    borderRadius: design.radius.sm,
-                    cursor: 'pointer',
-                    fontSize: typo.body,
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Water (n=1.33)
-                </button>
-                <button
-                  onClick={() => setMedium('oil')}
-                  style={{
-                    flex: 1,
-                    padding: '16px',
-                    background: medium === 'oil' ? design.colors.oil : design.colors.bgCard,
-                    color: design.colors.textPrimary,
-                    border: 'none',
-                    borderRadius: design.radius.sm,
-                    cursor: 'pointer',
-                    fontSize: typo.body,
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Oil (n=1.47)
-                </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <button
+                      onClick={() => setMedium('water')}
+                      style={{
+                        padding: '16px',
+                        background: medium === 'water' ? design.colors.water : design.colors.bgCard,
+                        color: design.colors.textPrimary,
+                        border: 'none',
+                        borderRadius: design.radius.sm,
+                        cursor: 'pointer',
+                        fontSize: typo.body,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Water (n=1.33)
+                    </button>
+                    <button
+                      onClick={() => setMedium('oil')}
+                      style={{
+                        padding: '16px',
+                        background: medium === 'oil' ? design.colors.oil : design.colors.bgCard,
+                        color: design.colors.textPrimary,
+                        border: 'none',
+                        borderRadius: design.radius.sm,
+                        cursor: 'pointer',
+                        fontSize: typo.body,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Oil (n=1.47)
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

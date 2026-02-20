@@ -1322,8 +1322,18 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         Observe how shading affects power output. Try different configurations to understand bypass diodes.
       </p>
 
-      {renderVisualization(true)}
-
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {renderVisualization(true)}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       {/* Slider controls for play phase */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1359,6 +1369,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
       </div>
 
       {renderControls()}
+        </div>
+      </div>
 
       <div style={{
         background: colors.bgCard,
@@ -1607,8 +1619,18 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
         Observe the difference. Toggle optimizers on and off while shading cells to try different configurations.
       </p>
 
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {renderVisualization(true, true)}
-
+      </div>
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
       {/* Slider controls for twist play phase */}
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1643,6 +1665,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
       </div>
 
       {renderControls()}
+      </div>
+      </div>
 
       <div style={{
         background: 'rgba(245, 158, 11, 0.2)',

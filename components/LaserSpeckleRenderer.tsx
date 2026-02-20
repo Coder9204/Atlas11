@@ -1390,131 +1390,145 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>This simulation displays how coherence length and surface roughness affect the speckle pattern formed on the detector screen.</p>
       <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px' }}>Observe how the pattern changes when you increase or decrease the coherence length. Notice when you adjust surface roughness, the number of scatter points changes. Try adjusting each slider to see distinct effects.</p>
 
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        {renderSpeckleVisualization()}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        maxWidth: '900px',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            {renderSpeckleVisualization()}
 
-        {/* Real-time calculated values display */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-            <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px' }}>Speckle Contrast: </span>
-            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{(coherenceLength / 100).toFixed(2)}</span>
+            {/* Real-time calculated values display */}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px' }}>Contrast: </span>
+                <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{(coherenceLength / 100).toFixed(2)}</span>
+              </div>
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '12px' }}>Scatter: </span>
+                <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{50 + Math.floor(surfaceRoughness * 0.5)}</span>
+              </div>
+              <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                <span style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '12px' }}>Shift: </span>
+                <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{Math.abs(viewpointOffset)}°</span>
+              </div>
+            </div>
           </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-            <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '12px' }}>Scatter Points: </span>
-            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{50 + Math.floor(surfaceRoughness * 0.5)}</span>
-          </div>
-          <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', padding: '8px 12px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-            <span style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '12px' }}>Pattern Shift: </span>
-            <span style={{ color: '#e2e8f0', fontSize: '14px', fontWeight: 700 }}>{Math.abs(viewpointOffset)}°</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Controls */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
-        {/* Coherence Length */}
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Coherence Length (wavelength units)</span>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>{coherenceLength}%</span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="100"
-            value={coherenceLength}
-            onChange={(e) => {
-              setCoherenceLength(Number(e.target.value));
-                          }}
-            style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y' }}
-          />
-        </div>
-
-        {/* Surface Roughness */}
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Surface Roughness</span>
-            <span style={{ color: '#f59e0b', fontWeight: 700 }}>{surfaceRoughness}%</span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="100"
-            value={surfaceRoughness}
-            onChange={(e) => {
-              setSurfaceRoughness(Number(e.target.value));
-                          }}
-            style={{ width: '100%', accentColor: '#f59e0b', touchAction: 'pan-y' }}
-          />
-        </div>
-
-        {/* Viewpoint */}
-        <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Viewpoint Offset</span>
-            <span style={{ color: '#8b5cf6', fontWeight: 700 }}>{viewpointOffset}</span>
-          </div>
-          <input
-            type="range"
-            min="-50"
-            max="50"
-            value={viewpointOffset}
-            onChange={(e) => {
-              setViewpointOffset(Number(e.target.value));
-                          }}
-            style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y' }}
-          />
-          <p style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '8px' }}>Move to see pattern shift (like moving your head)</p>
-        </div>
-      </div>
-
-      {/* Key insight */}
-      <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(34, 197, 94, 0.3)', marginBottom: '16px' }}>
-        <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Key Insight</p>
-        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>
-          Higher coherence = stronger speckle contrast. The pattern shifts as you change viewing angle because you're sampling different parts of the 3D interference field.
-        </p>
-      </div>
-
-      {/* Formula */}
-      <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '16px', textAlign: 'center' }}>
-        <p style={{ color: '#93c5fd', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Speckle Contrast Formula</p>
-        <div style={{ fontFamily: 'monospace', fontSize: '18px', color: 'white', marginBottom: '8px', lineHeight: '1.6' }}>
-          Contrast = σ/⟨I⟩
-        </div>
-        <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#94a3b8', marginBottom: '8px', lineHeight: '1.6' }}>
-          Speckle Size ∝ λ/θ
-        </div>
-        <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
-          σ = intensity std dev, ⟨I⟩ = mean intensity, λ = wavelength, θ = aperture angle
-        </p>
-      </div>
-
-      {/* Comparison: Coherent vs Incoherent */}
-      <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(139, 92, 246, 0.3)', marginBottom: '16px' }}>
-        <p style={{ color: '#8b5cf6', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>Comparison: Before vs After</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-            <p style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Coherent (Laser)</p>
-            <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
-              Fixed phase → Random interference → High contrast speckle
+          {/* Key insight */}
+          <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.3)', marginBottom: '16px' }}>
+            <p style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Key Insight</p>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>
+              Higher coherence = stronger speckle contrast. The pattern shifts as you change viewing angle because you're sampling different parts of the 3D interference field.
             </p>
           </div>
-          <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-            <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Incoherent (LED)</p>
-            <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
-              Random phases → Averaging → Smooth uniform light
+
+          {/* Comparison: Coherent vs Incoherent */}
+          <div style={{ background: 'rgba(139, 92, 246, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(139, 92, 246, 0.3)', marginBottom: '16px' }}>
+            <p style={{ color: '#8b5cf6', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>Comparison: Before vs After</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                <p style={{ color: '#22c55e', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Coherent (Laser)</p>
+                <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+                  Fixed phase → Random interference → High contrast speckle
+                </p>
+              </div>
+              <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '12px', marginBottom: '6px' }}>Incoherent (LED)</p>
+                <p style={{ color: '#e2e8f0', fontSize: '11px', lineHeight: '1.4' }}>
+                  Random phases → Averaging → Smooth uniform light
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', marginBottom: '16px' }}>
+            {/* Coherence Length */}
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Coherence Length</span>
+                <span style={{ color: '#22c55e', fontWeight: 700 }}>{coherenceLength}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={coherenceLength}
+                onChange={(e) => {
+                  setCoherenceLength(Number(e.target.value));
+                              }}
+                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y' }}
+              />
+            </div>
+
+            {/* Surface Roughness */}
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Surface Roughness</span>
+                <span style={{ color: '#f59e0b', fontWeight: 700 }}>{surfaceRoughness}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={surfaceRoughness}
+                onChange={(e) => {
+                  setSurfaceRoughness(Number(e.target.value));
+                              }}
+                style={{ width: '100%', accentColor: '#f59e0b', touchAction: 'pan-y' }}
+              />
+            </div>
+
+            {/* Viewpoint */}
+            <div style={{ background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Viewpoint Offset</span>
+                <span style={{ color: '#8b5cf6', fontWeight: 700 }}>{viewpointOffset}</span>
+              </div>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                value={viewpointOffset}
+                onChange={(e) => {
+                  setViewpointOffset(Number(e.target.value));
+                              }}
+                style={{ width: '100%', accentColor: '#8b5cf6', touchAction: 'pan-y' }}
+              />
+              <p style={{ color: '#e2e8f0', fontSize: '12px', marginTop: '8px' }}>Move to see pattern shift</p>
+            </div>
+          </div>
+
+          {/* Formula */}
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(59, 130, 246, 0.3)', marginBottom: '16px', textAlign: 'center' }}>
+            <p style={{ color: '#93c5fd', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Speckle Contrast</p>
+            <div style={{ fontFamily: 'monospace', fontSize: '18px', color: 'white', marginBottom: '8px', lineHeight: '1.6' }}>
+              Contrast = σ/⟨I⟩
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: '16px', color: '#94a3b8', marginBottom: '8px', lineHeight: '1.6' }}>
+              Speckle Size ∝ λ/θ
+            </div>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
+              σ = intensity std dev, ⟨I⟩ = mean intensity
+            </p>
+          </div>
+
+          {/* Real-world relevance */}
+          <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+            <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Real-World</p>
+            <p style={{ color: '#e2e8f0', fontSize: '13px', lineHeight: '1.5' }}>
+              Used in medical imaging for blood flow, materials science for surface roughness, and structural engineering for deformation.
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Real-world relevance */}
-      <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', maxWidth: '400px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-        <p style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Real-World Relevance</p>
-        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: '1.5' }}>
-          Laser speckle is used in medical imaging to measure blood flow non-invasively, in materials science to detect surface roughness at nanometer scales, and in structural engineering to measure tiny deformations in bridges and buildings.
-        </p>
       </div>
 
     </div>
@@ -1791,63 +1805,77 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>Laser vs Flashlight</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Toggle between coherent and incoherent light</p>
 
-      <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        {renderSpeckleVisualization()}
-      </div>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        maxWidth: '900px',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            {renderSpeckleVisualization()}
+          </div>
 
-      {/* Light source toggle */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-        <button
-          onPointerDown={(e) => { e.preventDefault(); setUseLaser(true); playSound('laser'); }}
-          style={{
-            padding: '16px 32px',
-            borderRadius: '12px',
-            fontWeight: 600,
-            border: 'none',
-            cursor: 'pointer',
-            background: useLaser ? 'linear-gradient(to right, #22c55e, #16a34a)' : 'rgba(51, 65, 85, 0.5)',
-            color: 'white',
-            transition: 'all 0.3s'
-          }}
-        >
-          💚 Laser (Coherent)
-        </button>
-        <button
-          onPointerDown={(e) => { e.preventDefault(); setUseLaser(false); }}
-          style={{
-            padding: '16px 32px',
-            borderRadius: '12px',
-            fontWeight: 600,
-            border: 'none',
-            cursor: 'pointer',
-            background: !useLaser ? 'linear-gradient(to right, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.5)',
-            color: 'white',
-            transition: 'all 0.3s'
-          }}
-        >
-          🔦 Flashlight (Incoherent)
-        </button>
-      </div>
-
-      {/* Comparison */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
-        <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-          <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Laser</h4>
-          <ul style={{ color: '#cbd5e1', fontSize: '12px', listStyle: 'none', padding: 0, margin: 0 }}>
-            <li>Fixed phase relationship</li>
-            <li>Single wavelength</li>
-            <li>Stable interference</li>
-            <li>Strong speckle</li>
-          </ul>
+          {/* Comparison */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%', marginBottom: '16px' }}>
+            <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+              <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px' }}>Laser</h4>
+              <ul style={{ color: '#cbd5e1', fontSize: '12px', listStyle: 'none', padding: 0, margin: 0 }}>
+                <li>Fixed phase relationship</li>
+                <li>Single wavelength</li>
+                <li>Stable interference</li>
+                <li>Strong speckle</li>
+              </ul>
+            </div>
+            <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+              <h4 style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Flashlight</h4>
+              <ul style={{ color: '#cbd5e1', fontSize: '12px', listStyle: 'none', padding: 0, margin: 0 }}>
+                <li>Random phases</li>
+                <li>Many wavelengths</li>
+                <li>Interference averages out</li>
+                <li>No visible speckle</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div style={{ background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
-          <h4 style={{ color: '#fbbf24', fontWeight: 600, marginBottom: '8px' }}>Flashlight</h4>
-          <ul style={{ color: '#cbd5e1', fontSize: '12px', listStyle: 'none', padding: 0, margin: 0 }}>
-            <li>Random phases</li>
-            <li>Many wavelengths</li>
-            <li>Interference averages out</li>
-            <li>No visible speckle</li>
-          </ul>
+
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Light source toggle */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+            <button
+              onPointerDown={(e) => { e.preventDefault(); setUseLaser(true); playSound('laser'); }}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                background: useLaser ? 'linear-gradient(to right, #22c55e, #16a34a)' : 'rgba(51, 65, 85, 0.5)',
+                color: 'white',
+                transition: 'all 0.3s'
+              }}
+            >
+              Laser (Coherent)
+            </button>
+            <button
+              onPointerDown={(e) => { e.preventDefault(); setUseLaser(false); }}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                background: !useLaser ? 'linear-gradient(to right, #f59e0b, #d97706)' : 'rgba(51, 65, 85, 0.5)',
+                color: 'white',
+                transition: 'all 0.3s'
+              }}
+            >
+              Flashlight (Incoherent)
+            </button>
+          </div>
         </div>
       </div>
     </div>

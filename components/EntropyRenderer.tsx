@@ -747,10 +747,23 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               Phase 3 of 10: Experiment - Adjust the sliders to observe how entropy changes
             </p>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid rgba(255,255,255,0.1)` }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '20px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid rgba(255,255,255,0.1)` }}>
               {renderEntropySVG(460, 300, true)}
             </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Sliders */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '16px', border: `1px solid rgba(255,255,255,0.1)` }}>
               <label style={{ display: 'block', color: colors.textPrimary, fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>
@@ -800,6 +813,8 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 <div style={{ color: colors.warning, fontWeight: 700, fontSize: '20px' }}>{microstates.toLocaleString()}</div>
                 <div style={{ color: colors.textMuted, fontSize: '12px' }}>Microstates ({'\u03A9'})</div>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* Formula */}
@@ -966,10 +981,23 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
               Phase 6 of 10: Heat Flow - Adjust the temperature sliders to explore efficiency limits
             </p>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '20px', border: `1px solid rgba(255,255,255,0.1)` }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '20px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', border: `1px solid rgba(255,255,255,0.1)` }}>
               {renderHeatFlowSVG(460, 300)}
             </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Temperature sliders */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '12px', border: `1px solid ${colors.hot}30` }}>
               <label style={{ display: 'block', color: colors.hot, fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>
@@ -1015,6 +1043,8 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
                 <div style={{ color: colors.warning, fontWeight: 700, fontSize: '18px' }}>{hotTemp - coldTemp}K</div>
                 <div style={{ color: colors.textMuted, fontSize: '11px' }}>Temperature Gap</div>
               </div>
+            </div>
+            </div>
             </div>
 
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'center', border: `1px solid #06B6D4` }}>

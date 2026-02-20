@@ -875,9 +875,20 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Explore Dispersion</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderDispersionSVG(true)}
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderDispersionSVG(true)}
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* What you see */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
@@ -943,7 +954,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
             {/* Data readout */}
             <div style={{ background: `${colors.primary}10`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.primary}20` }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', textAlign: 'center' }}>
                 <div>
                   <div style={{ color: colors.primary, fontSize: '20px', fontWeight: 700 }}>{prismAngle.toFixed(0)}°</div>
                   <div style={{ color: colors.textMuted, fontSize: '12px' }}>Prism Angle</div>
@@ -956,6 +967,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
                   <div style={{ color: colors.success, fontSize: '20px', fontWeight: 700 }}>{totalSpread.toFixed(1)}°</div>
                   <div style={{ color: colors.textMuted, fontSize: '12px' }}>Color Spread</div>
                 </div>
+              </div>
+            </div>
               </div>
             </div>
           </div>
@@ -1155,54 +1168,66 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>CD as a Diffraction Grating</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderCDSVG()}
-            </div>
-
-            {/* Controls */}
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.textMuted, fontSize: '13px' }}>0.5μm</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Track Spacing: {gratingSpacing.toFixed(1)}μm</span>
-                  <span style={{ color: colors.warning, fontSize: '13px' }}>3.0μm</span>
-                </div>
-                <input type="range" min="0.5" max="3" step="0.1" value={gratingSpacing} onChange={(e) => setGratingSpacing(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
-              </div>
-            </div>
-
-            {/* Comparison */}
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>Diffraction vs. Refraction Dispersion</h3>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: colors.primary, fontWeight: 700, marginBottom: '4px', fontSize: '14px' }}>Prism (Refraction)</div>
-                  <ul style={{ color: colors.textSecondary, fontSize: '13px', paddingLeft: '16px', margin: 0 }}>
-                    <li>Blue bends MORE</li>
-                    <li>Single spectrum</li>
-                    <li>Based on n(λ)</li>
-                  </ul>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: colors.warning, fontWeight: 700, marginBottom: '4px', fontSize: '14px' }}>CD (Diffraction)</div>
-                  <ul style={{ color: colors.textSecondary, fontSize: '13px', paddingLeft: '16px', margin: 0 }}>
-                    <li>Red bends MORE</li>
-                    <li>Multiple spectra</li>
-                    <li>Based on d·sinθ = mλ</li>
-                  </ul>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderCDSVG()}
                 </div>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Controls */}
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>0.5μm</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>Track Spacing: {gratingSpacing.toFixed(1)}μm</span>
+                      <span style={{ color: colors.warning, fontSize: '13px' }}>3.0μm</span>
+                    </div>
+                    <input type="range" min="0.5" max="3" step="0.1" value={gratingSpacing} onChange={(e) => setGratingSpacing(Number(e.target.value))} style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, accentColor: '#3b82f6', borderRadius: '4px', cursor: 'pointer' }} />
+                  </div>
+                </div>
 
-            {/* Formula */}
-            <div style={{ background: `${colors.warning}10`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.warning}30`, textAlign: 'center' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'serif' }}>
-                d × sin(θ) = m × λ
-              </p>
-              <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
-                track spacing × sine of angle = order × wavelength
-              </p>
+                {/* Comparison */}
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>Diffraction vs. Refraction Dispersion</h3>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: colors.primary, fontWeight: 700, marginBottom: '4px', fontSize: '14px' }}>Prism (Refraction)</div>
+                      <ul style={{ color: colors.textSecondary, fontSize: '13px', paddingLeft: '16px', margin: 0 }}>
+                        <li>Blue bends MORE</li>
+                        <li>Single spectrum</li>
+                        <li>Based on n(λ)</li>
+                      </ul>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: colors.warning, fontWeight: 700, marginBottom: '4px', fontSize: '14px' }}>CD (Diffraction)</div>
+                      <ul style={{ color: colors.textSecondary, fontSize: '13px', paddingLeft: '16px', margin: 0 }}>
+                        <li>Red bends MORE</li>
+                        <li>Multiple spectra</li>
+                        <li>Based on d·sinθ = mλ</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formula */}
+                <div style={{ background: `${colors.warning}10`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.warning}30`, textAlign: 'center' }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'serif' }}>
+                    d × sin(θ) = m × λ
+                  </p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', margin: '4px 0 0 0' }}>
+                    track spacing × sine of angle = order × wavelength
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

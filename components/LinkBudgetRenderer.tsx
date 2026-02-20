@@ -999,26 +999,39 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             </ul>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            {renderVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderVisualization()}
+              </div>
 
-          {renderControls()}
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${colors.warning}`, marginBottom: '16px' }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Experiments to Try:</h4>
+                <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.small }}>
+                  <li>Move distance from LEO to GEO - watch path loss skyrocket!</li>
+                  <li>Increase antenna gain to compensate for distance</li>
+                  <li>Change frequency and observe FSPL changes</li>
+                </ul>
+              </div>
 
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: `4px solid ${colors.warning}` }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', fontSize: typo.small }}>
-              <li>Move distance from LEO (400 km) to GEO (36,000 km) - watch path loss skyrocket!</li>
-              <li>Increase antenna gain to compensate for distance</li>
-              <li>Change frequency and observe FSPL changes</li>
-            </ul>
-          </div>
+              <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${colors.accent}` }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Why This Matters:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+                  Every communication satellite relies on precise link budget analysis. Engineers use these calculations to design antennas, select frequencies, and determine power requirements.
+                </p>
+              </div>
+            </div>
 
-          <div style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '16px', borderRadius: '12px', marginTop: '16px', borderLeft: `4px solid ${colors.accent}` }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Why This Matters:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
-              Link budget calculations are essential in real-world satellite engineering. Every communication satellite, from Starlink to GPS, relies on precise link budget analysis to ensure reliable data transmission across vast distances. Engineers use these calculations to design antennas, select frequencies, and determine power requirements.
-            </p>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
           </div>
         </div>
       </div>,
@@ -1155,47 +1168,58 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            {renderVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                {renderVisualization()}
+              </div>
 
-          <div style={{ padding: typo.pagePadding, maxWidth: '500px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
-                Frequency: {frequency} GHz
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="30"
-                step="1"
-                value={frequency}
-                onChange={(e) => setFrequency(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted, marginTop: '4px' }}>
-                <span>L-band (1.5 GHz)</span>
-                <span>Ka-band (30 GHz)</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: typo.body }}>L-band (1.5 GHz)</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '4px' }}>Lower loss, lower data rate</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>Good for voice, IoT</div>
+                </div>
+                <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
+                  <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: typo.body }}>Ka-band (30 GHz)</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '4px' }}>Higher loss, higher data rate</div>
+                  <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>Good for broadband</div>
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '20px' }}>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ color: '#60a5fa', fontWeight: 'bold', fontSize: typo.body }}>L-band (1.5 GHz)</div>
-                <div style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '4px' }}>Lower loss, lower data rate</div>
-                <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>Good for voice, IoT</div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                  Frequency: {frequency} GHz
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="30"
+                  step="1"
+                  value={frequency}
+                  onChange={(e) => setFrequency(parseInt(e.target.value))}
+                  style={{ width: '100%', accentColor: '#a855f7', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted, marginTop: '4px' }}>
+                  <span>L-band (1.5)</span>
+                  <span>Ka-band (30)</span>
+                </div>
               </div>
-              <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: typo.body }}>Ka-band (30 GHz)</div>
-                <div style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '4px' }}>Higher loss, higher data rate</div>
-                <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>Good for broadband</div>
-              </div>
-            </div>
 
-            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '12px', borderRadius: '8px', marginTop: '16px' }}>
-              <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
-                <strong style={{ color: '#a855f7' }}>Experiment:</strong> Note the FSPL value as you move from 1 GHz to 30 GHz. How much does path loss increase?
-              </p>
+              <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '12px', borderRadius: '8px' }}>
+                <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
+                  <strong style={{ color: '#a855f7' }}>Experiment:</strong> Note the FSPL as you move from 1 to 30 GHz. How much does path loss increase?
+                </p>
+              </div>
             </div>
           </div>
         </div>

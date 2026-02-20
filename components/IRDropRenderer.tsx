@@ -1121,83 +1121,94 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               </div>
             </div>
 
-            {/* Main visualization */}
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <PowerGridVisualization showHeatmap={true} />
-              </div>
-
-              {/* Current draw slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Current Draw</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{currentDraw}mA per cell</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  step="5"
-                  value={currentDraw}
-                  onChange={(e) => setCurrentDraw(parseInt(e.target.value))}
-                  onInput={(e) => setCurrentDraw(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
-
-              {/* Metal thickness slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Metal Thickness</span>
-                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{metalThickness}um</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="0.5"
-                  value={metalThickness}
-                  onChange={(e) => setMetalThickness(parseFloat(e.target.value))}
-                  onInput={(e) => setMetalThickness(parseFloat((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
-
-              {/* Grid density slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Density</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{gridDensity} stripes</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="10"
-                  step="1"
-                  value={gridDensity}
-                  onChange={(e) => setGridDensity(parseInt(e.target.value))}
-                  onInput={(e) => setGridDensity(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
-
-              {/* Stats display */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: stats.maxDrop > 50 ? colors.error : stats.maxDrop > 30 ? colors.warning : colors.success }}>
-                    {stats.maxDrop.toFixed(1)}mV
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <PowerGridVisualization showHeatmap={true} />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Max IR Drop</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{stats.avgDrop.toFixed(1)}mV</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Average Drop</div>
-                </div>
-                <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                  <div style={{ ...typo.h3, color: stats.efficiency > 95 ? colors.success : stats.efficiency > 90 ? colors.warning : colors.error }}>
-                    {stats.efficiency.toFixed(0)}%
+
+                  {/* Stats display */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: stats.maxDrop > 50 ? colors.error : stats.maxDrop > 30 ? colors.warning : colors.success }}>
+                        {stats.maxDrop.toFixed(1)}mV
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Max IR Drop</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{stats.avgDrop.toFixed(1)}mV</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Average Drop</div>
+                    </div>
+                    <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <div style={{ ...typo.h3, color: stats.efficiency > 95 ? colors.success : stats.efficiency > 90 ? colors.warning : colors.error }}>
+                        {stats.efficiency.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Grid Efficiency</div>
+                    </div>
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Grid Efficiency</div>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Current draw slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Current Draw</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{currentDraw}mA</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={currentDraw}
+                    onChange={(e) => setCurrentDraw(parseInt(e.target.value))}
+                    onInput={(e) => setCurrentDraw(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Metal thickness slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Metal Thickness</span>
+                    <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{metalThickness}um</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="0.5"
+                    value={metalThickness}
+                    onChange={(e) => setMetalThickness(parseFloat(e.target.value))}
+                    onInput={(e) => setMetalThickness(parseFloat((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Grid density slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Density</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{gridDensity} stripes</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="10"
+                    step="1"
+                    value={gridDensity}
+                    onChange={(e) => setGridDensity(parseInt(e.target.value))}
+                    onInput={(e) => setGridDensity(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
                 </div>
               </div>
             </div>
@@ -1443,67 +1454,75 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
               See how temperature and distance from power bump affect IR drop
             </p>
 
-            <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <TempVisualization />
-              </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <TempVisualization />
+                  </div>
 
-              {/* Temperature slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Chip Temperature</span>
-                  <span style={{
-                    ...typo.small,
-                    color: temperature > 70 ? colors.error : temperature > 50 ? colors.warning : colors.success,
-                    fontWeight: 600
-                  }}>
-                    {temperature}°C
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="-40"
-                  max="125"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseInt(e.target.value))}
-                  onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Cold (-40°C)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Hot (125°C)</span>
+                  {/* Resistance change indicator */}
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+                    <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                      Resistance change from 25°C:{' '}
+                      <span style={{ color: temperature > 25 ? colors.error : colors.success, fontWeight: 600 }}>
+                        {temperature > 25 ? '+' : ''}{((temperature - 25) * 0.4).toFixed(0)}%
+                      </span>
+                    </p>
+                    <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                      Copper: ~0.4%/°C temperature coefficient
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              {/* Distance from bump slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Power Bump</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distanceFromBump}um</span>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Temperature slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Chip Temp</span>
+                    <span style={{
+                      ...typo.small,
+                      color: temperature > 70 ? colors.error : temperature > 50 ? colors.warning : colors.success,
+                      fontWeight: 600
+                    }}>
+                      {temperature}°C
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-40"
+                    max="125"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseInt(e.target.value))}
+                    onInput={(e) => setTemperature(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  step="5"
-                  value={distanceFromBump}
-                  onChange={(e) => setDistanceFromBump(parseInt(e.target.value))}
-                  onInput={(e) => setDistanceFromBump(parseInt((e.target as HTMLInputElement).value))}
-                  style={sliderStyle}
-                />
-              </div>
 
-              {/* Resistance change indicator */}
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                  Resistance change from 25°C:{' '}
-                  <span style={{ color: temperature > 25 ? colors.error : colors.success, fontWeight: 600 }}>
-                    {temperature > 25 ? '+' : ''}{((temperature - 25) * 0.4).toFixed(0)}%
-                  </span>
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                  Copper: ~0.4%/°C temperature coefficient
-                </p>
+                {/* Distance from bump slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Distance</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distanceFromBump}um</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="5"
+                    value={distanceFromBump}
+                    onChange={(e) => setDistanceFromBump(parseInt(e.target.value))}
+                    onInput={(e) => setDistanceFromBump(parseInt((e.target as HTMLInputElement).value))}
+                    style={sliderStyle}
+                  />
+                </div>
               </div>
             </div>
 

@@ -1003,122 +1003,140 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             Adjust the turns on each coil to see how voltage transforms.
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TransformerVisualization
-                pTurns={primaryTurns}
-                sTurns={secondaryTurns}
-                vIn={inputVoltage}
-                ac={isAC}
-                animPhase={acPhase}
-              />
-            </div>
-
-            {/* Primary turns slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#f87171' }}>Primary Turns</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{primaryTurns}</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="200"
-                step="10"
-                value={primaryTurns}
-                onChange={(e) => setPrimaryTurns(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Secondary turns slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: '#4ade80' }}>Secondary Turns</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{secondaryTurns}</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="400"
-                step="10"
-                value={secondaryTurns}
-                onChange={(e) => setSecondaryTurns(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Input voltage slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Input Voltage</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{inputVoltage}V</span>
-              </div>
-              <input
-                type="range"
-                min="12"
-                max="240"
-                step="12"
-                value={inputVoltage}
-                onChange={(e) => setInputVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-              border: `1px solid ${colors.accent}44`,
-            }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
-              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
-                V₂/V₁ = N₂/N₁
-              </div>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{turnsRatio.toFixed(2)}:1</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Turns Ratio</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <TransformerVisualization
+                    pTurns={primaryTurns}
+                    sTurns={secondaryTurns}
+                    vIn={inputVoltage}
+                    ac={isAC}
+                    animPhase={acPhase}
+                  />
+                </div>
+
+                {/* Formula display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                  border: `1px solid ${colors.accent}44`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
+                  <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
+                    V₂/V₁ = N₂/N₁
+                  </div>
+                </div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{turnsRatio.toFixed(2)}:1</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Turns Ratio</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{outputVoltage.toFixed(0)}V</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Output Voltage</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: turnsRatio > 1 ? '#4ade80' : '#fb923c' }}>{transformerType}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Type</div>
+                  </div>
+                </div>
               </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.6))',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{outputVoltage.toFixed(0)}V</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Output Voltage</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: turnsRatio > 1 ? '#4ade80' : '#fb923c' }}>{transformerType}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Type</div>
+                {/* Primary turns slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#f87171' }}>Primary Turns</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{primaryTurns}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="10"
+                    value={primaryTurns}
+                    onChange={(e) => setPrimaryTurns(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Secondary turns slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: '#4ade80' }}>Secondary Turns</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{secondaryTurns}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="400"
+                    step="10"
+                    value={secondaryTurns}
+                    onChange={(e) => setSecondaryTurns(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
+                  />
+                </div>
+
+                {/* Input voltage slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Input Voltage</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{inputVoltage}V</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="12"
+                    max="240"
+                    step="12"
+                    value={inputVoltage}
+                    onChange={(e) => setInputVoltage(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', WebkitAppearance: 'none' as const, touchAction: 'pan-y', accentColor: '#3b82f6' }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1478,104 +1496,121 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             Toggle between AC and DC to see why transformers need AC
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TransformerVisualization
-                pTurns={100}
-                sTurns={200}
-                vIn={120}
-                ac={twistMode === 'ac'}
-                animPhase={acPhase}
-              />
-            </div>
-
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-              border: `1px solid ${colors.accent}44`,
-            }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
-              <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
-                V₂/V₁ = N₂/N₁
-              </div>
-            </div>
-
-            {/* AC/DC Toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => { playSound('click'); setTwistMode('ac'); }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: twistMode === 'ac' ? colors.success : colors.bgSecondary,
-                  color: twistMode === 'ac' ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                AC Input ~
-              </button>
-              <button
-                onClick={() => { playSound('click'); setTwistMode('dc'); }}
-                style={{
-                  padding: '14px 28px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: twistMode === 'dc' ? colors.error : colors.bgSecondary,
-                  color: twistMode === 'dc' ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                DC Input =
-              </button>
-            </div>
-
-            {/* Observation guidance */}
-            <div style={{
-              background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
-              borderRadius: '12px',
-              padding: '14px',
-              marginBottom: '16px',
-            }}>
-              <div style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>
-                What to observe:
-              </div>
-              <div style={{ ...typo.small, color: colors.textSecondary }}>
-                Toggle between AC and DC. Watch the magnetic flux animation appear/disappear and observe the output voltage change. DC creates static flux with no induction!
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <div style={{
-              background: twistMode === 'ac' ? `${colors.success}22` : `${colors.error}22`,
-              border: `1px solid ${twistMode === 'ac' ? colors.success : colors.error}`,
-              borderRadius: '12px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              {twistMode === 'ac' ? (
-                <div style={{ color: colors.success }}>
-                  <p style={{ fontWeight: 700, marginBottom: '8px' }}>AC: Constantly changing current = changing magnetic flux = induced EMF!</p>
-                  <p style={{ ...typo.small }}>Output: 240V AC (step-up working perfectly)</p>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <TransformerVisualization
+                    pTurns={100}
+                    sTurns={200}
+                    vIn={120}
+                    ac={twistMode === 'ac'}
+                    animPhase={acPhase}
+                  />
                 </div>
-              ) : (
-                <div style={{ color: colors.error }}>
-                  <p style={{ fontWeight: 700, marginBottom: '8px' }}>DC: Constant current = STATIC magnetic flux = NO induction!</p>
-                  <p style={{ ...typo.small }}>Output: 0V (nothing happens after the initial moment)</p>
+
+                {/* Formula display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                  border: `1px solid ${colors.accent}44`,
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Transformer Equation:</div>
+                  <div style={{ fontFamily: 'monospace', fontSize: '16px', color: colors.accent, fontWeight: 600 }}>
+                    V₂/V₁ = N₂/N₁
+                  </div>
                 </div>
-              )}
+
+                {/* Explanation */}
+                <div style={{
+                  background: twistMode === 'ac' ? `${colors.success}22` : `${colors.error}22`,
+                  border: `1px solid ${twistMode === 'ac' ? colors.success : colors.error}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  {twistMode === 'ac' ? (
+                    <div style={{ color: colors.success }}>
+                      <p style={{ fontWeight: 700, marginBottom: '8px' }}>AC: Constantly changing current = changing magnetic flux = induced EMF!</p>
+                      <p style={{ ...typo.small }}>Output: 240V AC (step-up working perfectly)</p>
+                    </div>
+                  ) : (
+                    <div style={{ color: colors.error }}>
+                      <p style={{ fontWeight: 700, marginBottom: '8px' }}>DC: Constant current = STATIC magnetic flux = NO induction!</p>
+                      <p style={{ ...typo.small }}>Output: 0V (nothing happens after the initial moment)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* AC/DC Toggle */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => { playSound('click'); setTwistMode('ac'); }}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: twistMode === 'ac' ? colors.success : colors.bgSecondary,
+                      color: twistMode === 'ac' ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    AC Input ~
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setTwistMode('dc'); }}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: twistMode === 'dc' ? colors.error : colors.bgSecondary,
+                      color: twistMode === 'dc' ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    DC Input =
+                  </button>
+                </div>
+
+                {/* Observation guidance */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  border: `1px solid ${colors.accent}33`,
+                  borderRadius: '12px',
+                  padding: '14px',
+                }}>
+                  <div style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '4px' }}>
+                    What to observe:
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textSecondary }}>
+                    Toggle between AC and DC. Watch the magnetic flux animation appear/disappear and observe the output voltage change. DC creates static flux with no induction!
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

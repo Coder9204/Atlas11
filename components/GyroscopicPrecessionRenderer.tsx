@@ -86,6 +86,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     return 'hook';
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
+
   // Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -1230,36 +1233,48 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               </p>
             </div>
 
-            {renderGyroscope(true)}
-
-            {isSpinning && (
-              <div style={{
-                marginTop: space.md,
-                padding: space.md,
-                borderRadius: radius.md,
-                background: `${colors.success}15`,
-                border: `1px solid ${colors.success}40`,
-              }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: colors.success, marginBottom: '4px' }}>Watch carefully!</p>
-                <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
-                  The wheel moves <strong style={{ color: colors.textPrimary }}>sideways</strong>, not down!
-                  Compare this with the reference line on the chart to see how spin speed affects precession rate.
-                </p>
-              </div>
-            )}
-
+            {/* Side-by-side layout */}
             <div style={{
-              marginTop: space.md,
-              padding: space.md,
-              borderRadius: radius.md,
-              background: colors.bgSecondary,
-              border: `1px solid ${colors.border}`,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>Why This Matters</p>
-              <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.6 }}>
-                Gyroscopic precession is fundamental to real-world engineering. Helicopters rely on this principle for stable flight,
-                spacecraft use reaction wheels for fuel-free orientation, and motorcycles depend on gyroscopic effects for stability at speed.
-              </p>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderGyroscope(true)}
+              </div>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {isSpinning && (
+                  <div style={{
+                    marginBottom: space.md,
+                    padding: space.md,
+                    borderRadius: radius.md,
+                    background: `${colors.success}15`,
+                    border: `1px solid ${colors.success}40`,
+                  }}>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: colors.success, marginBottom: '4px' }}>Watch carefully!</p>
+                    <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textSecondary, lineHeight: 1.5 }}>
+                      The wheel moves <strong style={{ color: colors.textPrimary }}>sideways</strong>, not down!
+                      Compare this with the reference line on the chart to see how spin speed affects precession rate.
+                    </p>
+                  </div>
+                )}
+
+                <div style={{
+                  padding: space.md,
+                  borderRadius: radius.md,
+                  background: colors.bgSecondary,
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: colors.primary, marginBottom: '6px' }}>Why This Matters</p>
+                  <p style={{ fontSize: '13px', fontWeight: 400, color: colors.textTertiary, lineHeight: 1.6 }}>
+                    Gyroscopic precession is fundamental to real-world engineering. Helicopters rely on this principle for stable flight,
+                    spacecraft use reaction wheels for fuel-free orientation, and motorcycles depend on gyroscopic effects for stability at speed.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1396,29 +1411,41 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         <div style={{ flex: 1, overflow: 'auto', padding: space.lg }}>
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {renderHeader('Step 5 \u2022 Explore', 'Adjust Spin Speed', 'See how precession rate changes with different spin speeds.')}
-            {renderGyroscope(true)}
-
+            {/* Side-by-side layout */}
             <div style={{
-              marginTop: space.md,
-              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.sm,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                padding: space.md,
-                borderRadius: radius.md,
-                background: `${colors.success}15`,
-                textAlign: 'center',
-              }}>
-                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>HIGH SPIN</p>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: colors.success }}>Slow Precession</p>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderGyroscope(true)}
               </div>
-              <div style={{
-                padding: space.md,
-                borderRadius: radius.md,
-                background: `${colors.danger}15`,
-                textAlign: 'center',
-              }}>
-                <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>LOW SPIN</p>
-                <p style={{ fontSize: '16px', fontWeight: 700, color: colors.danger }}>Fast Precession</p>
+
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.sm,
+                }}>
+                  <div style={{
+                    padding: space.md,
+                    borderRadius: radius.md,
+                    background: `${colors.success}15`,
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>HIGH SPIN</p>
+                    <p style={{ fontSize: '16px', fontWeight: 700, color: colors.success }}>Slow Precession</p>
+                  </div>
+                  <div style={{
+                    padding: space.md,
+                    borderRadius: radius.md,
+                    background: `${colors.danger}15`,
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ fontSize: '11px', color: colors.textTertiary, marginBottom: '4px' }}>LOW SPIN</p>
+                    <p style={{ fontSize: '16px', fontWeight: 700, color: colors.danger }}>Fast Precession</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

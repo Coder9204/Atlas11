@@ -1213,110 +1213,116 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             Switch between visible and IR views to see how different objects appear.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <IRSceneVisualization />
-            </div>
-
-            {/* Object selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Select Object</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {[
-                  { id: 'hand', label: 'Hand (37C)', icon: '✋' },
-                  { id: 'cup_matte', label: 'Matte Cup', icon: '☕' },
-                  { id: 'cup_shiny', label: 'Shiny Cup', icon: '🥤' },
-                  { id: 'ice', label: 'Ice (0C)', icon: '🧊' },
-                ].map(obj => (
-                  <button
-                    key={obj.id}
-                    onClick={() => { playSound('click'); setSelectedObject(obj.id as typeof selectedObject); }}
-                    style={{
-                      flex: 1,
-                      minWidth: '100px',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      border: `2px solid ${selectedObject === obj.id ? colors.accent : colors.border}`,
-                      background: selectedObject === obj.id ? `${colors.accent}22` : colors.bgSecondary,
-                      color: colors.textPrimary,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '24px' }}>{obj.icon}</div>
-                    <div style={{ ...typo.small }}>{obj.label}</div>
-                  </button>
-                ))}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <IRSceneVisualization />
+                </div>
               </div>
             </div>
-
-            {/* Temperature slider - always enabled */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Temperature</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{objectTemp}°C</span>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Object selector */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Select Object</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {[
+                    { id: 'hand', label: 'Hand (37C)', icon: '✋' },
+                    { id: 'cup_matte', label: 'Matte Cup', icon: '☕' },
+                    { id: 'cup_shiny', label: 'Shiny Cup', icon: '🥤' },
+                    { id: 'ice', label: 'Ice (0C)', icon: '🧊' },
+                  ].map(obj => (
+                    <button
+                      key={obj.id}
+                      onClick={() => { playSound('click'); setSelectedObject(obj.id as typeof selectedObject); }}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: `2px solid ${selectedObject === obj.id ? colors.accent : colors.border}`,
+                        background: selectedObject === obj.id ? `${colors.accent}22` : colors.bgSecondary,
+                        color: colors.textPrimary,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '24px' }}>{obj.icon}</div>
+                      <div style={{ ...typo.small }}>{obj.label}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <input
-                type="range"
-                min="5"
-                max="90"
-                value={objectTemp}
-                onChange={(e) => { setObjectTemp(parseInt(e.target.value)); }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <p style={{ ...typo.small, color: 'rgba(148,163,184,0.7)', margin: '4px 0 0', fontSize: '12px' }}>
-                Watch how temperature changes affect infrared emission. Higher temperature → more IR radiation emitted.
-              </p>
-            </div>
 
-            {/* View mode toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={() => { playSound('click'); setViewMode('visible'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: viewMode === 'visible' ? colors.cold : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Normal View
-              </button>
-              <button
-                onClick={() => { playSound('click'); setViewMode('infrared'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: viewMode === 'infrared' ? colors.accent : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                IR Camera
-              </button>
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{objectTemp}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="90"
+                  value={objectTemp}
+                  onChange={(e) => { setObjectTemp(parseInt(e.target.value)); }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+              </div>
+
+              {/* View mode toggle */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={() => { playSound('click'); setViewMode('visible'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: viewMode === 'visible' ? colors.cold : colors.bgSecondary,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Normal View
+                </button>
+                <button
+                  onClick={() => { playSound('click'); setViewMode('infrared'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: viewMode === 'infrared' ? colors.accent : colors.bgSecondary,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  IR Camera
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1612,48 +1618,60 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             Compare matte black vs polished metal at the same temperature
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TwistComparisonVisualization />
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <TwistComparisonVisualization />
+                </div>
+              </div>
             </div>
-
-            {/* View mode toggle */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={() => { playSound('click'); setTwistViewMode('visible'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: twistViewMode === 'visible' ? colors.cold : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                Normal View
-              </button>
-              <button
-                onClick={() => { playSound('click'); setTwistViewMode('infrared'); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: twistViewMode === 'infrared' ? colors.accent : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                IR Camera
-              </button>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* View mode toggle */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => { playSound('click'); setTwistViewMode('visible'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: twistViewMode === 'visible' ? colors.cold : colors.bgSecondary,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  Normal View
+                </button>
+                <button
+                  onClick={() => { playSound('click'); setTwistViewMode('infrared'); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: twistViewMode === 'infrared' ? colors.accent : colors.bgSecondary,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                  }}
+                >
+                  IR Camera
+                </button>
+              </div>
             </div>
           </div>
 

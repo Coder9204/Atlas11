@@ -1169,59 +1169,71 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             </p>
           </div>
 
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            padding: '8px',
-            marginBottom: '16px'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <LCVisualization />
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{
+                backgroundColor: colors.bgSurface,
+                borderRadius: '12px',
+                padding: '8px',
+                marginBottom: '16px'
+              }}>
+                <LCVisualization />
+              </div>
 
-          {/* Radio stations display */}
-          <div style={{
-            padding: '12px',
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            marginBottom: '16px'
-          }}>
-            <div style={{ fontSize: '11px', color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>
-              AM RADIO BAND - Tune to a station:
+              {/* Radio stations display */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: colors.bgSurface,
+                borderRadius: '12px',
+              }}>
+                <div style={{ fontSize: '11px', color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>
+                  AM RADIO BAND - Tune to a station:
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {radioStations.map(station => {
+                    const isNear = Math.abs(resonantFrequency - station.freq) < 40;
+                    const isTuned = Math.abs(resonantFrequency - station.freq) < 15;
+                    return (
+                      <div
+                        key={station.freq}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: isTuned ? `${colors.success}20` : isNear ? `${colors.warning}15` : colors.bgElevated,
+                          borderRadius: '8px',
+                          border: `1px solid ${isTuned ? colors.success : isNear ? colors.warning : 'transparent'}`,
+                          textAlign: 'center',
+                          minWidth: '80px'
+                        }}
+                      >
+                        <div style={{ fontSize: '16px' }}>{station.genre}</div>
+                        <div style={{ fontSize: '11px', color: '#e2e8f0', fontWeight: 600 }}>{station.freq}</div>
+                        <div style={{ fontSize: '9px', color: '#e2e8f0' }}>{station.name}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {radioStations.map(station => {
-                const isNear = Math.abs(resonantFrequency - station.freq) < 40;
-                const isTuned = Math.abs(resonantFrequency - station.freq) < 15;
-                return (
-                  <div
-                    key={station.freq}
-                    style={{
-                      padding: '8px 12px',
-                      backgroundColor: isTuned ? `${colors.success}20` : isNear ? `${colors.warning}15` : colors.bgElevated,
-                      borderRadius: '8px',
-                      border: `1px solid ${isTuned ? colors.success : isNear ? colors.warning : 'transparent'}`,
-                      textAlign: 'center',
-                      minWidth: '80px'
-                    }}
-                  >
-                    <div style={{ fontSize: '16px' }}>{station.genre}</div>
-                    <div style={{ fontSize: '11px', color: '#e2e8f0', fontWeight: 600 }}>{station.freq}</div>
-                    <div style={{ fontSize: '9px', color: '#e2e8f0' }}>{station.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Controls */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '12px'
-          }}>
-            {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Larger C = lower resonant frequency", setCapacitance, colors.capacitor)}
-            {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L = lower resonant frequency", setInductance, colors.inductor)}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Larger C = lower freq", setCapacitance, colors.capacitor)}
+                {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L = lower freq", setInductance, colors.inductor)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1411,41 +1423,53 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             </p>
           </div>
 
+          {/* Side-by-side layout */}
           <div style={{
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            padding: '8px',
-            marginBottom: '16px'
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <LCVisualization />
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                backgroundColor: colors.bgSurface,
+                borderRadius: '12px',
+                padding: '8px',
+                marginBottom: '16px'
+              }}>
+                <LCVisualization />
+              </div>
 
-          {/* Big frequency display */}
-          <div style={{
-            padding: '20px',
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            textAlign: 'center',
-            marginBottom: '16px'
-          }}>
-            <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '8px' }}>
-              RESONANT FREQUENCY
+              {/* Big frequency display */}
+              <div style={{
+                padding: '20px',
+                backgroundColor: colors.bgSurface,
+                borderRadius: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '12px', color: '#e2e8f0', marginBottom: '8px' }}>
+                  RESONANT FREQUENCY
+                </div>
+                <div style={{ fontSize: '48px', fontWeight: 700, color: colors.resonance }}>
+                  {resonantFrequency} kHz
+                </div>
+                <div style={{ fontSize: '14px', color: '#e2e8f0', marginTop: '8px' }}>
+                  f0 = 1 / (2pi x sqrt({inductance}uH x {capacitance}pF))
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: '48px', fontWeight: 700, color: colors.resonance }}>
-              {resonantFrequency} kHz
-            </div>
-            <div style={{ fontSize: '14px', color: '#e2e8f0', marginTop: '8px' }}>
-              f0 = 1 / (2pi x sqrt({inductance}uH x {capacitance}pF))
-            </div>
-          </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '12px'
-          }}>
-            {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Try doubling it! Watch the frequency change.", setCapacitance, colors.capacitor)}
-            {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L also lowers the frequency.", setInductance, colors.inductor)}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                {renderSliderControl("Capacitance (C)", capacitance, 10, 500, "pF", "Try doubling it!", setCapacitance, colors.capacitor)}
+                {renderSliderControl("Inductance (L)", inductance, 50, 500, "uH", "Larger L lowers freq.", setInductance, colors.inductor)}
+              </div>
+            </div>
           </div>
         </div>
       </div>

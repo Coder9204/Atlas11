@@ -1110,8 +1110,35 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
               Change the source angle and compare mirror vs retroreflector to understand how geometry determines light behavior.
             </p>
           </div>
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+          <div style={{
+
+            display: 'flex',
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+            gap: isMobile ? '12px' : '20px',
+
+            width: '100%',
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+          }}>
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+              {renderVisualization(true)}
+
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+              {renderControls()}
+
+            </div>
+
+          </div>
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px', padding: '20px', borderRadius: '12px', maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h4 style={{ color: colors.accent, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: '400', lineHeight: 1.9, paddingLeft: '20px', margin: 0 }}>
@@ -1204,8 +1231,35 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Test Driver Visibility</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>Compare what the driver sees from each surface type</p>
           </div>
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+          <div style={{
+
+            display: 'flex',
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+            gap: isMobile ? '12px' : '20px',
+
+            width: '100%',
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+          }}>
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+              {renderVisualization(true)}
+
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+              {renderControls()}
+
+            </div>
+
+          </div>
           <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.2))', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}`, maxWidth: '700px', marginLeft: 'auto', marginRight: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h4 style={{ color: colors.warning, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>Key Observation:</h4>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>The mirror reflects light away from the driver at most angles. The retroreflector sends headlight light back to the driver's eyes, appearing brilliantly bright even when the sign isn't perpendicular!</p>

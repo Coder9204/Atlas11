@@ -1009,132 +1009,143 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               </h2>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
               width: '100%',
-              maxWidth: '700px',
-              margin: '0 auto 20px auto',
-              background: colors.bgCard,
-              borderRadius: '16px',
-              border: `1px solid ${colors.border}`,
-              overflow: 'hidden'
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
             }}>
-              {renderVisualization(true)}
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
-                🎮 Controls: Adjust Temperature
-              </h3>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.cold, fontSize: '13px', fontWeight: 600 }}>❄️ Cold (0°C)</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
-                    {temperature}°C
-                  </span>
-                  <span style={{ color: colors.hot, fontSize: '13px', fontWeight: 600 }}>Hot (100°C) 🔥</span>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  width: '100%',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  border: `1px solid ${colors.border}`,
+                  overflow: 'hidden',
+                  marginBottom: '16px'
+                }}>
+                  {renderVisualization(true)}
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={temperature}
-                  onChange={(e) => setTemperature(Number(e.target.value))}
-                  onInput={(e) => setTemperature(Number((e.target as HTMLInputElement).value))}
-                  style={{
-                    width: '100%',
-                    height: '24px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: getTemperatureColor(temperature),
-                    touchAction: 'pan-y',
-                    WebkitAppearance: 'none' as const,
-                  }}
-                />
-              </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => {
-                    setFlowPosition(0);
-                    setIsFlowing(true);
-                    playSound('click');
-                  }}
-                  disabled={isFlowing}
-                  style={{
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: isFlowing
-                      ? colors.bgCardLight
-                      : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
-                    color: isFlowing ? colors.textMuted : 'white',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    cursor: isFlowing ? 'default' : 'pointer',
-                    minWidth: '150px'
-                  }}
-                >
-                  {isFlowing ? '🍯 Flowing...' : '🍯 Pour Syrup'}
-                </button>
-              </div>
-            </div>
+                <div style={{
+                  background: `linear-gradient(135deg, ${getTemperatureColor(temperature)}15 0%, ${colors.bgCard} 100%)`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  border: `1px solid ${getTemperatureColor(temperature)}40`
+                }}>
+                  <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                    👀 Observe the Chart — Watch How Viscosity Changes:
+                  </h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                    {temperature < 30 ? (
+                      <>At <strong style={{ color: colors.cold }}>low temperature</strong>, molecules move slowly and have strong attractions. High viscosity = slow flow.</>
+                    ) : temperature < 60 ? (
+                      <>At <strong style={{ color: colors.warm }}>moderate temperature</strong>, molecules have more energy to overcome attractions. Medium viscosity = moderate flow.</>
+                    ) : (
+                      <>At <strong style={{ color: colors.hot }}>high temperature</strong>, molecules move fast and easily overcome attractions. Low viscosity = fast flow!</>
+                    )}
+                  </p>
+                </div>
 
-            <div style={{
-              background: `linear-gradient(135deg, ${getTemperatureColor(temperature)}15 0%, ${colors.bgCard} 100%)`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px',
-              border: `1px solid ${getTemperatureColor(temperature)}40`
-            }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-                👀 Observe the Chart — Watch How Viscosity Changes:
-              </h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                {temperature < 30 ? (
-                  <>At <strong style={{ color: colors.cold }}>low temperature</strong>, molecules move slowly and have strong attractions. High viscosity = slow flow.</>
-                ) : temperature < 60 ? (
-                  <>At <strong style={{ color: colors.warm }}>moderate temperature</strong>, molecules have more energy to overcome attractions. Medium viscosity = moderate flow.</>
-                ) : (
-                  <>At <strong style={{ color: colors.hot }}>high temperature</strong>, molecules move fast and easily overcome attractions. Low viscosity = fast flow!</>
-                )}
-              </p>
-            </div>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
+                    📐 The Physics (Arrhenius Equation):
+                  </h4>
+                  <div style={{ fontFamily: 'monospace', fontSize: '16px', marginBottom: '12px' }}>
+                    <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span>
+                    <span style={{ color: colors.textSecondary }}> = </span>
+                    <span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span>
+                    <span style={{ color: colors.textSecondary }}> × e</span>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>(Ea/R·</span>
+                    <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '14px' }}>T</span>
+                    <span style={{ color: colors.textSecondary, fontSize: '12px' }}>)</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
+                    <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> (eta) = Viscosity (Pa·s)</div>
+                    <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span> = Pre-exponential factor</div>
+                    <div><span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> = Temperature (Kelvin)</div>
+                    <div>Higher <span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> → exponentially lower <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span></div>
+                  </div>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>
+                    This is important in engineering and industry: motor oil viscosity determines engine lubrication,
+                    and technology like inkjet printing relies on precise viscosity control at operating temperature.
+                  </p>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
+                    🎮 Controls: Adjust Temperature
+                  </h3>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>
-                📐 The Physics (Arrhenius Equation):
-              </h4>
-              <div style={{ fontFamily: 'monospace', fontSize: '16px', marginBottom: '12px' }}>
-                <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span>
-                <span style={{ color: colors.textSecondary }}> = </span>
-                <span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span>
-                <span style={{ color: colors.textSecondary }}> × e</span>
-                <span style={{ color: colors.textSecondary, fontSize: '12px' }}>(Ea/R·</span>
-                <span style={{ color: '#22d3ee', fontWeight: 700, fontSize: '14px' }}>T</span>
-                <span style={{ color: colors.textSecondary, fontSize: '12px' }}>)</span>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.cold, fontSize: '13px', fontWeight: 600 }}>❄️ Cold (0°C)</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                        {temperature}°C
+                      </span>
+                      <span style={{ color: colors.hot, fontSize: '13px', fontWeight: 600 }}>Hot (100°C) 🔥</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={temperature}
+                      onChange={(e) => setTemperature(Number(e.target.value))}
+                      onInput={(e) => setTemperature(Number((e.target as HTMLInputElement).value))}
+                      style={{
+                        width: '100%',
+                        height: '24px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: getTemperatureColor(temperature),
+                        touchAction: 'pan-y',
+                        WebkitAppearance: 'none' as const,
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setFlowPosition(0);
+                        setIsFlowing(true);
+                        playSound('click');
+                      }}
+                      disabled={isFlowing}
+                      style={{
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: isFlowing
+                          ? colors.bgCardLight
+                          : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                        color: isFlowing ? colors.textMuted : 'white',
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        cursor: isFlowing ? 'default' : 'pointer',
+                        minWidth: '150px'
+                      }}
+                    >
+                      {isFlowing ? '🍯 Flowing...' : '🍯 Pour Syrup'}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.8 }}>
-                <div><span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span> (eta) = Viscosity (Pa·s)</div>
-                <div><span style={{ color: '#fbbf24', fontWeight: 700 }}>A</span> = Pre-exponential factor</div>
-                <div><span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> = Temperature (Kelvin)</div>
-                <div>Higher <span style={{ color: '#22d3ee', fontWeight: 700 }}>T</span> → exponentially lower <span style={{ color: colors.primaryLight, fontWeight: 700 }}>η</span></div>
-              </div>
-              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>
-                This is important in engineering and industry: motor oil viscosity determines engine lubrication,
-                and technology like inkjet printing relies on precise viscosity control at operating temperature.
-              </p>
             </div>
           </div>
         </div>
@@ -1430,117 +1441,130 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
               </h2>
             </div>
 
-            {/* Fluid selector */}
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              gap: '12px',
-              justifyContent: 'center',
-              marginBottom: '20px'
-            }}>
-              {(['syrup', 'water', 'oil'] as const).map(fluid => (
-                <button
-                  key={fluid}
-                  onClick={() => {
-                    setSelectedFluid(fluid);
-                    playSound('click');
-                  }}
-                  style={{
-                    padding: '12px 20px',
-                    borderRadius: '12px',
-                    border: selectedFluid === fluid ? `2px solid ${fluid === 'syrup' ? colors.syrupLight : fluid === 'water' ? colors.cold : colors.oil}` : `1px solid ${colors.border}`,
-                    background: selectedFluid === fluid ? `${fluid === 'syrup' ? colors.syrupLight : fluid === 'water' ? colors.cold : colors.oil}20` : colors.bgCard,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  <span style={{ fontSize: '20px' }}>{fluid === 'syrup' ? '🍯' : fluid === 'water' ? '💧' : '🫒'}</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600, textTransform: 'capitalize' }}>
-                    {fluid}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div style={{
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
               width: '100%',
-              maxWidth: '700px',
-              margin: '0 auto 20px auto',
-              background: colors.bgCard,
-              borderRadius: '16px',
-              border: `1px solid ${colors.border}`,
-              overflow: 'hidden'
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
             }}>
-              {renderVisualization(true)}
-            </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  width: '100%',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  border: `1px solid ${colors.border}`,
+                  overflow: 'hidden',
+                  marginBottom: '16px'
+                }}>
+                  {renderVisualization(true)}
+                </div>
 
-            {/* Temperature control */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.cold, fontSize: '13px' }}>Cold</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>{temperature}°C</span>
-                  <span style={{ color: colors.hot, fontSize: '13px' }}>Hot</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={temperature}
-                  onChange={(e) => setTemperature(Number(e.target.value))}
-                  style={{ width: '100%', accentColor: getTemperatureColor(temperature) }}
-                />
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                textAlign: 'center'
-              }}>
-                <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px' }}>
-                  <p style={{ color: colors.syrupLight, fontSize: '12px', marginBottom: '4px' }}>Syrup</p>
-                  <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
-                    {calculateViscosity(temperature, 'syrup').toFixed(1)}
-                  </p>
-                </div>
-                <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px' }}>
-                  <p style={{ color: colors.cold, fontSize: '12px', marginBottom: '4px' }}>Water</p>
-                  <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
-                    {calculateViscosity(temperature, 'water').toFixed(2)}
-                  </p>
-                </div>
-                <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px' }}>
-                  <p style={{ color: colors.oil, fontSize: '12px', marginBottom: '4px' }}>Oil</p>
-                  <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
-                    {calculateViscosity(temperature, 'oil').toFixed(1)}
+                <div style={{
+                  background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.primary}10 100%)`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
+                    👀 Key Observation:
+                  </h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                    <strong style={{ color: colors.syrupLight }}>Syrup</strong> shows the most dramatic change!
+                    Its complex sugar molecules have strong hydrogen bonds that weaken significantly with temperature.
+                    <strong style={{ color: colors.cold }}> Water</strong> changes much less because its
+                    molecules are small and simple.
                   </p>
                 </div>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Fluid selector */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                  flexWrap: 'wrap'
+                }}>
+                  {(['syrup', 'water', 'oil'] as const).map(fluid => (
+                    <button
+                      key={fluid}
+                      onClick={() => {
+                        setSelectedFluid(fluid);
+                        playSound('click');
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        border: selectedFluid === fluid ? `2px solid ${fluid === 'syrup' ? colors.syrupLight : fluid === 'water' ? colors.cold : colors.oil}` : `1px solid ${colors.border}`,
+                        background: selectedFluid === fluid ? `${fluid === 'syrup' ? colors.syrupLight : fluid === 'water' ? colors.cold : colors.oil}20` : colors.bgCard,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span style={{ fontSize: '18px' }}>{fluid === 'syrup' ? '🍯' : fluid === 'water' ? '💧' : '🫒'}</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600, textTransform: 'capitalize' }}>
+                        {fluid}
+                      </span>
+                    </button>
+                  ))}
+                </div>
 
-            <div style={{
-              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.primary}10 100%)`,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-                👀 Key Observation:
-              </h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: colors.syrupLight }}>Syrup</strong> shows the most dramatic change!
-                Its complex sugar molecules have strong hydrogen bonds that weaken significantly with temperature.
-                <strong style={{ color: colors.cold }}> Water</strong> changes much less because its
-                molecules are small and simple.
-              </p>
+                {/* Temperature control */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '16px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.cold, fontSize: '13px' }}>Cold</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>{temperature}°C</span>
+                      <span style={{ color: colors.hot, fontSize: '13px' }}>Hot</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={temperature}
+                      onChange={(e) => setTemperature(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: getTemperatureColor(temperature) }}
+                    />
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px' }}>
+                      <p style={{ color: colors.syrupLight, fontSize: '12px', marginBottom: '4px' }}>Syrup</p>
+                      <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
+                        {calculateViscosity(temperature, 'syrup').toFixed(1)}
+                      </p>
+                    </div>
+                    <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px' }}>
+                      <p style={{ color: colors.cold, fontSize: '12px', marginBottom: '4px' }}>Water</p>
+                      <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
+                        {calculateViscosity(temperature, 'water').toFixed(2)}
+                      </p>
+                    </div>
+                    <div style={{ padding: '12px', background: colors.bgDark, borderRadius: '8px', gridColumn: 'span 2' }}>
+                      <p style={{ color: colors.oil, fontSize: '12px', marginBottom: '4px' }}>Oil</p>
+                      <p style={{ color: colors.textPrimary, fontWeight: 700 }}>
+                        {calculateViscosity(temperature, 'oil').toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

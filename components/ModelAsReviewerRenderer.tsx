@@ -944,63 +944,77 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
           Watch how increasing the review strength affects bug detection. Notice when each checklist item activates and observe how the effectiveness bar changes in real-time.
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '24px'
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            {renderVisualization(true)}
-          </div>
-
-          {/* Review Strength Slider */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Review Strength: {reviewStrength}%</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>
-                {reviewStrength < 30 ? 'No checks active' :
-                 reviewStrength < 50 ? 'Units check only' :
-                 reviewStrength < 70 ? 'Units + Conservation' :
-                 reviewStrength < 90 ? 'All 3 core checks' : 'Full coverage'}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={reviewStrength}
-              onChange={(e) => setReviewStrength(Number(e.target.value))}
-              style={{
-                width: '100%',
-                height: '20px',
-                accentColor: colors.accent,
-                touchAction: 'pan-y',
-                cursor: 'pointer'
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>0%</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderVisualization(true)}
+              </div>
             </div>
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              {/* Review Strength Slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Review: {reviewStrength}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={reviewStrength}
+                  onChange={(e) => setReviewStrength(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    accentColor: colors.accent,
+                    touchAction: 'pan-y',
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  {reviewStrength < 30 ? 'No checks active' :
+                   reviewStrength < 50 ? 'Units check only' :
+                   reviewStrength < 70 ? 'Units + Conservation' :
+                   reviewStrength < 90 ? 'All 3 core checks' : 'Full coverage'}
+                </div>
+              </div>
 
-          {/* Key observations */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px'
-          }}>
-            <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-              {'\u{1F4A1}'} Key Observations - watch for these as you adjust the slider:
-            </h4>
-            <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-              <li>When you increase the review strength above 30%, the unit check activates and catches the missing 1/2 in kinetic energy formula (KE = (1/2)mv\u00B2)</li>
-              <li>When you increase above 50%, conservation check catches F=m+a (should be F=m*a) because adding mass and acceleration violates dimensional analysis</li>
-              <li>When you increase above 70%, edge case check catches excluded negative velocities</li>
-              <li>Each checklist item targets a specific error category - this is why directed review prompts are more useful than general review</li>
-            </ul>
+              {/* Key observations */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '12px',
+                padding: '12px'
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  Key Observations:
+                </h4>
+                <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '16px', fontSize: '12px' }}>
+                  <li>Above 30%: unit check activates</li>
+                  <li>Above 50%: conservation check</li>
+                  <li>Above 70%: edge case check</li>
+                  <li>Directed prompts beat general review</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1183,58 +1197,70 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
           Observe how adding a cross-checker from a different model increases detection coverage beyond what single-model review achieves.
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '24px'
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            {renderVisualization(true, true)}
-          </div>
-
-          {/* Cross-check Strength Slider */}
-          <div style={{ marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Cross-Check Strength: {crossCheckStrength}%</span>
-              <span style={{ ...typo.small, color: useCrossChecker ? '#a78bfa' : colors.textMuted }}>
-                {useCrossChecker ? '+20% effectiveness bonus' : 'Below threshold (50%)'}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={crossCheckStrength}
-              onChange={(e) => setCrossCheckStrength(Number(e.target.value))}
-              style={{
-                width: '100%',
-                height: '20px',
-                accentColor: '#8b5cf6',
-                touchAction: 'pan-y',
-                cursor: 'pointer'
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>0%</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>100%</span>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderVisualization(true, true)}
+              </div>
             </div>
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              {/* Cross-check Strength Slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Cross-Check: {crossCheckStrength}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={crossCheckStrength}
+                  onChange={(e) => setCrossCheckStrength(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    accentColor: '#8b5cf6',
+                    touchAction: 'pan-y',
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{ ...typo.small, color: useCrossChecker ? '#a78bfa' : colors.textMuted, marginTop: '4px' }}>
+                  {useCrossChecker ? '+20% effectiveness bonus' : 'Below threshold (50%)'}
+                </div>
+              </div>
 
-          <div style={{
-            background: 'rgba(139,92,246,0.1)',
-            border: '1px solid rgba(139,92,246,0.3)',
-            borderRadius: '12px',
-            padding: '16px'
-          }}>
-            <h4 style={{ ...typo.small, color: '#a78bfa', marginBottom: '8px', fontWeight: 600 }}>
-              Cross-Checker Benefits:
-            </h4>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              Different models have different blind spots. Model A might miss edge cases
-              but catch unit errors. Model B might catch edge cases but miss unit errors.
-              Cross-checking reduces correlated blind spots by +20% effectiveness.
-            </p>
+              <div style={{
+                background: 'rgba(139,92,246,0.1)',
+                border: '1px solid rgba(139,92,246,0.3)',
+                borderRadius: '12px',
+                padding: '12px'
+              }}>
+                <h4 style={{ ...typo.small, color: '#a78bfa', marginBottom: '8px', fontWeight: 600 }}>
+                  Cross-Checker Benefits:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, fontSize: '12px' }}>
+                  Different models have different blind spots. Cross-checking reduces correlated blind spots by +20% effectiveness.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

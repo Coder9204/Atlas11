@@ -886,8 +886,49 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
           </p>
         </div>
 
-        {renderVisualization(true)}
-        {renderControls()}
+        {/* Side-by-side layout: SVG left, controls right */}
+
+
+        <div style={{
+
+
+          display: 'flex',
+
+
+          flexDirection: isMobile ? 'column' : 'row',
+
+
+          gap: isMobile ? '12px' : '20px',
+
+
+          width: '100%',
+
+
+          alignItems: isMobile ? 'center' : 'flex-start',
+
+
+        }}>
+
+
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+            {renderVisualization(true)}
+
+
+          </div>
+
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+            {renderControls()}
+
+
+          </div>
+
+
+        </div>
 
         <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
           <h4 style={{ color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>Experiments to Try:</h4>

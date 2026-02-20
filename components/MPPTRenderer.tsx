@@ -959,124 +959,141 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
               </p>
             </div>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <IVCurveVisualization showMPP={false} showOperatingPoint={true} interactive={true} showFormula={true} />
-              </div>
-
-              {/* Voltage slider */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Operating Voltage</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{operatingVoltage.toFixed(1)}V</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="22"
-                  step="0.5"
-                  value={operatingVoltage}
-                  onChange={(e) => setOperatingVoltage(parseFloat(e.target.value))}
-                  disabled={mpptEnabled}
-                  style={{
-                    width: '100%',
-                    height: '24px',
-                    borderRadius: '12px',
-                    background: `linear-gradient(to right, ${colors.accent} ${(operatingVoltage / 22) * 100}%, ${colors.border} ${(operatingVoltage / 22) * 100}%)`,
-                    cursor: mpptEnabled ? 'not-allowed' : 'pointer',
-                    opacity: mpptEnabled ? 0.5 : 1,
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                    touchAction: 'pan-y',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>0V</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>22V</span>
-                </div>
-              </div>
-
-              {/* MPPT toggle */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                marginBottom: '24px',
-              }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Manual Control</span>
-                <button
-                  onClick={() => setMpptEnabled(!mpptEnabled)}
-                  style={{
-                    width: '60px',
-                    height: '30px',
-                    borderRadius: '15px',
-                    border: 'none',
-                    background: mpptEnabled ? colors.success : colors.border,
-                    cursor: 'pointer',
-                    position: 'relative',
-                    transition: 'background 0.3s',
-                  }}
-                >
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'white',
-                    position: 'absolute',
-                    top: '3px',
-                    left: mpptEnabled ? '33px' : '3px',
-                    transition: 'left 0.3s',
-                  }} />
-                </button>
-                <span style={{ ...typo.small, color: mpptEnabled ? colors.success : colors.textSecondary, fontWeight: mpptEnabled ? 600 : 400 }}>
-                  MPPT Auto
-                </span>
-              </div>
-
-              {/* Power output display */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
                 }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{currentPower.toFixed(1)}W</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(1)}W</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Maximum Available</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{
-                    ...typo.h3,
-                    color: efficiency > 95 ? colors.success : efficiency > 80 ? colors.warning : colors.error
-                  }}>
-                    {efficiency.toFixed(0)}%
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <IVCurveVisualization showMPP={false} showOperatingPoint={true} interactive={true} showFormula={true} />
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Voltage slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Operating Voltage</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{operatingVoltage.toFixed(1)}V</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="22"
+                      step="0.5"
+                      value={operatingVoltage}
+                      onChange={(e) => setOperatingVoltage(parseFloat(e.target.value))}
+                      disabled={mpptEnabled}
+                      style={{
+                        width: '100%',
+                        height: '24px',
+                        borderRadius: '12px',
+                        background: `linear-gradient(to right, ${colors.accent} ${(operatingVoltage / 22) * 100}%, ${colors.border} ${(operatingVoltage / 22) * 100}%)`,
+                        cursor: mpptEnabled ? 'not-allowed' : 'pointer',
+                        opacity: mpptEnabled ? 0.5 : 1,
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>0V</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>22V</span>
+                    </div>
+                  </div>
+
+                  {/* MPPT toggle */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    marginBottom: '20px',
+                  }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Manual</span>
+                    <button
+                      onClick={() => setMpptEnabled(!mpptEnabled)}
+                      style={{
+                        width: '60px',
+                        height: '30px',
+                        borderRadius: '15px',
+                        border: 'none',
+                        background: mpptEnabled ? colors.success : colors.border,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        transition: 'background 0.3s',
+                      }}
+                    >
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: 'white',
+                        position: 'absolute',
+                        top: '3px',
+                        left: mpptEnabled ? '33px' : '3px',
+                        transition: 'left 0.3s',
+                      }} />
+                    </button>
+                    <span style={{ ...typo.small, color: mpptEnabled ? colors.success : colors.textSecondary, fontWeight: mpptEnabled ? 600 : 400 }}>
+                      MPPT
+                    </span>
+                  </div>
+
+                  {/* Power output display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{currentPower.toFixed(1)}W</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(1)}W</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Maximum Available</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{
+                        ...typo.h3,
+                        color: efficiency > 95 ? colors.success : efficiency > 80 ? colors.warning : colors.error
+                      }}>
+                        {efficiency.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1358,102 +1375,120 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
               </p>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <IVCurveVisualization showMPP={true} showOperatingPoint={true} showFormula={true} />
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <IVCurveVisualization showMPP={true} showOperatingPoint={true} showFormula={true} />
+                  </div>
+                </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  {/* Temperature slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Panel Temp</span>
+                      <span style={{
+                        ...typo.small,
+                        color: temperature > 40 ? colors.error : temperature > 30 ? colors.warning : colors.success,
+                        fontWeight: 600
+                      }}>
+                        {temperature}°C
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="70"
+                      value={temperature}
+                      onChange={(e) => setTemperature(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '24px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Cold</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Hot</span>
+                    </div>
+                  </div>
 
-              {/* Temperature slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>🌡️ Panel Temperature</span>
-                  <span style={{
-                    ...typo.small,
-                    color: temperature > 40 ? colors.error : temperature > 30 ? colors.warning : colors.success,
-                    fontWeight: 600
+                  {/* Irradiance slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Sunlight</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{irradiance} W/m²</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="1200"
+                      step="50"
+                      value={irradiance}
+                      onChange={(e) => setIrradiance(parseInt(e.target.value))}
+                      style={{
+                        width: '100%',
+                        height: '24px',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        WebkitAppearance: 'none',
+                        appearance: 'none',
+                        touchAction: 'pan-y',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Cloudy</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>Full Sun</span>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px',
                   }}>
-                    {temperature}°C
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="70"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '24px',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                    touchAction: 'pan-y',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Cold (0°C)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Hot (70°C)</span>
-                </div>
-              </div>
-
-              {/* Irradiance slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Sunlight Intensity</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{irradiance} W/m²</span>
-                </div>
-                <input
-                  type="range"
-                  min="100"
-                  max="1200"
-                  step="50"
-                  value={irradiance}
-                  onChange={(e) => setIrradiance(parseInt(e.target.value))}
-                  style={{
-                    width: '100%',
-                    height: '24px',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                    touchAction: 'pan-y',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Cloudy</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Full Sun</span>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-              }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(0)}W</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Max Power</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{mpp.voltage.toFixed(1)}V</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>MPP Voltage</div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(0)}W</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Max Power</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{mpp.voltage.toFixed(1)}V</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>MPP Voltage</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

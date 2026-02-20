@@ -1391,25 +1391,36 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           flexDirection: 'column',
           minHeight: '80vh'
         }}>
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            flex: 1,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            minHeight: '256px'
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+            flex: 1,
           }}>
-            {renderWaveVisualization()}
-          </div>
-
-          {/* Controls */}
-          <div style={{
-            padding: '24px',
-            background: 'rgba(15, 23, 42, 0.8)',
-            borderTop: '1px solid rgba(51, 65, 85, 0.5)'
-          }}>
-            <div style={{ maxWidth: '580px', margin: '0 auto' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+                minHeight: '256px'
+              }}>
+                {renderWaveVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                padding: '24px',
+                background: 'rgba(15, 23, 42, 0.8)',
+                borderRadius: '12px',
+              }}>
+                <div style={{ maxWidth: '580px', margin: '0 auto' }}>
               {/* Info card with styled container */}
               <div style={{
                 background: 'rgba(245, 158, 11, 0.1)',
@@ -1550,6 +1561,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 </button>
               </div>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       );
@@ -1832,25 +1845,36 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           flexDirection: 'column',
           minHeight: '80vh'
         }}>
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            flex: 1,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            minHeight: '256px'
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+            flex: 1,
           }}>
-            {renderWaveVisualization()}
-          </div>
-
-          {/* Controls */}
-          <div style={{
-            padding: '24px',
-            background: 'rgba(15, 23, 42, 0.8)',
-            borderTop: '1px solid rgba(51, 65, 85, 0.5)'
-          }}>
-            <div style={{ maxWidth: '580px', margin: '0 auto' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+                minHeight: '256px'
+              }}>
+                {renderWaveVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{
+                padding: '24px',
+                background: 'rgba(15, 23, 42, 0.8)',
+                borderRadius: '12px',
+              }}>
+                <div style={{ maxWidth: '580px', margin: '0 auto' }}>
               {/* Tension slider */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{
@@ -1940,6 +1964,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 </button>
               </div>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       );

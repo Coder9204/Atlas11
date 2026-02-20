@@ -307,6 +307,14 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
@@ -795,8 +803,19 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Motor visualization */}
             {renderMotorSVG()}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Formula */}
             <div style={{ textAlign: 'center', margin: '16px 0', padding: '12px', background: colors.bgCard, borderRadius: '10px', border: `1px solid ${colors.border}` }}>
@@ -828,6 +847,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                   <span style={{ fontSize: '11px', color: '#cbd5e1' }}>Low (0%)</span>
                   <span style={{ fontSize: '11px', color: '#cbd5e1' }}>High (100%)</span>
                 </div>
+              </div>
+            </div>
               </div>
             </div>
 
@@ -992,9 +1013,20 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               </h2>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {renderMotorSVG()}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
-            <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>Voltage</span>
@@ -1027,6 +1059,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     2 Magnets
                   </button>
                 </div>
+              </div>
+            </div>
               </div>
             </div>
 
@@ -1158,7 +1192,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '20px' }}>
               {currentApp.stats.map((stat, i) => (
                 <div key={i} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
                   <div style={{ color: currentApp.color, fontSize: '18px', fontWeight: 800 }}>{stat.value}</div>

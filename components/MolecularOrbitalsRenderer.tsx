@@ -1030,12 +1030,21 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             Explore how atomic orbitals combine into bonding and antibonding MOs
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* 3D Visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             <div style={{ width: '100%', height: '300px', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px', position: 'relative' }}>
               <CanvasErrorBoundary>
@@ -1135,6 +1144,14 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 Watch how the bonding orbital (green, lower energy) brings atoms together through constructive interference, while the antibonding orbital (red, higher energy) has a nodal plane that keeps atoms apart. As atomic separation changes, notice how orbital overlap affects bond stability.
               </p>
             </div>
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
 
             {/* What this shows */}
             <div style={{
@@ -1304,6 +1321,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 <div style={{ ...typo.small, color: colors.textSecondary }}>Higher energy = unstable</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           <button
@@ -1589,11 +1608,20 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             Compare the molecular orbital filling of oxygen and nitrogen
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             <div style={{ width: '100%', height: '280px', borderRadius: '12px', overflow: 'hidden', marginBottom: '16px', position: 'relative' }}>
               <CanvasErrorBoundary>
@@ -1660,7 +1688,14 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 </g>
               </svg>
             </div>
-
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+          }}>
             {/* Molecule selector */}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
               <button
@@ -1757,6 +1792,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 </>
               )}
             </div>
+          </div>
+          </div>
           </div>
 
           <button

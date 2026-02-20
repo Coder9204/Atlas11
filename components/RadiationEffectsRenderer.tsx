@@ -143,6 +143,8 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const [seuCount, setSeuCount] = useState(0);
   const [tidAccumulated, setTidAccumulated] = useState(0);
   const [discoveryMessage, setDiscoveryMessage] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener("resize", c); return () => window.removeEventListener("resize", c); }, []);
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -831,67 +833,22 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           This visualization shows the radiation flux factor across different orbital altitudes. Notice how the curve peaks at the Van Allen belts where trapped particles create intense radiation zones. Try adjusting altitude and observe how SEU rate, TID dose, and latchup risk change in real time.
         </p>
 
-        <div style={{ ...cardStyle(true), maxWidth: '600px', padding: '16px', marginBottom: '16px' }}>
-          {renderVisualization()}
-        </div>
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ ...cardStyle(true), padding: '16px', marginBottom: '16px' }}>
+              {renderVisualization()}
+            </div>
 
-        <div style={{ ...cardStyle(), maxWidth: '600px', width: '100%' }}>
-          {renderSlider('Altitude', altitude, 200, 40000, 200, setAltitude, ' km')}
-          {renderSlider('Shielding', shielding, 0, 20, 1, setShielding, ' mm Al')}
-
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            {(['commercial', 'rad-tolerant', 'rad-hard'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setChipType(type)}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: chipType === type ? '2px solid #a855f7' : '1px solid #334155',
-                  background: chipType === type ? 'rgba(168,85,247,0.2)' : '#0f172a',
-                  color: chipType === type ? '#c4b5fd' : '#94a3b8',
-                  fontWeight: chipType === type ? 700 : 500,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {type === 'commercial' ? 'Commercial' : type === 'rad-tolerant' ? 'Rad-Tolerant' : 'Rad-Hard'}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            {(['quiet', 'moderate', 'storm'] as const).map(activity => (
-              <button
-                key={activity}
-                onClick={() => setSolarActivity(activity)}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  borderRadius: '10px',
-                  border: solarActivity === activity ? '2px solid #f59e0b' : '1px solid #334155',
-                  background: solarActivity === activity ? 'rgba(245,158,11,0.2)' : '#0f172a',
-                  color: solarActivity === activity ? '#fde047' : '#94a3b8',
-                  fontWeight: solarActivity === activity ? 700 : 500,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {activity.charAt(0).toUpperCase() + activity.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Educational: cause-effect, key terms, real-world */}
-        <div style={{ ...cardStyle(), maxWidth: '600px', width: '100%' }}>
+            {/* Educational: cause-effect, key terms, real-world */}
+            <div style={{ ...cardStyle(), width: '100%' }}>
           <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444', marginBottom: '8px' }}>What You Are Seeing</h3>
           <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '12px' }}>
             Because higher altitude means entering the Van Allen radiation belts, the flux factor (radiation intensity) increases dramatically. Moving the altitude slider from 400 km to 3000 km shows how SEU rate spikes when entering the inner belt. This is why satellites in medium Earth orbit need extensive radiation hardening.
@@ -902,6 +859,62 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6' }}>
             <strong style={{ color: '#f59e0b' }}>Real-World Impact:</strong> The International Space Station at 400 km altitude experiences about 0.5 SEU per day. GPS satellites at 20200 km in the outer belt experience 50x more radiation, which is why each GPS satellite costs over $500M with extensive shielding.
           </p>
+        </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{ ...cardStyle(), width: '100%' }}>
+              {renderSlider('Altitude', altitude, 200, 40000, 200, setAltitude, ' km')}
+              {renderSlider('Shielding', shielding, 0, 20, 1, setShielding, ' mm Al')}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {(['commercial', 'rad-tolerant', 'rad-hard'] as const).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setChipType(type)}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: chipType === type ? '2px solid #a855f7' : '1px solid #334155',
+                      background: chipType === type ? 'rgba(168,85,247,0.2)' : '#0f172a',
+                      color: chipType === type ? '#c4b5fd' : '#94a3b8',
+                      fontWeight: chipType === type ? 700 : 500,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {type === 'commercial' ? 'Commercial' : type === 'rad-tolerant' ? 'Rad-Tolerant' : 'Rad-Hard'}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {(['quiet', 'moderate', 'storm'] as const).map(activity => (
+                  <button
+                    key={activity}
+                    onClick={() => setSolarActivity(activity)}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: solarActivity === activity ? '2px solid #f59e0b' : '1px solid #334155',
+                      background: solarActivity === activity ? 'rgba(245,158,11,0.2)' : '#0f172a',
+                      color: solarActivity === activity ? '#fde047' : '#94a3b8',
+                      fontWeight: solarActivity === activity ? 700 : 500,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {activity.charAt(0).toUpperCase() + activity.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Data readout */}
@@ -1059,15 +1072,28 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#a855f7', marginBottom: '12px', lineHeight: '1.3' }}>Van Allen Belt Explorer</h2>
 
-      <div style={{ ...cardStyle(true), maxWidth: '600px', padding: '16px', marginBottom: '16px' }}>
-        {renderVisualization()}
-      </div>
-
-      <div style={{ ...cardStyle(), maxWidth: '600px', width: '100%' }}>
-        <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.5' }}>
-          <strong style={{ color: '#a855f7' }}>Sweep through altitude</strong> to see how radiation changes. Notice the peaks at the inner and outer belts!
-        </p>
-        {renderSlider('Altitude', altitude, 200, 40000, 200, setAltitude, ' km')}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ ...cardStyle(true), padding: '16px', marginBottom: '16px' }}>
+            {renderVisualization()}
+          </div>
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ ...cardStyle(), width: '100%' }}>
+            <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.5' }}>
+              <strong style={{ color: '#a855f7' }}>Sweep through altitude</strong> to see how radiation changes. Notice the peaks at the inner and outer belts!
+            </p>
+            {renderSlider('Altitude', altitude, 200, 40000, 200, setAltitude, ' km')}
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', maxWidth: '600px', width: '100%', marginTop: '16px' }}>

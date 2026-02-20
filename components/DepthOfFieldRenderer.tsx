@@ -823,7 +823,18 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
               </p>
             </div>
 
-            {renderVisualization()}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderVisualization()}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Cause-effect explanation */}
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', margin: '16px 0', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -858,7 +869,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
             </div>
 
             {/* Real-time calculated values */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
                 <div style={{ fontSize: '16px', color: colors.warning, fontWeight: 700 }}>f/{(100 / apertureSize).toFixed(1)}</div>
                 <div style={{ fontSize: '11px', color: colors.textMuted }}>Aperture</div>
@@ -924,6 +935,8 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
               <div style={{ background: `${colors.lens}15`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.lens}30` }}>
                 <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Narrow Aperture (f/16)</h4>
                 <p style={{ fontSize: '12px', color: colors.textSecondary }}>Deep DOF, everything sharp, ideal for landscapes. Maximum depth of field.</p>
+              </div>
+            </div>
               </div>
             </div>
 
@@ -1106,8 +1119,18 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
               </p>
             </div>
 
-            {renderVisualization()}
-
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderVisualization()}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Sliders */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', marginBottom: '16px' }}>
               <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px' }}>
@@ -1144,6 +1167,8 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
                   <li style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '4px' }}>Background blur decreases</li>
                   <li style={{ fontSize: '12px', color: colors.textSecondary }}>Deeper effective DOF</li>
                 </ul>
+              </div>
+            </div>
               </div>
             </div>
 

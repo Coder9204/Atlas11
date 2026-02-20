@@ -1067,164 +1067,182 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             </p>
           </div>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {renderVisualization()}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {renderVisualization()}
 
-            {/* Legend */}
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '16px',
-              marginTop: '12px',
-              padding: '12px',
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#71717a' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Hinge (Pivot Point)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Push Point</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '3px', background: '#3b82f6' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Lever Arm (r)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '3px', height: '12px', background: '#22c55e' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Force (F)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#c4956a' }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Door Surface</span>
-              </div>
-            </div>
-
-            {/* Push position slider */}
-            <div style={{ marginTop: '24px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Push Position</span>
-                <span style={{ touchAction: 'pan-y', ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {(pushPosition * 100).toFixed(0)}% from hinge
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="1"
-                step="0.05"
-                value={pushPosition}
-                onChange={(e) => {
-                  setPushPosition(parseFloat(e.target.value));
-                  resetDoor();
-                  emitEvent('parameter_changed', { position: e.target.value });
-                }}
-                disabled={isPushing}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: isPushing ? 'not-allowed' : 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Near hinge</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>At handle</span>
-              </div>
-              <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '8px', fontStyle: 'italic' }}>
-                When you increase the distance from the hinge, less force is needed. This is why door handles are placed far from hinges - it's practical design used in everyday engineering!
-              </p>
-            </div>
-
-            {/* Friction toggle */}
-            <div style={{ marginBottom: '20px' }}>
-              <button
-                onClick={() => {
-                  setHasFriction(!hasFriction);
-                  resetDoor();
-                  emitEvent('parameter_changed', { friction: !hasFriction });
-                }}
-                style={{
-                  background: hasFriction ? `${colors.warning}22` : colors.bgSecondary,
-                  border: `2px solid ${hasFriction ? colors.warning : colors.border}`,
+                {/* Legend */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '16px',
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: colors.bgSecondary,
                   borderRadius: '8px',
-                  padding: '12px 20px',
-                  cursor: 'pointer',
-                  width: '100%',
-                  color: hasFriction ? colors.warning : colors.textSecondary,
-                  fontSize: typo.small.fontSize,
-                  fontWeight: 600,
-                  minHeight: '44px',
-                }}
-              >
-                {hasFriction ? '🔶 Sticky Hinge (Extra Resistance)' : '⚪ Normal Hinge'}
-              </button>
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#71717a' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Hinge (Pivot Point)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Push Point</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '3px', background: '#3b82f6' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Lever Arm (r)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '3px', height: '12px', background: '#22c55e' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Force (F)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#c4956a' }} />
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Door Surface</span>
+                  </div>
+                </div>
+              </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Push position slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Push Position</span>
+                    <span style={{ touchAction: 'pan-y', ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                      {(pushPosition * 100).toFixed(0)}% from hinge
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.05"
+                    value={pushPosition}
+                    onChange={(e) => {
+                      setPushPosition(parseFloat(e.target.value));
+                      resetDoor();
+                      emitEvent('parameter_changed', { position: e.target.value });
+                    }}
+                    disabled={isPushing}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: isPushing ? 'not-allowed' : 'pointer',
+                      accentColor: colors.accent,
+                      touchAction: 'pan-y',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>Near hinge</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>At handle</span>
+                  </div>
+                  <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '8px', fontStyle: 'italic' }}>
+                    When you increase the distance from the hinge, less force is needed. This is why door handles are placed far from hinges - it's practical design used in everyday engineering!
+                  </p>
+                </div>
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-              {doorAngle === 0 ? (
-                <button
-                  onClick={pushDoor}
-                  disabled={isPushing}
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                    color: 'white',
-                    border: 'none',
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    cursor: isPushing ? 'not-allowed' : 'pointer',
-                    opacity: isPushing ? 0.6 : 1,
-                    minHeight: '44px',
-                  }}
-                >
-                  Push Door!
-                </button>
-              ) : (
-                <button
-                  onClick={resetDoor}
-                  style={{
-                    background: colors.bgSecondary,
-                    color: colors.textPrimary,
-                    border: `1px solid ${colors.border}`,
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    minHeight: '44px',
-                  }}
-                >
-                  Reset Door
-                </button>
-              )}
-              <button
-                onClick={() => setShowForceVector(!showForceVector)}
-                style={{
-                  background: showForceVector ? `${colors.accent}22` : colors.bgSecondary,
-                  color: showForceVector ? colors.accent : colors.textSecondary,
-                  border: `1px solid ${showForceVector ? colors.accent : colors.border}`,
-                  padding: '14px 20px',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                }}
-              >
-                {showForceVector ? 'Vectors ON' : 'Vectors OFF'}
-              </button>
+                {/* Friction toggle */}
+                <div style={{ marginBottom: '20px' }}>
+                  <button
+                    onClick={() => {
+                      setHasFriction(!hasFriction);
+                      resetDoor();
+                      emitEvent('parameter_changed', { friction: !hasFriction });
+                    }}
+                    style={{
+                      background: hasFriction ? `${colors.warning}22` : colors.bgSecondary,
+                      border: `2px solid ${hasFriction ? colors.warning : colors.border}`,
+                      borderRadius: '8px',
+                      padding: '12px 20px',
+                      cursor: 'pointer',
+                      width: '100%',
+                      color: hasFriction ? colors.warning : colors.textSecondary,
+                      fontSize: typo.small.fontSize,
+                      fontWeight: 600,
+                      minHeight: '44px',
+                    }}
+                  >
+                    {hasFriction ? '🔶 Sticky Hinge (Extra Resistance)' : '⚪ Normal Hinge'}
+                  </button>
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                  {doorAngle === 0 ? (
+                    <button
+                      onClick={pushDoor}
+                      disabled={isPushing}
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                        color: 'white',
+                        border: 'none',
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        cursor: isPushing ? 'not-allowed' : 'pointer',
+                        opacity: isPushing ? 0.6 : 1,
+                        minHeight: '44px',
+                      }}
+                    >
+                      Push Door!
+                    </button>
+                  ) : (
+                    <button
+                      onClick={resetDoor}
+                      style={{
+                        background: colors.bgSecondary,
+                        color: colors.textPrimary,
+                        border: `1px solid ${colors.border}`,
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        minHeight: '44px',
+                      }}
+                    >
+                      Reset Door
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowForceVector(!showForceVector)}
+                    style={{
+                      background: showForceVector ? `${colors.accent}22` : colors.bgSecondary,
+                      color: showForceVector ? colors.accent : colors.textSecondary,
+                      border: `1px solid ${showForceVector ? colors.accent : colors.border}`,
+                      padding: '14px 20px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      minHeight: '44px',
+                    }}
+                  >
+                    {showForceVector ? 'Vectors ON' : 'Vectors OFF'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1488,155 +1506,172 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             Adjust weights and positions to achieve balance!
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Interactive seesaw SVG */}
-            <svg width="100%" height={180} viewBox="0 0 360 180" style={{ display: 'block', margin: '0 auto' }}>
-              <defs>
-                <linearGradient id="twistBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#a3765c" />
-                  <stop offset="50%" stopColor="#c9a07a" />
-                  <stop offset="100%" stopColor="#6b4d38" />
-                </linearGradient>
-                <linearGradient id="twistFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#6b7280" />
-                  <stop offset="100%" stopColor="#374151" />
-                </linearGradient>
-                <radialGradient id="twistLeftGrad" cx="30%" cy="30%">
-                  <stop offset="0%" stopColor="#fca5a5" />
-                  <stop offset="100%" stopColor="#b91c1c" />
-                </radialGradient>
-                <radialGradient id="twistRightGrad" cx="30%" cy="30%">
-                  <stop offset="0%" stopColor="#86efac" />
-                  <stop offset="100%" stopColor="#15803d" />
-                </radialGradient>
-              </defs>
-
-              <rect width="360" height="180" fill="#08050c" />
-              <rect x="0" y="145" width="360" height="35" fill="#1e1e2e" />
-
-              {/* Fulcrum */}
-              <polygon points="180,110 150,145 210,145" fill="url(#twistFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
-
-              {/* Board with tilt */}
-              <g transform={`rotate(${tilt}, 180, 105)`}>
-                <rect x="30" y="99" width="300" height="12" rx="4" fill="url(#twistBoardGrad)" />
-
-                {/* Left weight */}
-                <g transform={`translate(${30 + leftPosition * 150}, 75)`}>
-                  <circle r={15 + leftWeight * 2} fill="url(#twistLeftGrad)" stroke="#dc2626" strokeWidth="2" />
-                  <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{leftWeight}kg</text>
-                </g>
-
-                {/* Right weight */}
-                <g transform={`translate(${180 + rightPosition * 150}, 75)`}>
-                  <circle r={15 + rightWeight * 2} fill="url(#twistRightGrad)" stroke="#16a34a" strokeWidth="2" />
-                  <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{rightWeight}kg</text>
-                </g>
-              </g>
-
-              {/* Pivot glow if balanced */}
-              <circle cx="180" cy="110" r="6" fill={isBalanced ? colors.success : colors.accent} stroke={isBalanced ? '#86efac' : '#c084fc'} strokeWidth="2" />
-            </svg>
-
-            {/* Balance indicator */}
-            <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '24px' }}>
-              <span style={{
-                ...typo.body,
-                fontWeight: 700,
-                color: isBalanced ? colors.success : colors.warning,
-                background: isBalanced ? `${colors.success}22` : `${colors.warning}22`,
-                padding: '8px 20px',
-                borderRadius: '20px',
-                border: `1px solid ${isBalanced ? colors.success : colors.warning}44`,
-              }}>
-                {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
-              </span>
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: `${colors.error}11`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.error}33`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <p style={{ height: '20px', ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '12px' }}>Left Weight</p>
-                <div style={{ marginBottom: '12px' }}>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={leftWeight}
-                    onChange={(e) => setLeftWeight(parseInt(e.target.value))}
-                    style={{ touchAction: 'pan-y', width: '100%' }}
-                  />
-                  <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{leftWeight} kg</p>
-                </div>
-                <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(leftPosition * 100).toFixed(0)}%</p>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={leftPosition}
-                  onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
-                  style={{ touchAction: 'pan-y', width: '100%' }}
-                />
-              </div>
+                {/* Interactive seesaw SVG */}
+                <svg width="100%" height={180} viewBox="0 0 360 180" style={{ display: 'block', margin: '0 auto' }}>
+                  <defs>
+                    <linearGradient id="twistBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#a3765c" />
+                      <stop offset="50%" stopColor="#c9a07a" />
+                      <stop offset="100%" stopColor="#6b4d38" />
+                    </linearGradient>
+                    <linearGradient id="twistFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#6b7280" />
+                      <stop offset="100%" stopColor="#374151" />
+                    </linearGradient>
+                    <radialGradient id="twistLeftGrad" cx="30%" cy="30%">
+                      <stop offset="0%" stopColor="#fca5a5" />
+                      <stop offset="100%" stopColor="#b91c1c" />
+                    </radialGradient>
+                    <radialGradient id="twistRightGrad" cx="30%" cy="30%">
+                      <stop offset="0%" stopColor="#86efac" />
+                      <stop offset="100%" stopColor="#15803d" />
+                    </radialGradient>
+                  </defs>
 
-              <div style={{
-                background: `${colors.success}11`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.success}33`,
-              }}>
-                <p style={{ height: '20px', ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '12px' }}>Right Weight</p>
-                <div style={{ marginBottom: '12px' }}>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={rightWeight}
-                    onChange={(e) => setRightWeight(parseInt(e.target.value))}
-                    style={{ touchAction: 'pan-y', width: '100%' }}
-                  />
-                  <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{rightWeight} kg</p>
+                  <rect width="360" height="180" fill="#08050c" />
+                  <rect x="0" y="145" width="360" height="35" fill="#1e1e2e" />
+
+                  {/* Fulcrum */}
+                  <polygon points="180,110 150,145 210,145" fill="url(#twistFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
+
+                  {/* Board with tilt */}
+                  <g transform={`rotate(${tilt}, 180, 105)`}>
+                    <rect x="30" y="99" width="300" height="12" rx="4" fill="url(#twistBoardGrad)" />
+
+                    {/* Left weight */}
+                    <g transform={`translate(${30 + leftPosition * 150}, 75)`}>
+                      <circle r={15 + leftWeight * 2} fill="url(#twistLeftGrad)" stroke="#dc2626" strokeWidth="2" />
+                      <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{leftWeight}kg</text>
+                    </g>
+
+                    {/* Right weight */}
+                    <g transform={`translate(${180 + rightPosition * 150}, 75)`}>
+                      <circle r={15 + rightWeight * 2} fill="url(#twistRightGrad)" stroke="#16a34a" strokeWidth="2" />
+                      <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{rightWeight}kg</text>
+                    </g>
+                  </g>
+
+                  {/* Pivot glow if balanced */}
+                  <circle cx="180" cy="110" r="6" fill={isBalanced ? colors.success : colors.accent} stroke={isBalanced ? '#86efac' : '#c084fc'} strokeWidth="2" />
+                </svg>
+
+                {/* Balance indicator */}
+                <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '16px' }}>
+                  <span style={{
+                    ...typo.body,
+                    fontWeight: 700,
+                    color: isBalanced ? colors.success : colors.warning,
+                    background: isBalanced ? `${colors.success}22` : `${colors.warning}22`,
+                    padding: '8px 20px',
+                    borderRadius: '20px',
+                    border: `1px solid ${isBalanced ? colors.success : colors.warning}44`,
+                  }}>
+                    {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
+                  </span>
                 </div>
-                <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(rightPosition * 100).toFixed(0)}%</p>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={rightPosition}
-                  onChange={(e) => setRightPosition(parseFloat(e.target.value))}
-                  style={{ touchAction: 'pan-y', width: '100%' }}
-                />
+
+                {/* Torque display */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.accent}33`,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', ...typo.body }}>
+                    <span style={{ color: colors.textSecondary }}>
+                      Left: <span style={{ color: colors.error, fontWeight: 600 }}>{leftTorque.toFixed(1)}</span> N-m
+                    </span>
+                    <span style={{ color: colors.textMuted }}>|</span>
+                    <span style={{ color: colors.textSecondary }}>
+                      Right: <span style={{ color: colors.success, fontWeight: 600 }}>{rightTorque.toFixed(1)}</span> N-m
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Controls */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+                  <div style={{
+                    background: `${colors.error}11`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${colors.error}33`,
+                  }}>
+                    <p style={{ height: '20px', ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '12px' }}>Left Weight</p>
+                    <div style={{ marginBottom: '12px' }}>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={leftWeight}
+                        onChange={(e) => setLeftWeight(parseInt(e.target.value))}
+                        style={{ touchAction: 'pan-y', width: '100%' }}
+                      />
+                      <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{leftWeight} kg</p>
+                    </div>
+                    <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(leftPosition * 100).toFixed(0)}%</p>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.1"
+                      value={leftPosition}
+                      onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
+                      style={{ touchAction: 'pan-y', width: '100%' }}
+                    />
+                  </div>
 
-            {/* Torque display */}
-            <div style={{
-              background: `${colors.accent}11`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginTop: '20px',
-              border: `1px solid ${colors.accent}33`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', ...typo.body }}>
-                <span style={{ color: colors.textSecondary }}>
-                  Left: <span style={{ color: colors.error, fontWeight: 600 }}>{leftTorque.toFixed(1)}</span> N-m
-                </span>
-                <span style={{ color: colors.textMuted }}>|</span>
-                <span style={{ color: colors.textSecondary }}>
-                  Right: <span style={{ color: colors.success, fontWeight: 600 }}>{rightTorque.toFixed(1)}</span> N-m
-                </span>
+                  <div style={{
+                    background: `${colors.success}11`,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    border: `1px solid ${colors.success}33`,
+                  }}>
+                    <p style={{ height: '20px', ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '12px' }}>Right Weight</p>
+                    <div style={{ marginBottom: '12px' }}>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={rightWeight}
+                        onChange={(e) => setRightWeight(parseInt(e.target.value))}
+                        style={{ touchAction: 'pan-y', width: '100%' }}
+                      />
+                      <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{rightWeight} kg</p>
+                    </div>
+                    <p style={{ height: '20px', ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(rightPosition * 100).toFixed(0)}%</p>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.1"
+                      value={rightPosition}
+                      onChange={(e) => setRightPosition(parseFloat(e.target.value))}
+                      style={{ touchAction: 'pan-y', width: '100%' }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

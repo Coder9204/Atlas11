@@ -1159,45 +1159,58 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <WarmerVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <WarmerVisualization />
+                </div>
+              </div>
 
-            {/* Sliders for physics parameters */}
-            <div style={{ marginTop: '16px' }}>
-              <h4 style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>Adjust Parameters</h4>
-              {renderSlider('Warmer Mass (g)', ironPowder, setIronPowder, 20, 150, 'g', colors.accent)}
-              {renderSlider('Salt Catalyst (%)', saltConcentration, setSaltConcentration, 0, 100, '%', colors.warning)}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
-              {warmerState === 'liquid' && (
-                <button
-                  onClick={activateWarmer}
-                  style={{
-                    ...primaryButtonStyle,
-                    background: `linear-gradient(135deg, #0ea5e9, #0284c7)`,
-                  }}
-                >
-                  Click Metal Disc
-                </button>
-              )}
-              {warmerState !== 'liquid' && (
-                <button
-                  onClick={resetWarmer}
-                  style={{
-                    padding: '12px 24px',
-                    borderRadius: '10px',
-                    border: `1px solid ${colors.border}`,
-                    background: 'transparent',
-                    color: colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    minHeight: '44px',
-                  }}
-                >
-                  Boil to Reset (Reusable)
-                </button>
-              )}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Sliders for physics parameters */}
+                <div style={{ marginTop: '16px' }}>
+                  <h4 style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px', fontWeight: 600 }}>Adjust Parameters</h4>
+                  {renderSlider('Warmer Mass (g)', ironPowder, setIronPowder, 20, 150, 'g', colors.accent)}
+                  {renderSlider('Salt Catalyst (%)', saltConcentration, setSaltConcentration, 0, 100, '%', colors.warning)}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+                  {warmerState === 'liquid' && (
+                    <button
+                      onClick={activateWarmer}
+                      style={{
+                        ...primaryButtonStyle,
+                        background: `linear-gradient(135deg, #0ea5e9, #0284c7)`,
+                      }}
+                    >
+                      Click Metal Disc
+                    </button>
+                  )}
+                  {warmerState !== 'liquid' && (
+                    <button
+                      onClick={resetWarmer}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: '10px',
+                        border: `1px solid ${colors.border}`,
+                        background: 'transparent',
+                        color: colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        minHeight: '44px',
+                      }}
+                    >
+                      Boil to Reset (Reusable)
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1513,37 +1526,15 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             Compare the two hand warmer technologies
           </p>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
-            <button
-              onClick={() => { setWarmerType('phase'); resetTwist(); }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                background: warmerType === 'phase' ? '#3b82f6' : colors.bgCard,
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Phase-Change (Reusable)
-            </button>
-            <button
-              onClick={() => { setWarmerType('chemical'); resetTwist(); }}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '10px',
-                border: 'none',
-                background: warmerType === 'chemical' ? colors.accent : colors.bgCard,
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Chemical (Disposable)
-            </button>
-          </div>
-
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1552,7 +1543,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           }}>
             {/* SVG Visualization */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgSecondary, borderRadius: '12px', maxWidth: '100%' }}>
                 <defs>
                   <linearGradient id="tempBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#ef4444" />
@@ -1629,11 +1620,44 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               )}
             </div>
           </div>
+          </div>
+
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+            <button
+              onClick={() => { setWarmerType('phase'); resetTwist(); }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: warmerType === 'phase' ? '#3b82f6' : colors.bgCard,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Phase-Change (Reusable)
+            </button>
+            <button
+              onClick={() => { setWarmerType('chemical'); resetTwist(); }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: warmerType === 'chemical' ? colors.accent : colors.bgCard,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Chemical (Disposable)
+            </button>
+          </div>
 
           {/* Comparison table */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: '1fr',
             gap: '16px',
             marginBottom: '24px',
           }}>
@@ -1665,6 +1689,8 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
                 <li>Chemical reaction energy</li>
               </ul>
             </div>
+          </div>
+          </div>
           </div>
 
           <button

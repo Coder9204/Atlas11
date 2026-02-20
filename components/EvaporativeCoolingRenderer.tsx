@@ -1017,16 +1017,34 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               Evaporative cooling is defined as the process where heat energy is absorbed during a liquid-to-gas phase change. The formula Q = m × Lv describes how the heat removed (Q) is calculated from mass (m) and latent heat of vaporization (Lv = 2,260 J/g for water).
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderSkinVisualization()}
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Wet skin button */}
               <button
                 onClick={wetTheSkin}
@@ -1072,7 +1090,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               {/* Metrics */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
               }}>
                 <div style={{
@@ -1103,6 +1121,8 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   <div style={{ ...typo.small, color: colors.textMuted }}>Evap Rate</div>
                 </div>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* Real-world relevance */}
@@ -1425,16 +1445,34 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
               Adjust the wind speed slider to see the effect on skin temperature
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              maxWidth: '900px',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
               padding: '24px',
-              marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderSkinVisualization(true)}
               </div>
+            </div>
+            </div>
 
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
               {/* Make skin wet for this phase */}
               {!skinWet && (
                 <button
@@ -1508,6 +1546,8 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+            </div>
             </div>
 
             <button

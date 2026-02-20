@@ -927,110 +927,119 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             This is important because it explains how heat affects gas behavior in engines, HVAC systems, and everyday applications.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <MoleculeVisualization temp={temperature} vol={volume} count={particleCount} containerSize={containerSize} />
-            </div>
-
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{temperature} K</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="800"
-                step="10"
-                value={temperature}
-                onChange={(e) => {
-                  const newTemp = parseInt(e.target.value);
-                  setTemperature(newTemp);
-                  initializeMolecules(newTemp, particleCount, volume);
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  background: `linear-gradient(to right, ${colors.accent}, ${colors.accent})`,
-                  touchAction: 'pan-y',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100 K (Cold)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>800 K (Hot)</span>
-              </div>
-            </div>
-
-            {/* Particle count slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Molecules</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{particleCount}</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="80"
-                value={particleCount}
-                onChange={(e) => {
-                  const newCount = parseInt(e.target.value);
-                  setParticleCount(newCount);
-                  initializeMolecules(temperature, newCount, volume);
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: colors.success,
-                  background: `linear-gradient(to right, ${colors.success}, ${colors.success})`,
-                  touchAction: 'pan-y',
-                }}
-              />
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{rmsSpeed.toFixed(0)} m/s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>RMS Speed</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <MoleculeVisualization temp={temperature} vol={volume} count={particleCount} containerSize={containerSize} />
+                </div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{rmsSpeed.toFixed(0)} m/s</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>RMS Speed</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{((3/2) * k_B * temperature * 1e21).toFixed(2)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Avg KE (x10^-21 J)</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: '#3b82f6' }}>{(particleCount * temperature / volume).toFixed(1)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Pressure (NkT/V)</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{((3/2) * k_B * temperature * 1e21).toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Avg KE (x10^-21 J)</div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{temperature} K</span>
+                </div>
+                <input
+                  type="range"
+                  min="100"
+                  max="800"
+                  step="10"
+                  value={temperature}
+                  onChange={(e) => {
+                    const newTemp = parseInt(e.target.value);
+                    setTemperature(newTemp);
+                    initializeMolecules(newTemp, particleCount, volume);
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: colors.accent,
+                    touchAction: 'pan-y',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100 K</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>800 K</span>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#3b82f6' }}>{(particleCount * temperature / volume).toFixed(1)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Pressure (NkT/V)</div>
+
+              {/* Particle count slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Molecules</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{particleCount}</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="80"
+                  value={particleCount}
+                  onChange={(e) => {
+                    const newCount = parseInt(e.target.value);
+                    setParticleCount(newCount);
+                    initializeMolecules(temperature, newCount, volume);
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    accentColor: colors.success,
+                    touchAction: 'pan-y',
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -1314,84 +1323,93 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             All gases at the same temperature - compare their RMS speeds
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistTemperature} K</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="600"
-                step="50"
-                value={twistTemperature}
-                onChange={(e) => setTwistTemperature(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                }}
-              />
-            </div>
-
-            {/* Speed bars - SVG visualization */}
-            <svg width={isMobile ? 300 : 420} height={260} style={{ borderRadius: '8px' }}>
-              <defs>
-                <filter id="barGlow">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-                {massOptions.map(gas => (
-                  <linearGradient key={gas.name} id={`grad${gas.name}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={gas.color} stopOpacity="0.8" />
-                    <stop offset="100%" stopColor={gas.color} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <g>
-                <text x={isMobile ? 150 : 210} y="18" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="12">RMS Speed Comparison at {twistTemperature} K</text>
-              </g>
-              {massOptions.map((gas, idx) => {
-                const speed = getSpeed(gas.mass, twistTemperature);
-                const maxSpeed = getSpeed(2, 600); // H2 at max temp for scaling
-                const barWidth = (speed / maxSpeed) * (isMobile ? 200 : 300);
-                const y = 30 + idx * 46;
-                return (
-                  <g key={gas.name}>
-                    <text x="5" y={y + 18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="600">{gas.name}</text>
-                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.9)" fontSize="11">({gas.mass}u)</text>
-                    <rect x="75" y={y + 2} width={isMobile ? 200 : 300} height="28" rx="4" fill="rgba(255,255,255,0.05)" />
-                    <rect x="75" y={y + 2} width={barWidth} height="28" rx="4" fill={`url(#grad${gas.name})`} filter="url(#barGlow)" />
-                    <text x={80 + barWidth} y={y + 20} fill={gas.color} fontSize="11" fontWeight="bold">{speed.toFixed(0)} m/s</text>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+              }}>
+                {/* Speed bars - SVG visualization */}
+                <svg width={isMobile ? 300 : 420} height={260} style={{ borderRadius: '8px' }}>
+                  <defs>
+                    <filter id="barGlow">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                    {massOptions.map(gas => (
+                      <linearGradient key={gas.name} id={`grad${gas.name}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor={gas.color} stopOpacity="0.8" />
+                        <stop offset="100%" stopColor={gas.color} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <g>
+                    <text x={isMobile ? 150 : 210} y="18" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="12">RMS Speed Comparison at {twistTemperature} K</text>
                   </g>
-                );
-              })}
-            </svg>
+                  {massOptions.map((gas, idx) => {
+                    const speed = getSpeed(gas.mass, twistTemperature);
+                    const maxSpeed = getSpeed(2, 600);
+                    const barWidth = (speed / maxSpeed) * (isMobile ? 200 : 300);
+                    const y = 30 + idx * 46;
+                    return (
+                      <g key={gas.name}>
+                        <text x="5" y={y + 18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="600">{gas.name}</text>
+                        <text x="40" y={y + 18} fill="rgba(156,163,175,0.9)" fontSize="11">({gas.mass}u)</text>
+                        <rect x="75" y={y + 2} width={isMobile ? 200 : 300} height="28" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <rect x="75" y={y + 2} width={barWidth} height="28" rx="4" fill={`url(#grad${gas.name})`} filter="url(#barGlow)" />
+                        <text x={80 + barWidth} y={y + 20} fill={gas.color} fontSize="11" fontWeight="bold">{speed.toFixed(0)} m/s</text>
+                      </g>
+                    );
+                  })}
+                </svg>
 
-            {/* Ratio display */}
-            <div style={{
-              marginTop: '24px',
-              padding: '16px',
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-            }}>
-              <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center' }}>
-                H2 is <span style={{ color: colors.accent, fontWeight: 'bold' }}>
-                  {(getSpeed(2, twistTemperature) / getSpeed(28, twistTemperature)).toFixed(2)}x
-                </span> faster than N2 at {twistTemperature} K
-              </p>
-              <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginTop: '8px' }}>
-                sqrt(28/2) = sqrt(14) = 3.74 (independent of temperature!)
-              </p>
+                {/* Ratio display */}
+                <div style={{
+                  marginTop: '24px',
+                  padding: '16px',
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                }}>
+                  <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center' }}>
+                    H2 is <span style={{ color: colors.accent, fontWeight: 'bold' }}>
+                      {(getSpeed(2, twistTemperature) / getSpeed(28, twistTemperature)).toFixed(2)}x
+                    </span> faster than N2 at {twistTemperature} K
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistTemperature} K</span>
+                </div>
+                <input
+                  type="range"
+                  min="100"
+                  max="600"
+                  step="50"
+                  value={twistTemperature}
+                  onChange={(e) => setTwistTemperature(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                  }}
+                />
+              </div>
             </div>
           </div>
 

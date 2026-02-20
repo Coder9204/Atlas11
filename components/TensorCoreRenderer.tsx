@@ -1479,11 +1479,23 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderTensorCoreVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderTensorCoreVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
-          <div style={{ padding: '16px' }}>
+          <div>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
                 Matrix Size: {matrixSize}x{matrixSize}
@@ -1562,6 +1574,8 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
               <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
                 <strong>Why this matters:</strong> Every transformer attention layer, convolution, and neural network layer is matrix multiplication. Tensor cores achieve 2000+ TFLOPS for FP16 — enabling AI at scale.
               </p>
+            </div>
+          </div>
             </div>
           </div>
         </div>
@@ -1743,11 +1757,23 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            {renderTensorCoreVisualization()}
-          </div>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderTensorCoreVisualization()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
-          <div style={{ padding: '16px' }}>
+          <div>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
                 Select Precision
@@ -1809,6 +1835,8 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                 <li>FP16: Half precision, 2x throughput (good for inference)</li>
                 <li>INT8: Integer only, 4x throughput (quantized models)</li>
               </ul>
+            </div>
+          </div>
             </div>
           </div>
         </div>

@@ -923,119 +923,139 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <BallVisualization showAirflow={true} />
-            </div>
-
-            {/* Spin rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate (0%)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinRate}%</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <BallVisualization showAirflow={true} />
+                </div>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={spinRate}
-                onChange={(e) => setSpinRate(parseInt(e.target.value))}
-                style={{
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '10px',
-                  background: `linear-gradient(to right, ${colors.accent} ${spinRate}%, ${colors.border} ${spinRate}%)`,
-                  cursor: 'pointer',
-                } as React.CSSProperties}
-              />
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Spin rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate (0%)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinRate}%</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={spinRate}
+                    onChange={(e) => setSpinRate(parseInt(e.target.value))}
+                    style={{
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      background: `linear-gradient(to right, ${colors.accent} ${spinRate}%, ${colors.border} ${spinRate}%)`,
+                      cursor: 'pointer',
+                    } as React.CSSProperties}
+                  />
+                </div>
 
-            {/* Ball speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ball Speed (20%)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{ballSpeed}%</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
+                {/* Ball speed slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Ball Speed (20%)</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{ballSpeed}%</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>(100%)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={ballSpeed}
+                    onChange={(e) => setBallSpeed(parseInt(e.target.value))}
+                    style={{
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      background: `linear-gradient(to right, ${colors.warning} ${ballSpeed}%, ${colors.border} ${ballSpeed}%)`,
+                      cursor: 'pointer',
+                    } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Spin direction buttons */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {(['topspin', 'backspin', 'sidespin'] as const).map(dir => (
+                    <button
+                      key={dir}
+                      onClick={() => setSpinDirection(dir)}
+                      style={{
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        border: spinDirection === dir ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                        background: spinDirection === dir ? `${colors.accent}22` : 'transparent',
+                        color: spinDirection === dir ? colors.accent : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                        fontSize: '13px',
+                      }}
+                    >
+                      {dir}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Throw button */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <button
+                    onClick={() => {
+                      startAnimation();
+                      playSound('click');
+                    }}
+                    disabled={isAnimating}
+                    style={{
+                      padding: '14px 32px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: isAnimating ? colors.border : colors.accent,
+                      color: 'white',
+                      fontWeight: 700,
+                      cursor: isAnimating ? 'not-allowed' : 'pointer',
+                      fontSize: '16px',
+                      width: '100%',
+                    }}
+                  >
+                    {isAnimating ? 'Flying...' : 'Throw Ball'}
+                  </button>
+                </div>
               </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={ballSpeed}
-                onChange={(e) => setBallSpeed(parseInt(e.target.value))}
-                style={{
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '10px',
-                  background: `linear-gradient(to right, ${colors.warning} ${ballSpeed}%, ${colors.border} ${ballSpeed}%)`,
-                  cursor: 'pointer',
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Spin direction buttons */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
-              {(['topspin', 'backspin', 'sidespin'] as const).map(dir => (
-                <button
-                  key={dir}
-                  onClick={() => setSpinDirection(dir)}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: spinDirection === dir ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                    background: spinDirection === dir ? `${colors.accent}22` : 'transparent',
-                    color: spinDirection === dir ? colors.accent : colors.textSecondary,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {dir}
-                </button>
-              ))}
-            </div>
-
-            {/* Throw button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={() => {
-                  startAnimation();
-                  playSound('click');
-                }}
-                disabled={isAnimating}
-                style={{
-                  padding: '14px 32px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: isAnimating ? colors.border : colors.accent,
-                  color: 'white',
-                  fontWeight: 700,
-                  cursor: isAnimating ? 'not-allowed' : 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                {isAnimating ? 'Flying...' : 'Throw Ball'}
-              </button>
             </div>
           </div>
 
           {/* Comparison: current vs baseline values */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '12px',
             marginBottom: '24px',
           }}>
@@ -1383,133 +1403,150 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             Compare how different ball surfaces affect the Magnus effect
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Surface selector */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
-              {([
-                { id: 'smooth', label: 'Smooth', icon: '🏐', desc: 'Volleyball' },
-                { id: 'rough', label: 'Seamed', icon: '⚾', desc: 'Baseball' },
-                { id: 'dimpled', label: 'Dimpled', icon: '⛳', desc: 'Golf Ball' }
-              ] as const).map(surface => (
-                <button
-                  key={surface.id}
-                  onClick={() => setBallSurface(surface.id)}
-                  style={{
-                    padding: '16px 20px',
-                    borderRadius: '12px',
-                    border: ballSurface === surface.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                    background: ballSurface === surface.id ? `${colors.accent}22` : 'transparent',
-                    cursor: 'pointer',
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* SVG responding to spin rate */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }}>
+                    <rect width="300" height="180" fill="#1e3a5f" rx="8" />
+                    <line x1="30" y1="90" x2="270" y2="90" stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                    {/* Ball */}
+                    <circle cx="50" cy="90" r="18" fill={ballSurface === 'smooth' ? '#fbbf24' : ballSurface === 'dimpled' ? '#e2e8f0' : '#dc2626'} />
+                    {/* Trajectory curve based on spin */}
+                    <path
+                      d={`M 50 90 L 80 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 110 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.8 : twistSpinRate * 0.8)} L 140 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.9 : twistSpinRate * 0.9)))} L 170 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.85 : twistSpinRate * 0.85)))} L 200 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.7 : twistSpinRate * 0.7)} L 230 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 260 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.25 : twistSpinRate * 0.25)}`}
+                      fill="none"
+                      stroke={ballSurface === 'smooth' && twistSpinRate > 70 ? '#f59e0b' : '#22c55e'}
+                      strokeWidth="3"
+                    />
+                    <text x="150" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">
+                      {ballSurface === 'smooth' && twistSpinRate > 70 ? 'REVERSE Magnus!' : 'Normal Magnus'}
+                    </text>
+                    <text x="150" y="170" textAnchor="middle" fill="#94a3b8" fontSize="11">Spin: {twistSpinRate}% | Surface: {ballSurface}</text>
+                  </svg>
+                </div>
+
+                {/* Visualization diagrams */}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                    <h4 style={{ ...typo.small, color: colors.success, marginBottom: '12px' }}>Normal Magnus (Baseball)</h4>
+                    <svg width="180" height="100" style={{ maxWidth: '100%' }}>
+                      <rect width="180" height="100" fill="#1e3a5f" rx="6" />
+                      <circle cx="40" cy="50" r="18" fill="#dc2626" />
+                      <path d="M58 50 Q100 15 160 50" fill="none" stroke="#22c55e" strokeWidth="3" />
+                      <text x="100" y="12" fill="#22c55e" fontSize="11">Curves as expected</text>
+                    </svg>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                    <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '12px' }}>Reverse Magnus (Volleyball)</h4>
+                    <svg width="180" height="100" style={{ maxWidth: '100%' }}>
+                      <rect width="180" height="100" fill="#1e3a5f" rx="6" />
+                      <circle cx="40" cy="50" r="18" fill="#fbbf24" />
+                      <path d="M58 50 Q100 85 160 50" fill="none" stroke="#f59e0b" strokeWidth="3" />
+                      <text x="100" y="85" fill="#f59e0b" fontSize="11">Curves OPPOSITE!</text>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Surface selector */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {([
+                    { id: 'smooth', label: 'Smooth', icon: '🏐', desc: 'Volleyball' },
+                    { id: 'rough', label: 'Seamed', icon: '⚾', desc: 'Baseball' },
+                    { id: 'dimpled', label: 'Dimpled', icon: '⛳', desc: 'Golf Ball' }
+                  ] as const).map(surface => (
+                    <button
+                      key={surface.id}
+                      onClick={() => setBallSurface(surface.id)}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        border: ballSurface === surface.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                        background: ballSurface === surface.id ? `${colors.accent}22` : 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '24px' }}>{surface.icon}</div>
+                      <div style={{ color: colors.textPrimary, fontWeight: 600, marginTop: '4px', fontSize: '12px' }}>{surface.label}</div>
+                      <div style={{ color: colors.textMuted, fontSize: '10px' }}>{surface.desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Spin rate for twist */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistSpinRate}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={twistSpinRate}
+                    onChange={(e) => setTwistSpinRate(parseInt(e.target.value))}
+                    style={{
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      touchAction: 'pan-y',
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                    } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Curve direction display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '16px',
                     textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: '32px' }}>{surface.icon}</div>
-                  <div style={{ color: colors.textPrimary, fontWeight: 600, marginTop: '4px' }}>{surface.label}</div>
-                  <div style={{ color: colors.textMuted, fontSize: '12px' }}>{surface.desc}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* SVG responding to spin rate */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg width="300" height="180" viewBox="0 0 300 180">
-                <rect width="300" height="180" fill="#1e3a5f" rx="8" />
-                <line x1="30" y1="90" x2="270" y2="90" stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
-                {/* Ball */}
-                <circle cx="50" cy="90" r="18" fill={ballSurface === 'smooth' ? '#fbbf24' : ballSurface === 'dimpled' ? '#e2e8f0' : '#dc2626'} />
-                {/* Trajectory curve based on spin */}
-                <path
-                  d={`M 50 90 L 80 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 110 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.8 : twistSpinRate * 0.8)} L 140 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.9 : twistSpinRate * 0.9)))} L 170 ${Math.max(10, Math.min(170, 90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.85 : twistSpinRate * 0.85)))} L 200 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.7 : twistSpinRate * 0.7)} L 230 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.5 : twistSpinRate * 0.5)} L 260 ${90 + (twistSpinRate > 70 && ballSurface === 'smooth' ? -twistSpinRate * 0.25 : twistSpinRate * 0.25)}`}
-                  fill="none"
-                  stroke={ballSurface === 'smooth' && twistSpinRate > 70 ? '#f59e0b' : '#22c55e'}
-                  strokeWidth="3"
-                />
-                <text x="150" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">
-                  {ballSurface === 'smooth' && twistSpinRate > 70 ? 'REVERSE Magnus!' : 'Normal Magnus'}
-                </text>
-                <text x="150" y="170" textAnchor="middle" fill="#94a3b8" fontSize="11">Spin: {twistSpinRate}% | Surface: {ballSurface}</text>
-              </svg>
-            </div>
-
-            {/* Spin rate for twist */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistSpinRate}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={twistSpinRate}
-                onChange={(e) => setTwistSpinRate(parseInt(e.target.value))}
-                style={{
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  touchAction: 'pan-y',
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                } as React.CSSProperties}
-              />
-            </div>
-
-            {/* Curve direction display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: ballSurface === 'smooth' && twistSpinRate > 70 ? colors.warning : colors.success }}>
-                  {getCurveDirection()}
+                  }}>
+                    <div style={{ ...typo.h3, color: ballSurface === 'smooth' && twistSpinRate > 70 ? colors.warning : colors.success }}>
+                      {getCurveDirection()}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Curve Direction</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>
+                      {ballSurface === 'dimpled' ? 'Enhanced' : ballSurface === 'smooth' ? 'Variable' : 'Normal'}
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Magnus Strength</div>
+                  </div>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Curve Direction</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>
-                  {ballSurface === 'dimpled' ? 'Enhanced' : ballSurface === 'smooth' ? 'Variable' : 'Normal'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Magnus Strength</div>
-              </div>
-            </div>
-
-            {/* Visualization diagrams */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '12px' }}>Normal Magnus (Baseball)</h4>
-                <svg width="180" height="100" style={{ maxWidth: '100%' }}>
-                  <rect width="180" height="100" fill="#1e3a5f" rx="6" />
-                  <circle cx="40" cy="50" r="18" fill="#dc2626" />
-                  <path d="M58 50 Q100 15 160 50" fill="none" stroke="#22c55e" strokeWidth="3" />
-                  <text x="100" y="12" fill="#22c55e" fontSize="11">Curves as expected</text>
-                </svg>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '12px' }}>Reverse Magnus (Volleyball)</h4>
-                <svg width="180" height="100" style={{ maxWidth: '100%' }}>
-                  <rect width="180" height="100" fill="#1e3a5f" rx="6" />
-                  <circle cx="40" cy="50" r="18" fill="#fbbf24" />
-                  <path d="M58 50 Q100 85 160 50" fill="none" stroke="#f59e0b" strokeWidth="3" />
-                  <text x="100" y="85" fill="#f59e0b" fontSize="11">Curves OPPOSITE!</text>
-                </svg>
               </div>
             </div>
           </div>

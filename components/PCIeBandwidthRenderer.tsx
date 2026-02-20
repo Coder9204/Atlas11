@@ -982,107 +982,125 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Formula */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
-                Bandwidth Formula:
-              </p>
-              <p style={{ ...typo.body, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
-                Bandwidth = Per-Lane Speed × Number of Lanes
-              </p>
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
+              }}>
+                {/* Formula */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
+                    Bandwidth Formula:
+                  </p>
+                  <p style={{ ...typo.body, color: colors.accent, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                    Bandwidth = Per-Lane Speed × Number of Lanes
+                  </p>
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PCIeVisualization />
-            </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <PCIeVisualization />
+                </div>
+              </div>
 
-            {renderControls()}
+              {/* Comparison: Before vs After */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                gap: '16px',
+                marginBottom: '16px',
+              }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.border}`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                    Ideal Scaling (No Overhead)
+                  </h4>
+                  <p style={{ ...typo.h2, color: colors.textMuted, margin: '8px 0' }}>
+                    {numGPUs.toFixed(1)}x
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                    {numGPUs} GPUs would give {numGPUs}x speedup
+                  </p>
+                </div>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `2px solid ${effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning}`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                    Actual Scaling (With Overhead)
+                  </h4>
+                  <p style={{ ...typo.h2, color: effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning, margin: '8px 0' }}>
+                    {effectiveSpeedup.toFixed(2)}x
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    Communication overhead reduces gain
+                  </p>
+                </div>
+              </div>
+
+              {/* Discovery prompt */}
+              {numGPUs >= 4 && scalingEfficiency < 0.7 && (
+                <div style={{
+                  background: `${colors.warning}22`,
+                  border: `1px solid ${colors.warning}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                    Notice how scaling efficiency drops as you add more GPUs! Communication overhead is eating into your speedup.
+                  </p>
+                </div>
+              )}
+
+              {useNVLink && (
+                <div style={{
+                  background: `${colors.success}22`,
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                    NVLink provides 900 GB/s - that's 28x more bandwidth than PCIe 4.0 x16!
+                  </p>
+                </div>
+              )}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {renderControls()}
+              </div>
+            </div>
           </div>
-
-          {/* Comparison: Before vs After */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
-                Ideal Scaling (No Overhead)
-              </h4>
-              <p style={{ ...typo.h2, color: colors.textMuted, margin: '8px 0' }}>
-                {numGPUs.toFixed(1)}x
-              </p>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
-                {numGPUs} GPUs would give {numGPUs}x speedup
-              </p>
-            </div>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `2px solid ${effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning}`,
-            }}>
-              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
-                Actual Scaling (With Overhead)
-              </h4>
-              <p style={{ ...typo.h2, color: effectiveSpeedup >= numGPUs * 0.8 ? colors.success : colors.warning, margin: '8px 0' }}>
-                {effectiveSpeedup.toFixed(2)}x
-              </p>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                Communication overhead reduces gain
-              </p>
-            </div>
-          </div>
-
-          {/* Discovery prompt */}
-          {numGPUs >= 4 && scalingEfficiency < 0.7 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how scaling efficiency drops as you add more GPUs! Communication overhead is eating into your speedup.
-              </p>
-            </div>
-          )}
-
-          {useNVLink && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                NVLink provides 900 GB/s - that's 28x more bandwidth than PCIe 4.0 x16!
-              </p>
-            </div>
-          )}
 
           {renderBottomBar(
             { text: '← Back', onClick: () => goToPhase('predict') },
@@ -1361,72 +1379,90 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
             </p>
           </div>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Formula */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
-                Efficiency Formula:
-              </p>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
-                Efficiency = 1 / (1 + Overhead) where Overhead = (N-1) × 0.15
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PCIeVisualization />
-            </div>
-
-            {renderControls()}
-
-            {/* Communication pattern comparison */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: '16px',
-              marginTop: '24px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: `${colors.error}11`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.error}33`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '16px',
               }}>
-                <h4 style={{ ...typo.small, color: colors.error, marginBottom: '8px', fontWeight: 600 }}>
-                  Naive All-Reduce
-                </h4>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>
-                  Send all gradients to one GPU, average, broadcast back.
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  O(N) data movement - creates bottleneck
-                </p>
+                {/* Formula */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textMuted, margin: '0 0 4px 0' }}>
+                    Efficiency Formula:
+                  </p>
+                  <p style={{ ...typo.body, color: colors.warning, margin: 0, fontFamily: 'monospace', fontWeight: 600 }}>
+                    Efficiency = 1 / (1 + Overhead) where Overhead = (N-1) × 0.15
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <PCIeVisualization />
+                </div>
               </div>
+
+              {/* Communication pattern comparison */}
               <div style={{
-                background: `${colors.success}11`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `1px solid ${colors.success}33`,
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                gap: '16px',
               }}>
-                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
-                  Ring All-Reduce
-                </h4>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>
-                  GPUs pass gradient chunks in a ring, each doing partial reductions.
-                </p>
-                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-                  O(1) per GPU - scales efficiently
-                </p>
+                <div style={{
+                  background: `${colors.error}11`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.error}33`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.error, marginBottom: '8px', fontWeight: 600 }}>
+                    Naive All-Reduce
+                  </h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>
+                    Send all gradients to one GPU, average, broadcast back.
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                    O(N) data movement - creates bottleneck
+                  </p>
+                </div>
+                <div style={{
+                  background: `${colors.success}11`,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  border: `1px solid ${colors.success}33`,
+                }}>
+                  <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                    Ring All-Reduce
+                  </h4>
+                  <p style={{ ...typo.small, color: colors.textSecondary }}>
+                    GPUs pass gradient chunks in a ring, each doing partial reductions.
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                    O(1) per GPU - scales efficiently
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {renderControls()}
               </div>
             </div>
           </div>

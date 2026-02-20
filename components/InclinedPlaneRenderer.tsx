@@ -1070,110 +1070,128 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             This is important because the formula F = mg sin(theta) shows how inclined planes provide practical mechanical advantage used in real-world engineering applications.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
-            maxHeight: '600px',
-            overflowY: 'auto',
           }}>
-            {/* Acceleration vs Angle Graph */}
-            <div style={{ marginBottom: '24px' }}>
-              <AccelerationGraph />
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <InclinedPlaneVisualization />
-            </div>
-
-            {/* Angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle - When you increase the angle, the acceleration increases because more of gravity acts along the ramp.</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}°</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="60"
-                step="5"
-                value={angle}
-                onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
-                disabled={isRolling}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: isRolling ? 'not-allowed' : 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y' as const,
-                  background: `linear-gradient(to right, ${colors.accent}, ${colors.success})`,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>10° (gentle)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60° (steep)</span>
+            {/* Left column - SVG visualizations */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ marginBottom: '24px' }}>
+                  <AccelerationGraph />
+                </div>
+                <div>
+                  <InclinedPlaneVisualization />
+                </div>
               </div>
             </div>
 
-            {/* Vector toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Show Vectors</span>
-              <button
-                onClick={() => setShowVectors(!showVectors)}
-                style={{
-                  width: '50px',
-                  height: '26px',
-                  borderRadius: '13px',
-                  border: 'none',
-                  background: showVectors ? colors.accent : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: showVectors ? '27px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-            </div>
+            {/* Right column - Controls */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}>
+                {/* Angle slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="5"
+                    value={angle}
+                    onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
+                    disabled={isRolling}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: isRolling ? 'not-allowed' : 'pointer',
+                      accentColor: colors.accent,
+                      touchAction: 'pan-y' as const,
+                      background: `linear-gradient(to right, ${colors.accent}, ${colors.success})`,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>10°</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>60°</span>
+                  </div>
+                </div>
 
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
-              {!isRolling && ballPosition === 0 && (
-                <button
-                  onClick={() => { playSound('click'); startRolling(); }}
-                  style={{
-                    ...primaryButtonStyle,
-                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                  }}
-                >
-                  Roll Ball
-                </button>
-              )}
-              {(isRolling || ballPosition > 0) && (
-                <button
-                  onClick={() => { playSound('click'); resetExperiment(); }}
-                  style={{
-                    ...primaryButtonStyle,
-                    background: colors.bgSecondary,
-                    border: `1px solid ${colors.border}`,
-                  }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
+                {/* Vector toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Show Vectors</span>
+                  <button
+                    onClick={() => setShowVectors(!showVectors)}
+                    style={{
+                      width: '50px',
+                      height: '26px',
+                      borderRadius: '13px',
+                      border: 'none',
+                      background: showVectors ? colors.accent : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                    }}
+                  >
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: showVectors ? '27px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                </div>
 
+                {/* Control buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {!isRolling && ballPosition === 0 && (
+                    <button
+                      onClick={() => { playSound('click'); startRolling(); }}
+                      style={{
+                        ...primaryButtonStyle,
+                        background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                      }}
+                    >
+                      Roll Ball
+                    </button>
+                  )}
+                  {(isRolling || ballPosition > 0) && (
+                    <button
+                      onClick={() => { playSound('click'); resetExperiment(); }}
+                      style={{
+                        ...primaryButtonStyle,
+                        background: colors.bgSecondary,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Discovery prompt */}
@@ -1432,121 +1450,138 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             Compare smooth vs rough surfaces and see how friction affects motion
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ marginBottom: '24px' }}>
-              <InclinedPlaneVisualization />
-            </div>
-
-            {/* Acceleration vs Angle Graph */}
-            <div style={{ marginBottom: '24px' }}>
-              <AccelerationGraph />
-            </div>
-
-            {/* Surface toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { setHasFriction(false); resetExperiment(); }}
-                disabled={isRolling}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: !hasFriction ? colors.success : colors.bgSecondary,
-                  color: !hasFriction ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: isRolling ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Smooth Surface
-              </button>
-              <button
-                onClick={() => { setHasFriction(true); resetExperiment(); }}
-                disabled={isRolling}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: hasFriction ? colors.friction : colors.bgSecondary,
-                  color: hasFriction ? 'white' : colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: isRolling ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Rough Surface (mu = 0.3)
-              </button>
-            </div>
-
-            {/* Angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="60"
-                step="5"
-                value={angle}
-                onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
-                disabled={isRolling}
-                style={{ width: '100%', cursor: isRolling ? 'not-allowed' : 'pointer' }}
-              />
-            </div>
-
-            {/* Force display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.parallel }}>{gravityParallel.toFixed(1)} N</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Gravity Parallel</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: hasFriction ? colors.friction : colors.textMuted }}>
-                  {hasFriction ? frictionForce.toFixed(1) : '0.0'} N
+            {/* Left column - SVG visualizations */}
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ marginBottom: '24px' }}>
+                  <InclinedPlaneVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Friction Force</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{netAcceleration.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Net Accel (m/s^2)</div>
+                <div>
+                  <AccelerationGraph />
+                </div>
               </div>
             </div>
 
-            {/* Control buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              {!isRolling && ballPosition === 0 && (
-                <button
-                  onClick={() => { playSound('click'); startRolling(); }}
-                  style={{
-                    ...primaryButtonStyle,
-                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
-                  }}
-                >
-                  Roll Ball
-                </button>
-              )}
-              {(isRolling || ballPosition > 0) && (
-                <button
-                  onClick={() => { playSound('click'); resetExperiment(); }}
-                  style={{
-                    ...primaryButtonStyle,
-                    background: colors.bgSecondary,
-                    border: `1px solid ${colors.border}`,
-                  }}
-                >
-                  Reset
-                </button>
-              )}
+            {/* Right column - Controls */}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+              }}>
+                {/* Surface toggle */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => { setHasFriction(false); resetExperiment(); }}
+                    disabled={isRolling}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: !hasFriction ? colors.success : colors.bgSecondary,
+                      color: !hasFriction ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: isRolling ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Smooth Surface
+                  </button>
+                  <button
+                    onClick={() => { setHasFriction(true); resetExperiment(); }}
+                    disabled={isRolling}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: hasFriction ? colors.friction : colors.bgSecondary,
+                      color: hasFriction ? 'white' : colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: isRolling ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Rough (mu = 0.3)
+                  </button>
+                </div>
+
+                {/* Angle slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="5"
+                    value={angle}
+                    onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
+                    disabled={isRolling}
+                    style={{ width: '100%', cursor: isRolling ? 'not-allowed' : 'pointer' }}
+                  />
+                </div>
+
+                {/* Force display */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.parallel }}>{gravityParallel.toFixed(1)} N</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Gravity Parallel</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: hasFriction ? colors.friction : colors.textMuted }}>
+                      {hasFriction ? frictionForce.toFixed(1) : '0.0'} N
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Friction Force</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{netAcceleration.toFixed(2)}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Net Accel (m/s^2)</div>
+                  </div>
+                </div>
+
+                {/* Control buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {!isRolling && ballPosition === 0 && (
+                    <button
+                      onClick={() => { playSound('click'); startRolling(); }}
+                      style={{
+                        ...primaryButtonStyle,
+                        background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                      }}
+                    >
+                      Roll Ball
+                    </button>
+                  )}
+                  {(isRolling || ballPosition > 0) && (
+                    <button
+                      onClick={() => { playSound('click'); resetExperiment(); }}
+                      style={{
+                        ...primaryButtonStyle,
+                        background: colors.bgSecondary,
+                        border: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

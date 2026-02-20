@@ -1469,20 +1469,19 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-               {/* Visualization */}
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', padding: '16px' }}>
+               {/* Side-by-side layout */}
                <div style={{
-                  flex: 1,
-                  padding: '16px',
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '280px',
-                  overflowY: 'auto',
-                  paddingBottom: '80px',
-                  paddingTop: '44px'
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? '12px' : '20px',
+                  width: '100%',
+                  alignItems: isMobile ? 'center' : 'flex-start',
+                  maxWidth: '900px',
+                  margin: '0 auto',
+                  paddingTop: '44px',
                }}>
+                 <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                   {renderWaveVisualization()}
 
                   {/* Comparison display */}
@@ -1492,7 +1491,6 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      borderRadius: design.radius.lg,
                      background: design.colors.bgSecondary,
                      border: `1px solid ${design.colors.border}`,
-                     maxWidth: '500px',
                      width: '100%'
                   }}>
                      <div style={{
@@ -1550,13 +1548,15 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         </div>
                      </div>
                   </div>
-               </div>
+                 </div>
 
+                 <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                {/* Controls */}
                <div style={{
-                  padding: '20px 24px',
+                  padding: '20px',
                   background: design.colors.bgSecondary,
-                  borderTop: `1px solid ${design.colors.border}`,
+                  borderRadius: design.radius.lg,
+                  border: `1px solid ${design.colors.border}`,
                }}>
                   {/* Wave Frequency Slider */}
                   <div style={{ marginBottom: '16px' }}>
@@ -1696,6 +1696,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         </p>
                      </div>
                   )}
+               </div>
+                 </div>
                </div>
             </div>
             {renderBottomNav('predict', 'review', 'See What You Learned →', !hasExperimented)}
@@ -2027,20 +2029,19 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             fontFamily: design.font.sans,
          }}>
             {renderProgressBar()}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-               {/* Visualization */}
+            <div style={{ flex: 1, overflowY: 'auto', paddingTop: '44px', paddingBottom: '80px', padding: '16px' }}>
+               {/* Side-by-side layout */}
                <div style={{
-                  flex: 1,
-                  padding: '16px',
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '280px',
-                  overflowY: 'auto',
-                  paddingBottom: '80px',
-                  paddingTop: '44px'
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? '12px' : '20px',
+                  width: '100%',
+                  alignItems: isMobile ? 'center' : 'flex-start',
+                  maxWidth: '900px',
+                  margin: '0 auto',
+                  paddingTop: '44px',
                }}>
+                 <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                   {renderWaveVisualization()}
 
                   {/* Comparison: Solid vs Liquid behavior */}
@@ -2050,7 +2051,6 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      borderRadius: design.radius.lg,
                      background: design.colors.bgSecondary,
                      border: `1px solid ${design.colors.border}`,
-                     maxWidth: '500px',
                      width: '100%'
                   }}>
                      <div style={{
@@ -2102,13 +2102,15 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         </div>
                      </div>
                   </div>
-               </div>
+                 </div>
 
+                 <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
                {/* Controls */}
                <div style={{
-                  padding: '20px 24px',
+                  padding: '20px',
                   background: design.colors.bgSecondary,
-                  borderTop: `1px solid ${design.colors.border}`,
+                  borderRadius: design.radius.lg,
+                  border: `1px solid ${design.colors.border}`,
                }}>
                   {/* Medium selector */}
                   <p style={{
@@ -2242,6 +2244,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         </p>
                      </div>
                   )}
+               </div>
+                 </div>
                </div>
             </div>
             {renderBottomNav('twist_predict', 'twist_review', 'Understand Why →', !hasSentSWaveInLiquid)}

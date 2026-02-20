@@ -939,24 +939,34 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
                 Heat Transfer Visualization
               </h3>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                <ThermalVisualization />
-              </div>
-
-              {/* Formula near graphic */}
+              {/* Side-by-side layout */}
               <div style={{
-                background: colors.bgSecondary,
-                padding: '12px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                marginBottom: '16px',
-                fontFamily: 'monospace',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <span style={{ color: colors.accent, fontSize: isMobile ? '14px' : '18px' }}>R = t / (k × A)</span>
-              </div>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    <ThermalVisualization />
+                  </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Formula near graphic */}
+                  <div style={{
+                    background: colors.bgSecondary,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    marginBottom: '16px',
+                    fontFamily: 'monospace',
+                  }}>
+                    <span style={{ color: colors.accent, fontSize: isMobile ? '14px' : '18px' }}>R = t / (k × A)</span>
+                  </div>
 
-              {/* Sliders */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px' }}>
+                  {/* Sliders */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
                 {/* TIM Thickness */}
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1065,11 +1075,13 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
                   </div>
                 </div>
               </div>
+                </div>
+              </div>
 
               {/* Temperature stats */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
                 marginTop: '24px',
               }}>
@@ -1484,7 +1496,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
               {/* Material properties */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
                 gap: '16px',
                 marginBottom: '24px',
               }}>

@@ -1000,6 +1000,15 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
                 {renderFluorescenceChart(uvIntensity)}
               </div>
@@ -1008,24 +1017,26 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: '24px',
+                gap: '16px',
                 marginBottom: '16px',
                 flexWrap: 'wrap',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '16px', height: '16px', background: '#8b5cf6', borderRadius: '4px' }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Excitation (365 nm)</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV (365 nm)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '16px', height: '16px', background: '#22c55e', borderRadius: '4px' }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Visible Emission (520 nm)</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Emission (520 nm)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '16px', height: '16px', background: '#f59e0b', borderRadius: '4px' }} />
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Stokes Shift region</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Stokes Shift</span>
                 </div>
               </div>
+              </div>
 
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Formula display */}
               <div style={{
                 background: colors.bgSecondary,
@@ -1035,14 +1046,14 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                 marginBottom: '16px',
               }}>
                 <span style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace' }}>
-                  E = hc/λ | Emission Intensity = UV Power × Quantum Yield (QY = {quantumYield})
+                  E = hc/λ | QY = {quantumYield}
                 </span>
               </div>
 
               {/* UV Intensity slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity (excitation power)</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>UV Intensity</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{uvIntensity}%</span>
                 </div>
                 <input
@@ -1064,7 +1075,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               {/* Status display */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
               }}>
                 <div style={{
@@ -1098,6 +1109,8 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                   </div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>Stokes Shift</div>
                 </div>
+              </div>
+              </div>
               </div>
             </div>
 
@@ -1432,15 +1445,26 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               {/* Chart */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
                 {renderTwistChart(excitationWavelength)}
               </div>
+              </div>
 
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Excitation wavelength slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Excitation Wavelength</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Wavelength</span>
                   <span style={{ ...typo.small, color: wavelengthToColor(excitationWavelength), fontWeight: 600 }}>{excitationWavelength} nm</span>
                 </div>
                 <input
@@ -1454,8 +1478,8 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                   aria-label="Excitation Wavelength slider"
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>UV (300 nm)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>Violet (450 nm)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>UV (300)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Violet (450)</span>
                 </div>
               </div>
 
@@ -1489,6 +1513,8 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
                     Energy lost as heat before emission
                   </div>
                 </div>
+              </div>
+              </div>
               </div>
             </div>
 

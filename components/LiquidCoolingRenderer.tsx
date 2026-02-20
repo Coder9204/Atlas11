@@ -995,98 +995,116 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             Real-world relevance: This same physics powers cooling in data centers, EVs, and gaming PCs.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <LiquidCoolingVisualization />
-            </div>
-
-            {/* Coolant selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
-                Select Coolant Type:
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <LiquidCoolingVisualization />
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {(['air', 'water', 'oil'] as const).map(type => (
-                  <button
-                    key={type}
-                    onClick={() => { playSound('click'); setCoolantType(type); }}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Coolant selector */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                    Select Coolant Type:
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {(['air', 'water', 'oil'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => { playSound('click'); setCoolantType(type); }}
+                        style={{
+                          flex: 1,
+                          minWidth: '100px',
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: `2px solid ${coolantType === type ? coolantProps[type].color : colors.border}`,
+                          background: coolantType === type ? `${coolantProps[type].color}22` : colors.bgSecondary,
+                          color: coolantType === type ? coolantProps[type].color : colors.textSecondary,
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {coolantProps[type].name}
+                        <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 400 }}>
+                          Cp = {coolantProps[type].cp.toFixed(2)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Flow rate slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Flow Rate</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} L/min</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={flowRate}
+                    onChange={(e) => setFlowRate(parseInt(e.target.value))}
                     style={{
-                      flex: 1,
-                      minWidth: '100px',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      border: `2px solid ${coolantType === type ? coolantProps[type].color : colors.border}`,
-                      background: coolantType === type ? `${coolantProps[type].color}22` : colors.bgSecondary,
-                      color: coolantType === type ? coolantProps[type].color : colors.textSecondary,
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 1) / 19) * 100}%, ${colors.border} ${((flowRate - 1) / 19) * 100}%)`,
                       cursor: 'pointer',
-                      fontWeight: 600,
-                      transition: 'all 0.2s',
+                      touchAction: 'pan-y' as const,
+                      WebkitAppearance: 'none' as const,
+                      accentColor: '#3b82f6',
                     }}
-                  >
-                    {coolantProps[type].name}
-                    <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 400 }}>
-                      Cp = {coolantProps[type].cp.toFixed(2)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+                  />
+                </div>
 
-            {/* Flow rate slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textPrimary }}>Flow Rate</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} L/min</span>
+                {/* Heat load slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textPrimary }}>Heat Load (GPU Power)</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{heatLoad}W</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="1000"
+                    step="50"
+                    value={heatLoad}
+                    onChange={(e) => setHeatLoad(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.warning} ${((heatLoad - 100) / 900) * 100}%, ${colors.border} ${((heatLoad - 100) / 900) * 100}%)`,
+                      cursor: 'pointer',
+                      touchAction: 'pan-y' as const,
+                      WebkitAppearance: 'none' as const,
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
               </div>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={flowRate}
-                onChange={(e) => setFlowRate(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 1) / 19) * 100}%, ${colors.border} ${((flowRate - 1) / 19) * 100}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
-
-            {/* Heat load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textPrimary }}>Heat Load (GPU Power)</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{heatLoad}W</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="1000"
-                step="50"
-                value={heatLoad}
-                onChange={(e) => setHeatLoad(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.warning} ${((heatLoad - 100) / 900) * 100}%, ${colors.border} ${((heatLoad - 100) / 900) * 100}%)`,
-                  cursor: 'pointer',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                  accentColor: '#3b82f6',
-                }}
-              />
             </div>
           </div>
 
@@ -1417,73 +1435,91 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             Compare the cooling performance with and without phase change.
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TwoPhaseVisualization />
-            </div>
-
-            {/* Mode toggle */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
-              <button
-                onClick={() => { playSound('click'); setUseTwoPhase(false); }}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: `2px solid ${!useTwoPhase ? colors.accent : colors.border}`,
-                  background: !useTwoPhase ? `${colors.accent}22` : colors.bgSecondary,
-                  color: !useTwoPhase ? colors.accent : colors.textSecondary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Single-Phase (Water)
-              </button>
-              <button
-                onClick={() => { playSound('click'); setUseTwoPhase(true); }}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '8px',
-                  border: `2px solid ${useTwoPhase ? '#7c3aed' : colors.border}`,
-                  background: useTwoPhase ? '#7c3aed22' : colors.bgSecondary,
-                  color: useTwoPhase ? '#7c3aed' : colors.textSecondary,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                Two-Phase (Boiling)
-              </button>
-            </div>
-
-            {/* Heat load slider */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Load</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistHeatLoad}W</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <TwoPhaseVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="100"
-                max="2000"
-                step="100"
-                value={twistHeatLoad}
-                onChange={(e) => setTwistHeatLoad(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y' as const,
-                  WebkitAppearance: 'none' as const,
-                  accentColor: '#3b82f6',
-                }}
-              />
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Mode toggle */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexDirection: 'column' }}>
+                  <button
+                    onClick={() => { playSound('click'); setUseTwoPhase(false); }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '8px',
+                      border: `2px solid ${!useTwoPhase ? colors.accent : colors.border}`,
+                      background: !useTwoPhase ? `${colors.accent}22` : colors.bgSecondary,
+                      color: !useTwoPhase ? colors.accent : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Single-Phase (Water)
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setUseTwoPhase(true); }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '8px',
+                      border: `2px solid ${useTwoPhase ? '#7c3aed' : colors.border}`,
+                      background: useTwoPhase ? '#7c3aed22' : colors.bgSecondary,
+                      color: useTwoPhase ? '#7c3aed' : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Two-Phase (Boiling)
+                  </button>
+                </div>
+
+                {/* Heat load slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Load</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistHeatLoad}W</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="2000"
+                    step="100"
+                    value={twistHeatLoad}
+                    onChange={(e) => setTwistHeatLoad(parseInt(e.target.value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      touchAction: 'pan-y' as const,
+                      WebkitAppearance: 'none' as const,
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

@@ -1164,8 +1164,49 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{
             background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)',
@@ -1388,8 +1429,49 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{
             background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%)',

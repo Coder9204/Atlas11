@@ -748,6 +748,16 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           Watch how moving a magnet through a coil induces an electrical current. This demonstrates Faraday's Law in action.
         </p>
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
+        }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Main Visualization */}
         <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
           <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}>
@@ -912,9 +922,11 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
             <text x="12" y={height / 2} fill="rgba(148,163,184,0.7)" fontSize="11" transform={`rotate(-90, 12, ${height / 2})`}>Voltage</text>
           </svg>
         </div>
+        </div>
 
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', maxWidth: '672px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', width: '100%', marginBottom: '16px' }}>
           <button
             onClick={() => isAnimating ? stopAnimation() : startMagnetDemo()}
             style={{
@@ -993,6 +1005,8 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
             />
             <div style={{ color: '#22d3ee', fontWeight: 700, marginTop: '4px' }}>{fieldStrength.toFixed(1)} T</div>
           </div>
+        </div>
+        </div>
         </div>
 
         {/* Why this matters */}
@@ -1281,7 +1295,17 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
     <div className="flex flex-col items-center p-6">
       <h2 className={`${typo.heading} font-bold text-purple-400 mb-4`}>Flux Trapping in Superconductors</h2>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+        marginBottom: '24px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Normal Conductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Conductor</h3>
@@ -1312,7 +1336,9 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           <p className="text-center text-sm text-red-400 mt-2">Field decays over time</p>
           <p className="text-center text-xs text-slate-400 mt-1">Resistance causes induced currents to decay</p>
         </div>
+      </div>
 
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Superconductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Superconductor</h3>
@@ -1358,6 +1384,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
           <p className="text-center text-sm text-emerald-400 mt-2">Field trapped forever</p>
           <p className="text-center text-xs text-slate-400 mt-1">Zero resistance = currents flow forever!</p>
         </div>
+      </div>
       </div>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">

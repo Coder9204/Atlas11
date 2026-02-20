@@ -1077,16 +1077,27 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <HeatTransferVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <HeatTransferVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Interface type selector */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px' }}>
                 Interface Type
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                 {[
                   { id: 'air_gap' as const, name: 'Air Gap', k: '0.026 W/mK' },
                   { id: 'bare_contact' as const, name: 'Bare Contact', k: '2.5 W/mK' },
@@ -1183,11 +1194,13 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
                 Reset
               </button>
             </div>
+              </div>
+            </div>
 
             {/* Stats display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1505,9 +1518,20 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CPUCoolingVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <CPUCoolingVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Thermal paste toggle */}
             <div style={{ marginBottom: '20px' }}>
@@ -1616,6 +1640,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
               >
                 Reset
               </button>
+            </div>
+              </div>
             </div>
           </div>
 

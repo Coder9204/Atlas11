@@ -1016,100 +1016,118 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             Adjust the launch speed to see what happens.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderCannonScene()}
-            </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main visualization */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderCannonScene()}
+                </div>
 
-            {/* Launch speed slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Launch Speed</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{launchSpeed} km/s</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="12"
-                step="0.5"
-                value={launchSpeed}
-                onChange={(e) => setLaunchSpeed(parseFloat(e.target.value))}
-                disabled={isLaunched}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: isLaunched ? 'not-allowed' : 'pointer',
-                  accentColor: colors.accent,
-                  background: colors.bgSecondary,
-                  touchAction: 'pan-y',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>2 km/s (falls)</span>
-                <span style={{ ...typo.small, color: colors.success }}>~8 km/s (orbit)</span>
-                <span style={{ ...typo.small, color: '#8B5CF6' }}>11+ km/s (escape)</span>
-              </div>
-            </div>
-
-            {/* Launch/Reset button */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  if (isLaunched) {
-                    resetLaunch();
-                  } else {
-                    launchProjectile();
-                  }
-                }}
-                style={{
-                  padding: '12px 32px',
+                {/* Key insight */}
+                <div style={{
+                  background: `${colors.accent}11`,
+                  border: `1px solid ${colors.accent}33`,
                   borderRadius: '8px',
-                  border: 'none',
-                  background: isLaunched ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                }}
-              >
-                {isLaunched ? '&#x1F504; Reset' : '&#x1F680; Fire Cannon!'}
-              </button>
-            </div>
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: colors.accent }}>Key Insight:</strong> The cannonball always falls toward Earth. But if it is moving fast enough sideways, Earth's surface curves away beneath it at the same rate!
+                  </p>
+                </div>
 
-            {/* Key insight */}
-            <div style={{
-              background: `${colors.accent}11`,
-              border: `1px solid ${colors.accent}33`,
-              borderRadius: '8px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.accent }}>Key Insight:</strong> The cannonball always falls toward Earth. But if it is moving fast enough sideways, Earth's surface curves away beneath it at the same rate!
-              </p>
+                {/* Cause-effect explanation */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginTop: '16px',
+                }}>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, marginBottom: '8px' }}>
+                    <strong style={{ color: colors.textPrimary }}>What to Watch:</strong> When you increase the launch speed, the cannonball travels farther before falling back. This is important because it demonstrates the relationship between velocity and orbit.
+                  </p>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                    <strong style={{ color: colors.warning }}>Real-World Application:</strong> This principle is used by engineers to design satellite orbits. Understanding orbital velocity helps us place communication satellites and space stations at the right altitude.
+                  </p>
+                </div>
+              </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Launch speed slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Launch Speed</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{launchSpeed} km/s</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="12"
+                    step="0.5"
+                    value={launchSpeed}
+                    onChange={(e) => setLaunchSpeed(parseFloat(e.target.value))}
+                    disabled={isLaunched}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: isLaunched ? 'not-allowed' : 'pointer',
+                      accentColor: colors.accent,
+                      background: colors.bgSecondary,
+                      touchAction: 'pan-y',
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>2 km/s (falls)</span>
+                    <span style={{ ...typo.small, color: colors.success }}>~8 km/s (orbit)</span>
+                    <span style={{ ...typo.small, color: '#8B5CF6' }}>11+ km/s (escape)</span>
+                  </div>
+                </div>
 
-            {/* Cause-effect explanation */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginTop: '16px',
-            }}>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, marginBottom: '8px' }}>
-                <strong style={{ color: colors.textPrimary }}>What to Watch:</strong> When you increase the launch speed, the cannonball travels farther before falling back. This is important because it demonstrates the relationship between velocity and orbit.
-              </p>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                <strong style={{ color: colors.warning }}>Real-World Application:</strong> This principle is used by engineers to design satellite orbits. Understanding orbital velocity helps us place communication satellites and space stations at the right altitude.
-              </p>
+                {/* Launch/Reset button */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      if (isLaunched) {
+                        resetLaunch();
+                      } else {
+                        launchProjectile();
+                      }
+                    }}
+                    style={{
+                      padding: '12px 32px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isLaunched ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                    }}
+                  >
+                    {isLaunched ? '&#x1F504; Reset' : '&#x1F680; Fire Cannon!'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1382,74 +1400,92 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
             Watch the ISS and astronaut fall together
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderISSScene()}
-            </div>
-
-            {/* Gravity strength slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Gravity at ISS altitude vs surface</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{gravityStrength}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={gravityStrength}
-                onChange={(e) => setGravityStrength(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>0% (no gravity)</span>
-                <span style={{ ...typo.small, color: colors.success }}>90% actual ISS gravity</span>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderISSScene()}
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>8.7 m/s^2</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Gravity at ISS (400 km)</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>9.8 m/s^2</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Gravity at surface</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: `${colors.warning}11`,
+                border: `1px solid ${colors.warning}33`,
+                borderRadius: '12px',
                 padding: '16px',
+                marginTop: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.error }}>8.7 m/s^2</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Gravity at ISS (400 km)</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>9.8 m/s^2</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Gravity at surface</div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.warning }}>The ISS AND astronauts are falling at the same rate!</strong><br />
+                  Since they accelerate together, there's no "floor pushing up" feeling. It's like being in a falling elevator - except it never hits bottom!
+                </p>
               </div>
             </div>
-          </div>
-
-          <div style={{
-            background: `${colors.warning}11`,
-            border: `1px solid ${colors.warning}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.warning }}>The ISS AND astronauts are falling at the same rate!</strong><br />
-              Since they accelerate together, there's no "floor pushing up" feeling. It's like being in a falling elevator - except it never hits bottom!
-            </p>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Gravity strength slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Gravity at ISS altitude vs surface</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{gravityStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={gravityStrength}
+                    onChange={(e) => setGravityStrength(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', borderRadius: '4px', cursor: 'pointer', accentColor: colors.accent, background: colors.bgSecondary, touchAction: 'pan-y' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>0% (no gravity)</span>
+                    <span style={{ ...typo.small, color: colors.success }}>90% actual ISS gravity</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button

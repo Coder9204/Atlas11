@@ -675,8 +675,18 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             The net enthalpy of dissolution is calculated as: ΔH_diss = Lattice Energy + Hydration Energy. This formula describes how the relationship between bond-breaking and hydration leads to the observed temperature change. This is exactly how cold packs and hot packs work — a practical application used in real-world emergency medicine and industrial heating.
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Interactive SVG */}
-          <div style={{ width: '100%', maxWidth: '600px', marginBottom: '16px' }}>
+          <div style={{ width: '100%', marginBottom: '16px' }}>
             {generateEnergySVG(selectedSolute, soluteAmount, true)}
           </div>
 
@@ -684,15 +694,17 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
           <div style={{
             padding: '12px 24px', borderRadius: '12px', marginBottom: '16px',
             background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)',
-            maxWidth: '600px', textAlign: 'center',
+            textAlign: 'center',
           }}>
             <span style={{ fontFamily: 'monospace', fontSize: '15px', color: design.textPrimary, fontWeight: 700 }}>
               \u0394H = E_lattice + E_hydration = {(solute.bondEnergy * soluteAmount / 10).toFixed(1)} + ({(solute.hydrationEnergy * soluteAmount / 10).toFixed(1)}) = {(solute.netEnergy * soluteAmount / 10).toFixed(1)} kJ
             </span>
           </div>
+          </div>
 
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
-          <div style={{ ...cardStyle, maxWidth: '600px', width: '100%', marginBottom: '16px' }}>
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '16px' }}>
             <div style={{ marginBottom: '16px' }}>
               <p style={{ fontSize: '13px', fontWeight: 700, color: design.textPrimary, marginBottom: '8px' }}>
                 Select Solute:
@@ -734,7 +746,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
           {/* Results */}
           <div style={{
-            ...cardStyle, maxWidth: '600px', width: '100%',
+            ...cardStyle, width: '100%',
             background: solute.netEnergy > 0 ? 'rgba(59,130,246,0.1)' : 'rgba(249,115,22,0.1)',
             border: `1px solid ${solute.netEnergy > 0 ? 'rgba(59,130,246,0.3)' : 'rgba(249,115,22,0.3)'}`,
           }}>
@@ -754,6 +766,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 <p style={{ fontSize: '12px', color: design.textSecondary }}>Net (kJ) → {finalTemp.toFixed(1)}°C</p>
               </div>
             </div>
+          </div>
+          </div>
           </div>
         </div>
       </>)
@@ -928,11 +942,23 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             Adjust the solute and amount to see how the energy diagram changes. Notice how only endothermic salts produce a cooling effect. Try adjusting the slider to simulate different concentrations.
           </p>
 
-          <div style={{ width: '100%', maxWidth: '600px', marginBottom: '16px' }}>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            maxWidth: '900px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div style={{ width: '100%', marginBottom: '16px' }}>
             {generateEnergySVG(selectedSolute, twistAmount, true)}
           </div>
+          </div>
 
-          <div style={{ ...cardStyle, maxWidth: '600px', width: '100%', marginBottom: '16px' }}>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div style={{ ...cardStyle, width: '100%', marginBottom: '16px' }}>
             <p style={{ fontSize: '13px', fontWeight: 700, color: design.accent, marginBottom: '8px' }}>
               Select Solute to Compare:
             </p>
@@ -958,6 +984,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               onInput={e => setSoluteAmount(parseInt((e.target as HTMLInputElement).value))}
               style={sliderStyle}
             />
+          </div>
+          </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxWidth: '600px', width: '100%' }}>

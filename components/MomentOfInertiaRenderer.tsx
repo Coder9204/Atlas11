@@ -969,101 +969,110 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
             When arms extend outward, moment of inertia increases and spin slows down. This is important in figure skating, diving, and engineering applications.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SkaterVisualization size={isMobile ? 180 : 220} />
-            </div>
-
-            {/* Arm position slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {armExtension < 0.3 ? 'Tucked In' : armExtension > 0.7 ? 'Extended Out' : 'Partial'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={armExtension}
-                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
-                onInput={(e) => setArmExtension(parseFloat((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Tucked (Low I)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Extended (High I)</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <SkaterVisualization size={isMobile ? 180 : 220} />
+                </div>
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Arm position slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                      {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Partial'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={armExtension}
+                    onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                    onInput={(e) => setArmExtension(parseFloat((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                    }}
+                  />
+                </div>
 
-            {/* Angular momentum slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Initial Angular Momentum (L)</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{initialL}</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="25"
-                value={initialL}
-                onChange={(e) => setInitialL(parseInt(e.target.value))}
-                onInput={(e) => setInitialL(parseInt((e.target as HTMLInputElement).value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  accentColor: '#3b82f6',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none' as const,
-                }}
-              />
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                L stays constant (conserved) - change arm position to see omega change!
-              </p>
-            </div>
+                {/* Angular momentum slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Angular Momentum (L)</span>
+                    <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{initialL}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="25"
+                    value={initialL}
+                    onChange={(e) => setInitialL(parseInt(e.target.value))}
+                    onInput={(e) => setInitialL(parseInt((e.target as HTMLInputElement).value))}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      accentColor: '#3b82f6',
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none' as const,
+                    }}
+                  />
+                </div>
 
-            {/* Play/Pause button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => setIsSpinning(!isSpinning)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isSpinning ? colors.error : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {isSpinning ? 'Pause Spin' : 'Resume Spin'}
-              </button>
-            </div>
+                {/* Play/Pause button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => setIsSpinning(!isSpinning)}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isSpinning ? colors.error : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    {isSpinning ? 'Pause Spin' : 'Resume Spin'}
+                  </button>
+                </div>
 
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr',
+                  gap: '12px',
+                }}>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
@@ -1092,6 +1101,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                 <div style={{ ...typo.small, color: colors.textMuted }}>L = I * omega (constant!)</div>
               </div>
             </div>
+          </div>
+          </div>
           </div>
 
           {/* Discovery prompt */}
@@ -1349,80 +1360,98 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
             Watch which shape wins - lower moment of inertia means faster rolling!
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ShapeRaceVisualization />
-            </div>
-
-            {/* Race control */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-              <button
-                onClick={() => {
-                  setRaceTime(0);
-                  setIsRacing(true);
-                  playSound('click');
-                }}
-                disabled={isRacing}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: isRacing ? colors.border : colors.success,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: isRacing ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {isRacing ? 'Racing...' : 'Start Race!'}
-              </button>
-              <button
-                onClick={() => {
-                  setRaceTime(0);
-                  setIsRacing(false);
-                }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Shape I values comparison */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-            }}>
-              {Object.entries(shapeFactors).map(([key, shape]) => (
-                <div key={key} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                  border: `2px solid ${selectedShape === key ? shape.color : 'transparent'}`,
-                  cursor: 'pointer',
-                }}
-                onClick={() => setSelectedShape(key as typeof selectedShape)}
-                >
-                  <div style={{ ...typo.h3, color: shape.color }}>{shape.factor}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{shape.name}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>
-                    I = {shape.factor}MR^2
-                  </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <ShapeRaceVisualization />
                 </div>
-              ))}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Race control */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => {
+                      setRaceTime(0);
+                      setIsRacing(true);
+                      playSound('click');
+                    }}
+                    disabled={isRacing}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: isRacing ? colors.border : colors.success,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: isRacing ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isRacing ? 'Racing...' : 'Start Race!'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setRaceTime(0);
+                      setIsRacing(false);
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                {/* Shape I values comparison */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '8px',
+                }}>
+                  {Object.entries(shapeFactors).map(([key, shape]) => (
+                    <div key={key} style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                      border: `2px solid ${selectedShape === key ? shape.color : 'transparent'}`,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setSelectedShape(key as typeof selectedShape)}
+                    >
+                      <div style={{ ...typo.h3, color: shape.color }}>{shape.factor}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{shape.name}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>
+                        I = {shape.factor}MR^2
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

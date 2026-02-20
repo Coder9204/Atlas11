@@ -264,6 +264,14 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase());
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const c = () => setIsMobile(window.innerWidth < 768);
+    c();
+    window.addEventListener('resize', c);
+    return () => window.removeEventListener('resize', c);
+  }, []);
 
   // Simulation state
   const [mass, setMass] = useState(50); // kg
@@ -545,8 +553,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const renderSlidingVsRollingVisualization = (showSliders: boolean) => {
     const results = getSlidingResults();
 
-    return (
-      <div className="space-y-6">
+    const svgContent = (
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
           <h3 className="text-lg font-bold text-center text-indigo-300 mb-2">Friction Force Comparison</h3>
           <svg width="100%" viewBox="0 0 600 450" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
@@ -665,8 +672,9 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             </text>
           </svg>
         </div>
+    );
 
-        {showSliders && (
+    const slidersContent = showSliders ? (
           <div className="space-y-4 bg-slate-800/30 p-6 rounded-xl border border-slate-700">
             <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
@@ -795,7 +803,33 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               </p>
             </div>
           </div>
-        )}
+    ) : null;
+
+    if (showSliders) {
+      return (
+        <div className="space-y-6">
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {svgContent}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {slidersContent}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {svgContent}
       </div>
     );
   };
@@ -803,8 +837,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const renderStaticKineticVisualization = (showSliders: boolean) => {
     const results = getStaticKineticResults();
 
-    return (
-      <div className="space-y-6">
+    const svgContent2 = (
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
           <h3 className="text-lg font-bold text-center text-purple-300 mb-2">Static vs Kinetic Friction</h3>
           <svg width="100%" viewBox="0 0 600 400" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
@@ -903,8 +936,9 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             </text>
           </svg>
         </div>
+    );
 
-        {showSliders && (
+    const slidersContent2 = showSliders ? (
           <div className="space-y-4 bg-slate-800/30 p-6 rounded-xl border border-slate-700">
             <div className="w-full">
               <label className="block text-sm font-semibold text-slate-300 mb-2">
@@ -1020,7 +1054,33 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               </div>
             </div>
           </div>
-        )}
+    ) : null;
+
+    if (showSliders) {
+      return (
+        <div className="space-y-6">
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {svgContent2}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {slidersContent2}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {svgContent2}
       </div>
     );
   };

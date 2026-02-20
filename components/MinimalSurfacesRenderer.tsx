@@ -859,71 +859,78 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Try Different Frames</h2>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              {renderVisualization(true)}
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>🎮 Controls</h3>
-
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>Select a frame shape:</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                  {[
-                    { id: 'square', label: 'Square', icon: '⬜' },
-                    { id: 'triangle', label: 'Triangle', icon: '△' },
-                    { id: 'circle', label: '2 Rings', icon: '◎' },
-                    { id: 'cube', label: 'Cube', icon: '⬛' }
-                  ].map(frame => (
-                    <button key={frame.id} onClick={() => { setSelectedFrame(frame.id as any); setShowFilm(false); playSound('click'); }} style={{
-                      padding: '12px 8px', borderRadius: '8px',
-                      border: selectedFrame === frame.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      background: selectedFrame === frame.id ? `${colors.primary}20` : colors.bgDark,
-                      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      <span style={{ fontSize: '24px' }}>{frame.icon}</span>
-                      <span style={{ color: colors.textSecondary, fontSize: '11px' }}>{frame.label}</span>
-                    </button>
-                  ))}
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '20px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  {renderVisualization(true)}
                 </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>Controls</h3>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <label style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                    Film Thickness: <strong style={{ color: colors.primaryLight }}>{filmThickness}%</strong>
-                  </label>
-                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Surface energy: {(filmThickness * 0.24).toFixed(1)} mN/m</span>
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>Frame shape:</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {[
+                        { id: 'square', label: 'Square', icon: '⬜' },
+                        { id: 'triangle', label: 'Triangle', icon: '△' },
+                        { id: 'circle', label: '2 Rings', icon: '◎' },
+                        { id: 'cube', label: 'Cube', icon: '⬛' }
+                      ].map(frame => (
+                        <button key={frame.id} onClick={() => { setSelectedFrame(frame.id as any); setShowFilm(false); playSound('click'); }} style={{
+                          padding: '10px 8px', borderRadius: '8px',
+                          border: selectedFrame === frame.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                          background: selectedFrame === frame.id ? `${colors.primary}20` : colors.bgDark,
+                          cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                          transition: 'all 0.2s ease'
+                        }}>
+                          <span style={{ fontSize: '20px' }}>{frame.icon}</span>
+                          <span style={{ color: colors.textSecondary, fontSize: '11px' }}>{frame.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <label style={{ color: colors.textSecondary, fontSize: '13px' }}>
+                        Thickness: <strong style={{ color: colors.primaryLight }}>{filmThickness}%</strong>
+                      </label>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={filmThickness}
+                      onChange={(e) => setFilmThickness(Number(e.target.value))}
+                      onInput={(e) => setFilmThickness(Number((e.target as HTMLInputElement).value))}
+                      style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' }}
+                      aria-label="Film thickness slider"
+                    />
+                    <p style={{ color: colors.textMuted, fontSize: '11px', marginTop: '6px' }}>
+                      Energy: {(filmThickness * 0.24).toFixed(1)} mN/m
+                    </p>
+                  </div>
+
+                  <button onClick={() => { setShowFilm(true); playSound('success'); }} style={{
+                    width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
+                    background: showFilm ? colors.bgCardLight : `linear-gradient(135deg, ${colors.soapFilm} 0%, ${colors.primary} 100%)`,
+                    color: showFilm ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700, cursor: showFilm ? 'default' : 'pointer',
+                    transition: 'all 0.3s ease', minHeight: '44px'
+                  }}>
+                    {showFilm ? 'Film Formed!' : 'Dip in Soap'}
+                  </button>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginBottom: '4px' }}>
-                  <span>Thin (10%)</span>
-                  <span>Thick (100%)</span>
-                </div>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={filmThickness}
-                  onChange={(e) => setFilmThickness(Number(e.target.value))}
-                  onInput={(e) => setFilmThickness(Number((e.target as HTMLInputElement).value))}
-                  style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' }}
-                  aria-label="Film thickness slider"
-                />
-                <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '6px' }}>
-                  Observe how film opacity and surface energy change. Thicker films appear more opaque due to increased light scattering.
-                  When you increase thickness, the surface energy grows proportionally.
-                </p>
               </div>
-
-              <button onClick={() => { setShowFilm(true); playSound('success'); }} style={{
-                width: '100%', padding: '14px', borderRadius: '12px', border: 'none',
-                background: showFilm ? colors.bgCardLight : `linear-gradient(135deg, ${colors.soapFilm} 0%, ${colors.primary} 100%)`,
-                color: showFilm ? colors.textMuted : 'white', fontSize: '16px', fontWeight: 700, cursor: showFilm ? 'default' : 'pointer',
-                transition: 'all 0.3s ease', minHeight: '44px'
-              }}>
-                {showFilm ? '🫧 Film Formed!' : '🫧 Dip in Soap Solution'}
-              </button>
             </div>
 
             <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40`, marginBottom: '16px' }}>
@@ -1135,73 +1142,79 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary }}>Soap Films Solve It!</h2>
             </div>
 
-            {/* Interactive Steiner tree visualization */}
-            <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 16px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
-                <defs>
-                  <linearGradient id="steinerBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1e1b4b" />
-                    <stop offset="100%" stopColor="#0f172a" />
-                  </linearGradient>
-                  <filter id="steinerGlow">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
-                <rect x="0" y="0" width="400" height="220" fill="url(#steinerBg)" rx="12" />
-                <text x="200" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Steiner Junction — Drag slider to optimize</text>
-                {/* Axis labels */}
-                <text x="200" y="212" textAnchor="middle" fill="#64748b" fontSize="10">X axis — optimization progress (0% direct, 100% Steiner)</text>
-                {/* City positions */}
-                <circle cx="200" cy="45" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
-                <text x="200" y="50" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">A</text>
-                <circle cx="80" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
-                <text x="80" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">B</text>
-                <circle cx="320" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
-                <text x="320" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">C</text>
-                {/* Direct connections (fade as Steiner grows) */}
-                <line x1="200" y1="59" x2="94" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
-                <line x1="200" y1="59" x2="306" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
-                <line x1="94" y1="175" x2="306" y2="175" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
-                {/* Steiner junction point (moves into position) */}
-                {steinerProgress > 10 && (
-                  <>
-                    <circle cx="200" cy={175 - steinerProgress * 0.85} r={6 + steinerProgress * 0.06} fill={colors.success} filter="url(#steinerGlow)" opacity={steinerProgress / 100} />
-                    <line x1="200" y1="59" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
-                    <line x1="80" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
-                    <line x1="320" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
-                    <text x="200" y={175 - steinerProgress * 0.85 - 12} textAnchor="middle" fill={colors.success} fontSize="10">{junctionAngle}°</text>
-                  </>
-                )}
-                {/* Readout */}
-                <rect x="10" y="190" width="380" height="20" rx="4" fill="#0f172a" opacity="0.8" />
-                <text x="200" y="204" textAnchor="middle" fill={colors.primaryLight} fontSize="11" fontWeight="bold">
-                  Progress: {steinerProgress}% | Junction angle: {junctionAngle}° | Savings: {savings}% road length
-                </text>
-              </svg>
-            </div>
-
-            {/* Interactive slider */}
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '20px', border: `1px solid ${colors.border}` }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>🎮 Optimize the Network</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <label style={{ color: colors.textSecondary, fontSize: '14px' }}>Steiner Optimization: <strong style={{ color: colors.primaryLight }}>{steinerProgress}%</strong></label>
-                <span style={{ color: colors.success, fontSize: '13px' }}>Saving: {savings}%</span>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '20px',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Interactive Steiner tree visualization */}
+                <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+                  <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                    <defs>
+                      <linearGradient id="steinerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#1e1b4b" />
+                        <stop offset="100%" stopColor="#0f172a" />
+                      </linearGradient>
+                      <filter id="steinerGlow">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                    </defs>
+                    <rect x="0" y="0" width="400" height="220" fill="url(#steinerBg)" rx="12" />
+                    <text x="200" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Steiner Junction -- Drag slider to optimize</text>
+                    <text x="200" y="212" textAnchor="middle" fill="#64748b" fontSize="10">X axis -- optimization progress (0% direct, 100% Steiner)</text>
+                    <circle cx="200" cy="45" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                    <text x="200" y="50" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">A</text>
+                    <circle cx="80" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                    <text x="80" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">B</text>
+                    <circle cx="320" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
+                    <text x="320" y="180" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">C</text>
+                    <line x1="200" y1="59" x2="94" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                    <line x1="200" y1="59" x2="306" y2="161" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                    <line x1="94" y1="175" x2="306" y2="175" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5,4" opacity={Math.max(0, 1 - steinerProgress / 60)} />
+                    {steinerProgress > 10 && (
+                      <>
+                        <circle cx="200" cy={175 - steinerProgress * 0.85} r={6 + steinerProgress * 0.06} fill={colors.success} filter="url(#steinerGlow)" opacity={steinerProgress / 100} />
+                        <line x1="200" y1="59" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                        <line x1="80" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                        <line x1="320" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
+                        <text x="200" y={175 - steinerProgress * 0.85 - 12} textAnchor="middle" fill={colors.success} fontSize="10">{junctionAngle}</text>
+                      </>
+                    )}
+                    <rect x="10" y="190" width="380" height="20" rx="4" fill="#0f172a" opacity="0.8" />
+                    <text x="200" y="204" textAnchor="middle" fill={colors.primaryLight} fontSize="11" fontWeight="bold">
+                      Progress: {steinerProgress}% | Angle: {junctionAngle} | Savings: {savings}%
+                    </text>
+                  </svg>
+                </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: colors.textMuted, marginBottom: '4px' }}>
-                <span>0% (direct)</span>
-                <span>100% (Steiner optimal)</span>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Interactive slider */}
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', border: `1px solid ${colors.border}` }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '12px' }}>Optimize the Network</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <label style={{ color: colors.textSecondary, fontSize: '13px' }}>Optimization: <strong style={{ color: colors.primaryLight }}>{steinerProgress}%</strong></label>
+                  </div>
+                  <input
+                    type="range" min="0" max="100" value={steinerProgress}
+                    onChange={(e) => setTwistProgress(Number(e.target.value))}
+                    onInput={(e) => setTwistProgress(Number((e.target as HTMLInputElement).value))}
+                    style={{ width: '100%', accentColor: colors.success, touchAction: 'pan-y' }}
+                    aria-label="Steiner optimization slider"
+                  />
+                  <p style={{ color: colors.success, fontSize: '13px', marginTop: '8px', fontWeight: 600 }}>
+                    Saving: {savings}%
+                  </p>
+                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
+                    Drag to see how adding a Steiner junction saves road length. At 120 junction angles you get maximum 13.4% savings!
+                  </p>
+                </div>
               </div>
-              <input
-                type="range" min="0" max="100" value={steinerProgress}
-                onChange={(e) => setTwistProgress(Number(e.target.value))}
-                onInput={(e) => setTwistProgress(Number((e.target as HTMLInputElement).value))}
-                style={{ width: '100%', accentColor: colors.success, touchAction: 'pan-y' }}
-                aria-label="Steiner optimization slider"
-              />
-              <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '8px' }}>
-                Drag to see how adding a Steiner junction saves road length. At 120° junction angles you get maximum 13.4% savings!
-              </p>
             </div>
 
             <div style={{ background: `linear-gradient(135deg, ${colors.soapFilm}15 0%, ${colors.bgCard} 100%)`, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.soapFilm}40` }}>

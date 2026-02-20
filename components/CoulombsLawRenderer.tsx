@@ -1455,6 +1455,15 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 2 • Experiment', "Coulomb's Law Lab", 'Adjust charges and distance to see how force changes')}
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Simulation - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
@@ -1699,9 +1708,10 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             />
           </svg>
         </div>
-
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           <div style={{ backgroundColor: colors.bgCard, borderRadius: '10px', padding: '12px', border: `1px solid ${colors.border}` }}>
             <label style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Distance (mm)</label>
             <input
@@ -1862,6 +1872,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           <p style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '8px', fontFamily: 'monospace' }}>
             F = (8.99×10⁹) × |{charge1}×10⁻⁶| × |{charge2}×10⁻⁶| / ({(separation * 0.001).toFixed(3)})²
           </p>
+        </div>
+          </div>
         </div>
       </div>,
       renderBottomBar(true, hasExperimented, 'Understand Why')
@@ -2101,6 +2113,15 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 5 • Polarization', 'Electrostatic Induction', 'See how charges redistribute in neutral objects')}
 
+        {/* Side-by-side layout */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+        }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Animation - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
@@ -2253,7 +2274,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             <text x="375" y="38" textAnchor="end" fill={colors.negative} fontSize="11" opacity="0.8">− repelled</text>
           </svg>
         </div>
-
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Explanation steps */}
         <div style={{ marginBottom: typo.sectionGap }}>
           {[
@@ -2296,6 +2318,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           <p style={{ fontSize: typo.body, color: colors.success, fontWeight: 700, margin: 0 }}>
             🎈 This is why a balloon sticks to walls after rubbing on your hair!
           </p>
+        </div>
+          </div>
         </div>
       </div>,
       renderBottomBar(true, true, 'Understand Why')

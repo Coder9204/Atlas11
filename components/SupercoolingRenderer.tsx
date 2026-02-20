@@ -1913,70 +1913,83 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {/* Water container */}
-            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
-              {renderWaterContainer()}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            justifyContent: 'center',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Water container */}
+              <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
+                {renderWaterContainer()}
 
-              {/* Controls */}
-              <div style={{ marginTop: '16px' }}>
-                <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-                  Temperature: {temperature}C
-                </label>
-                <input
-                  type="range"
-                  min="-40"
-                  max="20"
-                  value={temperature}
-                  onChange={(e) => handleTemperatureChange(parseInt(e.target.value))}
-                  disabled={waterState === 'crystallizing' || waterState === 'frozen'}
-                  style={{ width: '100%', accentColor: '#06b6d4', touchAction: 'pan-y' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                  <span>-40C</span>
-                  <span style={{ color: '#ef4444' }}>0C (Freezing)</span>
-                  <span>20C</span>
+                {/* Phase diagram */}
+                <div style={{ marginTop: '16px' }}>
+                  <h3 style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>Phase Diagram</h3>
+                  {renderPhaseDiagram()}
                 </div>
               </div>
-
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  onPointerDown={(e) => { e.preventDefault(); addSeed(); }}
-                  disabled={waterState !== 'supercooled'}
-                  style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    border: 'none',
-                    cursor: waterState !== 'supercooled' ? 'not-allowed' : 'pointer',
-                    background: waterState === 'supercooled' ? 'linear-gradient(to right, #f59e0b, #d97706)' : '#475569',
-                    color: waterState === 'supercooled' ? 'white' : '#94a3b8'
-                  }}
-                >
-                  ❄️ Add Seed Crystal
-                </button>
-                <button
-                  onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: '#374151',
-                    color: 'white'
-                  }}
-                >
-                  Reset
-                </button>
-              </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ color: '#94a3b8', fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                    Temperature: {temperature}C
+                  </label>
+                  <input
+                    type="range"
+                    min="-40"
+                    max="20"
+                    value={temperature}
+                    onChange={(e) => handleTemperatureChange(parseInt(e.target.value))}
+                    disabled={waterState === 'crystallizing' || waterState === 'frozen'}
+                    style={{ width: '100%', accentColor: '#06b6d4', touchAction: 'pan-y' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
+                    <span>-40C</span>
+                    <span style={{ color: '#ef4444' }}>0C (Freezing)</span>
+                    <span>20C</span>
+                  </div>
+                </div>
 
-            {/* Phase diagram */}
-            <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
-              <h3 style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '12px', textAlign: 'center' }}>Phase Diagram</h3>
-              {renderPhaseDiagram()}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onPointerDown={(e) => { e.preventDefault(); addSeed(); }}
+                    disabled={waterState !== 'supercooled'}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: waterState !== 'supercooled' ? 'not-allowed' : 'pointer',
+                      background: waterState === 'supercooled' ? 'linear-gradient(to right, #f59e0b, #d97706)' : '#475569',
+                      color: waterState === 'supercooled' ? 'white' : '#94a3b8'
+                    }}
+                  >
+                    Add Seed Crystal
+                  </button>
+                  <button
+                    onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: '#374151',
+                      color: 'white'
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2158,25 +2171,37 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>Sodium Acetate Hand Warmer</h2>
           <p style={{ color: '#94a3b8', marginBottom: '16px' }}>Click the metal disc to trigger crystallization!</p>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderSodiumAcetateWarmer()}
-
-            <button
-              onPointerDown={(e) => { e.preventDefault(); resetTwist(); }}
-              style={{
-                width: '100%',
-                marginTop: '12px',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                border: 'none',
-                cursor: 'pointer',
-                background: '#374151',
-                color: 'white'
-              }}
-            >
-              Reset (Simulates boiling)
-            </button>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
+                {renderSodiumAcetateWarmer()}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); resetTwist(); }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: '#374151',
+                  color: 'white'
+                }}
+              >
+                Reset (Simulates boiling)
+              </button>
+            </div>
           </div>
 
           <div style={{

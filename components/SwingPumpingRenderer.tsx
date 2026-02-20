@@ -1029,7 +1029,18 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <SwingVisualization interactive={true} showFormula={true} />
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <SwingVisualization interactive={true} showFormula={true} />
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
               {/* Comparison: Before/After - Pump mode selector */}
               <div style={{ marginTop: '20px' }}>
@@ -1110,6 +1121,8 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                   {pumpMode === 'wrong' && 'Energy extracted! Amplitude shrinking (parametric damping).'}
                   {pumpMode === 'none' && 'Natural oscillation with slight air resistance damping.'}
                 </p>
+              </div>
+                </div>
               </div>
             </div>
 
@@ -1392,7 +1405,18 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <SwingVisualization interactive={true} showFormula={true} />
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <SwingVisualization interactive={true} showFormula={true} />
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
               {/* Pump mode selector */}
               <div style={{ marginTop: '20px' }}>
@@ -1451,6 +1475,8 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
                 <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
                   Optimal: 2x (pump twice per oscillation cycle). Drag slider to see amplitude change in the swing above.
                 </p>
+              </div>
+                </div>
               </div>
             </div>
 

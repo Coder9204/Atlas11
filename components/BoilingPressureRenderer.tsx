@@ -1201,83 +1201,68 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
             <strong>Observe</strong> how changing pressure affects the boiling point. <strong>Try</strong> adjusting the slider below and <strong>notice</strong> when bubbles appear! <strong>Experiment</strong> with different pressures and <strong>see what happens</strong> to the boiling temperature. Compare the current value to the reference baseline.
           </p>
 
-          {/* Pressure-Temperature chart */}
-          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderPTCurve(pressure)}
-          </div>
-
-          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderBeaker(temperature, pressure, bubbles)}
-
-            <div style={{ marginTop: '16px' }}>
-              <label style={{ display: 'block', color: colors.primary, fontWeight: 'bold', marginBottom: '8px' }}>
-                Pressure: {pressure.toFixed(2)} atm
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="3"
-                step="0.05"
-                value={pressure}
-                onChange={(e) => {
-                  setPressure(Number(e.target.value));
-                  setTemperature(25);
-                }}
-                style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' as const, height: '20px' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
-                <span>Vacuum (0.1)</span>
-                <span>Sea Level (1.0)</span>
-                <span>Pressure Cooker (3.0)</span>
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+                {renderPTCurve(pressure)}
+              </div>
+              <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px' }}>
+                {renderBeaker(temperature, pressure, bubbles)}
               </div>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px' }}>
+                <label style={{ display: 'block', color: colors.primary, fontWeight: 'bold', marginBottom: '8px' }}>
+                  Pressure: {pressure.toFixed(2)} atm
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.05"
+                  value={pressure}
+                  onChange={(e) => {
+                    setPressure(Number(e.target.value));
+                    setTemperature(25);
+                  }}
+                  style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' as const, height: '20px' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  <span>Vacuum (0.1)</span>
+                  <span>Sea Level (1.0)</span>
+                  <span>Pressure Cooker (3.0)</span>
+                </div>
 
-            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
-              <p style={{ color: colors.textSecondary }}>
-                At <span style={{ color: colors.primary, fontWeight: 'bold' }}>{pressure.toFixed(2)} atm</span>, water boils at{' '}
-                <span style={{ color: colors.accent, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}C</span>
-                {' '}(reference: 100°C at sea level)
-              </p>
-            </div>
+                <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                  <p style={{ color: colors.textSecondary }}>
+                    At <span style={{ color: colors.primary, fontWeight: 'bold' }}>{pressure.toFixed(2)} atm</span>, water boils at{' '}
+                    <span style={{ color: colors.accent, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}C</span>
+                  </p>
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setHeating(!heating);
-                }}
-                style={{
-                  padding: '12px 24px',
-                  minHeight: '44px',
-                  background: heating ? colors.danger : colors.accent,
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: colors.textPrimary,
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                }}
-              >
-                {heating ? 'Stop Heating' : 'Heat Water'}
-              </button>
-              <button
-                onClick={() => {
-                  playSound('click');
-                  setTemperature(25);
-                  setHeating(false);
-                }}
-                style={{
-                  padding: '12px 24px',
-                  minHeight: '44px',
-                  background: 'rgba(71, 85, 105, 0.6)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: colors.textSecondary,
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+                  <button
+                    onClick={() => { playSound('click'); setHeating(!heating); }}
+                    style={{ padding: '12px 24px', minHeight: '44px', background: heating ? colors.danger : colors.accent, border: 'none', borderRadius: '8px', color: colors.textPrimary, fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    {heating ? 'Stop Heating' : 'Heat Water'}
+                  </button>
+                  <button
+                    onClick={() => { playSound('click'); setTemperature(25); setHeating(false); }}
+                    style={{ padding: '12px 24px', minHeight: '44px', background: 'rgba(71, 85, 105, 0.6)', border: 'none', borderRadius: '8px', color: colors.textSecondary, fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1347,7 +1332,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
           <div style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(20, 184, 166, 0.2))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
             <h3 style={{ color: colors.primary, fontSize: typo.bodyLarge, marginBottom: '8px' }}>Pressure vs Temperature</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '8px' }}>
               <div style={{ padding: '8px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
                 <div style={{ fontSize: '20px', marginBottom: '4px' }}>Mountain</div>
                 <p style={{ fontSize: typo.label, color: colors.textMuted }}>Everest</p>
@@ -1649,11 +1634,21 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
             Observe how altitude affects boiling temperature. Adjust the altitude slider or select different locations below!
           </p>
 
-          {/* Altitude-Temperature chart */}
-          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-            {renderAltitudeChart(twistLocation)}
-          </div>
-
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Altitude-Temperature chart */}
+              <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+                {renderAltitudeChart(twistLocation)}
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px' }}>
             {/* Altitude slider control */}
             <div style={{ marginBottom: '16px' }}>
@@ -1709,7 +1704,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
               ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px' }}>
               <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '8px', textAlign: 'center' }}>
                 <p style={{ color: colors.textMuted, fontSize: typo.small }}>Altitude</p>
                 <p style={{ color: colors.textPrimary, fontWeight: 'bold' }}>
@@ -1795,6 +1790,8 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
                 </p>
               </div>
             )}
+          </div>
+            </div>
           </div>
 
           <button

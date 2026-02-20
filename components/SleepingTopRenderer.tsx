@@ -1223,37 +1223,50 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-
-          {/* Key formula near graphic */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(59, 130, 246, 0.1)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Key Formula:</h4>
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              padding: '12px',
-              borderRadius: '8px',
-              fontFamily: 'monospace',
-              fontSize: '16px',
-              color: colors.textPrimary,
-              textAlign: 'center',
-              marginBottom: '8px',
-              fontWeight: '600',
-            }}>
-              Ω_prec = mgh / (I · ω_spin)
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
-              Precession rate Ω is inversely proportional to spin rate ω — slower spin = faster precession.
-              This is the key cause-effect relationship governing gyroscopic motion.
-            </p>
-          </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Key formula near graphic */}
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                marginBottom: '12px',
+              }}>
+                <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Key Formula:</h4>
+                <div style={{
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontFamily: 'monospace',
+                  fontSize: '16px',
+                  color: colors.textPrimary,
+                  textAlign: 'center',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}>
+                  Ω_prec = mgh / (I · ω_spin)
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
+                  Precession rate Ω is inversely proportional to spin rate ω — slower spin = faster precession.
+                  This is the key cause-effect relationship governing gyroscopic motion.
+                </p>
+              </div>
 
-          {renderControls()}
+              {renderControls()}
+            </div>
+          </div>
 
           {/* Educational definition of key terms */}
           <div style={{
@@ -1533,35 +1546,48 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(59, 130, 246, 0.1)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Critical Relationship:</h4>
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              padding: '12px',
-              borderRadius: '8px',
-              fontFamily: 'monospace',
-              fontSize: '15px',
-              color: colors.textPrimary,
-              textAlign: 'center',
-              marginBottom: '8px',
-              fontWeight: '600',
-            }}>
-              Ω_prec = mgh / (I · ω_spin)
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
             </div>
-            <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
-              Slower spin (ω↓) → larger Ω_prec → faster wobble, until the top destabilizes completely.
-            </p>
-          </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.1)',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                marginBottom: '12px',
+              }}>
+                <h4 style={{ color: colors.spin, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>⚡ Critical Relationship:</h4>
+                <div style={{
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontFamily: 'monospace',
+                  fontSize: '15px',
+                  color: colors.textPrimary,
+                  textAlign: 'center',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}>
+                  Ω_prec = mgh / (I · ω_spin)
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '12px', margin: 0, fontWeight: 'normal' }}>
+                  Slower spin (ω↓) → larger Ω_prec → faster wobble, until the top destabilizes completely.
+                </p>
+              </div>
 
-          {renderControls()}
+              {renderControls()}
+            </div>
+          </div>
 
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',

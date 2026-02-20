@@ -1493,61 +1493,75 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </p>
           </div>
 
-          {renderRoomVisualization(true)}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-              Acoustic Treatment Level: {absorptionLevel}% — Controls RT60 reverberation time
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={absorptionLevel}
-              onChange={(e) => setAbsorptionLevel(parseInt(e.target.value))}
-              onInput={(e) => setAbsorptionLevel(parseInt((e.target as HTMLInputElement).value))}
-              style={{
-                width: '100%',
-                height: '20px',
-                accentColor: colors.accent,
-                touchAction: 'pan-y',
-                WebkitAppearance: 'none',
-                cursor: 'pointer',
-              }}
-            />
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderRoomVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '12px',
+              }}>
+                <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+                  Acoustic Treatment Level: {absorptionLevel}% — Controls RT60 reverberation time
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={absorptionLevel}
+                  onChange={(e) => setAbsorptionLevel(parseInt(e.target.value))}
+                  onInput={(e) => setAbsorptionLevel(parseInt((e.target as HTMLInputElement).value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    accentColor: colors.accent,
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
 
-          {renderRoomSelector()}
+              {renderRoomSelector()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Compare bathroom (tile) vs bedroom (carpet)</li>
-              <li>Notice how concert halls balance reverb</li>
-              <li>See how studio treatment kills reverb</li>
-              <li>Watch the energy decay curve change</li>
-            </ul>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: `1px solid rgba(139,92,246,0.3)` }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Physics Terms:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
-              <strong>RT60:</strong> Time for sound to decay 60 dB (reverberation time). Formula: RT60 = 0.161 × V / A (Sabine equation).
-              <strong> Absorption coefficient (α):</strong> 0=perfect reflector, 1=perfect absorber.
-              <strong> Total absorption (A):</strong> Sum of area × α for all surfaces.
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
-              This matters because: architects use RT60 to design concert halls, recording studios, and speech-intelligible classrooms. Understanding reverberation is fundamental to acoustic engineering.
-            </p>
+              <div style={{
+                background: colors.bgCard,
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '12px',
+              }}>
+                <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+                <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                  <li>Compare bathroom (tile) vs bedroom (carpet)</li>
+                  <li>Notice how concert halls balance reverb</li>
+                  <li>See how studio treatment kills reverb</li>
+                  <li>Watch the energy decay curve change</li>
+                </ul>
+              </div>
+              <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', border: `1px solid rgba(139,92,246,0.3)` }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Physics Terms:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7, fontWeight: 400 }}>
+                  <strong>RT60:</strong> Time for sound to decay 60 dB (reverberation time). Formula: RT60 = 0.161 × V / A (Sabine equation).
+                  <strong> Absorption coefficient (α):</strong> 0=perfect reflector, 1=perfect absorber.
+                  <strong> Total absorption (A):</strong> Sum of area × α for all surfaces.
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
+                  This matters because: architects use RT60 to design concert halls, recording studios, and speech-intelligible classrooms. Understanding reverberation is fundamental to acoustic engineering.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar()}
@@ -1695,44 +1709,56 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
             </p>
           </div>
 
-          {renderRoomVisualization(true)}
-
-          <div style={{ padding: '16px', display: 'flex', justifyContent: 'center' }}>
-            <button
-              onClick={() => {
-                setHasFurnishings(!hasFurnishings);
-                resetSimulation();
-              }}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '8px',
-                border: hasFurnishings ? `2px solid ${colors.success}` : `2px solid ${colors.warning}`,
-                background: hasFurnishings ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                color: colors.textPrimary,
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 'bold',
-              }}
-            >
-              {hasFurnishings ? 'Remove Blankets/Pillows' : 'Add Blankets/Pillows'}
-            </button>
-          </div>
-
-          {renderRoomSelector()}
-
+          {/* Side-by-side layout */}
           <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Watch how RT60 drops when you add soft materials. Even a small amount of
-              absorption can significantly reduce reverb time. This is why hotels put
-              carpet and curtains in echoey spaces!
-            </p>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderRoomVisualization(true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{ padding: '16px', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    setHasFurnishings(!hasFurnishings);
+                    resetSimulation();
+                  }}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '8px',
+                    border: hasFurnishings ? `2px solid ${colors.success}` : `2px solid ${colors.warning}`,
+                    background: hasFurnishings ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {hasFurnishings ? 'Remove Blankets/Pillows' : 'Add Blankets/Pillows'}
+                </button>
+              </div>
+
+              {renderRoomSelector()}
+
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '12px',
+                borderLeft: `3px solid ${colors.warning}`,
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+                <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                  Watch how RT60 drops when you add soft materials. Even a small amount of
+                  absorption can significantly reduce reverb time. This is why hotels put
+                  carpet and curtains in echoey spaces!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         {renderBottomBar()}

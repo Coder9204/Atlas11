@@ -1492,40 +1492,52 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </p>
           </div>
 
-          {renderVisualization(true)}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true)}
 
-          {/* Real-time calculated values */}
-          {(() => {
-            const yieldInfo = calculateYield();
-            const repairRatio = yieldInfo.defects.length > 0 ? (yieldInfo.repairedDefects / yieldInfo.defects.length * 100).toFixed(1) : '100.0';
-            return (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '12px',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                padding: '0 16px',
-                marginBottom: '8px',
-                transition: 'all 0.3s ease',
-              }}>
-                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
-                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Defect Rate</div>
-                  <div style={{ color: colors.defect, fontSize: '16px', fontWeight: 'bold' }}>{defectDensity.toFixed(1)}/1000</div>
-                </div>
-                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
-                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Repair Ratio</div>
-                  <div style={{ color: colors.repaired, fontSize: '16px', fontWeight: 'bold' }}>{repairRatio}%</div>
-                </div>
-                <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
-                  <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Yield Factor</div>
-                  <div style={{ color: yieldInfo.remainingDefects === 0 ? colors.success : colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{yieldInfo.repairedYield.toFixed(1)}%</div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {renderControls()}
+              {/* Real-time calculated values */}
+              {(() => {
+                const yieldInfo = calculateYield();
+                const repairRatio = yieldInfo.defects.length > 0 ? (yieldInfo.repairedDefects / yieldInfo.defects.length * 100).toFixed(1) : '100.0';
+                return (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    marginBottom: '8px',
+                    transition: 'all 0.3s ease',
+                  }}>
+                    <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                      <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Defect Rate</div>
+                      <div style={{ color: colors.defect, fontSize: '16px', fontWeight: 'bold' }}>{defectDensity.toFixed(1)}/1000</div>
+                    </div>
+                    <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                      <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Repair Ratio</div>
+                      <div style={{ color: colors.repaired, fontSize: '16px', fontWeight: 'bold' }}>{repairRatio}%</div>
+                    </div>
+                    <div style={{ background: colors.bgCard, padding: '10px 14px', borderRadius: '8px', textAlign: 'center', flex: '1 1 100px', transition: 'background 0.3s ease' }}>
+                      <div style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 400 }}>Yield Factor</div>
+                      <div style={{ color: yieldInfo.remainingDefects === 0 ? colors.success : colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{yieldInfo.repairedYield.toFixed(1)}%</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls()}
+            </div>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -1684,8 +1696,22 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </p>
           </div>
 
-          {renderVisualization(true, true)}
-          {renderControls(true)}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            padding: '0 16px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderVisualization(true, true)}
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {renderControls(true)}
+            </div>
+          </div>
 
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',

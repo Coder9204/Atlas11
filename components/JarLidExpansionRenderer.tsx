@@ -907,107 +907,119 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             This same principle matters for real-world engineering: bridges use expansion joints to prevent buckling, and shrink-fit assembly uses thermal expansion to create permanent machine joints.
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderJarVisualization()}
-            </div>
-
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{ ...typo.small, color: temperature > 60 ? colors.error : colors.accent, fontWeight: 600 }}>{temperature}C</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={temperature}
-                onChange={(e) => {
-                  setTemperature(parseInt(e.target.value));
-                  if (parseInt(e.target.value) > 60) playSound('heat');
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Room (20C)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Hot water (100C)</span>
-              </div>
-            </div>
-
-            {/* Material selector */}
-            <div style={{ marginBottom: '24px' }}>
-              <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px' }}>Lid Material:</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                {materials.slice(0, 3).map((mat, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { playSound('click'); setSelectedLidMaterial(i); }}
-                    style={{
-                      padding: '12px 8px',
-                      borderRadius: '8px',
-                      border: `2px solid ${selectedLidMaterial === i ? mat.color : colors.border}`,
-                      background: selectedLidMaterial === i ? `${mat.color}22` : colors.bgSecondary,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      minHeight: '44px',
-                    }}
-                  >
-                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: mat.color, margin: '0 auto 4px' }} />
-                    <div style={{ ...typo.small, color: '#e2e8f0' }}>{mat.name.split(' ')[0]}</div>
-                    <div style={{ fontSize: '10px', color: '#e2e8f0' }}>alpha={mat.alpha}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{(lidExpansion * 1000).toFixed(1)} um</div>
-                <div style={{ ...typo.small, color: '#e2e8f0' }}>Lid Expansion</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: '#67e8f9' }}>{(glassExpansion * 1000).toFixed(1)} um</div>
-                <div style={{ ...typo.small, color: '#e2e8f0' }}>Glass Expansion</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: gapChange > 0 ? colors.success : colors.error }}>
-                  {gapChange > 0 ? '+' : ''}{(gapChange * 1000).toFixed(1)} um
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderJarVisualization()}
                 </div>
-                <div style={{ ...typo.small, color: '#e2e8f0' }}>Gap Change</div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{(lidExpansion * 1000).toFixed(1)} um</div>
+                    <div style={{ ...typo.small, color: '#e2e8f0' }}>Lid Expansion</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: '#67e8f9' }}>{(glassExpansion * 1000).toFixed(1)} um</div>
+                    <div style={{ ...typo.small, color: '#e2e8f0' }}>Glass Expansion</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: gapChange > 0 ? colors.success : colors.error }}>
+                      {gapChange > 0 ? '+' : ''}{(gapChange * 1000).toFixed(1)} um
+                    </div>
+                    <div style={{ ...typo.small, color: '#e2e8f0' }}>Gap Change</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: temperature > 60 ? colors.error : colors.accent, fontWeight: 600 }}>{temperature}C</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={temperature}
+                  onChange={(e) => {
+                    setTemperature(parseInt(e.target.value));
+                    if (parseInt(e.target.value) > 60) playSound('heat');
+                  }}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20C</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100C</span>
+                </div>
+              </div>
+
+              {/* Material selector */}
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ ...typo.small, color: '#e2e8f0', marginBottom: '8px' }}>Lid Material:</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {materials.slice(0, 3).map((mat, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { playSound('click'); setSelectedLidMaterial(i); }}
+                      style={{
+                        padding: '12px 8px',
+                        borderRadius: '8px',
+                        border: `2px solid ${selectedLidMaterial === i ? mat.color : colors.border}`,
+                        background: selectedLidMaterial === i ? `${mat.color}22` : colors.bgSecondary,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: mat.color, margin: '0 auto 4px' }} />
+                      <div style={{ ...typo.small, color: '#e2e8f0' }}>{mat.name.split(' ')[0]}</div>
+                      <div style={{ fontSize: '10px', color: '#e2e8f0' }}>alpha={mat.alpha}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1277,102 +1289,112 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             Compare direct heating vs. chill-then-heat technique
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {/* Method toggle */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-              <button
-                onClick={() => { playSound('click'); setShowChillFirst(false); setTemperature(20); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${!showChillFirst ? colors.warning : colors.border}`,
-                  background: !showChillFirst ? `${colors.warning}22` : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔥</div>
-                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Direct Heat</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>20C to 80C</div>
-                <div style={{ ...typo.small, color: colors.warning, marginTop: '4px' }}>Delta T = 60C</div>
-              </button>
-              <button
-                onClick={() => { playSound('click'); setShowChillFirst(true); setTemperature(0); }}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: `2px solid ${showChillFirst ? '#3b82f6' : colors.border}`,
-                  background: showChillFirst ? 'rgba(59, 130, 246, 0.2)' : colors.bgSecondary,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>❄️🔥</div>
-                <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Chill + Heat</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>0C to 80C</div>
-                <div style={{ ...typo.small, color: '#3b82f6', marginTop: '4px' }}>Delta T = 80C</div>
-              </button>
-            </div>
-
-            {/* Jar visualization */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderJarVisualization()}
-            </div>
-
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
-                <span style={{ ...typo.small, color: temperature > 50 ? colors.error : temperature < 10 ? '#3b82f6' : colors.accent, fontWeight: 600 }}>{temperature}C</span>
-              </div>
-              <input
-                type="range"
-                min={showChillFirst ? 0 : 20}
-                max="100"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                }}
-              />
-            </div>
-
-            {/* Comparison stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${!showChillFirst ? colors.warning : colors.border}`,
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Direct Heat (Delta T=60C)</div>
-                <div style={{ ...typo.h2, color: colors.warning }}>+{directGap.toFixed(1)} um</div>
+                {/* Jar visualization */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderJarVisualization()}
+                </div>
+
+                {/* Comparison stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    border: `2px solid ${!showChillFirst ? colors.warning : colors.border}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Direct Heat (Delta T=60C)</div>
+                    <div style={{ ...typo.h2, color: colors.warning }}>+{directGap.toFixed(1)} um</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    border: `2px solid ${showChillFirst ? '#3b82f6' : colors.border}`,
+                  }}>
+                    <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Chill+Heat (Delta T=80C)</div>
+                    <div style={{ ...typo.h2, color: '#3b82f6' }}>+{chillGap.toFixed(1)} um</div>
+                  </div>
+                </div>
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-                border: `2px solid ${showChillFirst ? '#3b82f6' : colors.border}`,
-              }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Chill+Heat (Delta T=80C)</div>
-                <div style={{ ...typo.h2, color: '#3b82f6' }}>+{chillGap.toFixed(1)} um</div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Method toggle */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                <button
+                  onClick={() => { playSound('click'); setShowChillFirst(false); setTemperature(20); }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${!showChillFirst ? colors.warning : colors.border}`,
+                    background: !showChillFirst ? `${colors.warning}22` : colors.bgSecondary,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔥</div>
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Direct Heat</div>
+                  <div style={{ ...typo.small, color: colors.warning, marginTop: '4px' }}>Delta T = 60C</div>
+                </button>
+                <button
+                  onClick={() => { playSound('click'); setShowChillFirst(true); setTemperature(0); }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${showChillFirst ? '#3b82f6' : colors.border}`,
+                    background: showChillFirst ? 'rgba(59, 130, 246, 0.2)' : colors.bgSecondary,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>❄️🔥</div>
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>Chill + Heat</div>
+                  <div style={{ ...typo.small, color: '#3b82f6', marginTop: '4px' }}>Delta T = 80C</div>
+                </button>
+              </div>
+
+              {/* Temperature slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                  <span style={{ ...typo.small, color: temperature > 50 ? colors.error : temperature < 10 ? '#3b82f6' : colors.accent, fontWeight: 600 }}>{temperature}C</span>
+                </div>
+                <input
+                  type="range"
+                  min={showChillFirst ? 0 : 20}
+                  max="100"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '20px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    touchAction: 'pan-y',
+                    WebkitAppearance: 'none',
+                    accentColor: '#3b82f6',
+                  }}
+                />
               </div>
             </div>
           </div>

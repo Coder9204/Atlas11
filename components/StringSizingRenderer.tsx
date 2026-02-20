@@ -926,6 +926,16 @@ export default function StringSizingRenderer({
         </p>
       </div>
 
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        marginBottom: '16px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {/* SVG visualization of panels and voltage chart */}
       <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
         <defs>
@@ -995,6 +1005,8 @@ export default function StringSizingRenderer({
           <text x="250" y="120" textAnchor="middle" fill="#94a3b8" fontSize="11">Voltage vs Panel Count</text>
         </g>
       </svg>
+      </div>
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
       {/* Status Display */}
       <div style={{
@@ -1090,6 +1102,8 @@ export default function StringSizingRenderer({
           <span>4 panels</span>
           <span>15 panels</span>
         </div>
+      </div>
+      </div>
       </div>
 
       {/* Info cards */}
@@ -1309,6 +1323,16 @@ export default function StringSizingRenderer({
         </p>
       </div>
 
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        marginBottom: '16px',
+      }}>
+      <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {/* SVG visualization of temperature-adjusted voltage */}
       {(() => {
         // Calculate voltage range for dynamic y-axis scaling
@@ -1363,6 +1387,8 @@ export default function StringSizingRenderer({
           </svg>
         );
       })()}
+      </div>
+      <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
       {/* Status Display */}
       <div style={{
@@ -1447,6 +1473,8 @@ export default function StringSizingRenderer({
           onChange={(e) => setPanelCount(parseInt(e.target.value))}
           style={{ height: '20px', touchAction: 'pan-y', width: '100%', accentColor: '#eab308' }}
         />
+      </div>
+      </div>
       </div>
 
       <div style={{

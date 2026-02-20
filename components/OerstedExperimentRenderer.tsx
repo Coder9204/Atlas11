@@ -1286,127 +1286,139 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           {/* What to Watch callout */}
           {renderWhatToWatch()}
 
-          {renderExperimentVisualization()}
-
-          {/* Formula Breakdown */}
-          {renderFormulaBreakdown()}
-
-          {/* Why This Matters */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: `linear-gradient(135deg, ${colors.success}15, ${colors.bgCard})`,
-            borderRadius: '12px',
-            padding: '16px',
-            maxWidth: '500px',
-            margin: '12px auto',
-            border: `1px solid ${colors.success}30`
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <p style={{ color: colors.success, fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>
-              🌍 WHY THIS MATTERS:
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
-              This phenomenon — current creating magnetic fields — is the foundation of <strong style={{ color: colors.textPrimary }}>every electric motor, generator, transformer, and MRI machine</strong> on Earth.
-              It unified electricity and magnetism into one force: <strong style={{ color: colors.primary }}>electromagnetism</strong>.
-            </p>
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderExperimentVisualization()}
 
-          {/* Controls with clear labels */}
-          <div style={{ maxWidth: '500px', margin: '16px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Current Strength Slider with effect explanation */}
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
-                  ⚡ Current Strength
-                </span>
-                <span style={{ color: colors.current, fontSize: '18px', fontWeight: 700 }}>{currentStrength}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={currentStrength}
-                onChange={(e) => setCurrentStrength(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
-              />
-              <p style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
-                ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
-              </p>
-            </div>
+              {/* Formula Breakdown */}
+              {renderFormulaBreakdown()}
 
-            {/* Current Direction with clear labels */}
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600, marginBottom: '8px', textAlign: 'center' }}>
-                🔄 Current Direction (changes field direction)
-              </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => {
-                    setCurrentDirection('up');
-                    playSound('click');
-                    emitGameEvent('direction_changed', { direction: 'up' });
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: currentDirection === 'up' ? colors.primary : colors.bgCardLight,
-                    color: currentDirection === 'up' ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ↑ Upward
-                </button>
-                <button
-                  onClick={() => {
-                    setCurrentDirection('down');
-                    playSound('click');
-                    emitGameEvent('direction_changed', { direction: 'down' });
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    backgroundColor: currentDirection === 'down' ? colors.primary : colors.bgCardLight,
-                    color: currentDirection === 'down' ? 'white' : colors.textSecondary,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ↓ Downward
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setCurrentOn(!currentOn);
-                playSound(currentOn ? 'click' : 'success');
-                emitGameEvent(currentOn ? 'current_off' : 'current_on', { strength: currentStrength, direction: currentDirection });
-              }}
-              style={{
-                padding: '16px',
+              {/* Why This Matters */}
+              <div style={{
+                background: `linear-gradient(135deg, ${colors.success}15, ${colors.bgCard})`,
                 borderRadius: '12px',
-                fontWeight: 700,
-                fontSize: '16px',
-                backgroundColor: currentOn ? colors.error : colors.success,
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {currentOn ? '⏹ Turn OFF' : '▶ Turn ON'}
-            </button>
-          </div>
-
-          {currentOn && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
-                The compass deflects! Current creates a magnetic field around the wire.
-              </p>
+                padding: '16px',
+                maxWidth: '500px',
+                margin: '12px auto',
+                border: `1px solid ${colors.success}30`
+              }}>
+                <p style={{ color: colors.success, fontSize: '13px', fontWeight: 700, marginBottom: '8px' }}>
+                  🌍 WHY THIS MATTERS:
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+                  This phenomenon — current creating magnetic fields — is the foundation of <strong style={{ color: colors.textPrimary }}>every electric motor, generator, transformer, and MRI machine</strong> on Earth.
+                  It unified electricity and magnetism into one force: <strong style={{ color: colors.primary }}>electromagnetism</strong>.
+                </p>
+              </div>
             </div>
-          )}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls with clear labels */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Current Strength Slider with effect explanation */}
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                      ⚡ Current Strength
+                    </span>
+                    <span style={{ color: colors.current, fontSize: '18px', fontWeight: 700 }}>{currentStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={currentStrength}
+                    onChange={(e) => setCurrentStrength(Number(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
+                  />
+                  <p style={{ color: '#e2e8f0', fontSize: '11px', marginTop: '8px', textAlign: 'center' }}>
+                    ↑ Higher current = ↑ Stronger magnetic field = ↑ More compass deflection
+                  </p>
+                </div>
+
+                {/* Current Direction with clear labels */}
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600, marginBottom: '8px', textAlign: 'center' }}>
+                    🔄 Current Direction (changes field direction)
+                  </p>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button
+                      onClick={() => {
+                        setCurrentDirection('up');
+                        playSound('click');
+                        emitGameEvent('direction_changed', { direction: 'up' });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        backgroundColor: currentDirection === 'up' ? colors.primary : colors.bgCardLight,
+                        color: currentDirection === 'up' ? 'white' : colors.textSecondary,
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ↑ Upward
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCurrentDirection('down');
+                        playSound('click');
+                        emitGameEvent('direction_changed', { direction: 'down' });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        backgroundColor: currentDirection === 'down' ? colors.primary : colors.bgCardLight,
+                        color: currentDirection === 'down' ? 'white' : colors.textSecondary,
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ↓ Downward
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentOn(!currentOn);
+                    playSound(currentOn ? 'click' : 'success');
+                    emitGameEvent(currentOn ? 'current_off' : 'current_on', { strength: currentStrength, direction: currentDirection });
+                  }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    backgroundColor: currentOn ? colors.error : colors.success,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {currentOn ? '⏹ Turn OFF' : '▶ Turn ON'}
+                </button>
+              </div>
+
+              {currentOn && (
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                  <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
+                    The compass deflects! Current creates a magnetic field around the wire.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {renderBottomBar(true, currentOn, 'Understand the Physics →', () => goToPhase('review'), colors.success)}
@@ -1636,77 +1648,89 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             </h2>
           </div>
 
-          {renderExperimentVisualization()}
-
-          {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Number of Coil Turns</span>
-                <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 700 }}>{coilTurns}</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="10"
-                value={coilTurns}
-                onChange={(e) => {
-                  setCoilTurns(Number(e.target.value));
-                  emitGameEvent('coils_changed', { turns: Number(e.target.value) });
-                }}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
-              />
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {renderExperimentVisualization()}
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Controls */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>Number of Coil Turns</span>
+                    <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 700 }}>{coilTurns}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="10"
+                    value={coilTurns}
+                    onChange={(e) => {
+                      setCoilTurns(Number(e.target.value));
+                      emitGameEvent('coils_changed', { turns: Number(e.target.value) });
+                    }}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' as any, cursor: 'pointer' }}
+                  />
+                </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => {
-                  setWireMode(wireMode === 'straight' ? 'coil' : 'straight');
-                  playSound('click');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  backgroundColor: wireMode === 'coil' ? colors.accent : colors.bgCardLight,
-                  color: wireMode === 'coil' ? 'white' : colors.textSecondary,
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {wireMode === 'coil' ? '🔄 Coiled' : '| Straight'}
-              </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      setWireMode(wireMode === 'straight' ? 'coil' : 'straight');
+                      playSound('click');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: wireMode === 'coil' ? colors.accent : colors.bgCardLight,
+                      color: wireMode === 'coil' ? 'white' : colors.textSecondary,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {wireMode === 'coil' ? '🔄 Coiled' : '| Straight'}
+                  </button>
 
-              <button
-                onClick={() => {
-                  setCurrentOn(!currentOn);
-                  playSound(currentOn ? 'click' : 'success');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  backgroundColor: currentOn ? colors.error : colors.success,
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {currentOn ? '⏹ OFF' : '▶ ON'}
-              </button>
+                  <button
+                    onClick={() => {
+                      setCurrentOn(!currentOn);
+                      playSound(currentOn ? 'click' : 'success');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      fontWeight: 700,
+                      backgroundColor: currentOn ? colors.error : colors.success,
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {currentOn ? '⏹ OFF' : '▶ ON'}
+                  </button>
+                </div>
+              </div>
+
+              {currentOn && wireMode === 'coil' && (
+                <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                  <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
+                    Notice how the coiled wire creates a much stronger, focused magnetic field!
+                    It behaves like a bar magnet with N and S poles.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-
-          {currentOn && wireMode === 'coil' && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
-                Notice how the coiled wire creates a much stronger, focused magnetic field!
-                It behaves like a bar magnet with N and S poles.
-              </p>
-            </div>
-          )}
         </div>
 
         {renderBottomBar(true, currentOn && wireMode === 'coil', 'See the Explanation →', () => goToPhase('twist_review'), colors.warning)}

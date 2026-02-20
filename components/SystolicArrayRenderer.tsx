@@ -1162,7 +1162,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             {/* Real-time stats */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '24px',
             }}>
@@ -1195,18 +1195,29 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               </div>
             </div>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
               display: 'flex',
-              justifyContent: 'center',
-              overflowX: 'auto',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
             }}>
-              <SystolicArrayVisualization interactive={true} showAccumulators={true} />
-            </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Main visualization */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  overflowX: 'auto',
+                }}>
+                  <SystolicArrayVisualization interactive={true} showAccumulators={true} />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
           {/* Playback controls */}
           <div style={{
@@ -1336,6 +1347,8 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               }} />
             </button>
           </div>
+              </div>
+            </div>
 
           {/* Completion message */}
           {cycle >= maxCycles && (
@@ -1699,7 +1712,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             {currentMetric && (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
                 marginBottom: '24px',
               }}>
@@ -1759,18 +1772,29 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             ))}
           </div>
 
-          {/* Visualization for selected size */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
             display: 'flex',
-            justifyContent: 'center',
-            overflowX: 'auto',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
           }}>
-            <SystolicArrayVisualization interactive={false} showAccumulators={true} />
-          </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization for selected size */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+                display: 'flex',
+                justifyContent: 'center',
+                overflowX: 'auto',
+              }}>
+                <SystolicArrayVisualization interactive={false} showAccumulators={true} />
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
           {/* Simple playback */}
           <div style={{
@@ -1810,6 +1834,8 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             <span style={{ ...typo.small, color: colors.textSecondary }}>
               Cycle: {cycle}
             </span>
+          </div>
+            </div>
           </div>
 
           {/* Efficiency comparison table */}

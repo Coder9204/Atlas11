@@ -1114,151 +1114,164 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   };
 
   const renderPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+    <div style={{ padding: typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
       {renderSectionHeader('Step 2 • Experiment', 'Collision Lab', 'Compare elastic vs inelastic collisions')}
 
-      {/* Interactive Controls Panel */}
-      <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white text-sm">⚙️ Physics Controls</h4>
-          <button
-            onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
-            className="text-slate-400 hover:text-white text-xs"
-            style={{ zIndex: 10 }}
-          >
-            {showPhysicsPanel ? 'Hide' : 'Show'}
-          </button>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        marginBottom: '16px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+            {renderCollisionVisualization(collisionType)}
+          </div>
+
+          {/* Conservation Display */}
+          {animationPhase === 'after' && (
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700">
+              <div className="bg-slate-900/50 rounded-lg p-3">
+                <div className="text-xs text-slate-400 mb-1">Momentum (p = mv)</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 text-sm">Before:</span>
+                  <span className="text-emerald-400 font-mono">{momentumBefore.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 text-sm">After:</span>
+                  <span className="text-emerald-400 font-mono">{momentumAfter.toFixed(2)}</span>
+                </div>
+                <div className="text-xs text-emerald-400 mt-1 text-center">✓ Conserved!</div>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-3">
+                <div className="text-xs text-slate-400 mb-1">Energy (KE = ½mv²)</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 text-sm">Before:</span>
+                  <span className="text-amber-400 font-mono">{energyBefore.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-300 text-sm">After:</span>
+                  <span className="text-amber-400 font-mono">{energyAfter.toFixed(2)}</span>
+                </div>
+                <div className={`text-xs mt-1 text-center ${Math.abs(energyBefore - energyAfter) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {Math.abs(energyBefore - energyAfter) < 0.01 ? '✓ Conserved!' : `Lost: ${((1 - energyAfter / energyBefore) * 100).toFixed(0)}%`}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
-        {showPhysicsPanel && (
-          <div className="space-y-4">
-            {/* Mass 1 Slider */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-300">Ball 1 Mass (Blue)</span>
-                <span className="text-blue-400 font-mono">{mass1} kg</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="5"
-                step="0.5"
-                value={mass1}
-                onChange={(e) => setMass1(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'none' }}
-                disabled={isAnimating}
-              />
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
-                <span>0.5 kg (low)</span>
-                <span>5 kg (max)</span>
-              </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Interactive Controls Panel */}
+          <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-white text-sm">⚙️ Physics Controls</h4>
+              <button
+                onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+                className="text-slate-400 hover:text-white text-xs"
+                style={{ zIndex: 10 }}
+              >
+                {showPhysicsPanel ? 'Hide' : 'Show'}
+              </button>
             </div>
 
-            {/* Mass 2 Slider */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-300">Ball 2 Mass (Red)</span>
-                <span className="text-red-400 font-mono">{mass2} kg</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="5"
-                step="0.5"
-                value={mass2}
-                onChange={(e) => setMass2(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
-                style={{ width: '100%', height: '20px', accentColor: '#ef4444', touchAction: 'none' }}
-                disabled={isAnimating}
-              />
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
-                <span>0.5 kg (low)</span>
-                <span>5 kg (max)</span>
-              </div>
-            </div>
+            {showPhysicsPanel && (
+              <div className="space-y-4">
+                {/* Mass 1 Slider */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-300">Ball 1 Mass (Blue)</span>
+                    <span className="text-blue-400 font-mono">{mass1} kg</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="5"
+                    step="0.5"
+                    value={mass1}
+                    onChange={(e) => setMass1(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'none' }}
+                    disabled={isAnimating}
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>0.5 kg (low)</span>
+                    <span>5 kg (max)</span>
+                  </div>
+                </div>
 
-            {/* Initial Velocity Slider */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-300">Ball 1 Initial Velocity</span>
-                <span className="text-green-400 font-mono">{initialVelocity} m/s</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="0.5"
-                value={initialVelocity}
-                onChange={(e) => setInitialVelocity(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                style={{ width: '100%', height: '20px', accentColor: '#22c55e', touchAction: 'none' }}
-                disabled={isAnimating}
-              />
-            </div>
+                {/* Mass 2 Slider */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-300">Ball 2 Mass (Red)</span>
+                    <span className="text-red-400 font-mono">{mass2} kg</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="5"
+                    step="0.5"
+                    value={mass2}
+                    onChange={(e) => setMass2(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                    style={{ width: '100%', height: '20px', accentColor: '#ef4444', touchAction: 'none' }}
+                    disabled={isAnimating}
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>0.5 kg (low)</span>
+                    <span>5 kg (max)</span>
+                  </div>
+                </div>
 
-            {/* Elasticity Coefficient (only for elastic type) */}
-            {collisionType === 'elastic' && (
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-slate-300">Elasticity Coefficient (e)</span>
-                  <span className="text-purple-400 font-mono">{elasticityCoeff.toFixed(2)}</span>
+                {/* Initial Velocity Slider */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-300">Ball 1 Initial Velocity</span>
+                    <span className="text-green-400 font-mono">{initialVelocity} m/s</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    value={initialVelocity}
+                    onChange={(e) => setInitialVelocity(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                    style={{ width: '100%', height: '20px', accentColor: '#22c55e', touchAction: 'none' }}
+                    disabled={isAnimating}
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={elasticityCoeff}
-                  onChange={(e) => setElasticityCoeff(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                  style={{ width: '100%', height: '20px', accentColor: '#a855f7', touchAction: 'none' }}
-                  disabled={isAnimating}
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>Inelastic (0)</span>
-                  <span>Perfectly Elastic (1)</span>
-                </div>
-              </div>
-            )}
 
-            {/* Conservation Display */}
-            {animationPhase === 'after' && (
-              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700">
-                <div className="bg-slate-900/50 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Momentum (p = mv)</div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300 text-sm">Before:</span>
-                    <span className="text-emerald-400 font-mono">{momentumBefore.toFixed(2)}</span>
+                {/* Elasticity Coefficient (only for elastic type) */}
+                {collisionType === 'elastic' && (
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-300">Elasticity Coefficient (e)</span>
+                      <span className="text-purple-400 font-mono">{elasticityCoeff.toFixed(2)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={elasticityCoeff}
+                      onChange={(e) => setElasticityCoeff(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      style={{ width: '100%', height: '20px', accentColor: '#a855f7', touchAction: 'none' }}
+                      disabled={isAnimating}
+                    />
+                    <div className="flex justify-between text-xs text-slate-500 mt-1">
+                      <span>Inelastic (0)</span>
+                      <span>Perfectly Elastic (1)</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300 text-sm">After:</span>
-                    <span className="text-emerald-400 font-mono">{momentumAfter.toFixed(2)}</span>
-                  </div>
-                  <div className="text-xs text-emerald-400 mt-1 text-center">✓ Conserved!</div>
-                </div>
-                <div className="bg-slate-900/50 rounded-lg p-3">
-                  <div className="text-xs text-slate-400 mb-1">Energy (KE = ½mv²)</div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300 text-sm">Before:</span>
-                    <span className="text-amber-400 font-mono">{energyBefore.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-300 text-sm">After:</span>
-                    <span className="text-amber-400 font-mono">{energyAfter.toFixed(2)}</span>
-                  </div>
-                  <div className={`text-xs mt-1 text-center ${Math.abs(energyBefore - energyAfter) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {Math.abs(energyBefore - energyAfter) < 0.01 ? '✓ Conserved!' : `Lost: ${((1 - energyAfter / energyBefore) * 100).toFixed(0)}%`}
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
-        {renderCollisionVisualization(collisionType)}
+        </div>
       </div>
 
       <div className="mb-4">
@@ -1564,77 +1577,90 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   };
 
   const renderTwistPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+    <div style={{ padding: typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
       {renderSectionHeader('Step 5 • Twist Experiment', 'Mass Ratio Lab', 'Elastic collisions with different masses')}
 
-      <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
-        {renderCollisionVisualization('elastic', massRatio)}
-      </div>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        marginBottom: '16px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+            {renderCollisionVisualization('elastic', massRatio)}
+          </div>
 
-      <div className="mb-4">
-        <h4 className="font-semibold text-gray-700 mb-2">Select Mass Combination:</h4>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { id: 'equal' as const, label: 'Equal', desc: 'm vs m' },
-            { id: 'heavy_light' as const, label: 'Heavy→Light', desc: '3m vs m' },
-            { id: 'light_heavy' as const, label: 'Light→Heavy', desc: 'm vs 3m' }
-          ].map(m => (
+          {animationPhase === 'after' && (
+            <div className="bg-purple-50 rounded-xl p-4 mb-4">
+              <p className="text-purple-800">
+                <span className="font-bold">
+                  {massRatio === 'equal' && '✓ Equal masses: Ball 1 stops, Ball 2 takes all velocity!'}
+                  {massRatio === 'heavy_light' && '✓ Heavy hits light: Heavy continues forward (slower), light zooms off!'}
+                  {massRatio === 'light_heavy' && '✓ Light hits heavy: Light bounces back, heavy barely moves!'}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div className="mb-4">
+            <h4 className="font-semibold text-gray-700 mb-2">Select Mass Combination:</h4>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { id: 'equal' as const, label: 'Equal', desc: 'm vs m' },
+                { id: 'heavy_light' as const, label: 'Heavy→Light', desc: '3m vs m' },
+                { id: 'light_heavy' as const, label: 'Light→Heavy', desc: 'm vs 3m' }
+              ].map(m => (
+                <button
+                  key={m.id}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (!isAnimating) {
+                      setMassRatio(m.id);
+                      setBall1Pos(50);
+                      setBall2Pos(250);
+                      setAnimationPhase('before');
+                    }
+                  }}
+                  disabled={isAnimating}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    massRatio === m.id
+                      ? 'border-purple-500 bg-purple-50 shadow-md'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                >
+                  <p className="font-medium text-sm">{m.label}</p>
+                  <p className="text-xs text-gray-500">{m.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-center mb-4">
             <button
-              key={m.id}
               onPointerDown={(e) => {
                 e.preventDefault();
                 if (!isAnimating) {
-                  setMassRatio(m.id);
-                  setBall1Pos(50);
-                  setBall2Pos(250);
-                  setAnimationPhase('before');
+                  runCollision('elastic', massRatio);
+                  setTwistExperimentsRun(prev => prev + 1);
                 }
               }}
               disabled={isAnimating}
-              className={`p-3 rounded-lg border-2 transition-all ${
-                massRatio === m.id
-                  ? 'border-purple-500 bg-purple-50 shadow-md'
-                  : 'border-gray-200 bg-white'
+              className={`px-8 py-3 rounded-xl font-semibold transition-all ${
+                isAnimating
+                  ? 'bg-gray-200 text-gray-400'
+                  : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg hover:shadow-xl'
               }`}
             >
-              <p className="font-medium text-sm">{m.label}</p>
-              <p className="text-xs text-gray-500">{m.desc}</p>
+              {isAnimating ? 'Colliding...' : '💥 Run Collision'}
             </button>
-          ))}
+          </div>
         </div>
       </div>
-
-      <div className="flex justify-center mb-4">
-        <button
-          onPointerDown={(e) => {
-            e.preventDefault();
-            if (!isAnimating) {
-              runCollision('elastic', massRatio);
-              setTwistExperimentsRun(prev => prev + 1);
-            }
-          }}
-          disabled={isAnimating}
-          className={`px-8 py-3 rounded-xl font-semibold transition-all ${
-            isAnimating
-              ? 'bg-gray-200 text-gray-400'
-              : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isAnimating ? 'Colliding...' : '💥 Run Collision'}
-        </button>
-      </div>
-
-      {animationPhase === 'after' && (
-        <div className="bg-purple-50 rounded-xl p-4 mb-4">
-          <p className="text-purple-800">
-            <span className="font-bold">
-              {massRatio === 'equal' && '✓ Equal masses: Ball 1 stops, Ball 2 takes all velocity!'}
-              {massRatio === 'heavy_light' && '✓ Heavy hits light: Heavy continues forward (slower), light zooms off!'}
-              {massRatio === 'light_heavy' && '✓ Light hits heavy: Light bounces back, heavy barely moves!'}
-            </span>
-          </p>
-        </div>
-      )}
 
       <div className="text-center text-sm text-gray-500 mb-2">
         Experiments: {twistExperimentsRun} (try all three!)

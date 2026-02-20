@@ -1120,76 +1120,88 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CircuitDiagram showCurrentFlow={true} />
-            </div>
-
-            {renderLegend()}
-
-            {/* Number of panels slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of voltage panels (current count)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPanels}</span>
-              </div>
-              <input
-                type="range"
-                min="2"
-                max="6"
-                value={numPanels}
-                onChange={(e) => {
-                  setNumPanels(parseInt(e.target.value));
-                  setShadedPanel(null);
-                }}
-                onInput={(e) => {
-                  setNumPanels(parseInt((e.target as HTMLInputElement).value));
-                  setShadedPanel(null);
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  accentColor: colors.accent,
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                }}
-              />
-            </div>
-
-            {/* Output display */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{output.voltage}V</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Voltage</div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <CircuitDiagram showCurrentFlow={true} />
+                </div>
+                {renderLegend()}
               </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{output.current.toFixed(1)}A</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Current</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{output.power.toFixed(0)}W</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Power</div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Number of panels slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Number of voltage panels (current count)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPanels}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2"
+                    max="6"
+                    value={numPanels}
+                    onChange={(e) => {
+                      setNumPanels(parseInt(e.target.value));
+                      setShadedPanel(null);
+                    }}
+                    onInput={(e) => {
+                      setNumPanels(parseInt((e.target as HTMLInputElement).value));
+                      setShadedPanel(null);
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      accentColor: colors.accent,
+                      touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Output display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{output.voltage}V</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Voltage</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{output.current.toFixed(1)}A</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Current</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    gridColumn: 'span 2',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{output.power.toFixed(0)}W</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Power</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1533,94 +1545,106 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <CircuitDiagram showCurrentFlow={true} />
-            </div>
-
-            {renderLegend()}
-
-            {/* Shade level slider */}
-            {shadedPanel !== null && (
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>🌥️ Shade Level on P{shadedPanel + 1}</span>
-                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{shadeLevel}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shadeLevel}
-                  onChange={(e) => setShadeLevel(parseInt(e.target.value))}
-                  onInput={(e) => setShadeLevel(parseInt((e.target as HTMLInputElement).value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Clear shading button */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <button
-                onClick={() => setShadedPanel(null)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                }}
-              >
-                Clear Shading
-              </button>
-            </div>
-
-            {/* Stats */}
+            {/* Side-by-side layout */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{output.power.toFixed(0)}W</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Output Power</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.textMuted }}>{maxPower}W</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Max Possible</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: efficiency > 90 ? colors.success : efficiency > 70 ? colors.warning : colors.error
-                }}>
-                  {efficiency.toFixed(0)}%
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <CircuitDiagram showCurrentFlow={true} />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                {renderLegend()}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Shade level slider */}
+                {shadedPanel !== null && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>🌥️ Shade Level on P{shadedPanel + 1}</span>
+                      <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{shadeLevel}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={shadeLevel}
+                      onChange={(e) => setShadeLevel(parseInt(e.target.value))}
+                      onInput={(e) => setShadeLevel(parseInt((e.target as HTMLInputElement).value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y',
+                      WebkitAppearance: 'none',
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Clear shading button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <button
+                    onClick={() => setShadedPanel(null)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.border}`,
+                      background: 'transparent',
+                      color: colors.textSecondary,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    Clear Shading
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.success }}>{output.power.toFixed(0)}W</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Output Power</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.textMuted }}>{maxPower}W</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Max Possible</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                    gridColumn: 'span 2',
+                  }}>
+                    <div style={{
+                      ...typo.h3,
+                      color: efficiency > 90 ? colors.success : efficiency > 70 ? colors.warning : colors.error
+                    }}>
+                      {efficiency.toFixed(0)}%
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

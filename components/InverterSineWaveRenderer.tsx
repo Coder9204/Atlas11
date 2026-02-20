@@ -1127,85 +1127,84 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             </p>
           </div>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '16px',
-            marginBottom: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <InverterVisualization interactive={true} />
-          </div>
-
-          {/* Control sliders */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            {/* DC Voltage slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>DC Input Voltage</span>
-                <span style={{ ...typo.small, color: colors.dc, fontWeight: 600 }}>{dcVoltage}V</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="600"
-                step="10"
-                value={dcVoltage}
-                onChange={(e) => setDcVoltage(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>100V (Low)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>600V (Grid-Tied)</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '16px',
+                marginBottom: '24px',
+              }}>
+                <InverterVisualization interactive={true} />
               </div>
             </div>
-
-            {/* PWM Frequency slider (only for PWM mode) */}
-            {waveformType === 'pwm' && (
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>PWM Switching Frequency</span>
-                  <span style={{ ...typo.small, color: colors.pwm, fontWeight: 600 }}>{pwmFrequency}kHz</span>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Control sliders */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '24px',
+              }}>
+                {/* DC Voltage slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>DC Input</span>
+                    <span style={{ ...typo.small, color: colors.dc, fontWeight: 600 }}>{dcVoltage}V</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="100"
+                    max="600"
+                    step="10"
+                    value={dcVoltage}
+                    onChange={(e) => setDcVoltage(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  step="1"
-                  value={pwmFrequency}
-                  onChange={(e) => setPwmFrequency(parseInt(e.target.value))}
-                  style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>5kHz (Large filter)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>50kHz (Small filter)</span>
-                </div>
-              </div>
-            )}
 
-            {/* Output frequency */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Output Frequency</span>
-                <span style={{ ...typo.small, color: colors.ac, fontWeight: 600 }}>{frequency}Hz</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="60"
-                step="10"
-                value={frequency}
-                onChange={(e) => setFrequency(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>50Hz (Europe/Asia)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>60Hz (Americas)</span>
+                {/* PWM Frequency slider (only for PWM mode) */}
+                {waveformType === 'pwm' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>PWM Freq</span>
+                      <span style={{ ...typo.small, color: colors.pwm, fontWeight: 600 }}>{pwmFrequency}kHz</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="50"
+                      step="1"
+                      value={pwmFrequency}
+                      onChange={(e) => setPwmFrequency(parseInt(e.target.value))}
+                      style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                )}
+
+                {/* Output frequency */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Output</span>
+                    <span style={{ ...typo.small, color: colors.ac, fontWeight: 600 }}>{frequency}Hz</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="60"
+                    step="10"
+                    value={frequency}
+                    onChange={(e) => setFrequency(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1468,56 +1467,66 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
             See how harmonics cause motor overheating
           </p>
 
-          {/* Motor visualization */}
-          <MotorVisualization />
-
-          {/* Waveform selector */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Inverter Type</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {(['square', 'modified', 'pwm'] as const).map(type => (
-                  <button
-                    key={type}
-                    onClick={() => { playSound('click'); setWaveformType(type); }}
-                    style={{
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      border: waveformType === type ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                      background: waveformType === type ? `${colors.accent}22` : 'transparent',
-                      color: waveformType === type ? colors.accent : colors.textPrimary,
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      flex: 1,
-                    }}
-                  >
-                    {type === 'square' ? 'Square Wave' : type === 'modified' ? 'Modified Sine' : 'Pure Sine'}
-                  </button>
-                ))}
-              </div>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <MotorVisualization />
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Waveform selector */}
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Inverter Type</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {(['square', 'modified', 'pwm'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => { playSound('click'); setWaveformType(type); }}
+                        style={{
+                          padding: '10px 20px',
+                          borderRadius: '8px',
+                          border: waveformType === type ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                          background: waveformType === type ? `${colors.accent}22` : 'transparent',
+                          color: waveformType === type ? colors.accent : colors.textPrimary,
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {type === 'square' ? 'Square Wave' : type === 'modified' ? 'Modified Sine' : 'Pure Sine'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Motor load slider */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Motor Load</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{motorLoad}%</span>
+                {/* Motor load slider */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Motor Load</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{motorLoad}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={motorLoad}
+                    onChange={(e) => setMotorLoad(parseInt(e.target.value))}
+                    style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={motorLoad}
-                onChange={(e) => setMotorLoad(parseInt(e.target.value))}
-                style={{ width: '100%', height: '20px', cursor: 'pointer', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
             </div>
           </div>
 

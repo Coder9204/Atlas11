@@ -1513,6 +1513,15 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </h2>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* INTERACTIVE GRAPHIC */}
             <div style={{
               width: '100%',
@@ -1542,7 +1551,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                 This effect matters in real-world applications: paints, inks, and biological fluids all use shear-thinning to work properly.
               </p>
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Controls */}
             <div style={{
               background: colors.bgCard,
@@ -1612,6 +1622,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                   {isShaking ? '🫨 Shaking...' : '🍅 Hold to Shake'}
                 </button>
               </div>
+            </div>
+            </div>
             </div>
 
             {/* What's Happening */}
@@ -2013,12 +2025,21 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               </h2>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Comparison visualization */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gridTemplateColumns: '1fr 1fr',
               gap: '20px',
-              marginBottom: '24px'
             }}>
               {/* Ketchup */}
               <div style={{
@@ -2062,7 +2083,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                 </div>
               </div>
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Explanation */}
             <div style={{
               background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.warning}10 100%)`,
@@ -2081,6 +2103,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                 <br /><br />
                 Warm honey? Thinner. Cold honey? Thicker. But stirred honey? <strong>Same viscosity.</strong>
               </p>
+            </div>
+            </div>
             </div>
 
             {/* SVG comparison chart */}

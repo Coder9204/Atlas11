@@ -1026,10 +1026,20 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <ThermalIVVisualization showComparison={true} temp={temperature} irr={irradiance} />
               </div>
-
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Temperature slider */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1063,7 +1073,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               {/* Power output display */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '16px',
               }}>
                 <div style={{
@@ -1100,6 +1110,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
                   </div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>Thermal Effect</div>
                 </div>
+              </div>
+              </div>
               </div>
             </div>
 
@@ -1452,11 +1464,21 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Cooling visualization */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <CoolingVisualization panelTemp={panelTemp} airflowPct={airflow} />
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             <div style={{
               background: colors.bgCard,
               borderRadius: '16px',
@@ -1565,6 +1587,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
                   </span>
                 </div>
               )}
+            </div>
+            </div>
             </div>
 
             <button

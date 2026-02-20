@@ -302,6 +302,13 @@ const testQuestions = [
 
 const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>('hook');
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -715,161 +722,173 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               Drag Force vs Velocity Chart
             </p>
 
-            {/* SVG chart */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg viewBox={`0 0 ${chartW} ${chartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
-                <defs>
-                  <linearGradient id="dragGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
-                  </linearGradient>
-                  <linearGradient id="areaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
-                  </linearGradient>
-                  <radialGradient id="pointGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#fff" />
-                    <stop offset="100%" stopColor="#ef4444" />
-                  </radialGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                  <filter id="chartShadow">
-                    <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
-                  </filter>
-                </defs>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* SVG chart */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <svg viewBox={`0 0 ${chartW} ${chartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
+                    <defs>
+                      <linearGradient id="dragGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
+                      </linearGradient>
+                      <linearGradient id="areaGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                      </linearGradient>
+                      <radialGradient id="pointGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#fff" />
+                        <stop offset="100%" stopColor="#ef4444" />
+                      </radialGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                      <filter id="chartShadow">
+                        <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
+                      </filter>
+                    </defs>
 
-                {/* Background */}
-                <rect x="0" y="0" width={chartW} height={chartH + 60} fill={colors.bgCard} rx="12" />
+                    {/* Background */}
+                    <rect x="0" y="0" width={chartW} height={chartH + 60} fill={colors.bgCard} rx="12" />
 
-                {/* Grid lines */}
-                <g>
-                  {[0, 1, 2, 3, 4, 5].map(i => {
-                    const gy = chartTop + (i / 5) * chartH;
-                    return <line key={`hg${i}`} x1={chartLeft} y1={gy} x2={chartW - 10} y2={gy} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
-                  })}
-                  {[0, 1, 2, 3, 4].map(i => {
-                    const gx = chartLeft + (i / 4) * (chartW - chartLeft - 10);
-                    return <line key={`vg${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartTop + chartH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
-                  })}
-                </g>
+                    {/* Grid lines */}
+                    <g>
+                      {[0, 1, 2, 3, 4, 5].map(i => {
+                        const gy = chartTop + (i / 5) * chartH;
+                        return <line key={`hg${i}`} x1={chartLeft} y1={gy} x2={chartW - 10} y2={gy} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
+                      })}
+                      {[0, 1, 2, 3, 4].map(i => {
+                        const gx = chartLeft + (i / 4) * (chartW - chartLeft - 10);
+                        return <line key={`vg${i}`} x1={gx} y1={chartTop} x2={gx} y2={chartTop + chartH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
+                      })}
+                    </g>
 
-                {/* Axes */}
-                <g>
-                  <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartTop + chartH} stroke={colors.textSecondary} strokeWidth="2" />
-                  <line x1={chartLeft} y1={chartTop + chartH} x2={chartW - 10} y2={chartTop + chartH} stroke={colors.textSecondary} strokeWidth="2" />
-                </g>
+                    {/* Axes */}
+                    <g>
+                      <line x1={chartLeft} y1={chartTop} x2={chartLeft} y2={chartTop + chartH} stroke={colors.textSecondary} strokeWidth="2" />
+                      <line x1={chartLeft} y1={chartTop + chartH} x2={chartW - 10} y2={chartTop + chartH} stroke={colors.textSecondary} strokeWidth="2" />
+                    </g>
 
-                {/* Axis labels */}
-                <text x="12" y={chartTop + chartH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${chartTop + chartH / 2})`}>F (N)</text>
-                <text x={(chartLeft + chartW - 10) / 2} y={chartTop + chartH + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Velocity (m/s)</text>
+                    {/* Axis labels */}
+                    <text x="12" y={chartTop + chartH / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, 12, ${chartTop + chartH / 2})`}>F (N)</text>
+                    <text x={(chartLeft + chartW - 10) / 2} y={chartTop + chartH + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Velocity (m/s)</text>
 
-                {/* Tick labels */}
-                <g>
-                  <text x={chartLeft - 4} y={chartTop + 5} fill={colors.textSecondary} fontSize="11" textAnchor="end">{maxDrag.toFixed(0)}</text>
-                  <text x={chartLeft - 4} y={chartTop + chartH * 0.5} fill={colors.textSecondary} fontSize="11" textAnchor="end">{(maxDrag * 0.5).toFixed(0)}</text>
-                  <text x={chartLeft - 4} y={chartTop + chartH - 2} fill={colors.textSecondary} fontSize="11" textAnchor="end">0</text>
-                </g>
-                <g>
-                  <text x={chartLeft} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">0</text>
-                  <text x={chartLeft + (chartW - chartLeft - 10) / 2} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">{(maxV / 2).toFixed(0)}</text>
-                  <text x={chartW - 10} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">{maxV}</text>
-                </g>
+                    {/* Tick labels */}
+                    <g>
+                      <text x={chartLeft - 4} y={chartTop + 5} fill={colors.textSecondary} fontSize="11" textAnchor="end">{maxDrag.toFixed(0)}</text>
+                      <text x={chartLeft - 4} y={chartTop + chartH * 0.5} fill={colors.textSecondary} fontSize="11" textAnchor="end">{(maxDrag * 0.5).toFixed(0)}</text>
+                      <text x={chartLeft - 4} y={chartTop + chartH - 2} fill={colors.textSecondary} fontSize="11" textAnchor="end">0</text>
+                    </g>
+                    <g>
+                      <text x={chartLeft} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">0</text>
+                      <text x={chartLeft + (chartW - chartLeft - 10) / 2} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">{(maxV / 2).toFixed(0)}</text>
+                      <text x={chartW - 10} y={chartTop + chartH + 18} fill={colors.textSecondary} fontSize="11" textAnchor="middle">{maxV}</text>
+                    </g>
 
-                {/* Curve */}
-                <g filter="url(#chartShadow)">
-                  <path d={curvePath} fill="none" stroke={colors.dragForce} strokeWidth="3" />
-                </g>
+                    {/* Curve */}
+                    <g filter="url(#chartShadow)">
+                      <path d={curvePath} fill="none" stroke={colors.dragForce} strokeWidth="3" />
+                    </g>
 
-                {/* Area fill */}
-                <path d={`${curvePath} L ${chartW - 10} ${chartTop + chartH} L ${chartLeft} ${chartTop + chartH} Z`} fill="url(#dragGrad)" />
+                    {/* Area fill */}
+                    <path d={`${curvePath} L ${chartW - 10} ${chartTop + chartH} L ${chartLeft} ${chartTop + chartH} Z`} fill="url(#dragGrad)" />
 
-                {/* Interactive point */}
-                <circle cx={ptX} cy={ptY} r={8} fill={colors.dragForce} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+                    {/* Interactive point */}
+                    <circle cx={ptX} cy={ptY} r={8} fill={colors.dragForce} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
 
-                {/* Value label at point */}
-                <text x={ptX + 12} y={ptY - 8} fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-                  {calculatedDrag.toFixed(1)} N
-                </text>
+                    {/* Value label at point */}
+                    <text x={ptX + 12} y={ptY - 8} fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+                      {calculatedDrag.toFixed(1)} N
+                    </text>
 
-                {/* Legend */}
-                <g>
-                  <rect x={chartW - 140} y={chartTop + 5} width="12" height="12" rx="2" fill={colors.dragForce} />
-                  <text x={chartW - 124} y={chartTop + 15} fill={colors.textSecondary} fontSize="11">Drag Force Curve</text>
-                  <circle cx={chartW - 134} cy={chartTop + 32} r={5} fill={colors.dragForce} stroke="#fff" strokeWidth={1} />
-                  <text x={chartW - 124} y={chartTop + 35} fill={colors.textSecondary} fontSize="11">Current Value</text>
-                </g>
-              </svg>
-            </div>
-
-            {/* Key insight box */}
-            <div style={{ background: 'rgba(59, 130, 246, 0.08)', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.6', fontFamily, margin: 0 }}>
-                The quadratic relationship between velocity and drag means small speed increases create large force increases. At {velocity} m/s the drag force is {calculatedDrag.toFixed(1)} N, which changes dramatically as you adjust the sliders below.
-              </p>
-            </div>
-
-            {/* Data readout */}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, minWidth: '120px', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Velocity</span>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: colors.velocity, fontFamily }}>{velocity} m/s</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, minWidth: '120px', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Drag Force</span>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: colors.dragForce, fontFamily }}>{calculatedDrag.toFixed(1)} N</div>
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, minWidth: '120px', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Before vs After</span>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: colors.warning, fontFamily }}>
-                  {velocity <= 25 ? 'Low drag' : velocity <= 35 ? 'Medium drag' : 'High drag'}
+                    {/* Legend */}
+                    <g>
+                      <rect x={chartW - 140} y={chartTop + 5} width="12" height="12" rx="2" fill={colors.dragForce} />
+                      <text x={chartW - 124} y={chartTop + 15} fill={colors.textSecondary} fontSize="11">Drag Force Curve</text>
+                      <circle cx={chartW - 134} cy={chartTop + 32} r={5} fill={colors.dragForce} stroke="#fff" strokeWidth={1} />
+                      <text x={chartW - 124} y={chartTop + 35} fill={colors.textSecondary} fontSize="11">Current Value</text>
+                    </g>
+                  </svg>
                 </div>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Key insight box */}
+                <div style={{ background: 'rgba(59, 130, 246, 0.08)', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                  <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.6', fontFamily, margin: 0 }}>
+                    The quadratic relationship between velocity and drag means small speed increases create large force increases. At {velocity} m/s the drag force is {calculatedDrag.toFixed(1)} N, which changes dramatically as you adjust the sliders below.
+                  </p>
+                </div>
 
-            {/* Sliders */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
-                  Velocity: {velocity} m/s
-                </label>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  value={velocity}
-                  onChange={(e) => setVelocity(Number(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
-                  Surface Area: {surfaceArea.toFixed(1)} m²
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.5"
-                  step="0.1"
-                  value={surfaceArea}
-                  onChange={(e) => setSurfaceArea(Number(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
-              </div>
-              <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
-                  Drag Coefficient: {dragCoefficient.toFixed(1)}
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.5"
-                  step="0.1"
-                  value={dragCoefficient}
-                  onChange={(e) => setDragCoefficient(Number(e.target.value))}
-                  style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-                />
+                {/* Data readout */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                    <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Velocity</span>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: colors.velocity, fontFamily }}>{velocity} m/s</div>
+                  </div>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+                    <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Drag Force</span>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: colors.dragForce, fontFamily }}>{calculatedDrag.toFixed(1)} N</div>
+                  </div>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '12px 16px', border: `1px solid ${colors.border}`, textAlign: 'center', gridColumn: '1 / -1' }}>
+                    <span style={{ fontSize: '12px', color: colors.textSecondary, fontFamily }}>Before vs After</span>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: colors.warning, fontFamily }}>
+                      {velocity <= 25 ? 'Low drag' : velocity <= 35 ? 'Medium drag' : 'High drag'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sliders */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
+                      Velocity: {velocity} m/s
+                    </label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="50"
+                      value={velocity}
+                      onChange={(e) => setVelocity(Number(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
+                      Surface Area: {surfaceArea.toFixed(1)} m²
+                    </label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.5"
+                      step="0.1"
+                      value={surfaceArea}
+                      onChange={(e) => setSurfaceArea(Number(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                  <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                    <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
+                      Drag Coefficient: {dragCoefficient.toFixed(1)}
+                    </label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.5"
+                      step="0.1"
+                      value={dragCoefficient}
+                      onChange={(e) => setDragCoefficient(Number(e.target.value))}
+                      style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1160,70 +1179,82 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               v_terminal = √(2mg / ρ × Cd × A)
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg viewBox={`0 0 ${tvChartW} ${tvChartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
-                <defs>
-                  <linearGradient id="tvGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.05" />
-                  </linearGradient>
-                  <filter id="tvGlow">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                  <svg viewBox={`0 0 ${tvChartW} ${tvChartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
+                    <defs>
+                      <linearGradient id="tvGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.05" />
+                      </linearGradient>
+                      <filter id="tvGlow">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                    </defs>
 
-                <rect x="0" y="0" width={tvChartW} height={tvChartH + 60} fill={colors.bgCard} rx="12" />
+                    <rect x="0" y="0" width={tvChartW} height={tvChartH + 60} fill={colors.bgCard} rx="12" />
 
-                {/* Grid */}
-                <g>
-                  {[0, 1, 2, 3, 4, 5].map(i => {
-                    const gy = tvTop + (i / 5) * tvChartH;
-                    return <line key={`hg${i}`} x1={tvLeft} y1={gy} x2={tvChartW - 10} y2={gy} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
-                  })}
-                  {[0, 1, 2, 3, 4].map(i => {
-                    const gx = tvLeft + (i / 4) * (tvChartW - tvLeft - 10);
-                    return <line key={`vg${i}`} x1={gx} y1={tvTop} x2={gx} y2={tvTop + tvChartH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
-                  })}
-                </g>
+                    {/* Grid */}
+                    <g>
+                      {[0, 1, 2, 3, 4, 5].map(i => {
+                        const gy = tvTop + (i / 5) * tvChartH;
+                        return <line key={`hg${i}`} x1={tvLeft} y1={gy} x2={tvChartW - 10} y2={gy} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
+                      })}
+                      {[0, 1, 2, 3, 4].map(i => {
+                        const gx = tvLeft + (i / 4) * (tvChartW - tvLeft - 10);
+                        return <line key={`vg${i}`} x1={gx} y1={tvTop} x2={gx} y2={tvTop + tvChartH} stroke={colors.border} strokeDasharray="4 4" opacity="0.3" />;
+                      })}
+                    </g>
 
-                {/* Axes */}
-                <g>
-                  <line x1={tvLeft} y1={tvTop} x2={tvLeft} y2={tvTop + tvChartH} stroke={colors.textSecondary} strokeWidth="2" />
-                  <line x1={tvLeft} y1={tvTop + tvChartH} x2={tvChartW - 10} y2={tvTop + tvChartH} stroke={colors.textSecondary} strokeWidth="2" />
-                </g>
+                    {/* Axes */}
+                    <g>
+                      <line x1={tvLeft} y1={tvTop} x2={tvLeft} y2={tvTop + tvChartH} stroke={colors.textSecondary} strokeWidth="2" />
+                      <line x1={tvLeft} y1={tvTop + tvChartH} x2={tvChartW - 10} y2={tvTop + tvChartH} stroke={colors.textSecondary} strokeWidth="2" />
+                    </g>
 
-                <text x="15" y={tvTop + tvChartH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${tvTop + tvChartH / 2})`}>Terminal V (m/s)</text>
-                <text x={(tvLeft + tvChartW - 10) / 2} y={tvTop + tvChartH + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Mass (kg)</text>
+                    <text x="15" y={tvTop + tvChartH / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${tvTop + tvChartH / 2})`}>Terminal V (m/s)</text>
+                    <text x={(tvLeft + tvChartW - 10) / 2} y={tvTop + tvChartH + 40} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Mass (kg)</text>
 
-                <path d={tvCurvePath} fill="none" stroke={colors.warning} strokeWidth="3" />
-                <circle cx={tvPtX} cy={tvPtY} r={8} fill={colors.warning} filter="url(#tvGlow)" stroke="#fff" strokeWidth={2} />
-                <text x={tvPtX + 12} y={tvPtY - 8} fill={colors.textPrimary} fontSize="12" fontWeight="bold">{twistTerminalV.toFixed(1)} m/s</text>
-              </svg>
-            </div>
+                    <path d={tvCurvePath} fill="none" stroke={colors.warning} strokeWidth="3" />
+                    <circle cx={tvPtX} cy={tvPtY} r={8} fill={colors.warning} filter="url(#tvGlow)" stroke="#fff" strokeWidth={2} />
+                    <text x={tvPtX + 12} y={tvPtY - 8} fill={colors.textPrimary} fontSize="12" fontWeight="bold">{twistTerminalV.toFixed(1)} m/s</text>
+                  </svg>
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Slider */}
+                <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
+                    Mass: {twistMass} kg
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="120"
+                    value={twistMass}
+                    onChange={(e) => setTwistMass(Number(e.target.value))}
+                    style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
+                  />
+                </div>
 
-            {/* Slider */}
-            <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-              <label style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, fontFamily, display: 'block', marginBottom: '8px' }}>
-                Mass: {twistMass} kg
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="120"
-                value={twistMass}
-                onChange={(e) => setTwistMass(Number(e.target.value))}
-                style={{ width: '100%', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none', accentColor: '#3b82f6' }}
-              />
-            </div>
-
-            <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.5', fontFamily }}>
-                <span style={{ color: colors.success, fontWeight: 700 }}>Spread eagle (large area):</span> Lower terminal velocity (~55 m/s)
-              </p>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.5', fontFamily, marginTop: '4px' }}>
-                <span style={{ color: colors.warning, fontWeight: 700 }}>Tucked (small area):</span> Higher terminal velocity (~70 m/s)
-              </p>
+                <div style={{ background: colors.bgCard, borderRadius: '10px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                  <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.5', fontFamily }}>
+                    <span style={{ color: colors.success, fontWeight: 700 }}>Spread eagle (large area):</span> Lower terminal velocity (~55 m/s)
+                  </p>
+                  <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: '1.5', fontFamily, marginTop: '4px' }}>
+                    <span style={{ color: colors.warning, fontWeight: 700 }}>Tucked (small area):</span> Higher terminal velocity (~70 m/s)
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

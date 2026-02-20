@@ -854,194 +854,202 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             Watch for the action-reaction force arrows. Understanding these forces is essential for rocket propulsion, swimming, and countless real-world applications.
           </p>
 
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
-              <defs>
-                <radialGradient id="balloonGrad" cx="35%" cy="35%" r="65%">
-                  <stop offset="0%" stopColor="#fca5a5" />
-                  <stop offset="50%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#b91c1c" />
-                </radialGradient>
-                <linearGradient id="trackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#374151" />
-                  <stop offset="50%" stopColor="#6b7280" />
-                  <stop offset="100%" stopColor="#374151" />
-                </linearGradient>
-                <linearGradient id="actionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22d3ee" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-                <linearGradient id="reactionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#fb923c" />
-                  <stop offset="100%" stopColor="#f97316" />
-                </linearGradient>
-                <filter id="glowFilter">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <filter id="shadowFilter">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
-                </filter>
-                <radialGradient id="particleGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-                </radialGradient>
-              </defs>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
+                  <defs>
+                    <radialGradient id="balloonGrad" cx="35%" cy="35%" r="65%">
+                      <stop offset="0%" stopColor="#fca5a5" />
+                      <stop offset="50%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#b91c1c" />
+                    </radialGradient>
+                    <linearGradient id="trackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#374151" />
+                      <stop offset="50%" stopColor="#6b7280" />
+                      <stop offset="100%" stopColor="#374151" />
+                    </linearGradient>
+                    <linearGradient id="actionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#22d3ee" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                    <linearGradient id="reactionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#fb923c" />
+                      <stop offset="100%" stopColor="#f97316" />
+                    </linearGradient>
+                    <filter id="glowFilter">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="shadowFilter">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+                    </filter>
+                    <radialGradient id="particleGrad" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                      <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
 
-              {/* Background */}
-              <g>
-                <rect width="700" height="200" fill="#030712" />
-                <rect x="0" y="180" width="700" height="20" fill="#111827" />
-              </g>
+                  {/* Background */}
+                  <g>
+                    <rect width="700" height="200" fill="#030712" />
+                    <rect x="0" y="180" width="700" height="20" fill="#111827" />
+                  </g>
 
-              {/* Track */}
-              <g filter="url(#shadowFilter)">
-                <rect x="40" y="95" width="640" height="8" rx="4" fill="url(#trackGrad)" />
-                <line x1="40" y1="103" x2="680" y2="103" stroke="#1f2937" strokeWidth="1" />
-              </g>
+                  {/* Track */}
+                  <g filter="url(#shadowFilter)">
+                    <rect x="40" y="95" width="640" height="8" rx="4" fill="url(#trackGrad)" />
+                    <line x1="40" y1="103" x2="680" y2="103" stroke="#1f2937" strokeWidth="1" />
+                  </g>
 
-              {/* Grid lines */}
-              {[0, 100, 200, 300, 400, 500, 600].map(d => (
-                <line key={`grid-${d}`} x1={50 + d} y1="30" x2={50 + d} y2="105" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
-              ))}
+                  {/* Grid lines */}
+                  {[0, 100, 200, 300, 400, 500, 600].map(d => (
+                    <line key={`grid-${d}`} x1={50 + d} y1="30" x2={50 + d} y2="105" stroke="#4b5563" strokeDasharray="4 4" opacity="0.3" />
+                  ))}
 
-              {/* Distance markers */}
-              {[0, 100, 200, 300, 400, 500, 600].map(d => (
-                <g key={d}>
-                  <line x1={50 + d} y1="110" x2={50 + d} y2="125" stroke="#4b5563" strokeWidth="2" />
-                  <text x={50 + d} y="145" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
-                </g>
-              ))}
-              <text x="350" y="170" textAnchor="middle" fill="#64748b" fontSize="11">DISTANCE (cm)</text>
+                  {/* Distance markers */}
+                  {[0, 100, 200, 300, 400, 500, 600].map(d => (
+                    <g key={d}>
+                      <line x1={50 + d} y1="110" x2={50 + d} y2="125" stroke="#4b5563" strokeWidth="2" />
+                      <text x={50 + d} y="145" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
+                    </g>
+                  ))}
+                  <text x="350" y="170" textAnchor="middle" fill="#64748b" fontSize="11">DISTANCE (cm)</text>
 
-              {/* Air particles */}
-              {airParticles.map(p => (
-                <circle key={p.id} cx={p.x} cy={p.y} r={2 + (p.life / 30) * 3} fill="#67e8f9" opacity={p.life / 30} />
-              ))}
+                  {/* Air particles */}
+                  {airParticles.map(p => (
+                    <circle key={p.id} cx={p.x} cy={p.y} r={2 + (p.life / 30) * 3} fill="#67e8f9" opacity={p.life / 30} />
+                  ))}
 
-              {/* Balloon */}
-              <g transform={`translate(${balloonX}, 100)`}>
-                <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="url(#balloonGrad)" />
-                <rect x={-12} y={-displaySize * 0.5} width={12} height={displaySize} fill="#dc2626" rx="2" />
+                  {/* Balloon */}
+                  <g transform={`translate(${balloonX}, 100)`}>
+                    <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="url(#balloonGrad)" />
+                    <rect x={-12} y={-displaySize * 0.5} width={12} height={displaySize} fill="#dc2626" rx="2" />
 
-                {/* Force arrows when launched */}
-                {isLaunched && airRemaining > 0 && (
-                  <>
-                    <line x1="-20" y1="0" x2={-35 - forceMagnitude} y2="0" stroke="#22d3ee" strokeWidth="4" markerEnd="url(#arrowBlue)" />
-                    <text x="-45" y="-15" textAnchor="middle" fill="#22d3ee" fontSize="11">ACTION</text>
-                    <line x1={displaySize + 15} y1="0" x2={displaySize + 30 + forceMagnitude} y2="0" stroke="#fb923c" strokeWidth="4" markerEnd="url(#arrowOrange)" />
-                    <text x={displaySize + 45} y="-15" textAnchor="middle" fill="#fb923c" fontSize="11">REACTION</text>
-                  </>
-                )}
-              </g>
+                    {/* Force arrows when launched */}
+                    {isLaunched && airRemaining > 0 && (
+                      <>
+                        <line x1="-20" y1="0" x2={-35 - forceMagnitude} y2="0" stroke="#22d3ee" strokeWidth="4" markerEnd="url(#arrowBlue)" />
+                        <text x="-45" y="-15" textAnchor="middle" fill="#22d3ee" fontSize="11">ACTION</text>
+                        <line x1={displaySize + 15} y1="0" x2={displaySize + 30 + forceMagnitude} y2="0" stroke="#fb923c" strokeWidth="4" markerEnd="url(#arrowOrange)" />
+                        <text x={displaySize + 45} y="-15" textAnchor="middle" fill="#fb923c" fontSize="11">REACTION</text>
+                      </>
+                    )}
+                  </g>
 
-              {/* Force magnitude curve */}
-              <path d={`M50,${180 - forceMagnitude * 3} Q200,${120 - forceMagnitude * 8} 350,${20 + forceMagnitude * 5} Q500,${120 - forceMagnitude * 8} 650,${180 - forceMagnitude * 3}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
+                  {/* Force magnitude curve */}
+                  <path d={`M50,${180 - forceMagnitude * 3} Q200,${120 - forceMagnitude * 8} 350,${20 + forceMagnitude * 5} Q500,${120 - forceMagnitude * 8} 650,${180 - forceMagnitude * 3}`} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.4" />
 
-              {/* Educational labels */}
-              <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
-              <text x={balloonX + 10} y="68" textAnchor="middle" fill="#fca5a5" fontSize="11">Balloon</text>
-              <text x="60" y="86" fill="#9ca3af" fontSize="11">Launch Track</text>
+                  {/* Educational labels */}
+                  <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
+                  <text x={balloonX + 10} y="68" textAnchor="middle" fill="#fca5a5" fontSize="11">Balloon</text>
+                  <text x="60" y="86" fill="#9ca3af" fontSize="11">Launch Track</text>
 
-              {/* Equation */}
-              <text x="350" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontFamily="monospace">
-                F = -F&#x2032; (Action-Reaction)
-              </text>
-            </svg>
-          </div>
-
-          {/* Controls */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Balloon Size</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{balloonSize}%</span>
+                  {/* Equation */}
+                  <text x="350" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontFamily="monospace">
+                    F = -F&#x2032; (Action-Reaction)
+                  </text>
+                </svg>
               </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                value={balloonSize}
-                onChange={(e) => setBalloonSize(parseInt(e.target.value))}
-                disabled={isLaunched}
-                style={{
-                  width: '100%',
-                  cursor: isLaunched ? 'not-allowed' : 'pointer',
-                  height: '20px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${(balloonSize - 20) / 0.8}%, ${colors.border} ${(balloonSize - 20) / 0.8}%)`,
-                  WebkitAppearance: 'none' as const,
-                  touchAction: 'pan-y',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>More air = More thrust!</p>
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Balloon size slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Balloon Size</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{balloonSize}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={balloonSize}
+                    onChange={(e) => setBalloonSize(parseInt(e.target.value))}
+                    disabled={isLaunched}
+                    style={{
+                      width: '100%',
+                      cursor: isLaunched ? 'not-allowed' : 'pointer',
+                      height: '20px',
+                      borderRadius: '4px',
+                      background: `linear-gradient(to right, ${colors.accent} ${(balloonSize - 20) / 0.8}%, ${colors.border} ${(balloonSize - 20) / 0.8}%)`,
+                      WebkitAppearance: 'none' as const,
+                      touchAction: 'pan-y',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                  <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>More air = More thrust!</p>
+                </div>
 
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Distance Traveled</div>
-              <div style={{ ...typo.h2, color: colors.accent }}>{Math.round(balloonX - 80)} cm</div>
-              <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>Air: {Math.round(airRemaining)}%</div>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
-            <button
-              onClick={() => { if (!isLaunched) { playSound('click'); setIsLaunched(true); } }}
-              disabled={isLaunched}
-              style={{
-                ...primaryButtonStyle,
-                background: isLaunched ? colors.border : primaryButtonStyle.background,
-                cursor: isLaunched ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {isLaunched ? '🎈 Launched!' : '🚀 Launch Balloon!'}
-            </button>
-
-            {isLaunched && (
-              <button
-                onClick={() => {
-                  setBalloonX(80);
-                  setIsLaunched(false);
-                  setAirRemaining(100);
-                  setAirParticles([]);
-                }}
-                style={{
-                  padding: '14px 28px',
+                {/* Distance display */}
+                <div style={{
+                  background: colors.bgSecondary,
                   borderRadius: '12px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                🔄 Reset
-              </button>
-            )}
+                  padding: '16px',
+                  textAlign: 'center',
+                  marginBottom: '20px',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Distance Traveled</div>
+                  <div style={{ ...typo.h2, color: colors.accent }}>{Math.round(balloonX - 80)} cm</div>
+                  <div style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>Air: {Math.round(airRemaining)}%</div>
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button
+                    onClick={() => { if (!isLaunched) { playSound('click'); setIsLaunched(true); } }}
+                    disabled={isLaunched}
+                    style={{
+                      ...primaryButtonStyle,
+                      background: isLaunched ? colors.border : primaryButtonStyle.background,
+                      cursor: isLaunched ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isLaunched ? '🎈 Launched!' : '🚀 Launch!'}
+                  </button>
+
+                  {isLaunched && (
+                    <button
+                      onClick={() => {
+                        setBalloonX(80);
+                        setIsLaunched(false);
+                        setAirRemaining(100);
+                        setAirParticles([]);
+                      }}
+                      style={{
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        border: `1px solid ${colors.border}`,
+                        background: 'transparent',
+                        color: colors.textSecondary,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           <button
@@ -1284,99 +1292,113 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             Small balloon vs Large balloon - which wins?
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
-              <rect width="700" height="200" fill="#030712" />
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
+                  <rect width="700" height="200" fill="#030712" />
 
-              {/* Lane labels */}
-              <text x="25" y="55" fill="#93c5fd" fontSize="11" fontWeight="bold">SMALL</text>
-              <text x="25" y="145" fill="#fca5a5" fontSize="11" fontWeight="bold">LARGE</text>
+                  {/* Lane labels */}
+                  <text x="25" y="55" fill="#93c5fd" fontSize="11" fontWeight="bold">SMALL</text>
+                  <text x="25" y="145" fill="#fca5a5" fontSize="11" fontWeight="bold">LARGE</text>
 
-              {/* Tracks */}
-              <rect x="60" y="45" width="620" height="8" rx="4" fill="#374151" />
-              <rect x="60" y="135" width="620" height="8" rx="4" fill="#374151" />
+                  {/* Tracks */}
+                  <rect x="60" y="45" width="620" height="8" rx="4" fill="#374151" />
+                  <rect x="60" y="135" width="620" height="8" rx="4" fill="#374151" />
 
-              {/* Distance markers */}
-              {[0, 100, 200, 300, 400, 500, 600].map(d => (
-                <g key={d}>
-                  <line x1={60 + d} y1="160" x2={60 + d} y2="175" stroke="#4b5563" strokeWidth="2" />
-                  <text x={60 + d} y="190" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
-                </g>
-              ))}
+                  {/* Distance markers */}
+                  {[0, 100, 200, 300, 400, 500, 600].map(d => (
+                    <g key={d}>
+                      <line x1={60 + d} y1="160" x2={60 + d} y2="175" stroke="#4b5563" strokeWidth="2" />
+                      <text x={60 + d} y="190" textAnchor="middle" fill="#9ca3af" fontSize="11">{d}</text>
+                    </g>
+                  ))}
 
-              {/* Small balloon */}
-              <g transform={`translate(${smallBalloonX}, 50)`}>
-                <ellipse cx="10" cy="0" rx="15" ry="12" fill="#3b82f6" />
-                <rect x={-8} y={-10} width={8} height={20} fill="#1d4ed8" rx="2" />
-              </g>
+                  {/* Small balloon */}
+                  <g transform={`translate(${smallBalloonX}, 50)`}>
+                    <ellipse cx="10" cy="0" rx="15" ry="12" fill="#3b82f6" />
+                    <rect x={-8} y={-10} width={8} height={20} fill="#1d4ed8" rx="2" />
+                  </g>
 
-              {/* Large balloon */}
-              <g transform={`translate(${largeBalloonX}, 140)`}>
-                <ellipse cx="15" cy="0" rx="25" ry="20" fill="#ef4444" />
-                <rect x={-12} y={-16} width={12} height={32} fill="#b91c1c" rx="2" />
-              </g>
+                  {/* Large balloon */}
+                  <g transform={`translate(${largeBalloonX}, 140)`}>
+                    <ellipse cx="15" cy="0" rx="25" ry="20" fill="#ef4444" />
+                    <rect x={-12} y={-16} width={12} height={32} fill="#b91c1c" rx="2" />
+                  </g>
 
-              {/* Winner indicator */}
-              {(smallAir <= 0 && largeAir <= 0) && (
-                <text x="350" y="105" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
-                  {largeBalloonX > smallBalloonX ? 'LARGE WINS!' : 'SMALL WINS!'}
-                </text>
-              )}
-            </svg>
-          </div>
-
-          {/* Stats */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            <div style={{
-              background: `${colors.bgCard}`,
-              border: `1px solid #3b82f6`,
-              borderRadius: '12px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.small, color: '#3b82f6', marginBottom: '4px' }}>Small Balloon</div>
-              <div style={{ ...typo.h3, color: colors.textPrimary }}>{Math.round(smallBalloonX - 80)} cm</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Air: {Math.round(smallAir)}%</div>
+                  {/* Winner indicator */}
+                  {(smallAir <= 0 && largeAir <= 0) && (
+                    <text x="350" y="105" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
+                      {largeBalloonX > smallBalloonX ? 'LARGE WINS!' : 'SMALL WINS!'}
+                    </text>
+                  )}
+                </svg>
+              </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <button
-                onClick={() => { if (!twistLaunched) { playSound('click'); setTwistLaunched(true); } }}
-                disabled={twistLaunched}
-                style={{
-                  padding: '14px 24px',
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Small balloon stats */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  border: `1px solid #3b82f6`,
                   borderRadius: '12px',
-                  border: 'none',
-                  background: twistLaunched ? colors.border : `linear-gradient(135deg, ${colors.warning}, #D97706)`,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: twistLaunched ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {twistLaunched ? '🏁 Racing!' : '🚀 Start Race!'}
-              </button>
-            </div>
+                  padding: '12px',
+                  textAlign: 'center',
+                  marginBottom: '12px',
+                }}>
+                  <div style={{ ...typo.small, color: '#3b82f6', marginBottom: '4px' }}>Small Balloon</div>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{Math.round(smallBalloonX - 80)} cm</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Air: {Math.round(smallAir)}%</div>
+                </div>
 
-            <div style={{
-              background: `${colors.bgCard}`,
-              border: `1px solid #ef4444`,
-              borderRadius: '12px',
-              padding: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ ...typo.small, color: '#ef4444', marginBottom: '4px' }}>Large Balloon</div>
-              <div style={{ ...typo.h3, color: colors.textPrimary }}>{Math.round(largeBalloonX - 80)} cm</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Air: {Math.round(largeAir)}%</div>
+                {/* Large balloon stats */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  border: `1px solid #ef4444`,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{ ...typo.small, color: '#ef4444', marginBottom: '4px' }}>Large Balloon</div>
+                  <div style={{ ...typo.h3, color: colors.textPrimary }}>{Math.round(largeBalloonX - 80)} cm</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Air: {Math.round(largeAir)}%</div>
+                </div>
+
+                {/* Race button */}
+                <button
+                  onClick={() => { if (!twistLaunched) { playSound('click'); setTwistLaunched(true); } }}
+                  disabled={twistLaunched}
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: twistLaunched ? colors.border : `linear-gradient(135deg, ${colors.warning}, #D97706)`,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: twistLaunched ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                  }}
+                >
+                  {twistLaunched ? 'Racing!' : 'Start Race!'}
+                </button>
+              </div>
             </div>
           </div>
 

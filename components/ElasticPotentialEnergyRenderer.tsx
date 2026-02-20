@@ -1166,106 +1166,118 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         </p>
       </div>
 
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2'} gap-4 max-w-4xl w-full`}>
-        {/* Spring visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          {renderSpring(isMobile ? 300 : 350, isMobile ? 300 : 350)}
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          {/* Spring visualization */}
+          <div className="bg-slate-800/50 rounded-2xl p-4">
+            {renderSpring(isMobile ? 300 : 350, isMobile ? 300 : 350)}
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className="space-y-4">
-          {/* Spring constant slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
-              Spring Constant (k): {springConstant} N/m
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="300"
-              step="10"
-              value={springConstant}
-              onChange={(e) => {
-                setSpringConstant(parseInt(e.target.value));
-                onGameEvent?.({ type: 'parameter_changed', data: { springConstant: parseInt(e.target.value) } });
-              }}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
-              <span>Soft (50)</span>
-              <span>Stiff (300)</span>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Controls */}
+          <div className="space-y-4">
+            {/* Spring constant slider */}
+            <div className="bg-slate-800/50 rounded-xl p-4">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
+                Spring Constant (k): {springConstant} N/m
+              </label>
+              <input
+                type="range"
+                min="50"
+                max="300"
+                step="10"
+                value={springConstant}
+                onChange={(e) => {
+                  setSpringConstant(parseInt(e.target.value));
+                  onGameEvent?.({ type: 'parameter_changed', data: { springConstant: parseInt(e.target.value) } });
+                }}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
+              />
+              <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
+                <span>Soft (50)</span>
+                <span>Stiff (300)</span>
+              </div>
             </div>
-          </div>
 
-          {/* Displacement slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
-              Compression: {(displacement * 100).toFixed(0)} cm
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="30"
-              step="1"
-              value={displacement * 100}
-              onChange={(e) => {
-                setDisplacement(parseInt(e.target.value) / 100);
-                onGameEvent?.({ type: 'spring_compressed', data: { displacement: parseInt(e.target.value) / 100 } });
-              }}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
-              <span>0 cm</span>
-              <span>30 cm</span>
+            {/* Displacement slider */}
+            <div className="bg-slate-800/50 rounded-xl p-4">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#e2e8f0' }}>
+                Compression: {(displacement * 100).toFixed(0)} cm
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="30"
+                step="1"
+                value={displacement * 100}
+                onChange={(e) => {
+                  setDisplacement(parseInt(e.target.value) / 100);
+                  onGameEvent?.({ type: 'spring_compressed', data: { displacement: parseInt(e.target.value) / 100 } });
+                }}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: '#10b981' }}
+              />
+              <div className="flex justify-between text-xs mt-1" style={{ color: '#cbd5e1' }}>
+                <span>0 cm</span>
+                <span>30 cm</span>
+              </div>
             </div>
-          </div>
 
-          {/* Energy calculation */}
-          <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-emerald-400 mb-2">Energy Calculation</h3>
-            <div className="font-mono space-y-1" style={{ color: '#e2e8f0' }}>
-              <p>PE = 1/2 x k x x squared</p>
-              <p>PE = 1/2 x {springConstant} x {displacement.toFixed(2)} squared</p>
-              <p className="text-emerald-400 text-xl font-bold">PE = {elasticPE.toFixed(3)} J</p>
+            {/* Energy calculation */}
+            <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-emerald-400 mb-2">Energy Calculation</h3>
+              <div className="font-mono space-y-1" style={{ color: '#e2e8f0' }}>
+                <p>PE = 1/2 x k x x squared</p>
+                <p>PE = 1/2 x {springConstant} x {displacement.toFixed(2)} squared</p>
+                <p className="text-emerald-400 text-xl font-bold">PE = {elasticPE.toFixed(3)} J</p>
+              </div>
             </div>
-          </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => startRelease()}
-              disabled={displacement < 0.03}
-              style={{
-                flex: 1,
-                padding: '12px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                minHeight: '44px',
-                background: displacement >= 0.03 ? '#d97706' : '#475569',
-                color: displacement >= 0.03 ? '#ffffff' : '#e2e8f0',
-                border: 'none',
-                cursor: displacement >= 0.03 ? 'pointer' : 'default',
-              }}
-            >
-              Release Spring
-            </button>
-            <button
-              onClick={() => setShowEnergyBars(!showEnergyBars)}
-              style={{
-                padding: '12px 16px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                minHeight: '44px',
-                background: showEnergyBars ? '#059669' : '#475569',
-                color: '#ffffff',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Energy
-            </button>
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => startRelease()}
+                disabled={displacement < 0.03}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: '600',
+                  minHeight: '44px',
+                  background: displacement >= 0.03 ? '#d97706' : '#475569',
+                  color: displacement >= 0.03 ? '#ffffff' : '#e2e8f0',
+                  border: 'none',
+                  cursor: displacement >= 0.03 ? 'pointer' : 'default',
+                }}
+              >
+                Release Spring
+              </button>
+              <button
+                onClick={() => setShowEnergyBars(!showEnergyBars)}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontWeight: '600',
+                  minHeight: '44px',
+                  background: showEnergyBars ? '#059669' : '#475569',
+                  color: '#ffffff',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Energy
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1499,35 +1511,48 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mb-6">
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-3">Force vs. Displacement</h3>
-          <svg viewBox="0 0 200 150" className="w-full">
-            <rect width="200" height="150" fill="#0f172a" rx="8" />
-            {/* Axes */}
-            <line x1="30" y1="120" x2="180" y2="120" stroke="#64748b" strokeWidth="2" />
-            <line x1="30" y1="120" x2="30" y2="20" stroke="#64748b" strokeWidth="2" />
-            {/* Labels */}
-            <text x="105" y="140" fill="#e2e8f0" fontSize="11" textAnchor="middle">Displacement (x)</text>
-            <text x="15" y="70" fill="#e2e8f0" fontSize="11" transform="rotate(-90, 15, 70)">Force (F)</text>
-            {/* F = kx line */}
-            <line x1="30" y1="120" x2="170" y2="30" stroke="#22c55e" strokeWidth="3" />
-            <text x="130" y="50" fill="#22c55e" fontSize="11">F = kx</text>
-            {/* Shaded area (work) */}
-            <polygon points="30,120 170,120 170,30" fill="#22c55e" opacity="0.2" />
-            <text x="100" y="100" fill="#22c55e" fontSize="11" fontWeight="bold">Work = Area</text>
-          </svg>
+      {/* Side-by-side layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+        maxWidth: '900px',
+        marginBottom: '24px',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-slate-800/50 rounded-2xl p-4">
+            <h3 className="text-lg font-semibold text-cyan-400 mb-3">Force vs. Displacement</h3>
+            <svg viewBox="0 0 200 150" className="w-full">
+              <rect width="200" height="150" fill="#0f172a" rx="8" />
+              {/* Axes */}
+              <line x1="30" y1="120" x2="180" y2="120" stroke="#64748b" strokeWidth="2" />
+              <line x1="30" y1="120" x2="30" y2="20" stroke="#64748b" strokeWidth="2" />
+              {/* Labels */}
+              <text x="105" y="140" fill="#e2e8f0" fontSize="11" textAnchor="middle">Displacement (x)</text>
+              <text x="15" y="70" fill="#e2e8f0" fontSize="11" transform="rotate(-90, 15, 70)">Force (F)</text>
+              {/* F = kx line */}
+              <line x1="30" y1="120" x2="170" y2="30" stroke="#22c55e" strokeWidth="3" />
+              <text x="130" y="50" fill="#22c55e" fontSize="11">F = kx</text>
+              {/* Shaded area (work) */}
+              <polygon points="30,120 170,120 170,30" fill="#22c55e" opacity="0.2" />
+              <text x="100" y="100" fill="#22c55e" fontSize="11" fontWeight="bold">Work = Area</text>
+            </svg>
+          </div>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-purple-400 mb-3">Why x²?</h3>
-          <div className="space-y-3 text-slate-300 text-sm">
-            <p>Work = ∫F·dx from 0 to x</p>
-            <p>Since F = kx:</p>
-            <p className="font-mono bg-slate-700/50 p-2 rounded">W = ∫kx·dx = k·x²/2 = ½kx²</p>
-            <p className="text-purple-400 mt-3">
-              The area under F(x) is a triangle with base x and height kx. Area = ½ × base × height = ½kx²!
-            </p>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div className="bg-slate-800/50 rounded-2xl p-4">
+            <h3 className="text-lg font-semibold text-purple-400 mb-3">Why x²?</h3>
+            <div className="space-y-3 text-slate-300 text-sm">
+              <p>Work = ∫F·dx from 0 to x</p>
+              <p>Since F = kx:</p>
+              <p className="font-mono bg-slate-700/50 p-2 rounded">W = ∫kx·dx = k·x²/2 = ½kx²</p>
+              <p className="text-purple-400 mt-3">
+                The area under F(x) is a triangle with base x and height kx. Area = ½ × base × height = ½kx²!
+              </p>
+            </div>
           </div>
         </div>
       </div>

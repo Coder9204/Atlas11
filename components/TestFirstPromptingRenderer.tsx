@@ -1044,9 +1044,20 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <TDDVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <TDDVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Mode toggle */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
@@ -1135,6 +1146,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               >
                 Reset
               </button>
+            </div>
+              </div>
             </div>
           </div>
 
@@ -1484,9 +1497,20 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <PropertyTestVisualization />
-            </div>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <PropertyTestVisualization />
+                </div>
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Toggle property tests */}
             <div style={{ marginBottom: '20px' }}>
@@ -1541,6 +1565,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
                 />
               </div>
             )}
+              </div>
+            </div>
           </div>
 
           {/* Observation guidance */}

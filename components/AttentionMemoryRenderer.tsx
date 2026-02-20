@@ -991,91 +991,108 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             Adjust the sequence length and watch how memory grows. When you increase tokens, the attention matrix grows quadratically because every token must attend to every other token. This is why context windows have limits in real-world AI systems.
           </p>
 
-          {/* Main Chart */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderMemoryGrowthChart()}
-            </div>
-
-            {/* Sequence length slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length — controls memory density and power</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength.toLocaleString()} tokens</span>
-              </div>
-              <input
-                type="range"
-                min="128"
-                max="4096"
-                step="128"
-                value={sequenceLength}
-                onChange={handleSliderChange(setSequenceLength)}
-                onInput={handleSliderChange(setSequenceLength)}
-                style={{
-                  ...sliderStyle,
-                  background: `linear-gradient(to right, ${colors.accent} ${((sequenceLength - 128) / (4096 - 128)) * 100}%, ${colors.border} ${((sequenceLength - 128) / (4096 - 128)) * 100}%)`,
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>128</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>4096</span>
-              </div>
-            </div>
-
-            {/* Formula display */}
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <span style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '16px' }}>
-                Memory = n² × heads × 2 bytes = {sequenceLength}² × {numHeads} × 2 = {memory.attentionMemoryMB.toFixed(1)} MB
-              </span>
-            </div>
-
-            {/* Memory stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Main Chart */}
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: sequenceLength > 2048 ? colors.error : sequenceLength > 1024 ? colors.warning : colors.success }}>
-                  {memory.attentionMemoryMB.toFixed(1)} MB
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderMemoryGrowthChart()}
                 </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{(sequenceLength * sequenceLength / 1000000).toFixed(2)}M</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Matrix Entries</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>
-                  O(n²)
+
+                {/* Formula display */}
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <span style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '16px' }}>
+                    Memory = n² × heads × 2 bytes = {sequenceLength}² × {numHeads} × 2 = {memory.attentionMemoryMB.toFixed(1)} MB
+                  </span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Scaling Factor</div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Sequence length slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength.toLocaleString()} tokens</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="128"
+                    max="4096"
+                    step="128"
+                    value={sequenceLength}
+                    onChange={handleSliderChange(setSequenceLength)}
+                    onInput={handleSliderChange(setSequenceLength)}
+                    style={{
+                      ...sliderStyle,
+                      background: `linear-gradient(to right, ${colors.accent} ${((sequenceLength - 128) / (4096 - 128)) * 100}%, ${colors.border} ${((sequenceLength - 128) / (4096 - 128)) * 100}%)`,
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>128</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>4096</span>
+                  </div>
+                </div>
+
+                {/* Memory stats */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: sequenceLength > 2048 ? colors.error : sequenceLength > 1024 ? colors.warning : colors.success }}>
+                      {memory.attentionMemoryMB.toFixed(1)} MB
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{(sequenceLength * sequenceLength / 1000000).toFixed(2)}M</div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Matrix Entries</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.error }}>
+                      O(n²)
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Scaling Factor</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1292,135 +1309,152 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             Adjust heads, sequence length, and embedding dimension. When you increase heads, the head dimension decreases proportionally, so total memory stays similar. Toggle Flash Attention to see how it causes a 10x memory reduction.
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            {/* Multi-head chart */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              {renderMultiHeadChart()}
-            </div>
-
-            {/* Sliders */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length (tokens)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength} tokens</span>
-              </div>
-              <input
-                type="range"
-                min="256"
-                max="4096"
-                step="256"
-                value={sequenceLength}
-                onChange={handleSliderChange(setSequenceLength)}
-                onInput={handleSliderChange(setSequenceLength)}
-                style={sliderStyle}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Heads</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{numHeads} heads</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="32"
-                step="1"
-                value={numHeads}
-                onChange={handleSliderChange(setNumHeads)}
-                onInput={handleSliderChange(setNumHeads)}
-                style={sliderStyle}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Embedding Dimension</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{embeddingDim}</span>
-              </div>
-              <input
-                type="range"
-                min="256"
-                max="2048"
-                step="256"
-                value={embeddingDim}
-                onChange={handleSliderChange(setEmbeddingDim)}
-                onInput={handleSliderChange(setEmbeddingDim)}
-                style={sliderStyle}
-              />
-            </div>
-
-            {/* Flash Attention toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-              padding: '16px',
-              background: colors.bgSecondary,
-              borderRadius: '12px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Standard Attention</span>
-              <button
-                onClick={() => setUseFlashAttention(!useFlashAttention)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: useFlashAttention ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: useFlashAttention ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: useFlashAttention ? colors.success : colors.textSecondary, fontWeight: useFlashAttention ? 600 : 400 }}>
-                Flash Attention
-              </span>
-            </div>
-
-            {/* Stats grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{headDim}</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Head Dimension</div>
-                <div style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>(d_model / heads)</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: useFlashAttention ? colors.success : colors.error }}>
-                  {memory.attentionMemoryMB.toFixed(1)} MB
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Multi-head chart */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  {renderMultiHeadChart()}
                 </div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
-                {useFlashAttention && <div style={{ ...typo.small, color: colors.success, fontSize: '11px' }}>10x reduction!</div>}
+
+                {/* Stats grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{headDim}</div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Head Dimension</div>
+                    <div style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>(d_model / heads)</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: useFlashAttention ? colors.success : colors.error }}>
+                      {memory.attentionMemoryMB.toFixed(1)} MB
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Attention Memory</div>
+                    {useFlashAttention && <div style={{ ...typo.small, color: colors.success, fontSize: '11px' }}>10x reduction!</div>}
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.warning }}>{memory.kvCacheMB.toFixed(1)} MB</div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>KV Cache</div>
+                  </div>
+                  <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ ...typo.h3, color: colors.textPrimary }}>{memory.totalMB.toFixed(1)} MB</div>
+                    <div style={{ ...typo.small, color: colors.textSecondary }}>Total Memory</div>
+                  </div>
+                </div>
               </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{memory.kvCacheMB.toFixed(1)} MB</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>KV Cache</div>
-              </div>
-              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ ...typo.h3, color: colors.textPrimary }}>{memory.totalMB.toFixed(1)} MB</div>
-                <div style={{ ...typo.small, color: colors.textSecondary }}>Total Memory</div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Sliders */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length (tokens)</span>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength} tokens</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="256"
+                    max="4096"
+                    step="256"
+                    value={sequenceLength}
+                    onChange={handleSliderChange(setSequenceLength)}
+                    onInput={handleSliderChange(setSequenceLength)}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Heads</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{numHeads} heads</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="32"
+                    step="1"
+                    value={numHeads}
+                    onChange={handleSliderChange(setNumHeads)}
+                    onInput={handleSliderChange(setNumHeads)}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Embedding Dimension</span>
+                    <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{embeddingDim}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="256"
+                    max="2048"
+                    step="256"
+                    value={embeddingDim}
+                    onChange={handleSliderChange(setEmbeddingDim)}
+                    onInput={handleSliderChange(setEmbeddingDim)}
+                    style={sliderStyle}
+                  />
+                </div>
+
+                {/* Flash Attention toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  padding: '16px',
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Standard Attention</span>
+                  <button
+                    onClick={() => setUseFlashAttention(!useFlashAttention)}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: useFlashAttention ? colors.success : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: useFlashAttention ? '33px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                  <span style={{ ...typo.small, color: useFlashAttention ? colors.success : colors.textSecondary, fontWeight: useFlashAttention ? 600 : 400 }}>
+                    Flash Attention
+                  </span>
+                </div>
               </div>
             </div>
           </div>

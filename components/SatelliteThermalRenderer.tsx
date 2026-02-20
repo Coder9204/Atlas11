@@ -1350,37 +1350,49 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
               Control the thermal systems and watch how temperature responds. Try entering eclipse!
             </p>
 
-            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
-              {renderVisualization()}
-            </div>
-
-            {renderControls()}
-
-            <div style={{ background: 'rgba(30, 58, 95, 0.4)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '12px', padding: '16px', maxWidth: '512px', marginTop: '16px' }}>
-              <p className="text-blue-300 text-sm mb-2">
-                <strong>How it works:</strong> Changing absorptivity affects how much solar energy the satellite absorbs. Higher emissivity means it radiates heat faster. Louvers adjust how much surface area can radiate heat away.
-              </p>
-              <p className="text-blue-300 text-sm">
-                <strong>Why it matters:</strong> Real satellites use this exact physics to survive extreme space temperatures. NASA engineers carefully design thermal control systems using these principles to keep spacecraft operational for decades!
-              </p>
-            </div>
-
-            {/* Before/After comparison: sunlit vs eclipse */}
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', maxWidth: '512px', width: '100%', marginTop: '12px' }}>
-              <div style={{ flex: 1, background: 'rgba(254, 163, 64, 0.1)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                <p style={{ color: '#fbbf24', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>☀️ Sunlit Pass</p>
-                <p style={{ color: '#94a3b8', fontSize: '11px' }}>Solar heating dominates. Louvers open to radiate excess heat away to space.</p>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
+                  {renderVisualization()}
+                </div>
               </div>
-              <div style={{ flex: 1, background: 'rgba(30, 58, 95, 0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>🌑 Eclipse Pass</p>
-                <p style={{ color: '#94a3b8', fontSize: '11px' }}>No solar input. Heaters activate to prevent freezing. Louvers close to retain heat.</p>
-              </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {renderControls()}
 
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 max-w-lg mt-4">
-              <p className="text-amber-400 text-sm">
-                <strong>Try this:</strong> Put the satellite in eclipse and watch temperature drop. Then turn on heaters to compensate!
-              </p>
+                <div style={{ background: 'rgba(30, 58, 95, 0.4)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '12px', padding: '16px', marginTop: '16px' }}>
+                  <p className="text-blue-300 text-sm mb-2">
+                    <strong>How it works:</strong> Changing absorptivity affects how much solar energy the satellite absorbs. Higher emissivity means it radiates heat faster. Louvers adjust how much surface area can radiate heat away.
+                  </p>
+                  <p className="text-blue-300 text-sm">
+                    <strong>Why it matters:</strong> Real satellites use this exact physics to survive extreme space temperatures. NASA engineers carefully design thermal control systems using these principles to keep spacecraft operational for decades!
+                  </p>
+                </div>
+
+                {/* Before/After comparison: sunlit vs eclipse */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '12px' }}>
+                  <div style={{ background: 'rgba(254, 163, 64, 0.1)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                    <p style={{ color: '#fbbf24', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>☀️ Sunlit Pass</p>
+                    <p style={{ color: '#94a3b8', fontSize: '11px' }}>Solar heating dominates. Louvers open to radiate excess heat away to space.</p>
+                  </div>
+                  <div style={{ background: 'rgba(30, 58, 95, 0.3)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                    <p style={{ color: '#60a5fa', fontWeight: 700, fontSize: '12px', marginBottom: '4px' }}>🌑 Eclipse Pass</p>
+                    <p style={{ color: '#94a3b8', fontSize: '11px' }}>No solar input. Heaters activate to prevent freezing. Louvers close to retain heat.</p>
+                  </div>
+                </div>
+
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4">
+                  <p className="text-amber-400 text-sm">
+                    <strong>Try this:</strong> Put the satellite in eclipse and watch temperature drop. Then turn on heaters to compensate!
+                  </p>
+                </div>
+              </div>
             </div>
 
             <button
@@ -1536,36 +1548,48 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-4">Eclipse Survival Challenge</h2>
 
-            <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
-              {renderVisualization()}
-            </div>
-
-            <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">
-              <p className="text-slate-300 text-sm mb-3">
-                <strong className="text-purple-400">Challenge:</strong> Put the satellite in eclipse and try to keep the temperature above -20 C using heaters and louver control!
-              </p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => setInShadow(!inShadow)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold ${inShadow ? 'bg-slate-900 text-blue-400' : 'bg-yellow-600 text-white'}`}
-                >
-                  {inShadow ? 'In Eclipse' : 'In Sunlight'}
-                </button>
-                <button
-                  onClick={() => setHeatersOn(!heatersOn)}
-                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-bold ${heatersOn ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                >
-                  Heaters {heatersOn ? 'ON' : 'OFF'}
-                </button>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div className="bg-slate-800/60 rounded-2xl p-4 max-w-2xl border border-slate-700/50 mb-4">
+                  {renderVisualization()}
+                </div>
               </div>
-            </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">
+                  <p className="text-slate-300 text-sm mb-3">
+                    <strong className="text-purple-400">Challenge:</strong> Put the satellite in eclipse and try to keep the temperature above -20 C using heaters and louver control!
+                  </p>
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={() => setInShadow(!inShadow)}
+                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                      className={`px-4 py-2 rounded-lg font-bold ${inShadow ? 'bg-slate-900 text-blue-400' : 'bg-yellow-600 text-white'}`}
+                    >
+                      {inShadow ? 'In Eclipse' : 'In Sunlight'}
+                    </button>
+                    <button
+                      onClick={() => setHeatersOn(!heatersOn)}
+                      style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                      className={`px-4 py-2 rounded-lg font-bold ${heatersOn ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                    >
+                      Heaters {heatersOn ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
 
-            <div className="bg-blue-900/30 p-3 rounded-lg max-w-lg text-center">
-              <p className="text-blue-400 text-sm">
-                In LEO, satellites experience ~16 eclipses per day, each lasting up to 36 minutes!
-              </p>
+                <div className="bg-blue-900/30 p-3 rounded-lg max-w-lg text-center">
+                  <p className="text-blue-400 text-sm">
+                    In LEO, satellites experience ~16 eclipses per day, each lasting up to 36 minutes!
+                  </p>
+                </div>
+              </div>
             </div>
 
             <button

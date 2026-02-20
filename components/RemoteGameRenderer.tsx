@@ -950,52 +950,64 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
           </p>
         </div>
 
-        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-          {renderNetworkVisualization(true, false)}
-        </div>
-
-        {/* Controls */}
+        {/* Side-by-side layout */}
         <div style={{
-          padding: typo.cardPadding,
-          borderRadius: '12px',
-          backgroundColor: colors.bgCard,
-          border: `1px solid ${colors.border}`
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
         }}>
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Network Latency (Ping)</label>
-              <span style={{ fontSize: typo.small, color: latency < 50 ? colors.success : latency < 100 ? colors.warning : colors.danger, fontWeight: 700 }}>{latency}ms</span>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="200"
-              value={latency}
-              onChange={(e) => setLatency(Number(e.target.value))}
-              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
-              <span>10ms (Excellent)</span>
-              <span>200ms (Poor)</span>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+              {renderNetworkVisualization(true, false)}
             </div>
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Controls */}
+            <div style={{
+              padding: typo.cardPadding,
+              borderRadius: '12px',
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Network Latency (Ping)</label>
+                  <span style={{ fontSize: typo.small, color: latency < 50 ? colors.success : latency < 100 ? colors.warning : colors.danger, fontWeight: 700 }}>{latency}ms</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
+                  value={latency}
+                  onChange={(e) => setLatency(Number(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+                  <span>10ms (Excellent)</span>
+                  <span>200ms (Poor)</span>
+                </div>
+              </div>
 
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Server Tick Rate</label>
-              <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{tickRate}Hz</span>
-            </div>
-            <input
-              type="range"
-              min="20"
-              max="128"
-              value={tickRate}
-              onChange={(e) => setTickRate(Number(e.target.value))}
-              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
-              <span>20Hz (Sluggish)</span>
-              <span>128Hz (Responsive)</span>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Server Tick Rate</label>
+                  <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{tickRate}Hz</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="128"
+                  value={tickRate}
+                  onChange={(e) => setTickRate(Number(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.label, color: colors.textMuted }}>
+                  <span>20Hz (Sluggish)</span>
+                  <span>128Hz (Responsive)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1165,43 +1177,55 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
           </p>
         </div>
 
-        <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-          {renderNetworkVisualization(true, true)}
-        </div>
-
-        {/* Interactive controls */}
+        {/* Side-by-side layout */}
         <div style={{
-          padding: typo.cardPadding,
-          borderRadius: '12px',
-          backgroundColor: colors.bgCard,
-          border: `1px solid ${colors.border}`
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
         }}>
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Shooter's Latency</label>
-              <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{latency}ms</span>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ borderRadius: '16px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
+              {renderNetworkVisualization(true, true)}
             </div>
-            <input
-              type="range"
-              min="10"
-              max="200"
-              value={latency}
-              onChange={(e) => setLatency(Number(e.target.value))}
-              style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
-            />
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            {/* Interactive controls */}
+            <div style={{
+              padding: typo.cardPadding,
+              borderRadius: '12px',
+              backgroundColor: colors.bgCard,
+              border: `1px solid ${colors.border}`
+            }}>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Shooter's Latency</label>
+                  <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 700 }}>{latency}ms</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
+                  value={latency}
+                  onChange={(e) => setLatency(Number(e.target.value))}
+                  style={{ width: '100%', height: '20px', accentColor: '#3b82f6', touchAction: 'pan-y', WebkitAppearance: 'none', cursor: 'pointer' }}
+                />
+              </div>
 
-          <div style={{
-            padding: '12px',
-            borderRadius: '8px',
-            backgroundColor: colors.bgCardLight,
-            border: `1px solid ${colors.border}`
-          }}>
-            <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.accent }}>How it works:</strong> When a shot arrives at the server,
-              it includes a timestamp. The server "rewinds" the game state by {latency}ms to see exactly what
-              the shooter saw when they pulled the trigger. This makes hits feel fair even with high latency!
-            </p>
+              <div style={{
+                padding: '12px',
+                borderRadius: '8px',
+                backgroundColor: colors.bgCardLight,
+                border: `1px solid ${colors.border}`
+              }}>
+                <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.accent }}>How it works:</strong> When a shot arrives at the server,
+                  it includes a timestamp. The server "rewinds" the game state by {latency}ms to see exactly what
+                  the shooter saw when they pulled the trigger. This makes hits feel fair even with high latency!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>,

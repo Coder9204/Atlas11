@@ -503,7 +503,14 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
         : colors.success;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <svg
           viewBox={`0 0 ${Math.max(width, 520)} ${Math.max(height, 400)}`}
           style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '16px' }}
@@ -796,7 +803,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
           <rect x={Math.max(width, 520) - 60} y={70 + (Math.max(height, 400) - 140) * (1 - output.efficiency / 100)} width="12" height={(Math.max(height, 400) - 140) * (output.efficiency / 100)} rx="4" fill={efficiencyColor} />
           <text x={Math.max(width, 520) - 54} y="60" textAnchor="middle" fill={efficiencyColor} fontSize="11" fontWeight="600">{output.efficiency.toFixed(0)}%</text>
         </svg>
-
+        </div>
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
         {/* Controls */}
         {interactive && (
           <div style={{ width: '100%', maxWidth: width, display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -915,6 +923,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
             </div>
           </div>
         )}
+        </div>
       </div>
     );
   };

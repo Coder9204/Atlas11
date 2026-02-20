@@ -136,6 +136,14 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     return Math.sqrt(sumCos * sumCos + sumSin * sumSin) / phases.length;
   }, [metronomes, numMetronomes]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const startSimulation = () => {
     setMetronomes(prev => prev.map(m => ({ ...m, phase: Math.random() * 2 * Math.PI })));
     setIsRunning(true);
@@ -703,8 +711,35 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '800', margin: 0 }}>🔬 Experiment with Coupling!</h2>
             <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '4px' }}>Observe how increasing K causes faster synchronization</p>
           </div>
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+          <div style={{
+
+            display: 'flex',
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+            gap: isMobile ? '12px' : '20px',
+
+            width: '100%',
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+          }}>
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+              {renderVisualization()}
+
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+              {renderControls()}
+
+            </div>
+
+          </div>
           <div style={{ background: colors.bgCard, margin: '0 16px 16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '8px' }}>📐 What You're Seeing</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: '0 0 8px' }}>
@@ -807,8 +842,35 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
               Try setting coupling to 0 vs high values to verify what happens to the sync level
             </p>
           </div>
-          {renderVisualization()}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+          <div style={{
+
+            display: 'flex',
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+            gap: isMobile ? '12px' : '20px',
+
+            width: '100%',
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+          }}>
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+              {renderVisualization()}
+
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+              {renderControls()}
+
+            </div>
+
+          </div>
           <div style={{ background: colors.bgCard, margin: '0 16px 16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.accent, fontSize: '15px', marginBottom: '8px' }}>🔍 Comparison: Fixed vs Movable Platform</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

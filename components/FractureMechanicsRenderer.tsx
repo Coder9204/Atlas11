@@ -1091,127 +1091,146 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           Observe how geometry affects fracture behavior. Watch what happens when you increase stress on different defect types.
         </p>
 
-        {/* Main visualization */}
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
           marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            {renderStressVisualization()}
-          </div>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderStressVisualization()}
+              </div>
 
-          {/* Defect type selector */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
-              Defect Type:
+              {/* Formula */}
+              <div style={{
+                background: `${colors.accent}11`,
+                border: `1px solid ${colors.accent}33`,
+                borderRadius: '12px',
+                padding: '12px',
+                marginTop: '16px',
+              }}>
+                <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, textAlign: 'center', fontWeight: 600 }}>
+                  Local Stress = Kt x Applied Stress
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0', textAlign: 'center' }}>
+                  <strong style={{ color: colors.accent }}>Kt:</strong> Stress concentration factor. Sharper features = higher Kt = fracture at lower loads!
+                </p>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[
-                { id: 'none', label: 'None' },
-                { id: 'round', label: 'Round Hole' },
-                { id: 'vsharp', label: 'V-Notch' },
-                { id: 'crack', label: 'Crack' }
-              ].map(opt => (
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+            }}>
+              {/* Defect type selector */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>
+                  Defect Type:
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                  {[
+                    { id: 'none', label: 'None' },
+                    { id: 'round', label: 'Round Hole' },
+                    { id: 'vsharp', label: 'V-Notch' },
+                    { id: 'crack', label: 'Crack' }
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        playSound('click');
+                        setNotchType(opt.id as typeof notchType);
+                        setAppliedStress(30);
+                        setIsFractured(false);
+                      }}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: `2px solid ${notchType === opt.id ? colors.accent : colors.border}`,
+                        background: notchType === opt.id ? `${colors.accent}22` : 'transparent',
+                        color: notchType === opt.id ? colors.accent : colors.textSecondary,
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stress slider */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{appliedStress} MPa</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={appliedStress}
+                  onChange={(e) => setAppliedStress(parseInt(e.target.value))}
+                  disabled={isFractured}
+                  style={{
+                    ...sliderStyle,
+                    cursor: isFractured ? 'not-allowed' : 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>0</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontSize: '11px' }}>Threshold: {getFractureStress(notchType).toFixed(0)} MPa</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100</span>
+                </div>
+              </div>
+
+              {/* Reset button */}
+              {isFractured && (
                 <button
-                  key={opt.id}
                   onClick={() => {
                     playSound('click');
-                    setNotchType(opt.id as typeof notchType);
-                    setAppliedStress(30);
                     setIsFractured(false);
+                    setAppliedStress(30);
                   }}
                   style={{
-                    padding: '8px 16px',
+                    width: '100%',
+                    padding: '10px',
                     borderRadius: '8px',
-                    border: `2px solid ${notchType === opt.id ? colors.accent : colors.border}`,
-                    background: notchType === opt.id ? `${colors.accent}22` : 'transparent',
-                    color: notchType === opt.id ? colors.accent : colors.textSecondary,
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
                     cursor: 'pointer',
-                    fontWeight: 600,
-                    transition: 'all 0.2s',
+                    marginBottom: '12px',
                   }}
                 >
-                  {opt.label}
+                  Reset Experiment
                 </button>
-              ))}
-            </div>
-          </div>
+              )}
 
-          {/* Stress slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress (Force per Area)</span>
-              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{appliedStress} MPa</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={appliedStress}
-              onChange={(e) => setAppliedStress(parseInt(e.target.value))}
-              disabled={isFractured}
-              style={{
-                ...sliderStyle,
-                cursor: isFractured ? 'not-allowed' : 'pointer',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-              <span style={{ ...typo.small, color: colors.textMuted }}>0</span>
-              <span style={{ ...typo.small, color: colors.warning }}>Fracture threshold: {getFractureStress(notchType).toFixed(0)} MPa</span>
-              <span style={{ ...typo.small, color: colors.textMuted }}>100</span>
-            </div>
-          </div>
-
-          {/* Reset button */}
-          {isFractured && (
-            <button
-              onClick={() => {
-                playSound('click');
-                setIsFractured(false);
-                setAppliedStress(30);
-              }}
-              style={{
-                width: '100%',
+              {/* Real-world relevance */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '10px',
                 padding: '12px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                marginBottom: '16px',
-              }}
-            >
-              Reset Experiment
-            </button>
-          )}
-
-          {/* Formula */}
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0, textAlign: 'center', fontWeight: 600 }}>
-              Local Stress = Kt × Applied Stress
-            </p>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: '8px 0 0', textAlign: 'center' }}>
-              <strong style={{ color: colors.accent }}>Stress Concentration Factor (Kt):</strong> The ratio of maximum local stress to average stress. Sharper features have higher Kt values and fracture at lower applied loads!
-            </p>
-          </div>
-
-          {/* Real-world relevance */}
-          <div style={{
-            background: colors.bgSecondary,
-            borderRadius: '12px',
-            padding: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.success }}>Why this is important:</strong> This is why airplane windows have rounded corners and bridges use curved transitions at joints. Try adjusting the slider and notice how when you increase stress with a V-notch or crack, fracture occurs at much lower loads because the local stress is multiplied by Kt. This principle is used in engineering design across every industry.
-            </p>
+              }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.success }}>Why it matters:</strong> Airplane windows have rounded corners and bridges use curved transitions to avoid stress concentration.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1452,86 +1471,107 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           Observe how a drilled hole can arrest crack propagation. Try increasing stress with and without the stop hole.
         </p>
 
+        {/* Side-by-side layout */}
         <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '12px' : '20px',
+          width: '100%',
+          alignItems: isMobile ? 'center' : 'flex-start',
+          maxWidth: '900px',
           marginBottom: '24px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            {renderCrackStopVisualization()}
-          </div>
-
-          {/* Controls */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => {
-                playSound('click');
-                setHasCrackStopHole(!hasCrackStopHole);
-                setCrackLength(20);
-              }}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: 'none',
-                background: hasCrackStopHole ? colors.success : colors.bgSecondary,
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: 600,
-                transition: 'all 0.2s',
-              }}
-            >
-              {hasCrackStopHole ? 'Stop Hole Added' : 'Add Stop Hole'}
-            </button>
-            <button
-              onClick={() => {
-                playSound('click');
-                setCrackLength(20);
-                setTwistStress(20);
-              }}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.border}`,
-                background: 'transparent',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* Stress slider */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
-              <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistStress} MPa</span>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {renderCrackStopVisualization()}
+              </div>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="50"
-              value={twistStress}
-              onChange={(e) => setTwistStress(parseInt(e.target.value))}
-              style={{
-                ...sliderStyle,
-                cursor: 'pointer',
-              }}
-            />
           </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+            }}>
+              {/* Controls */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setHasCrackStopHole(!hasCrackStopHole);
+                    setCrackLength(20);
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: hasCrackStopHole ? colors.success : colors.bgSecondary,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                    width: '100%',
+                  }}
+                >
+                  {hasCrackStopHole ? 'Stop Hole Added' : 'Add Stop Hole'}
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    setCrackLength(20);
+                    setTwistStress(20);
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    width: '100%',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
 
-          {/* Info box */}
-          <div style={{
-            background: `${colors.success}11`,
-            border: `1px solid ${colors.success}33`,
-            borderRadius: '12px',
-            padding: '16px',
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <strong style={{ color: colors.success }}>The Crack-Stop Hole</strong> converts an infinitely sharp crack tip (Kt very high) into a rounded edge (Kt of about 3). This dramatically reduces stress concentration and arrests crack growth!
-            </p>
+              {/* Stress slider */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Stress</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistStress} MPa</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value={twistStress}
+                  onChange={(e) => setTwistStress(parseInt(e.target.value))}
+                  style={{
+                    ...sliderStyle,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Info box */}
+              <div style={{
+                background: `${colors.success}11`,
+                border: `1px solid ${colors.success}33`,
+                borderRadius: '10px',
+                padding: '12px',
+              }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  <strong style={{ color: colors.success }}>Crack-Stop Hole:</strong> Converts a sharp crack tip (Kt very high) into a rounded edge (Kt ~3), arresting crack growth.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

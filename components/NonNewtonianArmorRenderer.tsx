@@ -1182,128 +1182,125 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               </h2>
             </div>
 
-            {/* INTERACTIVE GRAPHIC */}
-            <div style={{
-              width: '100%',
-              maxWidth: '700px',
-              margin: '0 auto 20px auto',
-              background: colors.bgCard,
-              borderRadius: '16px',
-              border: `1px solid ${colors.border}`,
-              overflow: 'hidden'
-            }}>
-              {renderOobleckVisualization(true)}
-            </div>
-
-            {/* Controls Section - clearly separated */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, marginBottom: '16px' }}>
-                🎮 Controls: Adjust Poke Speed
-              </h3>
-
-              {/* Shear rate slider */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.flowingParticles, fontSize: '13px', fontWeight: 600 }}>🐌 Slow</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
-                    Speed: {shearRate}%
-                  </span>
-                  <span style={{ color: colors.jammedParticles, fontSize: '13px', fontWeight: 600 }}>Fast 👊</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={shearRate}
-                  onChange={(e) => setShearRate(Number(e.target.value))}
-                  onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    accentColor: shearRate > 50 ? colors.jammedParticles : colors.flowingParticles,
-                    touchAction: 'pan-y'
-                  }}
-                />
-                <p style={{ color: colors.textSecondary, fontSize: '12px', marginTop: '8px', textAlign: 'center' }}>
-                  ↑ Higher speed = higher shear rate = particles jam together
-                </p>
-              </div>
-
-              {/* Poke buttons */}
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button
-                  onPointerDown={() => setIsPoking(true)}
-                  onPointerUp={() => setIsPoking(false)}
-                  onPointerLeave={() => setIsPoking(false)}
-                  style={{
-                    touchAction: 'none',
-                    padding: '14px 28px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: isPoking
-                      ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primary} 100%)`
-                      : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-                    color: 'white',
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    minWidth: '150px',
-                    transform: isPoking ? 'scale(0.95)' : 'scale(1)',
-                    transition: 'transform 0.1s'
-                  }}
-                >
-                  {isPoking ? '👇 Poking...' : '👆 Hold to Poke'}
-                </button>
-              </div>
-            </div>
-
-            {/* Comparison Display - Side by side */}
+            {/* Side-by-side layout */}
             <div style={{
               display: 'flex',
-              flexDirection: 'row',
-              gap: '12px',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '20px',
-              flexWrap: isMobile ? 'wrap' : 'nowrap'
             }}>
-              <div style={{
-                flex: 1,
-                background: `${colors.flowingParticles}15`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `2px solid ${shearRate < 50 ? colors.flowingParticles : colors.border}40`,
-                minWidth: isMobile ? '100%' : '0'
-              }}>
-                <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '8px' }}>🐌</div>
-                <h4 style={{ color: colors.flowingParticles, fontSize: '14px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
-                  SLOW Movement
-                </h4>
-                <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', margin: 0 }}>
-                  Flows like liquid<br/>Particles move freely
-                </p>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  border: `1px solid ${colors.border}`,
+                  overflow: 'hidden'
+                }}>
+                  {renderOobleckVisualization(true)}
+                </div>
               </div>
-              <div style={{
-                flex: 1,
-                background: `${colors.jammedParticles}15`,
-                borderRadius: '12px',
-                padding: '16px',
-                border: `2px solid ${shearRate >= 50 ? colors.jammedParticles : colors.border}40`,
-                minWidth: isMobile ? '100%' : '0'
-              }}>
-                <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '8px' }}>👊</div>
-                <h4 style={{ color: colors.jammedParticles, fontSize: '14px', fontWeight: 700, textAlign: 'center', marginBottom: '8px' }}>
-                  FAST Impact
-                </h4>
-                <p style={{ color: colors.textSecondary, fontSize: '12px', textAlign: 'center', margin: 0 }}>
-                  Acts like solid<br/>Particles jam together
-                </p>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  border: `1px solid ${colors.border}`,
+                  marginBottom: '12px',
+                }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '16px' }}>
+                    Adjust Poke Speed
+                  </h3>
+
+                  {/* Shear rate slider */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.flowingParticles, fontSize: '12px', fontWeight: 600 }}>Slow</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
+                        {shearRate}%
+                      </span>
+                      <span style={{ color: colors.jammedParticles, fontSize: '12px', fontWeight: 600 }}>Fast</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={shearRate}
+                      onChange={(e) => setShearRate(Number(e.target.value))}
+                      onInput={(e) => setShearRate(Number((e.target as HTMLInputElement).value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        accentColor: shearRate > 50 ? colors.jammedParticles : colors.flowingParticles,
+                        touchAction: 'pan-y'
+                      }}
+                    />
+                  </div>
+
+                  {/* Poke button */}
+                  <button
+                    onPointerDown={() => setIsPoking(true)}
+                    onPointerUp={() => setIsPoking(false)}
+                    onPointerLeave={() => setIsPoking(false)}
+                    style={{
+                      touchAction: 'none',
+                      padding: '14px 28px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: isPoking
+                        ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.primary} 100%)`
+                        : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+                      color: 'white',
+                      fontSize: '16px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      width: '100%',
+                      transform: isPoking ? 'scale(0.95)' : 'scale(1)',
+                      transition: 'transform 0.1s'
+                    }}
+                  >
+                    {isPoking ? 'Poking...' : 'Hold to Poke'}
+                  </button>
+                </div>
+
+                {/* Comparison Display */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}>
+                  <div style={{
+                    background: `${colors.flowingParticles}15`,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    border: `2px solid ${shearRate < 50 ? colors.flowingParticles : colors.border}40`,
+                    textAlign: 'center',
+                  }}>
+                    <h4 style={{ color: colors.flowingParticles, fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>
+                      SLOW = Liquid
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
+                      Particles flow freely
+                    </p>
+                  </div>
+                  <div style={{
+                    background: `${colors.jammedParticles}15`,
+                    borderRadius: '12px',
+                    padding: '12px',
+                    border: `2px solid ${shearRate >= 50 ? colors.jammedParticles : colors.border}40`,
+                    textAlign: 'center',
+                  }}>
+                    <h4 style={{ color: colors.jammedParticles, fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>
+                      FAST = Solid
+                    </h4>
+                    <p style={{ color: colors.textSecondary, fontSize: '11px', margin: 0 }}>
+                      Particles jam together
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1704,155 +1701,169 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               </h2>
             </div>
 
-            {/* SVG Visualization - Dynamic based on starchRatio */}
+            {/* Side-by-side layout: SVG left, controls right */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`,
-              overflow: 'hidden'
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
             }}>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
-                <rect width="400" height="200" fill={colors.bgDark} />
-                <text x="200" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="700">
-                  Starch Ratio Effect
-                </text>
-
-                {/* Visual bar showing effectiveness */}
-                <rect x="50" y="70" width="300" height="40" fill={colors.bgCardLight} rx="8" />
-                <rect
-                  x="50"
-                  y="70"
-                  width={3 * effectiveness}
-                  height="40"
-                  fill={effectiveness > 80 ? colors.success : effectiveness > 60 ? colors.primaryLight : colors.warning}
-                  rx="8"
-                />
-                <text x="200" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-                  Armor Effectiveness: {Math.round(effectiveness)}%
-                </text>
-
-                {/* Particle visualization */}
-                {Array.from({ length: Math.floor(starchRatio / 5) }).map((_, i) => (
-                  <circle
-                    key={i}
-                    cx={60 + (i % 15) * 22}
-                    cy={140 + Math.floor(i / 15) * 20}
-                    r="8"
-                    fill={colors.starch}
-                    opacity="0.7"
-                  />
-                ))}
-
-                <text x="200" y="180" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
-                  More particles = stronger jamming effect
-                </text>
-              </svg>
-            </div>
-
-            {/* Ratio visualization */}
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '20px',
-              border: `1px solid ${colors.border}`
-            }}>
-              {/* Ratio bar */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: colors.water, fontSize: '13px', fontWeight: 600 }}>💧 More Water</span>
-                  <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700 }}>
-                    Starch: {starchRatio}%
-                  </span>
-                  <span style={{ color: colors.starch, fontSize: '13px', fontWeight: 600 }}>More Starch 🌾</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="85"
-                  value={starchRatio}
-                  onChange={(e) => setStarchRatio(Number(e.target.value))}
-                  onInput={(e) => setStarchRatio(Number((e.target as HTMLInputElement).value))}
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y'
-                  }}
-                />
+              {/* Left column - SVG Visualization */}
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  marginTop: '12px',
-                  padding: '8px 16px',
-                  background: starchRatio > 60 && starchRatio < 75 ? `${colors.success}20` : `${colors.warning}20`,
-                  borderRadius: '8px'
-                }}>
-                  <span style={{
-                    color: starchRatio > 60 && starchRatio < 75 ? colors.success : colors.warning,
-                    fontWeight: 600,
-                    fontSize: '14px'
-                  }}>
-                    {starchRatio < 50 ? '💧 Too runny - flows like water' :
-                     starchRatio < 60 ? '💧 Weak effect - low jamming' :
-                     starchRatio < 75 ? '✅ Optimal! Strong armor effect' :
-                     starchRatio < 80 ? '🌾 Very thick - hard to work with' :
-                     '🧱 Too thick - nearly solid always'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Effectiveness meter */}
-              <div>
-                <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', textAlign: 'center' }}>
-                  Armor Effectiveness
-                </p>
-                <div style={{
-                  height: '20px',
-                  background: colors.bgDark,
-                  borderRadius: '10px',
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  border: `1px solid ${colors.border}`,
                   overflow: 'hidden'
                 }}>
-                  <div style={{
-                    width: `${effectiveness}%`,
-                    height: '100%',
-                    background: effectiveness > 70
-                      ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`
-                      : `linear-gradient(90deg, ${colors.warning} 0%, ${colors.warningLight} 100%)`,
-                    borderRadius: '10px',
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: 700, textAlign: 'center', marginTop: '8px' }}>
-                  {effectiveness}% Effective
-                </p>
-              </div>
-            </div>
+                  <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                    <rect width="400" height="200" fill={colors.bgDark} />
+                    <text x="200" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="700">
+                      Starch Ratio Effect
+                    </text>
 
-            {/* Explanation */}
-            <div style={{
-              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.primary}10 100%)`,
-              borderRadius: '12px',
-              padding: '16px',
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
-                👀 What's Happening:
-              </h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                {starchRatio < 50
-                  ? "Too much water! Particles are too spread out to jam effectively. The mixture flows easily at all speeds."
-                  : starchRatio < 60
-                  ? "Getting better, but still not enough particles. Jamming occurs but the effect is weak."
-                  : starchRatio < 75
-                  ? "Perfect balance! Enough particles to jam under stress, but enough water to flow when slow. Maximum armor effect!"
-                  : starchRatio < 80
-                  ? "Very dense. Strong jamming, but it's getting hard to work with even at slow speeds."
-                  : "Too much starch! The mixture is nearly solid even without impact. No flexibility."
-                }
-              </p>
+                    {/* Visual bar showing effectiveness */}
+                    <rect x="50" y="70" width="300" height="40" fill={colors.bgCardLight} rx="8" />
+                    <rect
+                      x="50"
+                      y="70"
+                      width={3 * effectiveness}
+                      height="40"
+                      fill={effectiveness > 80 ? colors.success : effectiveness > 60 ? colors.primaryLight : colors.warning}
+                      rx="8"
+                    />
+                    <text x="200" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+                      Armor Effectiveness: {Math.round(effectiveness)}%
+                    </text>
+
+                    {/* Particle visualization */}
+                    {Array.from({ length: Math.floor(starchRatio / 5) }).map((_, i) => (
+                      <circle
+                        key={i}
+                        cx={60 + (i % 15) * 22}
+                        cy={140 + Math.floor(i / 15) * 20}
+                        r="8"
+                        fill={colors.starch}
+                        opacity="0.7"
+                      />
+                    ))}
+
+                    <text x="200" y="180" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+                      More particles = stronger jamming effect
+                    </text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Right column - Controls */}
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Ratio visualization */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  {/* Ratio bar */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ color: colors.water, fontSize: '11px', fontWeight: 600 }}>💧 Water</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 700 }}>
+                        Starch: {starchRatio}%
+                      </span>
+                      <span style={{ color: colors.starch, fontSize: '11px', fontWeight: 600 }}>Starch 🌾</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="30"
+                      max="85"
+                      value={starchRatio}
+                      onChange={(e) => setStarchRatio(Number(e.target.value))}
+                      onInput={(e) => setStarchRatio(Number((e.target as HTMLInputElement).value))}
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y'
+                      }}
+                    />
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      marginTop: '10px',
+                      padding: '6px 12px',
+                      background: starchRatio > 60 && starchRatio < 75 ? `${colors.success}20` : `${colors.warning}20`,
+                      borderRadius: '8px'
+                    }}>
+                      <span style={{
+                        color: starchRatio > 60 && starchRatio < 75 ? colors.success : colors.warning,
+                        fontWeight: 600,
+                        fontSize: '12px'
+                      }}>
+                        {starchRatio < 50 ? '💧 Too runny' :
+                         starchRatio < 60 ? '💧 Weak effect' :
+                         starchRatio < 75 ? '✅ Optimal!' :
+                         starchRatio < 80 ? '🌾 Very thick' :
+                         '🧱 Too thick'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Effectiveness meter */}
+                  <div>
+                    <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '6px', textAlign: 'center' }}>
+                      Armor Effectiveness
+                    </p>
+                    <div style={{
+                      height: '16px',
+                      background: colors.bgDark,
+                      borderRadius: '8px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${effectiveness}%`,
+                        height: '100%',
+                        background: effectiveness > 70
+                          ? `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`
+                          : `linear-gradient(90deg, ${colors.warning} 0%, ${colors.warningLight} 100%)`,
+                        borderRadius: '8px',
+                        transition: 'width 0.3s ease'
+                      }} />
+                    </div>
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, textAlign: 'center', marginTop: '6px' }}>
+                      {effectiveness}% Effective
+                    </p>
+                  </div>
+                </div>
+
+                {/* Explanation */}
+                <div style={{
+                  background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.primary}10 100%)`,
+                  borderRadius: '12px',
+                  padding: '12px',
+                  border: `1px solid ${colors.border}`
+                }}>
+                  <h4 style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    👀 What's Happening:
+                  </h4>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+                    {starchRatio < 50
+                      ? "Too much water! Particles too spread out to jam. Flows easily at all speeds."
+                      : starchRatio < 60
+                      ? "Getting better, but not enough particles. Jamming occurs but weakly."
+                      : starchRatio < 75
+                      ? "Perfect balance! Enough particles to jam under stress, enough water to flow when slow."
+                      : starchRatio < 80
+                      ? "Very dense. Strong jamming, but hard to work with even at slow speeds."
+                      : "Too much starch! Nearly solid even without impact. No flexibility."
+                    }
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

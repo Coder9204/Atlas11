@@ -1076,112 +1076,125 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {SMVisualization}
-              </div>
-
-              {/* Registers slider - controls register allocation */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Register Count per Thread (memory allocation)</span>
-                  <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
-                </div>
-                <input
-                  type="range"
-                  min="16"
-                  max="128"
-                  step="8"
-                  value={registersPerThread}
-                  onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
-                  onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Register count per thread"
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.registerColor} ${((registersPerThread - 16) / 112) * 100}%, ${colors.border} ${((registersPerThread - 16) / 112) * 100}%)`,
-                    cursor: 'pointer',
-                    touchAction: 'pan-y' as const,
-                    WebkitAppearance: 'none' as const,
-                    accentColor: '#3b82f6',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>16 (light)</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>128 (heavy)</span>
-                </div>
-              </div>
-
-              {/* Threads per block slider - controls thread density */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Thread Density per Block (parallelism)</span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
-                </div>
-                <input
-                  type="range"
-                  min="32"
-                  max="1024"
-                  step="32"
-                  value={threadsPerBlock}
-                  onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
-                  onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Thread density per block"
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    background: `linear-gradient(to right, ${colors.accent} ${((threadsPerBlock - 32) / 992) * 100}%, ${colors.border} ${((threadsPerBlock - 32) / 992) * 100}%)`,
-                    cursor: 'pointer',
-                    touchAction: 'pan-y' as const,
-                    WebkitAppearance: 'none' as const,
-                    accentColor: '#3b82f6',
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>32</span>
-                  <span style={{ ...typo.small, color: colors.textMuted }}>1024</span>
-                </div>
-              </div>
-
-              {/* Resource bars */}
-              {ResourceBars}
-
-              {/* Stats display */}
+              {/* Side-by-side layout */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-                marginTop: '24px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
-                    {occupancyData.occupancy.toFixed(0)}%
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    {SMVisualization}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+
+                  {/* Resource bars */}
+                  {ResourceBars}
+
+                  {/* Stats display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '16px',
+                    marginTop: '24px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                        {occupancyData.occupancy.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeWarps}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Active Warps</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.registerColor }}>{occupancyData.activeBlocks}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Active Blocks</div>
+                    </div>
+                  </div>
                 </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeWarps}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Active Warps</div>
-                </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.registerColor }}>{occupancyData.activeBlocks}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Active Blocks</div>
+
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* Registers slider - controls register allocation */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Register Count per Thread (memory allocation)</span>
+                      <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="16"
+                      max="128"
+                      step="8"
+                      value={registersPerThread}
+                      onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
+                      onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Register count per thread"
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        background: `linear-gradient(to right, ${colors.registerColor} ${((registersPerThread - 16) / 112) * 100}%, ${colors.border} ${((registersPerThread - 16) / 112) * 100}%)`,
+                        cursor: 'pointer',
+                        touchAction: 'pan-y' as const,
+                        WebkitAppearance: 'none' as const,
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>16 (light)</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>128 (heavy)</span>
+                    </div>
+                  </div>
+
+                  {/* Threads per block slider - controls thread density */}
+                  <div style={{ marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: colors.textSecondary }}>Thread Density per Block (parallelism)</span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="32"
+                      max="1024"
+                      step="32"
+                      value={threadsPerBlock}
+                      onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
+                      onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Thread density per block"
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        background: `linear-gradient(to right, ${colors.accent} ${((threadsPerBlock - 32) / 992) * 100}%, ${colors.border} ${((threadsPerBlock - 32) / 992) * 100}%)`,
+                        cursor: 'pointer',
+                        touchAction: 'pan-y' as const,
+                        WebkitAppearance: 'none' as const,
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>32</span>
+                      <span style={{ ...typo.small, color: colors.textMuted }}>1024</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1509,123 +1522,136 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                {SMVisualization}
-              </div>
-
-              {/* All three sliders with physics labels */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'registers' ? colors.registerColor : colors.textSecondary }}>
-                    Register Count per Thread (memory allocation) {occupancyData.limitingFactor === 'registers' && '(Limiting)'}
-                  </span>
-                  <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
-                </div>
-                <input
-                  type="range"
-                  min="16"
-                  max="128"
-                  step="8"
-                  value={registersPerThread}
-                  onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
-                  onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Register count per thread"
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y' as const,
-                    WebkitAppearance: 'none' as const,
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'shared_memory' ? colors.sharedMemColor : colors.textSecondary }}>
-                    Shared Memory Capacity per Block (KB) {occupancyData.limitingFactor === 'shared_memory' && '(Limiting)'}
-                  </span>
-                  <span style={{ ...typo.small, color: colors.sharedMemColor, fontWeight: 600 }}>{sharedMemoryPerBlock}KB</span>
-                </div>
-                <input
-                  type="range"
-                  min="4"
-                  max="96"
-                  step="4"
-                  value={sharedMemoryPerBlock}
-                  onChange={(e) => setSharedMemoryPerBlock(parseInt(e.target.value))}
-                  onInput={(e) => setSharedMemoryPerBlock(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Shared memory capacity per block"
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y' as const,
-                    WebkitAppearance: 'none' as const,
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'threads' ? colors.accent : colors.textSecondary }}>
-                    Thread Density per Block (parallelism) {occupancyData.limitingFactor === 'threads' && '(Limiting)'}
-                  </span>
-                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
-                </div>
-                <input
-                  type="range"
-                  min="32"
-                  max="1024"
-                  step="32"
-                  value={threadsPerBlock}
-                  onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
-                  onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
-                  aria-label="Thread density per block"
-                  style={{
-                    width: '100%',
-                    height: '20px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    touchAction: 'pan-y' as const,
-                    WebkitAppearance: 'none' as const,
-                    accentColor: '#3b82f6',
-                  }}
-                />
-              </div>
-
-              {ResourceBars}
-
-              {/* Stats */}
+              {/* Side-by-side layout */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '12px',
-                marginTop: '20px',
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
               }}>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
-                    {occupancyData.occupancy.toFixed(0)}%
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    {SMVisualization}
                   </div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+
+                  {ResourceBars}
+
+                  {/* Stats */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px',
+                    marginTop: '20px',
+                  }}>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                        {occupancyData.occupancy.toFixed(0)}%
+                      </div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
+                    </div>
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeBlocks}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>Blocks per SM</div>
+                    </div>
+                  </div>
                 </div>
-                <div style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeBlocks}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>Blocks per SM</div>
+
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                  {/* All three sliders with physics labels */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'registers' ? colors.registerColor : colors.textSecondary }}>
+                        Register Count per Thread {occupancyData.limitingFactor === 'registers' && '(Limiting)'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="16"
+                      max="128"
+                      step="8"
+                      value={registersPerThread}
+                      onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
+                      onInput={(e) => setRegistersPerThread(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Register count per thread"
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y' as const,
+                        WebkitAppearance: 'none' as const,
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'shared_memory' ? colors.sharedMemColor : colors.textSecondary }}>
+                        Shared Memory per Block (KB) {occupancyData.limitingFactor === 'shared_memory' && '(Limiting)'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.sharedMemColor, fontWeight: 600 }}>{sharedMemoryPerBlock}KB</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="4"
+                      max="96"
+                      step="4"
+                      value={sharedMemoryPerBlock}
+                      onChange={(e) => setSharedMemoryPerBlock(parseInt(e.target.value))}
+                      onInput={(e) => setSharedMemoryPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Shared memory capacity per block"
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y' as const,
+                        WebkitAppearance: 'none' as const,
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'threads' ? colors.accent : colors.textSecondary }}>
+                        Thread Density per Block {occupancyData.limitingFactor === 'threads' && '(Limiting)'}
+                      </span>
+                      <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="32"
+                      max="1024"
+                      step="32"
+                      value={threadsPerBlock}
+                      onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
+                      onInput={(e) => setThreadsPerBlock(parseInt((e.target as HTMLInputElement).value))}
+                      aria-label="Thread density per block"
+                      style={{
+                        width: '100%',
+                        height: '20px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        touchAction: 'pan-y' as const,
+                        WebkitAppearance: 'none' as const,
+                        accentColor: '#3b82f6',
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

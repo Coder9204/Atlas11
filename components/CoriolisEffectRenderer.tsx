@@ -1065,6 +1065,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               {hemisphere === 'north' ? 'Northern Hemisphere (looking down)' : 'Southern Hemisphere (looking up)'}
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 280" className="w-full h-full">
                 {renderSvgDefs()}
@@ -1247,9 +1256,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 </span>
               </div>
             </div>
-
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '16px', width: '100%', maxWidth: '640px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', width: '100%', maxWidth: '640px', marginBottom: '16px' }}>
               <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
                 <label style={{ color: '#cbd5e1', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Hemisphere</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -1321,6 +1331,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   ? `The ball curves ${hemisphere === 'north' ? 'right' : 'left'} and misses your friend! This is the Coriolis effect - an apparent deflection due to observing from a rotating frame.`
                   : 'Press "Fire Ball!" to see how the Coriolis effect deflects moving objects on a rotating platform.'}
               </p>
+            </div>
+              </div>
             </div>
 
             <button
@@ -1472,6 +1484,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               Coriolis Force vs. Scale
             </p>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 280" className="w-full h-full">
                 {renderSvgDefs()}
@@ -1569,7 +1590,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 <span style={{ fontSize: typo.label, color: colors.textMuted }}>Seconds to drain</span>
               </div>
             </div>
-
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 max-w-lg">
               <h4 className="text-amber-400 font-semibold mb-2">The Math</h4>
               <p className="text-slate-300 text-sm">
@@ -1577,6 +1599,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 For a sink: ~10^-5 m/s squared (barely measurable!)<br />
                 <span className="text-amber-400">That&apos;s 10 million times weaker than other effects!</span>
               </p>
+            </div>
+              </div>
             </div>
 
             <button

@@ -188,6 +188,15 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
 
+  // Responsive
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Animation ref
   const animationRef = useRef<number | null>(null);
 
@@ -922,124 +931,133 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               Adjust the padding thickness and drop the egg. Watch how <strong style={{ color: design.colors.cyan }}>increasing padding time</strong> reduces the <strong style={{ color: design.colors.warning }}>impact force</strong> compared to the baseline (no padding).
             </p>
 
-            {/* Educational context */}
+            {/* Side-by-side layout */}
             <div style={{
-              padding: design.spacing.lg,
-              borderRadius: design.radius.lg,
-              background: design.colors.bgCard,
-              border: `1px solid ${design.colors.border}`,
-              marginBottom: design.spacing.xl
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: design.colors.accentPrimary, marginBottom: design.spacing.sm }}>
-                🔬 What to observe:
-              </p>
-              <ul style={{ fontSize: '13px', color: design.colors.textSecondary, lineHeight: 1.7, paddingLeft: '20px', margin: 0 }}>
-                <li><strong style={{ color: design.colors.textPrimary }}>Cause:</strong> More padding = longer stopping time (Δt)</li>
-                <li><strong style={{ color: design.colors.textPrimary }}>Effect:</strong> Same momentum change (Δp) over more time = less force (F = Δp/Δt)</li>
-                <li><strong style={{ color: design.colors.textPrimary }}>Key term:</strong> <span style={{ color: design.colors.cyan, fontWeight: 700 }}>Impulse</span> = Force × Time = Change in Momentum</li>
-                <li><strong style={{ color: design.colors.textPrimary }}>Why it matters:</strong> This principle protects cargo, passengers in cars, and athletes in sports</li>
-              </ul>
-            </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderEggDropVisualization(eggPosition, eggSurvived, dropComplete, paddingThickness, 2.0, true)}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Educational context */}
+                <div style={{
+                  padding: design.spacing.lg,
+                  borderRadius: design.radius.lg,
+                  background: design.colors.bgCard,
+                  border: `1px solid ${design.colors.border}`,
+                  marginBottom: design.spacing.md
+                }}>
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: design.colors.accentPrimary, marginBottom: design.spacing.sm }}>
+                    What to observe:
+                  </p>
+                  <ul style={{ fontSize: '13px', color: design.colors.textSecondary, lineHeight: 1.7, paddingLeft: '20px', margin: 0 }}>
+                    <li><strong style={{ color: design.colors.textPrimary }}>Cause:</strong> More padding = longer stopping time</li>
+                    <li><strong style={{ color: design.colors.textPrimary }}>Effect:</strong> Same momentum over more time = less force</li>
+                    <li><strong style={{ color: design.colors.textPrimary }}>Key term:</strong> <span style={{ color: design.colors.cyan, fontWeight: 700 }}>Impulse</span> = Force x Time</li>
+                  </ul>
+                </div>
 
-            {renderEggDropVisualization(eggPosition, eggSurvived, dropComplete, paddingThickness, 2.0, true)}
-
-            {/* Comparison: Before vs After */}
-            {dropComplete && (
-              <div style={{
-                marginTop: design.spacing.xl,
-                padding: design.spacing.lg,
-                borderRadius: design.radius.lg,
-                background: design.colors.bgCard,
-                border: `1px solid ${design.colors.border}`
-              }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.md, textAlign: 'center' }}>
-                  Comparison: No Padding vs Your Padding
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'row', gap: design.spacing.lg, justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center', flex: 1 }}>
-                    <div style={{ fontSize: '12px', color: design.colors.textMuted, marginBottom: design.spacing.sm, fontWeight: 400 }}>
-                      No Padding (0%)
-                    </div>
-                    <div style={{ fontSize: '24px', marginBottom: design.spacing.xs }}>💥</div>
-                    <div style={{ fontSize: '11px', color: design.colors.error, fontWeight: 600 }}>Broken</div>
-                    <div style={{ fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
-                      {(0.05 * Math.sqrt(2 * 9.8 * 2) / 0.01).toFixed(0)} N
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'center', flex: 1 }}>
-                    <div style={{ fontSize: '12px', color: design.colors.textMuted, marginBottom: design.spacing.sm, fontWeight: 400 }}>
-                      Your Padding ({(paddingThickness * 100).toFixed(0)}%)
-                    </div>
-                    <div style={{ fontSize: '24px', marginBottom: design.spacing.xs }}>{eggSurvived ? '✓' : '💥'}</div>
-                    <div style={{ fontSize: '11px', color: eggSurvived ? design.colors.success : design.colors.error, fontWeight: 600 }}>
-                      {eggSurvived ? 'Survived' : 'Broken'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
-                      {(0.05 * Math.sqrt(2 * 9.8 * 2) / (0.01 + paddingThickness * 0.1)).toFixed(0)} N
-                    </div>
+                {/* Slider controls */}
+                <div style={{
+                  padding: design.spacing.lg,
+                  borderRadius: design.radius.lg,
+                  background: design.colors.bgCard,
+                  border: `1px solid ${design.colors.border}`,
+                  marginBottom: design.spacing.md
+                }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: design.colors.textPrimary,
+                    marginBottom: design.spacing.sm
+                  }}>
+                    Padding Thickness: <span style={{ color: design.colors.cyan }}>{(paddingThickness * 100).toFixed(0)}%</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={paddingThickness}
+                    onChange={(e) => {
+                      setPaddingThickness(parseFloat(e.target.value));
+                      resetDrop();
+                    }}
+                    onInput={(e) => {
+                      setPaddingThickness(parseFloat((e.target as HTMLInputElement).value));
+                      resetDrop();
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '24px',
+                      borderRadius: '12px',
+                      background: `linear-gradient(to right, ${design.colors.error} 0%, ${design.colors.warning} 50%, ${design.colors.success} 100%)`,
+                      outline: 'none',
+                      appearance: 'none',
+                      cursor: 'pointer',
+                      touchAction: 'none'
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
+                    <span>None (0%)</span>
+                    <span>Thick (100%)</span>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Slider controls */}
-            <div style={{
-              marginTop: design.spacing.xl,
-              padding: design.spacing.lg,
-              borderRadius: design.radius.lg,
-              background: design.colors.bgCard,
-              border: `1px solid ${design.colors.border}`
-            }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: design.colors.textPrimary,
-                marginBottom: design.spacing.sm
-              }}>
-                Padding Thickness: <span style={{ color: design.colors.cyan }}>{(paddingThickness * 100).toFixed(0)}%</span>
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={paddingThickness}
-                onChange={(e) => {
-                  setPaddingThickness(parseFloat(e.target.value));
-                  resetDrop();
-                }}
-                onInput={(e) => {
-                  setPaddingThickness(parseFloat((e.target as HTMLInputElement).value));
-                  resetDrop();
-                }}
-                style={{
-                  width: '100%',
-                  height: '24px',
-                  borderRadius: '12px',
-                  background: `linear-gradient(to right, ${design.colors.error} 0%, ${design.colors.warning} 50%, ${design.colors.success} 100%)`,
-                  outline: 'none',
-                  appearance: 'none',
-                  cursor: 'pointer',
-                  touchAction: 'none'
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
-                <span>None (0%)</span>
-                <span>Thick (100%)</span>
+                <div style={{ display: 'flex', gap: design.spacing.md, justifyContent: 'center', marginBottom: design.spacing.md }}>
+                  {renderButton('Drop Egg', startDrop, 'primary', isDropping)}
+                  {renderButton('Reset', resetDrop, 'ghost')}
+                </div>
+
+                {/* Comparison: Before vs After */}
+                {dropComplete && (
+                  <div style={{
+                    padding: design.spacing.lg,
+                    borderRadius: design.radius.lg,
+                    background: design.colors.bgCard,
+                    border: `1px solid ${design.colors.border}`,
+                    marginBottom: design.spacing.md
+                  }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: 600, color: design.colors.textPrimary, marginBottom: design.spacing.md, textAlign: 'center' }}>
+                      No Padding vs Your Padding
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: design.spacing.md }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: design.colors.textMuted, marginBottom: design.spacing.sm, fontWeight: 400 }}>
+                          No Padding (0%)
+                        </div>
+                        <div style={{ fontSize: '11px', color: design.colors.error, fontWeight: 600 }}>Broken</div>
+                        <div style={{ fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
+                          {(0.05 * Math.sqrt(2 * 9.8 * 2) / 0.01).toFixed(0)} N
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', color: design.colors.textMuted, marginBottom: design.spacing.sm, fontWeight: 400 }}>
+                          Your Padding ({(paddingThickness * 100).toFixed(0)}%)
+                        </div>
+                        <div style={{ fontSize: '11px', color: eggSurvived ? design.colors.success : design.colors.error, fontWeight: 600 }}>
+                          {eggSurvived ? 'Survived' : 'Broken'}
+                        </div>
+                        <div style={{ fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
+                          {(0.05 * Math.sqrt(2 * 9.8 * 2) / (0.01 + paddingThickness * 0.1)).toFixed(0)} N
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {dropComplete && (
+                  <div style={{ textAlign: 'center' }}>
+                    {renderButton('Continue to Explanation →', goNext)}
+                  </div>
+                )}
               </div>
             </div>
-
-            <div style={{ marginTop: design.spacing.lg, display: 'flex', gap: design.spacing.md, justifyContent: 'center' }}>
-              {renderButton('Drop Egg', startDrop, 'primary', isDropping)}
-              {renderButton('Reset', resetDrop, 'ghost')}
-            </div>
-
-            {dropComplete && (
-              <div style={{ marginTop: design.spacing.xl, textAlign: 'center' }}>
-                {renderButton('Continue to Explanation →', goNext)}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1269,66 +1287,78 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               Same foam padding, but vary the drop height. Notice how velocity (and momentum) increase with height: <strong style={{ color: design.colors.cyan }}>v = √(2gh)</strong>
             </p>
 
-            {renderEggDropVisualization(eggPosition, eggSurvived, dropComplete, 0.5, dropHeight, true)}
-
-            {/* Height slider */}
+            {/* Side-by-side layout */}
             <div style={{
-              marginTop: design.spacing.xl,
-              padding: design.spacing.lg,
-              borderRadius: design.radius.lg,
-              background: design.colors.bgCard,
-              border: `1px solid ${design.colors.border}`
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
             }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: design.colors.textPrimary,
-                marginBottom: design.spacing.sm
-              }}>
-                Drop Height: <span style={{ color: design.colors.cyan }}>{dropHeight.toFixed(1)} m</span>
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="6"
-                step="0.1"
-                value={dropHeight}
-                onChange={(e) => {
-                  setDropHeight(parseFloat(e.target.value));
-                  resetDrop();
-                }}
-                onInput={(e) => {
-                  setDropHeight(parseFloat((e.target as HTMLInputElement).value));
-                  resetDrop();
-                }}
-                style={{
-                  width: '100%',
-                  height: '24px',
-                  borderRadius: '12px',
-                  background: `linear-gradient(to right, ${design.colors.success} 0%, ${design.colors.warning} 50%, ${design.colors.error} 100%)`,
-                  outline: 'none',
-                  appearance: 'none',
-                  cursor: 'pointer',
-                  touchAction: 'none'
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
-                <span>Low (0.5m)</span>
-                <span>High (6m)</span>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {renderEggDropVisualization(eggPosition, eggSurvived, dropComplete, 0.5, dropHeight, true)}
+              </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* Height slider */}
+                <div style={{
+                  padding: design.spacing.lg,
+                  borderRadius: design.radius.lg,
+                  background: design.colors.bgCard,
+                  border: `1px solid ${design.colors.border}`,
+                  marginBottom: design.spacing.md
+                }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: design.colors.textPrimary,
+                    marginBottom: design.spacing.sm
+                  }}>
+                    Drop Height: <span style={{ color: design.colors.cyan }}>{dropHeight.toFixed(1)} m</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="6"
+                    step="0.1"
+                    value={dropHeight}
+                    onChange={(e) => {
+                      setDropHeight(parseFloat(e.target.value));
+                      resetDrop();
+                    }}
+                    onInput={(e) => {
+                      setDropHeight(parseFloat((e.target as HTMLInputElement).value));
+                      resetDrop();
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '24px',
+                      borderRadius: '12px',
+                      background: `linear-gradient(to right, ${design.colors.success} 0%, ${design.colors.warning} 50%, ${design.colors.error} 100%)`,
+                      outline: 'none',
+                      appearance: 'none',
+                      cursor: 'pointer',
+                      touchAction: 'none'
+                    }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: design.colors.textMuted, marginTop: design.spacing.xs }}>
+                    <span>Low (0.5m)</span>
+                    <span>High (6m)</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: design.spacing.md, justifyContent: 'center', marginBottom: design.spacing.md }}>
+                  {renderButton('Drop Egg', startTwistDrop, 'primary', isDropping)}
+                  {renderButton('Reset', resetDrop, 'ghost')}
+                </div>
+
+                {dropComplete && (
+                  <div style={{ textAlign: 'center' }}>
+                    {renderButton('See the Complete Picture →', goNext)}
+                  </div>
+                )}
               </div>
             </div>
-
-            <div style={{ marginTop: design.spacing.lg, display: 'flex', gap: design.spacing.md, justifyContent: 'center' }}>
-              {renderButton('Drop Egg', startTwistDrop, 'primary', isDropping)}
-              {renderButton('Reset', resetDrop, 'ghost')}
-            </div>
-
-            {dropComplete && (
-              <div style={{ marginTop: design.spacing.xl, textAlign: 'center' }}>
-                {renderButton('See the Complete Picture →', goNext)}
-              </div>
-            )}
           </div>
         </div>
       </div>

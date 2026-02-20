@@ -974,6 +974,15 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               Click any bit to simulate a cosmic ray flipping it. Watch how ECC detects and locates the error.
             </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1099,32 +1108,6 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               </svg>
             </div>
 
-            {/* Slider: Parity Bit Count */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ ...typo.small, color: colors.textPrimary, display: 'block', marginBottom: '8px' }}>
-                Parity Bits: <strong style={{ color: colors.accent }}>{parityBitCount}</strong>
-                {' '}(protects {Math.pow(2, parityBitCount) - parityBitCount - 1} data bits, detects up to {parityBitCount === 3 ? 2 : 1}-bit errors)
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="5"
-                value={parityBitCount}
-                onChange={e => { setParityBitCount(Number(e.target.value)); playSound('click'); }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  touchAction: 'pan-y',
-                  WebkitAppearance: 'none',
-                  accentColor: '#3b82f6',
-                  cursor: 'pointer',
-                }}
-              />
-              <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '6px', opacity: 0.75 }}>
-                More parity bits = more overhead but stronger error correction. Real ECC uses 8 parity bits per 64 data bits.
-              </p>
-            </div>
-
             {/* Original Data */}
             <div style={{ marginBottom: '24px' }}>
               <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -1173,6 +1156,35 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               </div>
               <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '8px', textAlign: 'center', opacity: 0.7 }}>
                 Purple = Parity bits | Cyan = Data bits
+              </p>
+            </div>
+          </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+            {/* Slider: Parity Bit Count */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ ...typo.small, color: colors.textPrimary, display: 'block', marginBottom: '8px' }}>
+                Parity Bits: <strong style={{ color: colors.accent }}>{parityBitCount}</strong>
+                {' '}(protects {Math.pow(2, parityBitCount) - parityBitCount - 1} data bits, detects up to {parityBitCount === 3 ? 2 : 1}-bit errors)
+              </label>
+              <input
+                type="range"
+                min="2"
+                max="5"
+                value={parityBitCount}
+                onChange={e => { setParityBitCount(Number(e.target.value)); playSound('click'); }}
+                style={{
+                  width: '100%',
+                  height: '20px',
+                  touchAction: 'pan-y',
+                  WebkitAppearance: 'none',
+                  accentColor: '#3b82f6',
+                  cursor: 'pointer',
+                }}
+              />
+              <p style={{ ...typo.small, color: colors.textPrimary, marginTop: '6px', opacity: 0.75 }}>
+                More parity bits = more overhead but stronger error correction. Real ECC uses 8 parity bits per 64 data bits.
               </p>
             </div>
 
@@ -1271,6 +1283,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               >
                 Reset
               </button>
+            </div>
             </div>
           </div>
 
@@ -1623,6 +1636,15 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               Click TWO different bits to see what happens with multiple errors
             </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1724,6 +1746,9 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
                 Errors introduced: {errorCount} / 2
               </p>
             </div>
+          </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Analysis */}
             {errorCount === 2 && (
@@ -1777,6 +1802,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               >
                 Reset
               </button>
+            </div>
             </div>
           </div>
 

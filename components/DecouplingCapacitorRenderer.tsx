@@ -1093,17 +1093,32 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             When you decrease capacitance, the local energy reservoir is the measure of how quickly power can be delivered.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <ICVisualization showDecoupling={true} interactive={true} />
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ICVisualization showDecoupling={true} interactive={true} />
-            </div>
-
             {/* Decoupling toggle */}
             <div style={{
               display: 'flex',
@@ -1228,7 +1243,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             {/* Status display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1262,6 +1277,8 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>IC Status</div>
               </div>
+            </div>
+          </div>
             </div>
           </div>
 
@@ -1558,16 +1575,32 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
             Each capacitor has a "sweet spot" frequency where impedance is lowest
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <FrequencyResponseVisualization />
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <FrequencyResponseVisualization />
-            </div>
-
             {/* ESR slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1633,6 +1666,8 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
                 <div style={{ ...typo.h3, color: colors.error }}>1nF</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>High freq: 100MHz-1GHz</div>
               </div>
+            </div>
+          </div>
             </div>
           </div>
 

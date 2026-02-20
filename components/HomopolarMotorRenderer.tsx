@@ -1448,17 +1448,35 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Responsive graphic container */}
             <div style={{
               width: '100%',
-              maxWidth: '700px',
               margin: '0 auto'
             }}>
               {renderMotorVisualization()}
             </div>
 
+          {isRunning && (
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
+                The wire spins continuously! The Lorentz force creates constant torque.
+              </p>
+            </div>
+          )}
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
           {/* Controls */}
-          <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
               <label htmlFor="magnet-strength-slider" style={{ display: 'block', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1508,14 +1526,6 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             </button>
           </div>
 
-          {isRunning && (
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <p style={{ color: colors.success, fontSize: '16px', fontWeight: 600 }}>
-                The wire spins continuously! The Lorentz force creates constant torque.
-              </p>
-            </div>
-          )}
-
           {/* Real-world relevance */}
           <div style={{
             background: colors.bgCard,
@@ -1523,8 +1533,6 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             padding: '16px',
             marginTop: '24px',
             border: `1px solid ${colors.border}`,
-            maxWidth: '600px',
-            margin: '24px auto 0'
           }}>
             <h4 style={{ color: colors.primary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
               Real-World Connection
@@ -1534,6 +1542,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               MRI gradient coils that create medical images, and industrial welding systems that join metals in milliseconds.
             </p>
           </div>
+            </div>
+            </div>
           </div>
         </div>
 
@@ -1814,17 +1824,35 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </h2>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Responsive graphic container */}
             <div style={{
               width: '100%',
-              maxWidth: '700px',
               margin: '0 auto'
             }}>
               {renderMotorVisualization()}
             </div>
 
+            {isRunning && (
+              <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
+                  Direction: {rotationSpeed > 0 ? 'Clockwise' : 'Counter-clockwise'} — Flipping the magnet reverses it!
+                </p>
+              </div>
+            )}
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Controls */}
-            <div style={{ maxWidth: '500px', margin: '24px auto 0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
                 <p style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600, marginBottom: '12px', textAlign: 'center' }}>
                   Magnet Polarity (Facing Up)
@@ -1888,14 +1916,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 {isRunning ? '⏹ Stop Motor' : '▶ Start Motor'}
               </button>
             </div>
-
-            {isRunning && (
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                <p style={{ color: colors.warning, fontSize: '16px', fontWeight: 600 }}>
-                  Direction: {rotationSpeed > 0 ? 'Clockwise' : 'Counter-clockwise'} — Flipping the magnet reverses it!
-                </p>
-              </div>
-            )}
+            </div>
+            </div>
           </div>
         </div>
 

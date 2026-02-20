@@ -370,6 +370,14 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Derived values (memoized)
   const apparentSpeed = getApparentSpeed;
   const apparentAngle = useMemo(() => {
@@ -1180,8 +1188,49 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{ ...maxWidthStyle, padding: '16px' }}>
             <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -1389,8 +1438,49 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+          {/* Side-by-side layout: SVG left, controls right */}
+
+
+          <div style={{
+
+
+            display: 'flex',
+
+
+            flexDirection: isMobile ? 'column' : 'row',
+
+
+            gap: isMobile ? '12px' : '20px',
+
+
+            width: '100%',
+
+
+            alignItems: isMobile ? 'center' : 'flex-start',
+
+
+          }}>
+
+
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+
+
+              {renderVisualization(true)}
+
+
+            </div>
+
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+
+
+              {renderControls()}
+
+
+            </div>
+
+
+          </div>
 
           <div style={{ ...maxWidthStyle, padding: '16px' }}>
             <div style={{ background: 'rgba(245, 158, 11, 0.15)', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>

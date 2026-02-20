@@ -922,83 +922,100 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             Adjust load power and see how Peukert effect reduces actual runtime. This directly matters for data center design — engineers must account for Peukert's Law when sizing UPS systems.
           </p>
 
-          {/* Main visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <BatteryVisualization />
-            </div>
-
-            {/* Battery Capacity slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Capacity</label>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batteryCapacity} Ah</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <BatteryVisualization />
+                </div>
               </div>
-              <input
-                type="range"
-                min="50"
-                max="200"
-                step="10"
-                value={batteryCapacity}
-                onChange={(e) => setBatteryCapacity(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
             </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Battery Capacity slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Capacity</label>
+                    <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batteryCapacity} Ah</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="50"
+                    max="200"
+                    step="10"
+                    value={batteryCapacity}
+                    onChange={(e) => setBatteryCapacity(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
 
-            {/* Load Power slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>Load Power</label>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{loadPower} W ({(loadPower/batteryVoltage).toFixed(1)} A)</span>
-              </div>
-              <input
-                type="range"
-                min="500"
-                max="5000"
-                step="100"
-                value={loadPower}
-                onChange={(e) => setLoadPower(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
+                {/* Load Power slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>Load Power</label>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{loadPower} W ({(loadPower/batteryVoltage).toFixed(1)} A)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="500"
+                    max="5000"
+                    step="100"
+                    value={loadPower}
+                    onChange={(e) => setLoadPower(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
 
-            {/* Temperature slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>Temperature</label>
-                <span style={{ ...typo.small, color: '#f97316', fontWeight: 600 }}>{temperature}°C</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="5"
-                value={temperature}
-                onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-            </div>
+                {/* Temperature slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>Temperature</label>
+                    <span style={{ ...typo.small, color: '#f97316', fontWeight: 600 }}>{temperature}°C</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    step="5"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
 
-            {/* Battery Age slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Age</label>
-                <span style={{ ...typo.small, color: '#8b5cf6', fontWeight: 600 }}>{batteryAge} years</span>
+                {/* Battery Age slider */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ ...typo.small, color: colors.textPrimary }}>Battery Age</label>
+                    <span style={{ ...typo.small, color: '#8b5cf6', fontWeight: 600 }}>{batteryAge} years</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="5"
+                    step="1"
+                    value={batteryAge}
+                    onChange={(e) => setBatteryAge(parseInt(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                </div>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="5"
-                step="1"
-                value={batteryAge}
-                onChange={(e) => setBatteryAge(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
             </div>
           </div>
 
@@ -1240,64 +1257,82 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
             See how discharge rate affects the energy you can actually extract
           </p>
 
+          {/* Side-by-side layout */}
           <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <DischargeRateVisualization />
-            </div>
-
-            {/* Discharge rate selector */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Select Discharge Rate</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
-                  {dischargeRate <= 0.05 ? 'C/20 (20hr)' : dischargeRate <= 0.1 ? 'C/10 (10hr)' : dischargeRate <= 0.2 ? 'C/5 (5hr)' : dischargeRate <= 0.5 ? 'C/2 (2hr)' : dischargeRate <= 1 ? 'C/1 (1hr)' : dischargeRate <= 2 ? '2C (30min)' : '4C (15min)'}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0.05"
-                max="4"
-                step="0.05"
-                value={dischargeRate}
-                onChange={(e) => setDischargeRate(parseFloat(e.target.value))}
-                style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>C/20 (Slow)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>4C (Very Fast)</span>
-              </div>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{calculateTwistRuntime().toFixed(1)} min</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Actual Runtime</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.loss }}>
-                  {(100 - (calculateTwistRuntime() / (100 / (100/20 * dischargeRate * 20) * 60)) * 100).toFixed(0)}%
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <DischargeRateVisualization />
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Lost</div>
+
+                {/* Stats display */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px',
+                }}>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.accent }}>{calculateTwistRuntime().toFixed(1)} min</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Actual Runtime</div>
+                  </div>
+                  <div style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ ...typo.h3, color: colors.loss }}>
+                      {(100 - (calculateTwistRuntime() / (100 / (100/20 * dischargeRate * 20) * 60)) * 100).toFixed(0)}%
+                    </div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Lost</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '16px',
+                padding: '24px',
+              }}>
+                {/* Discharge rate selector */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Select Discharge Rate</span>
+                    <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                      {dischargeRate <= 0.05 ? 'C/20 (20hr)' : dischargeRate <= 0.1 ? 'C/10 (10hr)' : dischargeRate <= 0.2 ? 'C/5 (5hr)' : dischargeRate <= 0.5 ? 'C/2 (2hr)' : dischargeRate <= 1 ? 'C/1 (1hr)' : dischargeRate <= 2 ? '2C (30min)' : '4C (15min)'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.05"
+                    max="4"
+                    step="0.05"
+                    value={dischargeRate}
+                    onChange={(e) => setDischargeRate(parseFloat(e.target.value))}
+                    style={{ width: '100%', accentColor: '#3b82f6', height: '20px', touchAction: 'pan-y', WebkitAppearance: 'none' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>C/20 (Slow)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>4C (Very Fast)</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

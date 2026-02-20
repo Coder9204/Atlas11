@@ -837,12 +837,22 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             </p>
           </div>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
+            marginBottom: '16px',
           }}>
             <svg viewBox="0 0 500 280" style={{ width: '100%', marginBottom: '20px' }}>
               <defs>
@@ -987,6 +997,65 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
               </text>
             </svg>
 
+            {/* Formula */}
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: colors.accent, marginBottom: '4px' }}>
+                ΔP = ρ × c × Δv
+              </div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>
+                Joukowsky equation: Pressure rise = Density × Sound speed × Velocity change
+              </div>
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{flowVelocity} m/s</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Flow Velocity</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{pressureInBars(calculatePressureRise(flowVelocity)).toFixed(1)} bar</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Expected Peak</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+                gridColumn: 'span 2',
+              }}>
+                <div style={{ ...typo.h3, color: colors.error }}>{pressureInBars(maxPressure).toFixed(1)} bar</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Measured Peak</div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
             {/* Velocity slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1038,7 +1107,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             </div>
 
             {/* Action buttons */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
               {valveOpen ? (
                 <button
                   onClick={closeValve}
@@ -1074,57 +1143,8 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 </button>
               )}
             </div>
-
-            {/* Formula */}
-            <div style={{
-              background: `${colors.accent}11`,
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: colors.accent, marginBottom: '4px' }}>
-                ΔP = ρ × c × Δv
-              </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>
-                Joukowsky equation: Pressure rise = Density × Sound speed × Velocity change
-              </div>
             </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{flowVelocity} m/s</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Flow Velocity</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{pressureInBars(calculatePressureRise(flowVelocity)).toFixed(1)} bar</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Expected Peak</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.error }}>{pressureInBars(maxPressure).toFixed(1)} bar</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Measured Peak</div>
-              </div>
-            </div>
+          </div>
           </div>
 
           {/* Result reveal */}
@@ -1450,11 +1470,20 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             Adjust closure time and see how it affects peak pressure
           </p>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
             {/* Pressure graph */}
             <svg viewBox="0 0 400 180" style={{ width: '100%', marginBottom: '20px' }}>
@@ -1524,7 +1553,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             {/* Stats grid */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '20px',
             }}>
@@ -1558,7 +1587,14 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 </div>
               </div>
             </div>
-
+          </div>
+          </div>
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+            }}>
             {/* Closure time slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1626,6 +1662,8 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
                 {twistAnimating ? 'Simulating...' : 'Run Simulation'}
               </button>
             </div>
+            </div>
+          </div>
           </div>
 
           {/* Result reveal */}

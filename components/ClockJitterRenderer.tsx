@@ -1184,9 +1184,20 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderClockSignalVisualization()}
               </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
               {/* Jitter amount slider */}
               <div style={{ marginBottom: '24px' }}>
@@ -1245,7 +1256,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               {/* Metrics display */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '16px',
               }}>
                 <div style={{
@@ -1284,6 +1295,8 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                     {metrics.actualSnr.toFixed(0)} dB
                   </div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>ADC SNR Impact</div>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -1676,9 +1689,20 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               padding: '24px',
               marginBottom: '24px',
             }}>
+              {/* Side-by-side layout */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '12px' : '20px',
+                width: '100%',
+                alignItems: isMobile ? 'center' : 'flex-start',
+              }}>
+                <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 {renderEyeDiagramVisualization()}
               </div>
+                </div>
+                <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
               {/* Jitter slider */}
               <div style={{ marginBottom: '20px' }}>
@@ -1768,6 +1792,8 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
                     {metrics.marginPercent.toFixed(0)}%
                   </div>
                   <div style={{ ...typo.small, color: colors.textMuted }}>Timing Margin</div>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -2006,7 +2032,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
 
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '12px',
               }}>
                 {app.stats.map((stat, i) => (

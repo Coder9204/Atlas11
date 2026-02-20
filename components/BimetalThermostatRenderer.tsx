@@ -963,85 +963,95 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             <p style={{ ...typo.small, color: colors.textSecondary }}>Adjust the temperature slider and observe how the strip bends</p>
           </div>
 
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            backgroundColor: colors.bgCard,
-            borderRadius: '12px',
-            padding: '8px',
-            marginBottom: '16px',
-            border: `1px solid ${colors.border}`,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
           }}>
-            {renderBimetallicStrip()}
-          </div>
-
-          {/* Temperature slider */}
-          <div style={{
-            backgroundColor: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            border: `1px solid ${colors.border}`,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: colors.textSecondary }}>Temperature:</span>
-              <span style={{ fontWeight: 600, color: temperature > 50 ? colors.error : '#22d3ee' }}>{temperature}C</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{
+                backgroundColor: colors.bgCard,
+                borderRadius: '12px',
+                padding: '8px',
+                marginBottom: '16px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                {renderBimetallicStrip()}
+              </div>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={temperature}
-              onChange={(e) => {
-                const newTemp = Number(e.target.value);
-                setIsHeating(newTemp > temperature);
-                setTemperature(newTemp);
-              }}
-              style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>
-              <span>0C</span>
-              <span>Contact: {contactThreshold}C</span>
-              <span>100C</span>
-            </div>
-          </div>
-
-          {/* Metal pair selector */}
-          <div style={{
-            backgroundColor: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            border: `1px solid ${colors.border}`,
-          }}>
-            <p style={{ color: colors.textSecondary, marginBottom: '8px' }}>Metal Pair:</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              {metalPairs.map((pair, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setSelectedPair(i); playSound('click'); }}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: selectedPair === i ? `2px solid ${colors.accent}` : `2px solid ${colors.border}`,
-                    backgroundColor: selectedPair === i ? `${colors.accent}20` : 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature slider */}
+              <div style={{
+                backgroundColor: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ color: colors.textSecondary }}>Temperature:</span>
+                  <span style={{ fontWeight: 600, color: temperature > 50 ? colors.error : '#22d3ee' }}>{temperature}C</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={temperature}
+                  onChange={(e) => {
+                    const newTemp = Number(e.target.value);
+                    setIsHeating(newTemp > temperature);
+                    setTemperature(newTemp);
                   }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: pair.metal1.color }} />
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: pair.metal2.color }} />
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: colors.textPrimary }}>{pair.name}</span>
-                  </div>
-                  <p style={{ fontSize: '10px', color: colors.textMuted }}>Delta alpha = {pair.metal1.alpha - pair.metal2.alpha}</p>
-                </button>
-              ))}
-            </div>
-          </div>
+                  style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>
+                  <span>0C</span>
+                  <span>Contact: {contactThreshold}C</span>
+                  <span>100C</span>
+                </div>
+              </div>
 
-          {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
+              {/* Metal pair selector */}
+              <div style={{
+                backgroundColor: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <p style={{ color: colors.textSecondary, marginBottom: '8px' }}>Metal Pair:</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {metalPairs.map((pair, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setSelectedPair(i); playSound('click'); }}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: selectedPair === i ? `2px solid ${colors.accent}` : `2px solid ${colors.border}`,
+                        backgroundColor: selectedPair === i ? `${colors.accent}20` : 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: pair.metal1.color }} />
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: pair.metal2.color }} />
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: colors.textPrimary }}>{pair.name}</span>
+                      </div>
+                      <p style={{ fontSize: '10px', color: colors.textMuted }}>Delta alpha = {pair.metal1.alpha - pair.metal2.alpha}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '16px' }}>
             <div style={{ backgroundColor: `${currentPair.metal1.color}20`, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
               <p style={{ ...typo.label, color: colors.textSecondary }}>{currentPair.metal1.name}</p>
               <p style={{ fontWeight: 'bold', color: currentPair.metal1.color }}>alpha = {currentPair.metal1.alpha}</p>
@@ -1053,6 +1063,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             <div style={{ backgroundColor: `${colors.accent}20`, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
               <p style={{ ...typo.label, color: colors.textSecondary }}>Difference</p>
               <p style={{ fontWeight: 'bold', color: colors.accentSecondary }}>Delta = {currentPair.metal1.alpha - currentPair.metal2.alpha}</p>
+            </div>
+              </div>
             </div>
           </div>
 
@@ -1327,58 +1339,69 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             </button>
           </div>
 
-          {/* Visualization */}
+          {/* Side-by-side layout */}
           <div style={{
-            backgroundColor: colors.bgCard,
-            borderRadius: '12px',
-            padding: '8px',
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
             marginBottom: '16px',
-            border: `1px solid ${colors.border}`,
           }}>
-            {renderBimetallicStrip()}
-          </div>
-
-          {/* Temperature control */}
-          <div style={{
-            backgroundColor: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            border: `1px solid ${colors.border}`,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ color: colors.textSecondary }}>
-                Temperature ({isHeating ? 'Heating' : 'Cooling'}):
-              </span>
-              <span style={{ fontWeight: 600, color: temperature > 50 ? colors.error : '#22d3ee' }}>{temperature}C</span>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+              {/* Visualization */}
+              <div style={{
+                backgroundColor: colors.bgCard,
+                borderRadius: '12px',
+                padding: '8px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                {renderBimetallicStrip()}
+              </div>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={temperature}
-              onChange={(e) => {
-                const newTemp = Number(e.target.value);
-                setIsHeating(newTemp > temperature);
-                setTemperature(newTemp);
-              }}
-              style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
-              {showHysteresis ? (
-                <>
-                  <span style={{ color: colors.textMuted }}>0C</span>
-                  <span style={{ color: colors.error }}>OFF: {contactThreshold - 3}C</span>
-                  <span style={{ color: colors.success }}>ON: {contactThreshold}C</span>
-                  <span style={{ color: colors.textMuted }}>100C</span>
-                </>
-              ) : (
-                <>
-                  <span style={{ color: colors.textMuted }}>0C</span>
-                  <span style={{ color: colors.accent }}>Switch: {contactThreshold}C</span>
-                  <span style={{ color: colors.textMuted }}>100C</span>
-                </>
-              )}
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+              {/* Temperature control */}
+              <div style={{
+                backgroundColor: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ color: colors.textSecondary }}>
+                    Temperature ({isHeating ? 'Heating' : 'Cooling'}):
+                  </span>
+                  <span style={{ fontWeight: 600, color: temperature > 50 ? colors.error : '#22d3ee' }}>{temperature}C</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={temperature}
+                  onChange={(e) => {
+                    const newTemp = Number(e.target.value);
+                    setIsHeating(newTemp > temperature);
+                    setTemperature(newTemp);
+                  }}
+                  style={{ width: '100%', height: '20px', accentColor: colors.accent, cursor: 'pointer', touchAction: 'pan-y' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px' }}>
+                  {showHysteresis ? (
+                    <>
+                      <span style={{ color: colors.textMuted }}>0C</span>
+                      <span style={{ color: colors.error }}>OFF: {contactThreshold - 3}C</span>
+                      <span style={{ color: colors.success }}>ON: {contactThreshold}C</span>
+                      <span style={{ color: colors.textMuted }}>100C</span>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ color: colors.textMuted }}>0C</span>
+                      <span style={{ color: colors.accent }}>Switch: {contactThreshold}C</span>
+                      <span style={{ color: colors.textMuted }}>100C</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

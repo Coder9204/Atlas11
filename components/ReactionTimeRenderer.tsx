@@ -1094,7 +1094,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   };
 
   const renderPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+    <div style={{ padding: typo.pagePadding, maxWidth: '900px', margin: '0 auto' }}>
       {renderSectionHeader('Step 2 • Experiment', 'Ruler Drop Test', 'Catch it as fast as you can!')}
 
       {/* Educational Context */}
@@ -1108,178 +1108,192 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         </p>
       </div>
 
-      {/* Interactive Controls Panel */}
-      <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="font-semibold text-white">⚙️ Physics Controls</h4>
-          <button
-            onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
-            className="text-slate-400 hover:text-white text-sm"
-            style={{ zIndex: 10 }}
-          >
-            {showPhysicsPanel ? 'Hide' : 'Show'}
-          </button>
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left panel - Visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+            {renderRulerDrop()}
+          </div>
+
+          <div className="flex justify-center gap-3 mb-4">
+            {rulerState === 'ready' && (
+              <button
+                onClick={() => startTest()}
+                className="px-8 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl"
+                style={{ zIndex: 10 }}
+              >
+                🎯 Start Test
+              </button>
+            )}
+            {(rulerState === 'waiting' || rulerState === 'dropping') && (
+              <button
+                onClick={() => catchRuler()}
+                className="px-12 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl animate-pulse"
+                style={{ zIndex: 10 }}
+              >
+                👋 CATCH!
+              </button>
+            )}
+            {(rulerState === 'caught' || rulerState === 'missed') && (
+              <button
+                onClick={() => resetTest()}
+                className="px-8 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700"
+                style={{ zIndex: 10 }}
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+
+          {rulerState === 'caught' && reactionTime !== null && catchDistance !== null && (
+            <div className="bg-green-50 rounded-xl p-4 mb-4">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-green-600 mb-1">
+                  {reactionTime.toFixed(0)}ms
+                </p>
+                <p className="text-green-700">
+                  Caught at {catchDistance.toFixed(1)}cm
+                  <br />
+                  <span className="text-2xl">{getReactionRating(reactionTime).emoji}</span>
+                  <span className="font-semibold ml-2" style={{ color: getReactionRating(reactionTime).color }}>
+                    {getReactionRating(reactionTime).label}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {rulerState === 'missed' && (
+            <div className="bg-red-50 rounded-xl p-4 mb-4">
+              <p className="text-red-800 text-center">
+                <span className="font-bold">Missed!</span> The ruler fell more than {rulerLength}cm.
+                <br />
+                Reaction time would be &gt;{distanceToTime(rulerLength).toFixed(0)}ms
+              </p>
+            </div>
+          )}
         </div>
 
-        {showPhysicsPanel && (
-          <div className="space-y-4">
-            {/* Gravity Slider */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-300">Gravity Environment</span>
-                <span className="text-amber-400 font-mono">{gravity.toFixed(2)} m/s²</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="25"
-                step="0.1"
-                value={gravity}
-                onChange={(e) => setGravity(parseFloat(e.target.value))}
-                onInput={(e) => setGravity(parseFloat((e.target as HTMLInputElement).value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
-                disabled={rulerState !== 'ready'}
-              />
-              <div className="flex justify-between mt-2 gap-2">
-                {gravityPresets.map(preset => (
-                  <button
-                    key={preset.name}
-                    onClick={() => setGravity(preset.value)}
+        {/* Right panel - Controls */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          {/* Interactive Controls Panel */}
+          <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-white">Physics Controls</h4>
+              <button
+                onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+                className="text-slate-400 hover:text-white text-sm"
+                style={{ zIndex: 10 }}
+              >
+                {showPhysicsPanel ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
+            {showPhysicsPanel && (
+              <div className="space-y-4">
+                {/* Gravity Slider */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-300">Gravity</span>
+                    <span className="text-amber-400 font-mono">{gravity.toFixed(2)} m/s²</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="25"
+                    step="0.1"
+                    value={gravity}
+                    onChange={(e) => setGravity(parseFloat(e.target.value))}
+                    onInput={(e) => setGravity(parseFloat((e.target as HTMLInputElement).value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
                     disabled={rulerState !== 'ready'}
-                    className={`flex-1 py-1 px-2 rounded text-xs font-medium transition-all ${
-                      Math.abs(gravity - preset.value) < 0.1
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
-                    style={{ zIndex: 10 }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                    {gravityPresets.map(preset => (
+                      <button
+                        key={preset.name}
+                        onClick={() => setGravity(preset.value)}
+                        disabled={rulerState !== 'ready'}
+                        className={`w-full py-1 px-2 rounded text-xs font-medium transition-all ${
+                          Math.abs(gravity - preset.value) < 0.1
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                        style={{ zIndex: 10 }}
+                      >
+                        {preset.emoji} {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ruler Length Slider */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-300">Ruler Length</span>
+                    <span className="text-blue-400 font-mono">{rulerLength} cm</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="15"
+                    max="50"
+                    step="5"
+                    value={rulerLength}
+                    onChange={(e) => setRulerLength(parseInt(e.target.value))}
+                    onInput={(e) => setRulerLength(parseInt((e.target as HTMLInputElement).value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                    disabled={rulerState !== 'ready'}
+                  />
+                </div>
+
+                {/* Real-time Physics Display */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px solid rgba(51,65,85,1)' }}>
+                  <div className="text-center bg-slate-900/50 rounded p-2">
+                    <div className="text-xs text-slate-400">Max Fall Time</div>
+                    <div className="text-lg font-bold text-green-400">{distanceToTime(rulerLength).toFixed(0)}ms</div>
+                  </div>
+                  <div className="text-center bg-slate-900/50 rounded p-2">
+                    <div className="text-xs text-slate-400">Current Distance</div>
+                    <div className="text-lg font-bold text-blue-400">{rulerPosition.toFixed(1)}cm</div>
+                  </div>
+                  <div className="text-center bg-slate-900/50 rounded p-2">
+                    <div className="text-xs text-slate-400">Fall Velocity</div>
+                    <div className="text-lg font-bold text-purple-400">{getCurrentVelocity(rulerPosition).toFixed(0)}cm/s</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {attempts.length > 0 && (
+            <div className="bg-indigo-50 rounded-xl p-4 mb-4">
+              <h4 className="font-semibold text-indigo-800 mb-2">Your Attempts:</h4>
+              <div className="flex flex-wrap gap-2">
+                {attempts.map((time, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 rounded-full text-sm font-medium text-white"
+                    style={{ backgroundColor: getReactionRating(time).color }}
                   >
-                    {preset.emoji} {preset.name}
-                  </button>
+                    {time.toFixed(0)}ms
+                  </span>
                 ))}
               </div>
+              <p className="text-sm text-indigo-700 mt-2">
+                Average: {(attempts.reduce((a, b) => a + b, 0) / attempts.length).toFixed(0)}ms
+              </p>
             </div>
-
-            {/* Ruler Length Slider */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-300">Ruler Length</span>
-                <span className="text-blue-400 font-mono">{rulerLength} cm</span>
-              </div>
-              <input
-                type="range"
-                min="15"
-                max="50"
-                step="5"
-                value={rulerLength}
-                onChange={(e) => setRulerLength(parseInt(e.target.value))}
-                onInput={(e) => setRulerLength(parseInt((e.target as HTMLInputElement).value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                style={{ width: "100%", height: "20px", accentColor: "#3b82f6", cursor: "pointer", touchAction: "pan-y", WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
-                disabled={rulerState !== 'ready'}
-              />
-            </div>
-
-            {/* Real-time Physics Display */}
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700">
-              <div className="text-center bg-slate-900/50 rounded p-2">
-                <div className="text-xs text-slate-400">Max Fall Time</div>
-                <div className="text-lg font-bold text-green-400">{distanceToTime(rulerLength).toFixed(0)}ms</div>
-              </div>
-              <div className="text-center bg-slate-900/50 rounded p-2">
-                <div className="text-xs text-slate-400">Current Distance</div>
-                <div className="text-lg font-bold text-blue-400">{rulerPosition.toFixed(1)}cm</div>
-              </div>
-              <div className="text-center bg-slate-900/50 rounded p-2">
-                <div className="text-xs text-slate-400">Fall Velocity</div>
-                <div className="text-lg font-bold text-purple-400">{getCurrentVelocity(rulerPosition).toFixed(0)}cm/s</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
-        {renderRulerDrop()}
-      </div>
-
-      <div className="flex justify-center gap-3 mb-4">
-        {rulerState === 'ready' && (
-          <button
-            onClick={() => startTest()}
-            className="px-8 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl"
-            style={{ zIndex: 10 }}
-          >
-            🎯 Start Test
-          </button>
-        )}
-        {(rulerState === 'waiting' || rulerState === 'dropping') && (
-          <button
-            onClick={() => catchRuler()}
-            className="px-12 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl animate-pulse"
-            style={{ zIndex: 10 }}
-          >
-            👋 CATCH!
-          </button>
-        )}
-        {(rulerState === 'caught' || rulerState === 'missed') && (
-          <button
-            onClick={() => resetTest()}
-            className="px-8 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700"
-            style={{ zIndex: 10 }}
-          >
-            Try Again
-          </button>
-        )}
-      </div>
-
-      {rulerState === 'caught' && reactionTime !== null && catchDistance !== null && (
-        <div className="bg-green-50 rounded-xl p-4 mb-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-green-600 mb-1">
-              {reactionTime.toFixed(0)}ms
-            </p>
-            <p className="text-green-700">
-              Caught at {catchDistance.toFixed(1)}cm
-              <br />
-              <span className="text-2xl">{getReactionRating(reactionTime).emoji}</span>
-              <span className="font-semibold ml-2" style={{ color: getReactionRating(reactionTime).color }}>
-                {getReactionRating(reactionTime).label}
-              </span>
-            </p>
-          </div>
+          )}
         </div>
-      )}
-
-      {rulerState === 'missed' && (
-        <div className="bg-red-50 rounded-xl p-4 mb-4">
-          <p className="text-red-800 text-center">
-            <span className="font-bold">Missed!</span> The ruler fell more than {rulerLength}cm.
-            <br />
-            Reaction time would be &gt;{distanceToTime(rulerLength).toFixed(0)}ms
-          </p>
-        </div>
-      )}
-
-      {attempts.length > 0 && (
-        <div className="bg-indigo-50 rounded-xl p-4 mb-4">
-          <h4 className="font-semibold text-indigo-800 mb-2">📊 Your Attempts:</h4>
-          <div className="flex flex-wrap gap-2">
-            {attempts.map((time, i) => (
-              <span
-                key={i}
-                className="px-3 py-1 rounded-full text-sm font-medium text-white"
-                style={{ backgroundColor: getReactionRating(time).color }}
-              >
-                {time.toFixed(0)}ms
-              </span>
-            ))}
-          </div>
-          <p className="text-sm text-indigo-700 mt-2">
-            Average: {(attempts.reduce((a, b) => a + b, 0) / attempts.length).toFixed(0)}ms
-          </p>
-        </div>
-      )}
+      </div>
 
       {renderBottomBar(() => goToPhase('review'), attempts.length >= 3, 'Understand the Physics')}
     </div>
@@ -1474,108 +1488,123 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   };
 
   const renderTwistPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+    <div style={{ padding: typo.pagePadding, maxWidth: '900px', margin: '0 auto' }}>
       {renderSectionHeader('Step 5 • Twist Experiment', 'Distraction Test', 'Catch the ruler while multitasking')}
 
-      <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
-        {renderRulerDrop(true)}
-      </div>
-
-      <div className="mb-4">
-        <h4 className="font-semibold text-gray-700 mb-2">Select Distraction:</h4>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { id: 'none' as const, label: 'None', icon: '😌' },
-            { id: 'visual' as const, label: 'Visual', icon: '👀' },
-            { id: 'math' as const, label: 'Math', icon: '🔢' }
-          ].map(d => (
-            <button
-              key={d.id}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setDistractionType(d.id);
-                resetTest();
-              }}
-              className={`p-3 rounded-lg border-2 transition-all ${
-                distractionType === d.id
-                  ? 'border-purple-500 bg-purple-50 shadow-md'
-                  : 'border-gray-200 bg-white'
-              }`}
-            >
-              <span className="text-xl">{d.icon}</span>
-              <p className="text-sm font-medium">{d.label}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-center gap-3 mb-4">
-        {rulerState === 'ready' && (
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              startDistractionTest();
-            }}
-            className="px-8 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
-          >
-            🎯 Start Test
-          </button>
-        )}
-        {(rulerState === 'waiting' || rulerState === 'dropping') && (
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              catchRuler();
-              if (reactionTime !== null) {
-                setTwistAttempts(prev => [...prev, { type: distractionType, time: reactionTime }]);
-              }
-            }}
-            className="px-12 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg animate-pulse"
-          >
-            👋 CATCH!
-          </button>
-        )}
-        {(rulerState === 'caught' || rulerState === 'missed') && (
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              if (reactionTime !== null) {
-                setTwistAttempts(prev => [...prev, { type: distractionType, time: reactionTime }]);
-              }
-              resetTest();
-            }}
-            className="px-8 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700"
-          >
-            Try Again
-          </button>
-        )}
-      </div>
-
-      {rulerState === 'caught' && reactionTime !== null && (
-        <div className="bg-purple-50 rounded-xl p-4 mb-4">
-          <p className="text-center text-2xl font-bold text-purple-600">{reactionTime.toFixed(0)}ms</p>
-          <p className="text-center text-purple-700">with {distractionType === 'none' ? 'no' : distractionType} distraction</p>
-        </div>
-      )}
-
-      {twistAttempts.length > 0 && (
-        <div className="bg-indigo-50 rounded-xl p-4 mb-4">
-          <h4 className="font-semibold text-indigo-800 mb-2">📊 Distraction Results:</h4>
-          <div className="space-y-2">
-            {['none', 'visual', 'math'].map(type => {
-              const typeAttempts = twistAttempts.filter(a => a.type === type);
-              if (typeAttempts.length === 0) return null;
-              const avg = typeAttempts.reduce((a, b) => a + b.time, 0) / typeAttempts.length;
-              return (
-                <div key={type} className="flex justify-between items-center bg-white rounded-lg p-2">
-                  <span className="text-gray-700 capitalize">{type === 'none' ? 'No distraction' : type}</span>
-                  <span className="font-bold" style={{ color: getReactionRating(avg).color }}>{avg.toFixed(0)}ms</span>
-                </div>
-              );
-            })}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '12px' : '20px',
+        width: '100%',
+        alignItems: isMobile ? 'center' : 'flex-start',
+      }}>
+        {/* Left panel - Visualization */}
+        <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+          <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+            {renderRulerDrop(true)}
           </div>
+
+          <div className="flex justify-center gap-3 mb-4">
+            {rulerState === 'ready' && (
+              <button
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  startDistractionTest();
+                }}
+                className="px-8 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg"
+              >
+                Start Test
+              </button>
+            )}
+            {(rulerState === 'waiting' || rulerState === 'dropping') && (
+              <button
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  catchRuler();
+                  if (reactionTime !== null) {
+                    setTwistAttempts(prev => [...prev, { type: distractionType, time: reactionTime }]);
+                  }
+                }}
+                className="px-12 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg animate-pulse"
+              >
+                CATCH!
+              </button>
+            )}
+            {(rulerState === 'caught' || rulerState === 'missed') && (
+              <button
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  if (reactionTime !== null) {
+                    setTwistAttempts(prev => [...prev, { type: distractionType, time: reactionTime }]);
+                  }
+                  resetTest();
+                }}
+                className="px-8 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700"
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+
+          {rulerState === 'caught' && reactionTime !== null && (
+            <div className="bg-purple-50 rounded-xl p-4 mb-4">
+              <p className="text-center text-2xl font-bold text-purple-600">{reactionTime.toFixed(0)}ms</p>
+              <p className="text-center text-purple-700">with {distractionType === 'none' ? 'no' : distractionType} distraction</p>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right panel - Controls */}
+        <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+          <div className="mb-4">
+            <h4 className="font-semibold text-gray-700 mb-2">Select Distraction:</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { id: 'none' as const, label: 'None', icon: '😌' },
+                { id: 'visual' as const, label: 'Visual', icon: '👀' },
+                { id: 'math' as const, label: 'Math', icon: '🔢' }
+              ].map(d => (
+                <button
+                  key={d.id}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    setDistractionType(d.id);
+                    resetTest();
+                  }}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    distractionType === d.id
+                      ? 'border-purple-500 bg-purple-50 shadow-md'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <span className="text-xl">{d.icon}</span>
+                  <p className="text-sm font-medium">{d.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {twistAttempts.length > 0 && (
+            <div className="bg-indigo-50 rounded-xl p-4 mb-4">
+              <h4 className="font-semibold text-indigo-800 mb-2">Distraction Results:</h4>
+              <div className="space-y-2">
+                {['none', 'visual', 'math'].map(type => {
+                  const typeAttempts = twistAttempts.filter(a => a.type === type);
+                  if (typeAttempts.length === 0) return null;
+                  const avg = typeAttempts.reduce((a, b) => a + b.time, 0) / typeAttempts.length;
+                  return (
+                    <div key={type} className="flex justify-between items-center bg-white rounded-lg p-2">
+                      <span className="text-gray-700 capitalize">{type === 'none' ? 'No distraction' : type}</span>
+                      <span className="font-bold" style={{ color: getReactionRating(avg).color }}>{avg.toFixed(0)}ms</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {renderBottomBar(() => goToPhase('twist_review'), twistAttempts.length >= 3, 'Review Findings')}
     </div>

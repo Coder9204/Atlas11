@@ -1177,7 +1177,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             {/* Real-time calculated values */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '16px',
             }}>
@@ -1200,18 +1200,6 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 textAlign: 'center',
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Defense</div>
-                <div style={{ ...typo.h3, color: colors.textSecondary }}>
-                  {hasSafeFolder ? 'Active' : 'None'}
-                </div>
-              </div>
-              <div style={{
-                background: colors.bgCard,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${colors.border}`,
-              }}>
                 <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Risk Score</div>
                 <div style={{ ...typo.h3, color: attackTriggered && !attackBlocked ? colors.danger : colors.safe }}>
                   {attackTriggered && !attackBlocked ? '100%' : '0%'}
@@ -1219,94 +1207,105 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               </div>
             </div>
 
-            {/* Main visualization */}
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <AgentSecurityVisualization interactive={true} showDefenses={false} />
-              </div>
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                {/* Main visualization */}
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <AgentSecurityVisualization interactive={true} showDefenses={false} />
+                  </div>
 
-            {/* File content preview */}
-            {selectedFile && (
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '16px',
-                marginBottom: '16px',
-                borderLeft: `3px solid ${
-                  fileSystem.find(f => f.path === selectedFile)?.type === 'malicious' ? colors.danger :
-                  fileSystem.find(f => f.path === selectedFile)?.type === 'sensitive' ? colors.warning :
-                  colors.safe
-                }`,
-              }}>
-                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
-                  File: {selectedFile}
-                </p>
-                <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', margin: 0 }}>
-                  {fileSystem.find(f => f.path === selectedFile)?.content}
-                </p>
+                  {/* File content preview */}
+                  {selectedFile && (
+                    <div style={{
+                      background: colors.bgSecondary,
+                      borderRadius: '8px',
+                      padding: '16px',
+                      borderLeft: `3px solid ${
+                        fileSystem.find(f => f.path === selectedFile)?.type === 'malicious' ? colors.danger :
+                        fileSystem.find(f => f.path === selectedFile)?.type === 'sensitive' ? colors.warning :
+                        colors.safe
+                      }`,
+                    }}>
+                      <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                        File: {selectedFile}
+                      </p>
+                      <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', margin: 0 }}>
+                        {fileSystem.find(f => f.path === selectedFile)?.content}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-
-            {/* File selector slider */}
-            <div style={{ marginTop: '16px' }}>
-              <label style={{
-                display: 'block',
-                color: colors.textSecondary,
-                fontSize: '14px',
-                marginBottom: '8px',
-                fontWeight: 600,
-              }}>
-                File Position / Pressure: {fileSystem[fileIndex].label} — Threat Index: {fileIndex + 1}/{fileSystem.length}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max={fileSystem.length - 1}
-                step="1"
-                value={fileIndex}
-                onChange={(e) => {
-                  const idx = parseInt(e.target.value);
-                  setFileIndex(idx);
-                  const file = fileSystem[idx];
-                  setSelectedFile(file.path);
-                  if (file.type === 'malicious') {
-                    setAttackTriggered(true);
-                    setAttackBlocked(hasSafeFolder && !file.path.startsWith('/work/'));
-                    playSound('failure');
-                  } else {
-                    setAttackTriggered(false);
-                    setAttackBlocked(false);
-                    playSound('click');
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  height: '20px',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  background: `linear-gradient(to right, ${colors.safe} 0%, ${colors.warning} 50%, ${colors.danger} 100%)`,
-                  cursor: 'pointer',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  touchAction: 'pan-y',
-                  accentColor: '#3b82f6',
-                }}
-              />
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '4px',
-              }}>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Low Risk (min)</span>
-                <span style={{ fontSize: '11px', color: '#C8C8D0' }}>High Risk (max)</span>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
+                {/* File selector slider */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{
+                    display: 'block',
+                    color: colors.textSecondary,
+                    fontSize: '14px',
+                    marginBottom: '8px',
+                    fontWeight: 600,
+                  }}>
+                    File Position / Pressure: {fileSystem[fileIndex].label} — Threat Index: {fileIndex + 1}/{fileSystem.length}
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max={fileSystem.length - 1}
+                    step="1"
+                    value={fileIndex}
+                    onChange={(e) => {
+                      const idx = parseInt(e.target.value);
+                      setFileIndex(idx);
+                      const file = fileSystem[idx];
+                      setSelectedFile(file.path);
+                      if (file.type === 'malicious') {
+                        setAttackTriggered(true);
+                        setAttackBlocked(hasSafeFolder && !file.path.startsWith('/work/'));
+                        playSound('failure');
+                      } else {
+                        setAttackTriggered(false);
+                        setAttackBlocked(false);
+                        playSound('click');
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '20px',
+                      borderRadius: '4px',
+                      outline: 'none',
+                      background: `linear-gradient(to right, ${colors.safe} 0%, ${colors.warning} 50%, ${colors.danger} 100%)`,
+                      cursor: 'pointer',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      touchAction: 'pan-y',
+                      accentColor: '#3b82f6',
+                    }}
+                  />
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: '4px',
+                  }}>
+                    <span style={{ fontSize: '11px', color: '#C8C8D0' }}>Low Risk (min)</span>
+                    <span style={{ fontSize: '11px', color: '#C8C8D0' }}>High Risk (max)</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Discovery prompt */}
           {attackTriggered && !attackBlocked && (
@@ -1627,7 +1626,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
             {/* Real-time calculated values */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
               marginBottom: '16px',
             }}>
@@ -1650,18 +1649,6 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 textAlign: 'center',
                 border: `1px solid ${colors.border}`,
               }}>
-                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Threat Level</div>
-                <div style={{ ...typo.h3, color: threatLevel === 'HIGH' ? colors.danger : threatLevel === 'MEDIUM' ? colors.warning : colors.safe }}>
-                  {threatLevel}
-                </div>
-              </div>
-              <div style={{
-                background: colors.bgCard,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-                border: `1px solid ${colors.border}`,
-              }}>
                 <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Status</div>
                 <div style={{ ...typo.h3, color: attackBlocked ? colors.safe : attackTriggered ? colors.danger : colors.textSecondary }}>
                   {attackBlocked ? 'Blocked' : attackTriggered ? 'Breach' : 'Safe'}
@@ -1669,15 +1656,27 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               </div>
             </div>
 
+            {/* Side-by-side layout */}
             <div style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '24px',
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
               marginBottom: '24px',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <AgentSecurityVisualization interactive={true} showDefenses={true} />
+              <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+                <div style={{
+                  background: colors.bgCard,
+                  borderRadius: '16px',
+                  padding: '24px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                    <AgentSecurityVisualization interactive={true} showDefenses={true} />
+                  </div>
+                </div>
               </div>
+              <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
 
             {/* Safe folder slider */}
             <div style={{ marginBottom: '20px' }}>
@@ -1802,6 +1801,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 <span style={{ fontSize: '11px', color: '#C8C8D0' }}>High Risk (max)</span>
               </div>
             </div>
+          </div>
           </div>
 
           {/* Success message */}

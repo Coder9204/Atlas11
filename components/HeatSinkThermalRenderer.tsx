@@ -1002,6 +1002,16 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               </p>
             </div>
 
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              marginBottom: '24px',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Main visualization */}
             <div style={{
               background: colors.bgCard,
@@ -1012,7 +1022,31 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <HeatSinkVisualization />
               </div>
+            </div>
 
+            {/* Before/after comparison */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '16px',
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: `1px solid ${colors.border}`, paddingRight: '16px' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>No TIM (Air)</p>
+                <p style={{ ...typo.h3, color: colors.error, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 2.0 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 2.0 K/W</p>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>Premium TIM</p>
+                <p style={{ ...typo.h3, color: colors.success, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 0.2 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 0.2 K/W</p>
+              </div>
+            </div>
+            </div>
+
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
               {/* Power slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1034,7 +1068,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                 <span style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
                   Thermal Interface Material
                 </span>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {[
                     { id: 'none', label: 'None (Air)', r: '2.0 K/W' },
                     { id: 'cheap', label: 'Basic', r: '0.5 K/W' },
@@ -1044,7 +1078,6 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                       key={tim.id}
                       onClick={() => setThermalPaste(tim.id as typeof thermalPaste)}
                       style={{
-                        flex: 1,
                         padding: '12px',
                         borderRadius: '8px',
                         border: `2px solid ${thermalPaste === tim.id ? colors.accent : colors.border}`,
@@ -1092,27 +1125,6 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                 />
               </div>
             </div>
-
-            {/* Before/after comparison */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '16px',
-              marginBottom: '24px',
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '16px',
-            }}>
-              <div style={{ flex: 1, textAlign: 'center', borderRight: `1px solid ${colors.border}`, paddingRight: '16px' }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>No TIM (Air)</p>
-                <p style={{ ...typo.h3, color: colors.error, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 2.0 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 2.0 K/W</p>
-              </div>
-              <div style={{ flex: 1, textAlign: 'center' }}>
-                <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>Premium TIM</p>
-                <p style={{ ...typo.h3, color: colors.success, margin: '4px 0' }}>{(ambientTemp + cpuPower * (0.3 + 0.2 + 0.1 + thermalRes.R_fins)).toFixed(0)}°C</p>
-                <p style={{ ...typo.small, color: colors.textSecondary }}>R_tim = 0.2 K/W</p>
-              </div>
             </div>
 
             {/* Discovery prompts */}
@@ -1442,16 +1454,28 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             </p>
           </div>
 
+          {/* Side-by-side layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '20px',
+            width: '100%',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            marginBottom: '24px',
+          }}>
+          <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
-            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <HeatSinkVisualization />
             </div>
+          </div>
+          </div>
 
+          <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Fin count slider with efficiency display */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1479,6 +1503,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
               borderRadius: '12px',
               padding: '16px',
               textAlign: 'center',
+              marginBottom: '16px',
             }}>
               <div style={{
                 ...typo.h2,
@@ -1496,7 +1521,6 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
             {/* Airflow visualization description */}
             <div style={{
-              marginTop: '16px',
               padding: '12px',
               background: colors.bgSecondary,
               borderRadius: '8px',
@@ -1505,6 +1529,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
                 <strong>Boundary Layer Effect:</strong> Air flowing past each fin develops a slow-moving boundary layer. When fins are too close, these layers merge and block fresh air from reaching fin surfaces.
               </p>
             </div>
+          </div>
           </div>
 
           <button

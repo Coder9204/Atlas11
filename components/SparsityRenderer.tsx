@@ -1343,10 +1343,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <SparseMatrixVisualization interactive={true} />
             </div>
-
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Sparsity slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1446,7 +1456,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             {/* Stats display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '16px',
             }}>
               <div style={{
@@ -1479,6 +1489,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             </div>
 
             {showComputation && <ComputationVisualization />}
+            </div>
+            </div>
           </div>
 
           {/* Discovery prompt */}
@@ -1761,6 +1773,20 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Side-by-side layout */}
+            <div style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? '12px' : '20px',
+              width: '100%',
+              alignItems: isMobile ? 'center' : 'flex-start',
+            }}>
+            <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SparseMatrixVisualization />
+            </div>
+            </div>
+            <div style={{ width: isMobile ? '100%' : '280px', flexShrink: 0 }}>
             {/* Sparsity type toggle */}
             <div style={{
               display: 'flex',
@@ -1796,10 +1822,6 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
               >
                 Structured (2:4)
               </button>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <SparseMatrixVisualization />
             </div>
 
             {sparsityType === 'unstructured' && (
@@ -1876,6 +1898,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
                   ? '✓ Structured 2:4 sparsity achieves ~90% of theoretical speedup on NVIDIA Tensor Cores because memory access is predictable.'
                   : '⚠️ Unstructured sparsity only achieves ~40% of theoretical speedup due to irregular memory access patterns.'}
               </p>
+            </div>
+            </div>
             </div>
           </div>
 
