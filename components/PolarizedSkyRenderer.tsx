@@ -342,6 +342,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -753,7 +755,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
@@ -900,7 +902,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1086,7 +1088,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1199,7 +1201,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1327,7 +1329,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1482,7 +1484,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1568,7 +1570,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1798,7 +1800,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -1907,7 +1909,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{
               minHeight: '100dvh',
               background: colors.bgPrimary,
@@ -2084,7 +2086,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: colors.bgPrimary,
@@ -2179,7 +2181,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             minHeight: '100dvh',
             background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,

@@ -185,6 +185,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   const goToPhase = useCallback((newPhase: PVPhase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
 
     if (onGameEvent) {
       onGameEvent({ type: 'phase_complete', phase: newPhase });

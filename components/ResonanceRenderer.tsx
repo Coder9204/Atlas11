@@ -273,6 +273,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   const goToPhase = useCallback((newPhase: Phase) => {
     if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);

@@ -383,6 +383,8 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   // Navigation
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase });
     onPhaseComplete?.(phase);

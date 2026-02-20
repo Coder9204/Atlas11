@@ -179,6 +179,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setShowCoachMessage(true);
     emitEvent('phase_change', { action: `Moved to ${newPhase}` });
 

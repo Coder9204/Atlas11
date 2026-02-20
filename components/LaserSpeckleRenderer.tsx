@@ -135,6 +135,13 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const resolvedPhase = (gamePhase || phase || 'hook') as typeof PHASES[number];
   const validPhase = PHASES.includes(resolvedPhase as typeof PHASES[number]) ? resolvedPhase : 'hook';
   const [currentPhase, setCurrentPhase] = useState<typeof PHASES[number]>(validPhase);
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -1205,7 +1212,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   };
 
   const renderHook = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '16px', textAlign: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '16px', textAlign: 'center' }}>
       {/* Badge */}
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', borderRadius: '9999px', marginBottom: '32px' }}>
         <span style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
@@ -1293,7 +1300,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
 
       {/* SVG visualization for predict phase */}
@@ -1386,7 +1393,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Speckle Lab</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>This simulation displays how coherence length and surface roughness affect the speckle pattern formed on the detector screen.</p>
       <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px' }}>Observe how the pattern changes when you increase or decrease the coherence length. Notice when you adjust surface roughness, the number of scatter points changes. Try adjusting each slider to see distinct effects.</p>
@@ -1536,7 +1543,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', maxWidth: '800px', margin: '0 auto', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', maxWidth: '800px', margin: '0 auto', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>Why Speckle Happens</h2>
 
       {/* WHY explanation */}
@@ -1679,7 +1686,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderTwistPredict = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '24px' }}>The Twist</h2>
 
       {/* SVG visualization for twist predict */}
@@ -1802,7 +1809,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>Laser vs Flashlight</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '24px' }}>Toggle between coherent and incoherent light</p>
 
@@ -1883,7 +1890,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderTwistReview = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', maxWidth: '700px', margin: '0 auto', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', maxWidth: '700px', margin: '0 auto', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '16px' }}>Key Discovery</h2>
 
       {/* Reference user's twist prediction */}
@@ -1965,7 +1972,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   );
 
   const renderTransfer = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Real-World Applications</h2>
       <p style={{ color: '#e2e8f0', marginBottom: '24px', textAlign: 'center', maxWidth: '600px' }}>
         Laser speckle patterns, once considered noise, are now powerful tools in medicine, manufacturing, and engineering.
@@ -2086,7 +2093,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     const answeredCount = testAnswers.filter(a => a !== null).length;
 
     return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingLeft: '24px', paddingRight: '24px', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Knowledge Test</h2>
       <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '24px' }}>
         Question {currentQuestionIndex + 1} of {testQuestions.length}
@@ -2271,7 +2278,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   };
 
   const renderMastery = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center' }}>
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1))', borderRadius: '24px', padding: '32px', maxWidth: '500px' }}>
         <div style={{ fontSize: '64px', marginBottom: '24px' }}>💚</div>
         <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 700, marginBottom: '16px' }}>Speckle Master!</h1>

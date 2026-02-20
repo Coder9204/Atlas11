@@ -207,6 +207,8 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
   const goToPhase = useCallback((p: SPICEPhase) => {
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
   }, []);
 
@@ -929,7 +931,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Continue') => (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: colors.bgDark }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar(canGoNext, nextLabel)}

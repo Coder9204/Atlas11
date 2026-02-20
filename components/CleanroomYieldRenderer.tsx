@@ -56,6 +56,13 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   // Self-managing navigation - always start at hook when no prop provided
   const [currentPhase, setCurrentPhase] = useState<typeof phaseOrder[number]>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
+
   // Sync with external phase changes (only update if explicitly set)
   useEffect(() => {
     const externalPhase = gamePhase || phaseProp;
@@ -1049,7 +1056,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -1122,7 +1129,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{
@@ -1213,7 +1220,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1330,7 +1337,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{
@@ -1416,7 +1423,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1501,7 +1508,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
@@ -1562,7 +1569,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{
@@ -1666,7 +1673,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px' }}>
@@ -1764,7 +1771,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingBottom: '16px',
           }}>
             <div style={{
@@ -1819,7 +1826,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '16px' }}>
@@ -2016,7 +2023,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
@@ -2064,7 +2071,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         alignItems: 'center',

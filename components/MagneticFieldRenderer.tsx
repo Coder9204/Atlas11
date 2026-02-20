@@ -350,6 +350,8 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_changed', { phase: newPhase, phaseLabel: phaseLabels[newPhase] });
   }, [emitEvent, phaseLabels]);
 
@@ -2229,7 +2231,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         </div>
         <span style={{ fontSize: '14px', color: '#64748b' }}>{pidx + 1}/10</span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((pidx + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

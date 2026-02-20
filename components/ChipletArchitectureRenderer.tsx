@@ -114,6 +114,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     isNavigating.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 100);
   }, []);
 
@@ -255,7 +257,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, color: colors.textPrimary }}>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingTop: '60px', paddingBottom: '16px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, flexShrink: 0 }}>{bottomBarContent}</div>}

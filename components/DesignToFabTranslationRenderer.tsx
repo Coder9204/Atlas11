@@ -84,6 +84,8 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
     lastClickRef.current = now;
     isNavigating.current = true;
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 400);
   }, []);
 
@@ -744,7 +746,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
   // ── Phase container ─────────────────────────────────────────────────────
   const renderPhaseContainer = (children: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {children}
       </div>
       {renderNavBar()}

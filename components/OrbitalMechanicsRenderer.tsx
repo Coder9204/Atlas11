@@ -428,6 +428,8 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1008,7 +1010,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Newton's Cannonball
@@ -1639,7 +1641,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingLeft: '24px', paddingRight: '24px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '40px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications

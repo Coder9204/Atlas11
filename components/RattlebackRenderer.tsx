@@ -135,6 +135,13 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   // Use gamePhase if provided, otherwise propPhase, default to hook
   const [internalPhase, setInternalPhase] = useState<string>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine effective phase
   const effectivePhase = gamePhase || propPhase || internalPhase;
   const phase = PHASES.includes(effectivePhase) ? effectivePhase : 'hook';
@@ -954,7 +961,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {children}

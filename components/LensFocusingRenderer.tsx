@@ -379,6 +379,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -928,7 +930,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Lens Optics Lab

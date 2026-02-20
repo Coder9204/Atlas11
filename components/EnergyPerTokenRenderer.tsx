@@ -76,6 +76,8 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     lastPhaseChangeRef.current = now;
     playSound();
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
   }, []);
 
   const goNext = useCallback(() => {
@@ -423,7 +425,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   const renderPhaseContent = (content: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', background: '#0f172a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px 24px', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px 24px', paddingTop: '60px', paddingBottom: '16px' }}>
         {content}
       </div>
       {renderBottomBar()}

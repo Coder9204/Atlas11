@@ -230,6 +230,13 @@ export default function MakeMicrophoneRenderer({
   const [currentPhase, setCurrentPhase] = useState<Phase>(() => {
     if (gamePhase && PHASES.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
     }
     return 'hook';
   });
@@ -879,7 +886,7 @@ export default function MakeMicrophoneRenderer({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',

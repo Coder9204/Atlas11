@@ -471,6 +471,8 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1049,7 +1051,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Standing Wave Laboratory
@@ -1435,7 +1437,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1965,7 +1967,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -2139,7 +2141,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
           {renderNavBar()}
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -2240,7 +2242,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress */}
           <div style={{

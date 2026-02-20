@@ -183,6 +183,13 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
   // Core state
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine which phase to use - external prop takes precedence
   const phase = (externalPhase || gamePhase || internalPhase) as Phase;
   const isSelfManaged = !externalPhase && !gamePhase;
@@ -539,7 +546,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
   const contentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    paddingTop: '48px',
+    paddingTop: '60px',
     paddingLeft: '16px',
     paddingRight: '16px',
     paddingBottom: '16px',

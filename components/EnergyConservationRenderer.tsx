@@ -345,6 +345,8 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -777,7 +779,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '16px',
@@ -874,7 +876,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -994,7 +996,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Energy Conservation Lab
@@ -1192,7 +1194,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Conservation of Mechanical Energy
@@ -1309,7 +1311,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1448,7 +1450,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Energy Dissipation Lab
@@ -1587,7 +1589,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Energy Transforms, Never Disappears
@@ -1706,7 +1708,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1920,7 +1922,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           background: colors.bgPrimary,
         }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center', padding: '0 24px' }}>
               <div style={{
                 fontSize: '80px',
@@ -2007,7 +2009,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
         background: colors.bgPrimary,
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0', padding: '0 24px' }}>
             {/* Progress */}
             <div style={{
@@ -2229,7 +2231,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '16px',

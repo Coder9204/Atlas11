@@ -356,6 +356,8 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -1015,7 +1017,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1262,7 +1264,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: '1 1 0%',
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1494,7 +1496,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1834,7 +1836,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -2122,7 +2124,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',

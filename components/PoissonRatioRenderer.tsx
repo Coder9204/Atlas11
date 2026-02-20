@@ -345,6 +345,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -782,7 +784,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -854,7 +856,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{
@@ -1286,7 +1288,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
 
         <div style={{ maxWidth: '700px', margin: '16px auto 0' }}>
           <div style={{

@@ -142,6 +142,8 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
     isNavigating.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
 
     const idx = phaseOrder.indexOf(p);
@@ -492,7 +494,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
         overflowY: 'auto',
         overflowX: 'hidden',
         position: 'relative',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px'
       }}>
         {children}

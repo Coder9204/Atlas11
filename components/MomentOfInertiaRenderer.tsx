@@ -387,6 +387,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -2137,7 +2139,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, overflow: 'hidden' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
         {renderPhaseContent()}
       </div>
       {renderBottomBar()}

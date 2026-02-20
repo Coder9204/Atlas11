@@ -314,6 +314,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     const newIndex = phaseOrder.indexOf(newPhase);
 
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onPhaseComplete && newIndex > currentIndex) {
       onPhaseComplete(phase);
     }
@@ -1708,7 +1710,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       {/* Scroll container with all app cards */}
-      <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', flex: 1, width: '100%', maxWidth: '700px' }}>
+      <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', flex: 1, width: '100%', maxWidth: '700px' }}>
         {transferApps.map((app, appIdx) => (
           <div key={appIdx} style={{
             display: activeAppIndex === appIdx ? 'block' : 'none',
@@ -2301,7 +2303,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       {/* Main content - scrollable */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', position: 'relative', zIndex: 10 }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', position: 'relative', zIndex: 10 }}>
         {renderPhase()}
       </div>
 

@@ -359,6 +359,8 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -901,7 +903,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -972,7 +974,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1087,13 +1089,13 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Experiment with IR Drop
@@ -1237,7 +1239,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1320,7 +1322,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1440,7 +1442,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1549,7 +1551,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1638,7 +1640,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -1785,7 +1787,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
           background: colors.bgPrimary,
           display: 'flex',
           flexDirection: 'column',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
           {renderNavigationBar()}
@@ -1877,7 +1879,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavigationBar()}
@@ -2010,7 +2012,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         padding: '24px',
         textAlign: 'center',

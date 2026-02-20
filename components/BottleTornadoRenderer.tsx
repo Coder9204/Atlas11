@@ -63,6 +63,13 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // Internal phase management - default to 'hook'
   const [internalPhase, setInternalPhase] = useState('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine effective phase: prop takes precedence, then internal state
   const effectivePhase = phaseProp || gamePhase || internalPhase;
   const phase = PHASE_SEQUENCE.includes(effectivePhase) ? effectivePhase : 'hook';

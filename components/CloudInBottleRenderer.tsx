@@ -130,6 +130,13 @@ const realWorldApps = [
 
 const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
   const [currentPhase, setCurrentPhase] = useState<PhaseType>(phase || 'hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);

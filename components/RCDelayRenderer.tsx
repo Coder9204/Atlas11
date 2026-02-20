@@ -389,6 +389,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -821,7 +823,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '64px',
@@ -887,7 +889,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -1005,7 +1007,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             RC Circuit Simulator
@@ -1206,7 +1208,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Physics of RC Delay
@@ -1310,7 +1312,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1424,7 +1426,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Repeater Optimization
@@ -1572,7 +1574,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Defeating the Wire Bottleneck
@@ -1676,7 +1678,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -1849,7 +1851,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
           {renderNavBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -1921,7 +1923,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px' }}>
           {/* Progress */}
           <div style={{
@@ -2084,7 +2086,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)` }}>
         {renderProgressBar()}
         {renderNavBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
         <div style={{
           fontSize: '100px',

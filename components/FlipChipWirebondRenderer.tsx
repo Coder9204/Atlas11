@@ -108,6 +108,8 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   const goToPhase = useCallback((newPhase: FCWBPhase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
 
     if (onGameEvent) {
       onGameEvent({ type: 'phase_complete', phase: newPhase });

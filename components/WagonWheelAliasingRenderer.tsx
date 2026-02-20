@@ -119,6 +119,13 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
 
   const [currentPhase, setCurrentPhase] = useState<Phase>(resolveInitialPhase);
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
+
   // Sync with external prop changes
   useEffect(() => {
     const raw = gamePhase || phaseProp;

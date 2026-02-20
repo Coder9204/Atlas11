@@ -348,6 +348,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -959,7 +961,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
@@ -1063,7 +1065,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
@@ -1263,7 +1265,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
@@ -1370,7 +1372,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
@@ -1488,7 +1490,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
@@ -1698,7 +1700,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>
@@ -1819,7 +1821,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '800px', margin: '0 auto' }}>
@@ -2025,7 +2027,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingBottom: '16px',
           }}>
           <div style={{ padding: '0 24px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
@@ -2127,7 +2129,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ padding: '0 24px', maxWidth: '700px', margin: '0 auto' }}>

@@ -82,6 +82,13 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   // Internal phase state for self-managing navigation
   const [currentPhase, setCurrentPhase] = useState<Phase>(getInitialPhase);
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {

@@ -442,6 +442,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(phase);
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
 
     setTimeout(() => { navigationLockRef.current = false; }, 300);
   }, [phase, playSound, emitEvent, onPhaseComplete]);

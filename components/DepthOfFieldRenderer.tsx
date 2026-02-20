@@ -129,6 +129,8 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setAnswerConfirmed(false);
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
@@ -707,7 +709,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px', textAlign: 'center', marginTop: '20px' }}>
             <div style={{ fontSize: '72px', marginBottom: '24px' }}>📸</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
@@ -744,7 +746,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
               Make Your Prediction
@@ -809,7 +811,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
               Depth of Field Lab
@@ -959,7 +961,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
               The Physics of Depth of Field
@@ -1040,7 +1042,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <span style={{ background: `${colors.secondary}22`, border: `1px solid ${colors.secondary}`, borderRadius: '20px', padding: '4px 16px', color: colors.secondary, fontSize: '14px' }}>THE TWIST</span>
@@ -1105,7 +1107,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.secondary, textAlign: 'center', marginBottom: '8px' }}>
               Distance and Background Blur
@@ -1189,7 +1191,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.secondary, textAlign: 'center', marginBottom: '16px' }}>
               Key Discovery: Three Paths to Blur
@@ -1256,7 +1258,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '24px 16px 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1390,7 +1392,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
       return (
         <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
               <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
               <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1432,7 +1434,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             {/* Progress indicator */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1567,7 +1569,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
             <h2 style={{ ...typo.h2, color: colors.success, marginBottom: '16px' }}>
@@ -1610,7 +1612,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   return (
     <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ padding: '24px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary }}>Depth of Field</h1>
           <button onClick={() => goToPhase('hook')} style={primaryButtonStyle}>Start</button>

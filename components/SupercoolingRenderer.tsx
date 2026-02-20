@@ -110,6 +110,13 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     return 'hook';
   };
   const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>(getInitialPhase);
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const phase = internalPhase;
 
   const phaseLabels: Record<typeof PHASES[number], string> = {

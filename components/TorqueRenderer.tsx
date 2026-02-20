@@ -369,6 +369,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     const phaseIndex = phaseOrder.indexOf(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(phaseIndex);
@@ -839,7 +841,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         flexDirection: 'column',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center', paddingBottom: '16px', paddingTop: '60px' }}>
 
         <div style={{
           fontSize: '64px',
@@ -909,7 +911,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -1029,7 +1031,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Torque Laboratory
@@ -1804,7 +1806,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
@@ -2038,7 +2040,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
@@ -2060,7 +2062,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
                 Question-by-Question Review
               </p>
-              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '16px', paddingTop: '48px', flex: 1 }}>
+              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '16px', paddingTop: '60px', flex: 1 }}>
                 {testQuestions.map((q, i) => {
                   const correctOpt = q.options.find(o => o.correct);
                   const isCorrect = testAnswers[i] === correctOpt?.id;
@@ -2148,7 +2150,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Knowledge Test

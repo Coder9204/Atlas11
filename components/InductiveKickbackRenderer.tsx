@@ -323,6 +323,8 @@ export default function InductiveKickbackRenderer({
     navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => {
       navigationLockRef.current = false;
     }, 200);
@@ -1956,7 +1958,7 @@ export default function InductiveKickbackRenderer({
       </nav>
 
       {/* Main content */}
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto', maxHeight: '100dvh', flex: 1, lineHeight: '1.6', fontSize: '16px' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto', maxHeight: '100dvh', flex: 1, lineHeight: '1.6', fontSize: '16px' }}>
         <div style={{ maxWidth: '672px', margin: '0 auto', width: '100%', overflowY: 'auto', maxWidth: '768px' }}>
           {renderContent()}
         </div>

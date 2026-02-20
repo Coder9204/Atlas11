@@ -84,6 +84,8 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onPhaseComplete?.(newPhase);
     setTimeout(() => { navigationLockRef.current = false; }, 50);
   }, [onPhaseComplete]);
@@ -1295,7 +1297,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#f8fafc' }}>
       {renderNavDots()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {renderPhase()}
         </div>

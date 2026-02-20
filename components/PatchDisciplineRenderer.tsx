@@ -167,6 +167,8 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     isNavigating.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
 
     const idx = phaseOrder.indexOf(p);
     emitGameEvent('phase_changed', {
@@ -969,7 +971,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // HOOK PHASE
     if (phase === 'hook') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 800 }}>
@@ -1018,7 +1020,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // PREDICT PHASE
     if (phase === 'predict') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             {renderVisualization(false)}
 
@@ -1072,7 +1074,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     if (phase === 'play') {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>🔬 Explore Patch Size Effects</h2>
@@ -1156,7 +1158,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
       const wasCorrect = prediction === 'exponential';
 
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
@@ -1220,7 +1222,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // TWIST PREDICT PHASE
     if (phase === 'twist_predict') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>🌀 The Twist</h2>
@@ -1280,7 +1282,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // TWIST PLAY PHASE
     if (phase === 'twist_play') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: 700 }}>🧪 Explore Refactor Risk</h2>
@@ -1318,7 +1320,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
       const wasCorrect = twistPrediction === 'refactor_risky';
 
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{
               background: wasCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
@@ -1380,7 +1382,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
 
     if (phase === 'transfer') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>
@@ -1447,7 +1449,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     if (phase === 'test') {
       if (testSubmitted) {
         return (
-          <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+          <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
             <div style={{ padding: '16px' }}>
               <div style={{
                 background: testScore >= 8 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
@@ -1486,7 +1488,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
 
       const currentQ = testQuestions[currentTestQuestion];
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ color: colors.textPrimary, fontWeight: 700 }}>📝 Knowledge Test</h2>
@@ -1538,7 +1540,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
     // MASTERY PHASE
     if (phase === 'mastery') {
       return (
-        <div style={{ overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', minHeight: '100dvh' }}>
+        <div style={{ overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', minHeight: '100dvh' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>

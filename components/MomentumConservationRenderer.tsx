@@ -359,6 +359,8 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onPhaseComplete?.(p);
     if (onGameEvent) {
       onGameEvent({
@@ -923,7 +925,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '88px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '88px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Momentum Lab

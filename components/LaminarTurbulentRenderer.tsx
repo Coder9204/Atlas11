@@ -431,6 +431,8 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -607,7 +609,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -816,7 +818,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {/* Progress indicator */}
           <div style={{
@@ -946,7 +948,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', padding: '72px 24px 100px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Reynolds Number Lab

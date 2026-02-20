@@ -129,6 +129,8 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
   }, []);
 
   const goBack = useCallback(() => {

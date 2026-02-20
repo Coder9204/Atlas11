@@ -366,6 +366,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -733,7 +735,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -815,7 +817,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -927,7 +929,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1096,7 +1098,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1221,7 +1223,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1488,7 +1490,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1643,7 +1645,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1750,7 +1752,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1954,7 +1956,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
@@ -2013,7 +2015,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -2183,7 +2185,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',

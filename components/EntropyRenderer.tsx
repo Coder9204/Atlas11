@@ -295,6 +295,8 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     if (isNavigating.current) return;
     isNavigating.current = true;
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setAnswerConfirmed(false);
     if (onGameEvent) {
       onGameEvent({ eventType: 'phase_changed', gameType: 'entropy', gameTitle: 'Entropy & Thermodynamics', details: { phase: p }, timestamp: Date.now() });
@@ -639,7 +641,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
             <div style={{ fontSize: '64px', marginBottom: '24px' }}>{'\u{1F3B2}\u{1F525}\u2744\uFE0F'}</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
@@ -677,7 +679,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Make Your Prediction
@@ -739,7 +741,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Entropy Laboratory
@@ -847,7 +849,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Understanding Entropy
@@ -909,7 +911,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px', textAlign: 'center' }}>
               The Twist Challenge
@@ -973,7 +975,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px', textAlign: 'center' }}>
               Carnot Efficiency Explorer
@@ -1069,7 +1071,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px', textAlign: 'center' }}>
               The Deep Insight
@@ -1153,7 +1155,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1287,7 +1289,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
       return (
         <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
               <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
                 Test Complete!
@@ -1358,7 +1360,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '600px', margin: '24px auto 0', padding: '0 16px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Knowledge Assessment
@@ -1495,7 +1497,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '500px', margin: '24px auto 0', textAlign: 'center', padding: '0 16px' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>{'\u{1F3B2}\u{1F3C6}'}</div>
             <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>

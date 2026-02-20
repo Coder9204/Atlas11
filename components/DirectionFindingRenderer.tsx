@@ -39,6 +39,13 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
   onIncorrectAnswer,
 }) => {
   const [internalPhase, setInternalPhase] = useState<GamePhase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const currentPhase: GamePhase = gamePhase || phaseProp || internalPhase;
   const currentPhaseIndex = PHASE_ORDER.indexOf(currentPhase);
 
@@ -792,7 +799,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
   const renderPageWrapper = (children: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
       {renderTopNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           {children}
         </div>

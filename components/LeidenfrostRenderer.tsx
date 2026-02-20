@@ -1243,6 +1243,8 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
   }, [playSound]);
 
@@ -1597,7 +1599,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     return (
       <div style={{ minHeight: '100dvh', background: '#0a0f1a', color: 'white', paddingBottom: '16px', paddingTop: '80px' }}>
         {renderNavBar()}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto', flex: 1 }}>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>Leidenfrost Lab</h2>
           <p style={{ color: '#e2e8f0', marginBottom: '8px' }}>Adjust the surface temperature and drop water to see the effect! Observe how the droplet behavior changes versus the baseline.</p>
           <p style={{ color: '#e2e8f0', marginBottom: '16px', fontSize: '14px', fontStyle: 'italic' }}>

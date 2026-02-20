@@ -330,6 +330,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     if (!phaseOrder.includes(newPhase)) return;
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
@@ -2703,7 +2705,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
       </nav>
 
       {/* Main content */}
-      <div style={{ overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', flex: 1 }}>
+      <div style={{ overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px', flex: 1 }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl }}>
           {phase === 'hook' && renderHookPhase()}
           {phase === 'predict' && renderPredictPhase()}

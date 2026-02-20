@@ -221,6 +221,8 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
     isNavigating.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (p === 'play' || p === 'twist_play') {
       setIsAnimating(false);
     }
@@ -1114,7 +1116,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
         overflowX: 'hidden',
         position: 'relative',
         WebkitOverflowScrolling: 'touch',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px'
       }}>
         {children}

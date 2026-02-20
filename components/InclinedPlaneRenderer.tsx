@@ -360,6 +360,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1062,7 +1064,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Inclined Plane Simulator
           </h2>

@@ -44,6 +44,12 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   // Validate phase - if invalid, default to 'hook'
   const phase = PHASES.includes(currentPhase as typeof PHASES[number]) ? currentPhase : 'hook';
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {

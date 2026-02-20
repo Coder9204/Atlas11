@@ -371,6 +371,8 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     }
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -778,7 +780,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           textAlign: 'center',
         }}>
@@ -847,7 +849,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.accent}22`,
@@ -952,7 +954,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Tube Simulator
@@ -1160,7 +1162,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Physics of the Venturi Effect
@@ -1261,7 +1263,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <div style={{
               background: `${colors.warning}22`,
@@ -1371,7 +1373,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Venturi Flow Meter
@@ -1515,7 +1517,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               How Venturi Meters Measure Flow
@@ -1638,7 +1640,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1842,7 +1844,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
               <div style={{
                 fontSize: '80px',
@@ -1891,7 +1893,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -2071,7 +2073,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           textAlign: 'center',
         }}>

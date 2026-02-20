@@ -262,6 +262,8 @@ export default function SoapBoatRenderer({
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onGameEvent?.({
       type: 'phase_change',
       data: { from: phase, to: newPhase }

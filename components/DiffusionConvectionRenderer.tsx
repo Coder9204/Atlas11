@@ -437,6 +437,8 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   const goToPhase = useCallback((newPhase: Phase) => {
     if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
@@ -2810,7 +2812,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         paddingLeft: isMobile ? '16px' : '24px',
         paddingRight: isMobile ? '16px' : '24px',

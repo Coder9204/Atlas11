@@ -366,6 +366,8 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   // Phase navigation
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
   }, [phase, emitEvent]);
 
@@ -479,7 +481,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     overflowY: 'auto',
     paddingLeft: '20px',
     paddingRight: '20px',
-    paddingTop: '48px',
+    paddingTop: '60px',
     paddingBottom: '16px',
   };
 

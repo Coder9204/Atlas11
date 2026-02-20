@@ -155,6 +155,13 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
   };
 
   const [currentPhase, setCurrentPhase] = useState<Phase>(getInitialPhase());
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
   const phase = currentPhase;
 
   // Event emitter helper

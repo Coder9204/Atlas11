@@ -288,6 +288,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
   }, [playSound, emitEvent, phase, onPhaseComplete]);
@@ -1703,7 +1705,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

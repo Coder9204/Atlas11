@@ -344,6 +344,8 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -685,7 +687,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         padding: '24px',
         textAlign: 'center',
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderProgressBar()}
@@ -760,7 +762,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -892,7 +894,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {/* Educational header */}
           <div style={{
             padding: '16px 24px',
@@ -1104,7 +1106,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             The Darcy-Weisbach Equation
@@ -1263,7 +1265,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1391,7 +1393,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {/* Educational header */}
           <div style={{
             padding: '16px 24px',
@@ -1616,7 +1618,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             System Design Principles
@@ -1761,7 +1763,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Transfer Applications
@@ -1923,7 +1925,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         }}>
           {renderProgressBar()}
 
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', padding: '0 24px' }}>
             <div style={{
               fontSize: '80px',
@@ -2033,7 +2035,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '0 24px' }}>
           {/* Progress */}
           <div style={{
@@ -2205,7 +2207,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         padding: '24px',
         textAlign: 'center',
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderProgressBar()}

@@ -316,6 +316,13 @@ export default function ChromaticAberrationRenderer({
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Sync with external phase changes
   useEffect(() => {
     const prop = externalPhase || gamePhase;
@@ -2624,7 +2631,7 @@ export default function ChromaticAberrationRenderer({
       </div>
 
       {/* Scrollable Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

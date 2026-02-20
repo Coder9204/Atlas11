@@ -51,6 +51,13 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
   // Internal phase state for self-navigation
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Use external phase if provided, otherwise internal
   const currentPhase: Phase = externalPhase && PHASES.includes(externalPhase) ? externalPhase :
                               (!externalPhase ? internalPhase : 'hook');

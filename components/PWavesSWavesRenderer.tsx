@@ -280,6 +280,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const goToPhase = useCallback((newPhase: Phase) => {
       if (!phaseOrder.includes(newPhase)) return;
       setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
       playSound('transition');
       emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
       onPhaseComplete?.(newPhase);
@@ -2481,7 +2483,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                </div>
 
                {/* Content area - scrollable with proper padding */}
-               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '48px' }}>
+               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingBottom: '16px', paddingTop: '60px' }}>
                   {/* App header */}
                   <div style={{
                      display: 'flex',

@@ -177,6 +177,8 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
 
@@ -1663,7 +1665,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: design.colors.bgDeep, overflow: 'hidden' }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             {/* Side-by-side layout */}
             <div style={{

@@ -413,6 +413,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1035,7 +1037,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>

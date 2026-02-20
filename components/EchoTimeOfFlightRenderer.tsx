@@ -326,6 +326,8 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   const goToPhase = useCallback((newPhase: Phase) => {
     if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
@@ -2823,7 +2825,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         position: 'relative'
       }}>

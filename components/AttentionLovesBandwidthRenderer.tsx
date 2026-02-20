@@ -232,6 +232,8 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
     lastPhaseChangeRef.current = now;
     playSound();
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
   }, []);
 
   const goNext = useCallback(() => {
@@ -470,7 +472,7 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   const renderPhaseContent = (content: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0f172a', color: '#f8fafc' }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ padding: '0 24px 24px 24px' }}>
           {content}
         </div>

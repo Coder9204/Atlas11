@@ -233,6 +233,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
   // Navigation
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
@@ -2156,8 +2158,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           {/* Content */}
           <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
           paddingBottom: '16px',
-          paddingTop: '48px',
-          paddingTop: '48px',
+          paddingTop: '60px',
+          paddingTop: '60px',
             <div style={{ maxWidth: '720px', margin: '0 auto' }}>
               {/* Graphic */}
               <div style={{

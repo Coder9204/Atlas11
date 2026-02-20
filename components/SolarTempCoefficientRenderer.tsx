@@ -272,6 +272,8 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
 
   const goToPhase = useCallback((p: Phase) => {
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({ eventType: 'phase_changed', details: { phase: p }, timestamp: Date.now() });
     }
@@ -956,7 +958,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   // ─── Phase layouts ──────────────────────────────────────────────────────────
   const pageStyle: React.CSSProperties = {
     minHeight: '100dvh',
-    paddingTop: '48px',
+    paddingTop: '60px',
     paddingBottom: '16px',
     background: colors.bgPrimary,
     overflowX: 'hidden',
@@ -967,7 +969,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: isMobile ? '24px' : '32px', marginBottom: '8px', fontWeight: 800 }}>
               Solar Panel Temperature Coefficient
@@ -1017,7 +1019,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {renderVisualization(false)}
 
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
@@ -1066,7 +1068,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '6px', fontSize: isMobile ? '18px' : '22px' }}>
               Explore Temperature Effects
@@ -1150,7 +1152,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
@@ -1212,7 +1214,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
               ⚡ The Twist: Summer vs Winter
@@ -1272,7 +1274,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: isMobile ? '20px' : '24px' }}>
               Season Comparison
@@ -1350,7 +1352,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
             margin: '16px',
@@ -1414,7 +1416,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '6px', textAlign: 'center', fontSize: isMobile ? '20px' : '24px' }}>
               Real-World Applications
@@ -1547,7 +1549,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
               margin: '16px',
@@ -1617,7 +1619,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <h2 style={{ color: colors.textPrimary, fontSize: isMobile ? '16px' : '18px' }}>Knowledge Test</h2>
@@ -1820,7 +1822,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
             <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px' }}>Mastery Achieved!</h1>

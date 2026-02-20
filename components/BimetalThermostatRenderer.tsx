@@ -412,6 +412,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   const goToPhase = (p: Phase) => {
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
   };
 
   const goNext = () => {

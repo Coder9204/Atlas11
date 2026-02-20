@@ -116,6 +116,13 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   // Internal phase state for self-managing mode
   const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Use gamePhase prop if provided, otherwise use internal phase management
   const phase = gamePhase || phaseProp || internalPhase;
   const currentPhaseIndex = PHASE_ORDER.indexOf(phase as typeof PHASE_ORDER[number]);

@@ -446,6 +446,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
   }, [playSound, emitEvent, phase, onPhaseComplete]);
@@ -802,7 +804,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         paddingLeft: isMobile ? space.lg : space.xxl,
         paddingRight: isMobile ? space.lg : space.xxl,
@@ -976,7 +978,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('🤔', 'Your Prediction', 'Step 1 of 2: Make your prediction')}
 
         {/* Static SVG for prediction phase */}
@@ -1105,7 +1107,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('🔬', 'Forced Oscillation Lab', 'Observe how driving frequency affects amplitude. This visualization shows the spring-mass system responding to a periodic driving force — important because resonance affects bridges, radios, and instruments!')}
         <div style={{ display: 'flex', flexDirection: 'row', gap: space.md, marginBottom: space.md, background: `${colors.primary}10`, borderRadius: radius.sm, padding: space.md }}>
           <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 400, lineHeight: 1.5 }}>
@@ -1469,7 +1471,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('📚', 'Understanding Forced Oscillations', 'The physics behind resonance')}
 
         <div style={{
@@ -1570,7 +1572,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('🌀', 'The Twist Challenge', 'A surprising source of periodic force')}
 
         <div style={{
@@ -1693,7 +1695,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('🔬', 'Vortex-Induced Vibration', 'How steady flow creates periodic forces')}
 
         {/* Side-by-side layout */}
@@ -1943,7 +1945,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden'
     }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, paddingLeft: isMobile ? space.lg : space.xl, paddingRight: isMobile ? space.lg : space.xl, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderSectionHeader('💡', 'Key Discovery', 'Resonance can be hidden!')}
 
         <div style={{
@@ -2044,7 +2046,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {renderSectionHeader('🌍', 'Real-World Applications', 'Resonance engineering in everyday life')}
 
           {/* Progress indicator */}
@@ -2363,7 +2365,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         overflow: 'hidden'
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, paddingLeft: isMobile ? space.md : space.lg, paddingRight: isMobile ? space.md : space.lg, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {!showTestResults ? (
             <>
               <div style={{
@@ -2663,7 +2665,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           paddingLeft: isMobile ? space.lg : space.xl,
           paddingRight: isMobile ? space.lg : space.xl,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',

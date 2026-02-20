@@ -323,6 +323,8 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
   const goToPhase = useCallback((newPhase: Phase) => {
     if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
@@ -2722,7 +2724,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
       </nav>
 
       {/* Main content */}
-      <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', minHeight: '100dvh', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', maxWidth: '900px', margin: '0 auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px', overflowY: 'auto', minHeight: '100dvh', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {phase === 'hook' && renderHookPhase()}
         {phase === 'predict' && renderPredictPhase()}
         {phase === 'play' && renderPlayPhase()}

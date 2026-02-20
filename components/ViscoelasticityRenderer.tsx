@@ -272,6 +272,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) onGameEvent({ eventType: 'phase_changed', details: { phase: p }, timestamp: Date.now() });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
@@ -730,7 +732,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   // HOOK
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -772,7 +774,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
       { id: 'random', label: '🎲 It behaves randomly — you cannot predict which behavior you will see' },
     ];
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         <div aria-label="prediction observation" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
           Observe what happens to viscoelastic materials. What do you predict will happen?
@@ -881,7 +883,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'rate_depends';
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -936,7 +938,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
       { id: 'melts', label: '🔥 It melts completely when warm and stays solid when cold' },
     ];
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(!!twistPrediction)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -975,7 +977,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   // TWIST PLAY
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -1006,7 +1008,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'cold_brittle';
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(true)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -1068,7 +1070,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     const allCompleted = transferCompleted.size >= realWorldApps.length;
 
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(allCompleted)}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -1175,7 +1177,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+        <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
           {renderProgressBar()}
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
           <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -1237,7 +1239,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
 
     const currentQ = testQuestions[currentTestQ];
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderNavBar(false, 'Submit')}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
@@ -1316,7 +1318,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   // MASTERY
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '48px', paddingBottom: '16px', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
         {renderBottomBar(false, true, 'Complete Game 🎉')}
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>

@@ -290,6 +290,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
   }, [playSound, emitEvent, phase, onPhaseComplete]);
@@ -1851,7 +1853,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
       </div>
 
       {/* Main content with overflow-y for scrolling (L.2) */}
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         {renderPhase()}
       </div>
 

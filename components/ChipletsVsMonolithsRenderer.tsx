@@ -70,6 +70,13 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   const [isMobile, setIsMobile] = useState(false);
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Use gamePhase or phase prop, or internal state for self-managed navigation
   // Validate phase and default to 'hook' for invalid values
   const rawPhase = gamePhase || phaseProp || internalPhase;

@@ -138,6 +138,13 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   // Internal phase state for self-managed navigation
   const [internalPhase, setInternalPhase] = useState('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Support both phase and gamePhase props, default to internal state
   const externalPhase = phaseProp || gamePhase;
   const currentPhase = externalPhase || internalPhase;
@@ -930,7 +937,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: '#ffffff', fontSize: '28px', marginBottom: '8px' }}>
               The Crying Glass
@@ -986,7 +993,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           {/* 1. STATIC GRAPHIC FIRST */}
           {renderVisualization(false)}
 
@@ -1058,7 +1065,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', marginBottom: '4px' }}>
               Experiment Time!
@@ -1172,7 +1179,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '' : ''}
@@ -1298,7 +1305,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', marginBottom: '8px' }}>
               Plot Twist!
@@ -1368,7 +1375,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '20px', marginBottom: '4px' }}>
               Exploring Evaporation's Role
@@ -1464,7 +1471,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>
               {isCorrect ? '' : ''}
@@ -1595,7 +1602,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Real-World Applications
@@ -1735,7 +1742,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
 
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>
                 {score >= 80 ? '' : score >= 60 ? '' : ''}
@@ -1795,7 +1802,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', marginBottom: '8px' }}>
               Knowledge Check
@@ -1962,7 +1969,7 @@ const MarangoniTearsRenderer: React.FC<MarangoniTearsRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px', marginBottom: '16px' }}></div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '8px' }}>

@@ -309,6 +309,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     }
 
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
   }, [phase, playSound, onPhaseComplete, onGameEvent]);
 

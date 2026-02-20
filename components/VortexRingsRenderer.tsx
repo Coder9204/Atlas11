@@ -150,6 +150,13 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 }) => {
   // Self-managed phase state
   const [currentPhase, setCurrentPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
   const rawPhase = (gamePhase as Phase) || currentPhase;
   const phase: Phase = phaseOrder.includes(rawPhase) ? rawPhase : 'hook';
 

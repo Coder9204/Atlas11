@@ -665,6 +665,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   const goToPhase = useCallback((p: Phase) => {
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -810,7 +812,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -886,7 +888,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1018,7 +1020,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1353,7 +1355,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1471,7 +1473,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1596,7 +1598,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1824,7 +1826,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -1940,7 +1942,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -2144,7 +2146,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingLeft: '24px',
             paddingRight: '24px',
             paddingBottom: '24px',
@@ -2292,7 +2294,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',
@@ -2471,7 +2473,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '24px',

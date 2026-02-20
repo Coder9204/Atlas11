@@ -125,6 +125,13 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
   // Internal phase management for self-managing navigation
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   // Use external prop if explicitly provided (for testing), otherwise use internal state
   const phase = normalizedInputPhase || internalPhase;
 

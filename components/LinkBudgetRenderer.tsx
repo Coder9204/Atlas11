@@ -397,6 +397,8 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
 
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitGameEvent('phase_change', {
       from: phase,
       to: p,
@@ -635,7 +637,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
       minHeight: '100dvh',
     }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '48px' }}>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingTop: '60px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}

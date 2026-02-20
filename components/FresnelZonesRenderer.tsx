@@ -368,6 +368,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -765,7 +767,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           textAlign: 'center',
         }}>
@@ -841,7 +843,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
@@ -939,7 +941,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -1129,7 +1131,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
@@ -1226,7 +1228,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
@@ -1322,7 +1324,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -1459,7 +1461,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
@@ -1559,7 +1561,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -1772,7 +1774,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
             flex: 1,
             overflowY: 'auto',
             padding: '24px',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingBottom: '16px',
             textAlign: 'center',
           }}>
@@ -1838,7 +1840,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           flex: 1,
           overflowY: 'auto',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
         }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
@@ -2019,7 +2021,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
           alignItems: 'center',
           justifyContent: 'center',
           padding: '24px',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           textAlign: 'center',
         }}>

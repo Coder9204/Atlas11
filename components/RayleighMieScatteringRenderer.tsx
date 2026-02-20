@@ -435,6 +435,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   const goToPhase = useCallback((newPhase: Phase) => {
     if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
@@ -1396,7 +1398,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Static Preview SVG */}
@@ -1531,7 +1533,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             {/* Header */}
@@ -1766,7 +1768,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Result */}
@@ -1954,7 +1956,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Static Sunset Path SVG */}
@@ -2132,7 +2134,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             {/* Header */}
@@ -2272,7 +2274,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Result */}
@@ -2522,7 +2524,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
           overflowY: 'auto',
           padding: isMobile ? spacing.lg : spacing.xl,
           paddingBottom: '16px',
-          paddingTop: '48px'
+          paddingTop: '60px'
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Header */}

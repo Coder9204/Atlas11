@@ -714,6 +714,13 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     ? externalPhase as Phase : null;
 
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const currentPhase = normalizedInputPhase || internalPhase;
 
   // Physics state
@@ -2103,7 +2110,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderPhaseContent()}

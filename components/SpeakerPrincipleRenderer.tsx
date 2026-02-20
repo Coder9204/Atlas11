@@ -361,6 +361,8 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1035,7 +1037,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',
@@ -1415,7 +1417,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         paddingLeft: '24px',
         paddingRight: '24px',

@@ -109,6 +109,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   const goToPhase = useCallback((p: Phase) => {
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onPhaseComplete) onPhaseComplete(p);
     if (onGameEvent) onGameEvent({ type: 'phase_change', data: { to: p } });
   }, [playSound, onPhaseComplete, onGameEvent]);
@@ -469,7 +471,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
       }}
     >
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', display: 'flex', flexDirection: 'column' }}>
         {children}
       </div>
       {renderBottomNav(canNext, nextLabel)}

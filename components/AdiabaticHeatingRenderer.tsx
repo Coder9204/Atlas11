@@ -140,6 +140,13 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   // Internal phase management for self-managing navigation
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   // Use external prop if explicitly provided (for testing), otherwise use internal state
   const currentPhase = normalizedInputPhase || internalPhase;
 
@@ -2022,7 +2029,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0a0f1a', lineHeight: 1.6 }}>
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
         {renderPhaseContent()}
         {renderNavDots()}
       </div>

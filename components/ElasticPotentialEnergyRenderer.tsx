@@ -233,6 +233,8 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     }
 
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase } });
   }, [playSound, onGameEvent, phase, onPhaseComplete]);
 
@@ -1885,7 +1887,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
             </button>
           </div>
         ) : (
-          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>
+          <div className="max-w-2xl w-full" style={{ maxHeight: '70vh', overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>
             <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
               <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Excellent!' : 'Keep Learning'}</div>
               <h3 className="text-2xl font-bold mb-2" style={{ color: '#f1f5f9' }}>

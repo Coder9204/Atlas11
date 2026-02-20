@@ -378,6 +378,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -776,7 +778,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -890,7 +892,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1137,7 +1139,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1261,7 +1263,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1391,7 +1393,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1588,7 +1590,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1699,7 +1701,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}
@@ -1893,7 +1895,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
           overflowY: 'auto',
           paddingBottom: '16px',
           flex: 1,
-          paddingTop: '48px',
+          paddingTop: '60px',
         }}>
           {renderProgressBar()}
           {renderBottomNav()}
@@ -2008,7 +2010,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
         overflowY: 'auto',
         paddingBottom: '16px',
         flex: 1,
-        paddingTop: '48px',
+        paddingTop: '60px',
       }}>
         {renderProgressBar()}
         {renderBottomNav()}

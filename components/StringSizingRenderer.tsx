@@ -433,6 +433,8 @@ export default function StringSizingRenderer({
     navigationLockRef.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
 
     setTimeout(() => {
@@ -2077,49 +2079,49 @@ export default function StringSizingRenderer({
       case 'hook':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderHook()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderHook()}</div>
             {renderBottomBar(false, true, 'Start Learning')}
           </>
         );
       case 'predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderPredict()}</div>
             {renderBottomBar(true, showPredictionFeedback, 'Continue')}
           </>
         );
       case 'play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderPlay()}</div>
             {renderBottomBar(true, hasExperimented, 'Continue')}
           </>
         );
       case 'review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderReview()}</div>
             {renderBottomBar(true, true, 'Next: The Twist')}
           </>
         );
       case 'twist_predict':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistPredict()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderTwistPredict()}</div>
             {renderBottomBar(true, showTwistFeedback, 'Continue')}
           </>
         );
       case 'twist_play':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistPlay()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderTwistPlay()}</div>
             {renderBottomBar(true, hasExploredTwist, 'Continue')}
           </>
         );
       case 'twist_review':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTwistReview()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderTwistReview()}</div>
             {renderBottomBar(true, true, 'Applications')}
           </>
         );
@@ -2138,14 +2140,14 @@ export default function StringSizingRenderer({
       case 'test':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderTest()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderTest()}</div>
             {testSubmitted && renderBottomBar(true, true, 'Complete')}
           </>
         );
       case 'mastery':
         return (
           <>
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px' }}>{renderMastery()}</div>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px' }}>{renderMastery()}</div>
           </>
         );
       default:
@@ -2174,7 +2176,7 @@ export default function StringSizingRenderer({
         overflow: 'hidden',
         overflowY: 'auto',
         paddingBottom: '16px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         maxWidth: '600px',
         width: '100%',
         margin: '0 auto',

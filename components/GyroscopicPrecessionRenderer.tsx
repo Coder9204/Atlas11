@@ -158,6 +158,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitGameEvent('phase_changed', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
   }, [emitGameEvent, phase, playSound]);
 
@@ -417,7 +419,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         position: 'relative',
       }}>

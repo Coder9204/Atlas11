@@ -417,6 +417,13 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
   const { gamePhase, onCorrectAnswer } = props;
   // State management
   const [phase, setPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState(0);

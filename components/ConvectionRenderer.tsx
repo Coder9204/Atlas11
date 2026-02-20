@@ -493,6 +493,8 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const goToPhase = useCallback((nextPhase: Phase) => {
     playSound('click');
     setPhase(nextPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onPhaseComplete?.(nextPhase);
     onGameEvent?.({ type: 'phase_started', data: { phase: nextPhase, phaseLabel: phaseLabels[nextPhase] } });
   }, [onPhaseComplete, onGameEvent, playSound]);

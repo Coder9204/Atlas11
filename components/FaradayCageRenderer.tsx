@@ -276,6 +276,13 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   // Internal phase management
   const [internalPhase, setInternalPhase] = useState<Phase>(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
     if (externalPhase) return externalPhase;
     return 'hook';
   });
@@ -2513,7 +2520,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderPhaseContent()}
       </div>
 

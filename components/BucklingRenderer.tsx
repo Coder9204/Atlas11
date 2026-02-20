@@ -108,6 +108,13 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   };
 
   const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase as Phase);
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [currentPhase]);
+
   const [showCoachMessage, setShowCoachMessage] = useState(true);
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
@@ -2660,7 +2667,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       {/* Main content */}
       <div
         className="relative pt-16 pb-12"
-        style={{ position: 'relative', paddingTop: '48px', paddingBottom: '16px', flex: 1, overflowY: 'auto' }}
+        style={{ position: 'relative', paddingTop: '60px', paddingBottom: '16px', flex: 1, overflowY: 'auto' }}
       >
         {renderPhase()}
       </div>

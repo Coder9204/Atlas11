@@ -366,6 +366,8 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -796,7 +798,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '48px', paddingBottom: '16px', textAlign: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', paddingTop: '60px', paddingBottom: '16px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -1735,7 +1737,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
       }}>
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px' }}>
           <div style={{ maxWidth: '800px', margin: '16px auto 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h2 style={{ ...typo.h2, color: colors.textPrimary, margin: 0 }}>

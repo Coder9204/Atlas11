@@ -133,6 +133,13 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
 }) => {
   // ==================== STATE ====================
   const [internalPhase, setInternalPhase] = useState('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -827,7 +834,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   const scrollStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto' as const,
-    paddingTop: '48px',
+    paddingTop: '60px',
     paddingBottom: '16px',
   };
 

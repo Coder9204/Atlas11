@@ -376,6 +376,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -990,7 +992,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         textAlign: 'center',
         overflowY: 'auto',
@@ -1061,7 +1063,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>
@@ -1199,13 +1201,13 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         background: colors.bgPrimary,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderNavBar()}
         {renderProgressBar()}
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '48px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Thermal Camera Simulator
@@ -1393,7 +1395,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>
@@ -1472,7 +1474,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>
@@ -1604,7 +1606,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>
@@ -1711,7 +1713,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>
@@ -1832,7 +1834,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         minHeight: '100dvh',
         background: colors.bgPrimary,
         padding: '24px',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         overflowY: 'auto',
       }}>

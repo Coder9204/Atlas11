@@ -47,6 +47,13 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   // Internal phase management
   const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine active phase - prefer gamePhase, then phase prop, then internal state
   const activePhase = gamePhase || phaseProp || internalPhase;
 

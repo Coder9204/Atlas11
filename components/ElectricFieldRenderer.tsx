@@ -378,6 +378,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     lastClickRef.current = now;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
 
     const phaseIndex = phaseOrder.indexOf(p);
     emitGameEvent('phase_changed', {
@@ -2317,7 +2319,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseIndex + 1}/10</span>
       </div>
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingBottom: '16px', paddingTop: '48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', paddingBottom: '16px', paddingTop: '60px' }}>
         <div style={{ position: 'fixed', top: 0, left: 0, width: `${((phaseIndex + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>

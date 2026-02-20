@@ -351,6 +351,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -1745,7 +1747,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         <NavigationDots />
       </div>
       {/* Scrollable content area */}
-      <div style={{ flex: '1 1 0%', minHeight: '100dvh', overflowY: 'auto', paddingTop: '48px' }}>
+      <div style={{ flex: '1 1 0%', minHeight: '100dvh', overflowY: 'auto', paddingTop: '60px' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '16px' }}>
           {renderPhase()}
         </div>

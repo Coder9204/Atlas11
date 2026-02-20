@@ -425,6 +425,8 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -890,7 +892,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         overflow: 'hidden',
       }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px', paddingLeft: '24px', paddingRight: '24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{
             fontSize: '64px',
             marginBottom: '24px',
@@ -960,7 +962,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1358,7 +1360,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1822,7 +1824,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1919,7 +1921,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -2176,7 +2178,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',

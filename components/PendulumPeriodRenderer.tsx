@@ -268,6 +268,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
   }, [playSound, emitEvent, phase, onPhaseComplete]);
@@ -894,7 +896,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Pendulum Period</span>
         <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
-      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '48px' }}>{renderPhase()}</div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%', overflowY: 'auto', paddingTop: '60px' }}>{renderPhase()}</div>
       {renderBottomBar()}
     </div>
   );

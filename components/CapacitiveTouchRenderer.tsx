@@ -244,6 +244,13 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // Internal phase management - supports both self-managing and externally-managed modes
   const [internalPhase, setInternalPhase] = useState<GamePhase>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine which phase to use: external prop takes precedence if valid
   const getValidPhase = (p: string | undefined): GamePhase | null => {
     if (p && PHASES.includes(p as GamePhase)) return p as GamePhase;

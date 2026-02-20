@@ -363,6 +363,8 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -1124,7 +1126,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '60px', paddingBottom: '16px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Ground Bounce Simulator
           </h2>
@@ -1353,7 +1355,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
         {renderNavigationBar()}
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto', overflowY: 'auto', flex: 1, paddingTop: '60px', paddingBottom: '16px' }}>
           {/* Reference user's prediction */}
           <div style={{
             background: predictionWasCorrect ? `${colors.success}22` : `${colors.warning}22`,

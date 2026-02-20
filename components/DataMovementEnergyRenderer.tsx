@@ -384,6 +384,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -816,7 +818,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -900,7 +902,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1037,7 +1039,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1224,7 +1226,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1330,7 +1332,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1449,7 +1451,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1632,7 +1634,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1753,7 +1755,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -1929,7 +1931,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
           <div style={{
             flex: 1,
             overflowY: 'auto',
-            paddingTop: '48px',
+            paddingTop: '60px',
             paddingBottom: '16px',
             paddingLeft: '24px',
             paddingRight: '24px',
@@ -1998,7 +2000,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',
@@ -2177,7 +2179,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           paddingLeft: '24px',
           paddingRight: '24px',

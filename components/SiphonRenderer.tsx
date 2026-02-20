@@ -107,6 +107,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
 
   const goToPhase = (newPhase: PhaseType) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     onPhaseComplete?.();
   };
 
@@ -1082,7 +1084,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100dvh',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px'
       }}>
         <div style={{ padding: isMobile ? '16px' : '24px' }}>
@@ -1850,7 +1852,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100dvh',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px'
       }}>
         <div style={{ padding: isMobile ? '16px' : '24px' }}>
@@ -2379,7 +2381,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100dvh',
-      paddingTop: '48px',
+      paddingTop: '60px',
       paddingBottom: '16px'
     }}>
       <div style={{ padding: isMobile ? '16px' : '24px' }}>

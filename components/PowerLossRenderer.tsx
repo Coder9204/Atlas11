@@ -129,6 +129,13 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   // Internal phase management - start at hook
   const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
+
   // Determine actual phase: prefer gamePhase prop, then phase prop, then internal state
   const getValidPhase = (p: string | undefined): typeof PHASE_ORDER[number] | null => {
     if (p && PHASE_ORDER.includes(p as typeof PHASE_ORDER[number])) {
@@ -1016,7 +1023,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   const renderPageWrapper = (children: React.ReactNode) => (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
       {renderNavBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {children}
       </div>
     </div>

@@ -391,6 +391,8 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     const phaseIndex = phaseOrder.indexOf(newPhase);
     onPhaseComplete?.(phaseIndex);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
@@ -2107,7 +2109,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       </div>
 
       {/* Main content - scrollable */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderPhase()}
       </div>
 

@@ -116,6 +116,12 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   const phase = phaseNames[currentPhaseIndex] as typeof initialPhase;
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const [sourceAngle, setSourceAngle] = useState(30);
   const [viewerAngle, setViewerAngle] = useState(30);
   const [showMirror, setShowMirror] = useState(true);
@@ -1031,7 +1037,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h1 style={{ color: colors.accent, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Welcome to Retroreflection</h1>
@@ -1057,7 +1063,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', width: '100%', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px' }}>
           {renderVisualization(false)}
           <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
@@ -1102,7 +1108,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: '800', fontSize: '28px', lineHeight: 1.5 }}>Explore Retroreflection</h2>
@@ -1157,7 +1163,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'retro_source';
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
@@ -1180,7 +1186,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ padding: '16px 0', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>The Twist</h2>
@@ -1226,7 +1232,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px', fontWeight: '700', fontSize: '28px', lineHeight: 1.5 }}>Test Driver Visibility</h2>
@@ -1274,7 +1280,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'retro_bright';
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ background: wasCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
             <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '12px', fontWeight: '700', lineHeight: 1.5 }}>{wasCorrect ? 'Correct!' : 'Not Quite!'}</h3>
@@ -1312,7 +1318,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     const isCompleted = transferCompleted.has(currentTransferApp);
     const allCompleted = transferCompleted.size >= transferApplications.length;
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ paddingTop: '16px', paddingBottom: '0' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '4px', textAlign: 'center', fontWeight: '800', fontSize: '28px', lineHeight: 1.5 }}>Real-World Applications</h2>
@@ -1425,7 +1431,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
           <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
             <div style={{ background: testScore >= 8 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.2))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(239, 68, 68, 0.2))', margin: '16px 0', padding: '24px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, fontWeight: '700', lineHeight: 1.5 }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
@@ -1450,7 +1456,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
     }
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ padding: '16px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -1551,7 +1557,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', maxWidth: '900px', margin: '0 auto', paddingLeft: '16px', paddingRight: '16px', paddingTop: '0', paddingBottom: '16px', width: '100%' }}>
           <div style={{ padding: '24px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
@@ -1576,7 +1582,7 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
 
   // Default fallback - unique from hook
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '48px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', paddingTop: '60px', paddingBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro", "Inter", sans-serif' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
         <div style={{ padding: '24px', textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
           <h1 style={{ color: colors.error, fontSize: '36px', marginBottom: '12px', fontWeight: '800', lineHeight: 1.4 }}>Invalid Phase Configuration</h1>

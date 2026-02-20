@@ -385,6 +385,8 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
 
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitGameEvent('phase_change', { from: phase, to: p });
 
     // Reset quiz state when entering test phase

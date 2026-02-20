@@ -466,6 +466,8 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     if (onGameEvent) {
       onGameEvent({
         eventType: 'phase_changed',
@@ -1073,7 +1075,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1195,7 +1197,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1252,7 +1254,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -1376,7 +1378,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1432,7 +1434,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           </button>
         </div>
 
-        <div style={{ maxWidth: '800px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Heat the Ice
           </h2>
@@ -1584,7 +1586,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1695,7 +1697,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1734,7 +1736,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
           <span style={{ ...typo.small, color: colors.textMuted }}>Step 5 of 10</span>
         </div>
 
-        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '700px', margin: '24px auto 0', flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
           <div style={{
             background: `${colors.steam}22`,
             borderRadius: '12px',
@@ -1855,7 +1857,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -1943,7 +1945,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -2055,7 +2057,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -2065,7 +2067,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0', flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
@@ -2247,7 +2249,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         <div style={{
           minHeight: '100dvh',
           background: colors.bgPrimary,
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '16px',
@@ -2306,7 +2308,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',
@@ -2479,7 +2481,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingLeft: '24px',
         paddingRight: '24px',
         paddingBottom: '16px',

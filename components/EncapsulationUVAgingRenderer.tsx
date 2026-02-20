@@ -102,6 +102,8 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     lastClickRef.current = now;
     isNavigating.current = true;
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 400);
   }, []);
 
@@ -779,7 +781,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
   };
   const scrollStyle: React.CSSProperties = {
-    flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px',
+    flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px',
   };
 
   // ── HOOK ──

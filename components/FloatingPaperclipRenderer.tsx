@@ -480,6 +480,13 @@ export default function FloatingPaperclipRenderer({
 }: FloatingPaperclipRendererProps) {
   // State for self-managed phase
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const phase = (phaseProp || gamePhase || internalPhase) as Phase;
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
@@ -2203,7 +2210,7 @@ export default function FloatingPaperclipRenderer({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         position: 'relative'
       }}>

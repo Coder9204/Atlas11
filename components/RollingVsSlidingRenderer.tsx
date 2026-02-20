@@ -387,6 +387,8 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
   const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitEvent('phase_changed', { from: phase, to: newPhase });
   }, [phase, emitEvent]);
@@ -1985,7 +1987,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col overflow-hidden" style={{ minHeight: '100dvh', background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
-      <div className="flex-1 overflow-y-auto p-6" style={{ flex: 1, overflowY: 'auto', paddingTop: '48px' }}>
+      <div className="flex-1 overflow-y-auto p-6" style={{ flex: 1, overflowY: 'auto', paddingTop: '60px' }}>
         <div className="max-w-4xl mx-auto" style={{ maxWidth: '900px', margin: '0 auto', padding: '0 24px' }}>
           {renderProgressBar()}
 

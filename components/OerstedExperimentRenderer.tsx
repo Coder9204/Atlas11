@@ -451,6 +451,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     isNavigating.current = true;
 
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     playSound('transition');
     emitGameEvent('phase_changed', { phase: p });
 
@@ -992,7 +994,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
@@ -1147,7 +1149,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1443,7 +1445,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1571,7 +1573,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -1755,7 +1757,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
@@ -2189,7 +2191,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           overflowY: 'auto',
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px'
         }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '30px 20px' }}>

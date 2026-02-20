@@ -54,6 +54,13 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
 }) => {
   const externalPhase = gamePhase ?? phaseProp;
   const [internalPhase, setInternalPhase] = useState('hook');
+
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const phase = externalPhase && PHASES.includes(externalPhase) ? externalPhase : internalPhase;
   const currentPhaseIndex = PHASES.indexOf(phase);
 
@@ -651,7 +658,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: '900', margin: '0 0 8px' }}>🎵 The Dancing Metronomes</h1>
             <p style={{ color: colors.accent, fontSize: '18px', fontWeight: '700', margin: 0 }}>Game 116: Metronome Synchronization</p>
@@ -680,7 +687,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           {renderVisualization()}
           <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
             <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '8px' }}>📋 The Setup</h3>
@@ -707,7 +714,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '800', margin: 0 }}>🔬 Experiment with Coupling!</h2>
             <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '4px' }}>Observe how increasing K causes faster synchronization</p>
@@ -769,7 +776,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     const isCorrect = userPrediction?.correct;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
             <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '22px', fontWeight: '800' }}>{isCorrect ? 'Excellent Prediction!' : 'Surprising Result!'}</h2>
@@ -810,7 +817,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', fontWeight: '800' }}>🌀 New Variable: What Causes Coupling?</h2>
             <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '8px' }}>You've seen synchronization happen. Now predict its mechanism.</p>
@@ -836,7 +843,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, fontSize: '22px', fontWeight: '800' }}>🌀 Explore the Coupling Mechanism</h2>
             <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '4px' }}>
@@ -896,7 +903,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     const isCorrect = userTwistPrediction?.correct;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px' }}>{isCorrect ? '🎯' : '💡'}</div>
             <h2 style={{ color: isCorrect ? colors.success : colors.warning, fontSize: '22px', fontWeight: '800' }}>{isCorrect ? 'Exactly Right!' : 'Great Thinking!'}</h2>
@@ -935,7 +942,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     const allCompleted = transferCompleted.size >= 4;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '22px', fontWeight: '800' }}>🌍 Real-World Applications</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '8px' }}>
@@ -982,7 +989,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
       const correctCount = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length;
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ fontSize: '64px' }}>{correctCount >= 8 ? '🏆' : correctCount >= 6 ? '⭐' : '📚'}</div>
               <h2 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: '900' }}>
@@ -1033,7 +1040,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '800', margin: 0 }}>📝 Knowledge Test</h2>
             <p style={{ color: colors.accent, fontSize: '15px', marginTop: '6px' }}>
@@ -1132,7 +1139,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
           <div style={{ padding: '20px', textAlign: 'center' }}>
             <div style={{ fontSize: '72px' }}>🏆</div>
             <h1 style={{ color: colors.textPrimary, fontSize: '28px', fontWeight: '900' }}>Synchronization Master!</h1>
@@ -1158,7 +1165,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   // Default fallback
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h1 style={{ color: colors.textPrimary, fontSize: '28px' }}>🎵 The Dancing Metronomes</h1>
           <p style={{ color: colors.accent, fontSize: '18px' }}>Game 116: Metronome Synchronization</p>

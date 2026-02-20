@@ -148,6 +148,12 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   const phaseIndex = externalPhaseIndex >= 0 ? externalPhaseIndex : internalPhaseIndex;
   const phase = NETL_PHASES[phaseIndex] || 'hook';
 
+  // Scroll to top on phase change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [phase]);
+
   const goNext = useCallback(() => {
     const nextIndex = Math.min(phaseIndex + 1, NETL_PHASES.length - 1);
     if (onPhaseComplete) {

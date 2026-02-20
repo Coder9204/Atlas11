@@ -337,6 +337,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -765,7 +767,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
       }}>
         {renderProgressBar()}
@@ -886,7 +888,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -994,7 +996,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingLeft: '24px',
           paddingRight: '24px',
           paddingBottom: '16px',
@@ -1166,7 +1168,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -1307,7 +1309,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -1432,7 +1434,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -1612,7 +1614,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -1743,7 +1745,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -1922,7 +1924,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
         <div style={{
           minHeight: '100dvh',
           background: colors.bgPrimary,
-          paddingTop: '48px',
+          paddingTop: '60px',
           paddingBottom: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -2050,7 +2052,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: colors.bgPrimary,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -2226,7 +2228,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
       <div style={{
         minHeight: '100dvh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        paddingTop: '48px',
+        paddingTop: '60px',
         paddingBottom: '16px',
         display: 'flex',
         flexDirection: 'column',

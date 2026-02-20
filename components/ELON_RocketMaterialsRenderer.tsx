@@ -354,6 +354,8 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     playSound('transition');
     emitEvent('phase_changed', { from: phase, to: newPhase });
     setPhase(newPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, [phase, emitEvent]);
 

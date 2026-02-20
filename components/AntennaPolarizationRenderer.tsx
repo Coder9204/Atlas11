@@ -253,6 +253,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     emitGameEvent('phase_changed', { newPhase: p });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, [emitGameEvent]);
@@ -3048,7 +3050,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
       </nav>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '48px', paddingBottom: '16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px' }}>
         {renderContent()}
       </div>
     </div>

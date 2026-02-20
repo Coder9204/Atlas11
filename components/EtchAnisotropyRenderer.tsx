@@ -97,6 +97,8 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     lastClickRef.current = now;
     isNavigating.current = true;
     setPhase(targetPhase);
+    // Scroll to top on phase change
+    requestAnimationFrame(() => { window.scrollTo(0, 0); document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; }); });
     setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
 
@@ -1223,7 +1225,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, transition: 'all 0.3s ease' }}>
       {renderNavigationBar()}
       {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '48px', transition: 'all 0.3s ease' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingTop: '60px', transition: 'all 0.3s ease' }}>
         {content}
       </div>
       {renderBottomBar(canProceed, nextLabel)}
