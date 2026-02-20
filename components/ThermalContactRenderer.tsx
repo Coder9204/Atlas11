@@ -932,8 +932,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
             rx="4"
           />
           <text x="30" y="45" textAnchor="middle" fill={colors.warning} fontSize="28" fontWeight="700">?</text>
-          <text x="30" y="70" textAnchor="middle" fill={colors.warning} fontSize="10">What fills</text>
-          <text x="30" y="82" textAnchor="middle" fill={colors.warning} fontSize="10">the gaps?</text>
+          <text x="30" y="70" textAnchor="middle" fill={colors.warning} fontSize="11">What fills</text>
+          <text x="30" y="82" textAnchor="middle" fill={colors.warning} fontSize="11">the gaps?</text>
         </g>
 
         {/* Cold Block */}

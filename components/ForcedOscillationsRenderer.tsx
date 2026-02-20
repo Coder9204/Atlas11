@@ -1609,12 +1609,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             {/* Vortex indicators */}
             <ellipse cx="260" cy="50" rx="16" ry="10" fill="none" stroke={colors.secondary} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.8"/>
             <ellipse cx="260" cy="90" rx="16" ry="10" fill="none" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.8"/>
-            <text x="245" y="47" fill={colors.secondary} fontSize="10">↺</text>
-            <text x="245" y="93" fill={colors.accent} fontSize="10">↻</text>
-            <text x="232" y="122" fill={colors.textSecondary} fontSize="10">Vortices shed</text>
+            <text x="245" y="47" fill={colors.secondary} fontSize="11">↺</text>
+            <text x="245" y="93" fill={colors.accent} fontSize="11">↻</text>
+            <text x="232" y="122" fill={colors.textSecondary} fontSize="11">Vortices shed</text>
             {/* Question mark */}
             <text x="155" y="30" fill={colors.primary} fontSize="22" textAnchor="middle" fontWeight="700">?</text>
-            <text x="155" y="128" fill={colors.textTertiary} fontSize="10" textAnchor="middle">Why does this create oscillations?</text>
+            <text x="155" y="128" fill={colors.textTertiary} fontSize="11" textAnchor="middle">Why does this create oscillations?</text>
           </svg>
         </div>
 

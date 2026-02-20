@@ -2058,8 +2058,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                 {/* Interactive marker */}
                 <circle cx="310" cy="110" r="6" fill="#f59e0b" stroke="#fff" strokeWidth="2" />
                 {/* Labels */}
-                <text x="300" y="218" fill="#64748b" fontSize="10" textAnchor="middle">Mass (kg)</text>
-                <text x="232" y="110" fill="#64748b" fontSize="10" textAnchor="end" transform="rotate(-90, 232, 110)">Power (W)</text>
+                <text x="300" y="218" fill="#64748b" fontSize="11" textAnchor="middle">Mass (kg)</text>
+                <text x="232" y="110" fill="#64748b" fontSize="11" textAnchor="end" transform="rotate(-90, 232, 110)">Power (W)</text>
                 <text x="95" y="245" fill="#a5b4fc" fontSize="11" textAnchor="middle">70kg + pack</text>
                 <text x="310" y="45" fill="#f59e0b" fontSize="12" fontWeight="700" textAnchor="middle">P = mgh/t</text>
               </svg>
@@ -2261,7 +2261,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   return (
                     <>
                       <line x1="50" y1={baseY} x2="330" y2={baseY} stroke="#6366f1" strokeWidth="1" strokeDasharray="6 3" opacity="0.6" />
-                      <text x="335" y={baseY + 4} fill="#8b8cf8" fontSize="10" textAnchor="start">reference {basePower}W</text>
+                      <text x="335" y={baseY + 4} fill="#8b8cf8" fontSize="11" textAnchor="start">reference {basePower}W</text>
                     </>
                   );
                 })()}

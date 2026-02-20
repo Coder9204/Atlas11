@@ -1323,7 +1323,7 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
 
             {/* Static SVG showing viscosity comparison - no sliders */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', borderRadius: '12px', display: 'block' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', borderRadius: '12px', display: 'block' }}>
                 <defs>
                   <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#1e1b4b" />

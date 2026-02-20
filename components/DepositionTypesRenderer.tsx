@@ -1651,7 +1651,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         {/* Review diagram */}
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto', maxWidth: '400px' }}>
+        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
           <defs>
             <linearGradient id="reviewPvdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" />
@@ -1886,7 +1886,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         {/* Twist review diagram showing void formation */}
-        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto 16px', maxWidth: '400px' }}>
+        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto 16px' }}>
           <defs>
             <linearGradient id="twistReviewGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" />

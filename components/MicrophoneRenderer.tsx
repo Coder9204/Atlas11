@@ -1188,11 +1188,11 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           <svg viewBox="0 0 350 100" style={{ width: '100%', height: '80px' }}>
             {/* Low frequency wave */}
             <path d="M 30 50 Q 60 20, 90 50 T 150 50" fill="none" stroke={colors.primary} strokeWidth="2" />
-            <text x="90" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Low Pitch (Bass)</text>
+            <text x="90" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Low Pitch (Bass)</text>
 
             {/* High frequency wave */}
             <path d="M 200 50 Q 215 20, 230 50 T 260 50 T 290 50 T 320 50" fill="none" stroke={colors.accent} strokeWidth="2" />
-            <text x="260" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="9">High Pitch (Treble)</text>
+            <text x="260" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="11">High Pitch (Treble)</text>
           </svg>
         </div>
 

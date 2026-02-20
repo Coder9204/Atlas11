@@ -714,7 +714,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px' }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%' }}>
               {/* Pipe */}
               <rect x="40" y="40" width="260" height="40" rx="4" fill="#475569" />
               <rect x="45" y="45" width="250" height="30" fill="#3b82f6" opacity="0.6" />
@@ -1351,7 +1351,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', margin: '0 auto', display: 'block' }}>
               {/* Fast closure - left side */}
               <text x="95" y="16" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="bold">FAST Closure</text>
               <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />

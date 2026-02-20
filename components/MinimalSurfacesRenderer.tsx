@@ -555,7 +555,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
                 {/* 120° angle indicators */}
                 <path d="M -15 5 A 20 20 0 0 1 15 5" fill="none" stroke={colors.success} strokeWidth="2" />
-                <text x="0" y="-10" textAnchor="middle" fill={colors.success} fontSize="10">120°</text>
+                <text x="0" y="-10" textAnchor="middle" fill={colors.success} fontSize="11">120°</text>
               </g>
 
               {/* Comparison */}
@@ -1071,8 +1071,8 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                 {/* Grid lines (axes) */}
                 <line x1="40" y1="20" x2="40" y2="200" stroke="#334155" strokeDasharray="3,4" opacity="0.5" />
                 <line x1="40" y1="200" x2="380" y2="200" stroke="#334155" strokeDasharray="3,4" opacity="0.5" />
-                <text x="200" y="215" textAnchor="middle" fill="#64748b" fontSize="10">X axis — East-West distance</text>
-                <text x="22" y="110" textAnchor="middle" fill="#64748b" fontSize="10" transform="rotate(-90,22,110)">Y axis</text>
+                <text x="200" y="215" textAnchor="middle" fill="#64748b" fontSize="11">X axis — East-West distance</text>
+                <text x="22" y="110" textAnchor="middle" fill="#64748b" fontSize="11" transform="rotate(-90,22,110)">Y axis</text>
                 {/* City A (top center) */}
                 <circle cx="200" cy="50" r="16" fill={colors.bgCard} stroke={colors.wire} strokeWidth="3" filter="url(#cityGlow)" />
                 <text x="200" y="55" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">A</text>
@@ -1170,7 +1170,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                     </defs>
                     <rect x="0" y="0" width="400" height="220" fill="url(#steinerBg)" rx="12" />
                     <text x="200" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Steiner Junction -- Drag slider to optimize</text>
-                    <text x="200" y="212" textAnchor="middle" fill="#64748b" fontSize="10">X axis -- optimization progress (0% direct, 100% Steiner)</text>
+                    <text x="200" y="212" textAnchor="middle" fill="#64748b" fontSize="11">X axis -- optimization progress (0% direct, 100% Steiner)</text>
                     <circle cx="200" cy="45" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
                     <text x="200" y="50" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">A</text>
                     <circle cx="80" cy="175" r="14" fill={colors.bgCard} stroke={colors.wire} strokeWidth="2" filter="url(#steinerGlow)" />
@@ -1186,7 +1186,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
                         <line x1="200" y1="59" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
                         <line x1="80" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
                         <line x1="320" y1="175" x2="200" y2={175 - steinerProgress * 0.85} stroke={colors.soapFilm} strokeWidth="3" opacity={steinerProgress / 100} />
-                        <text x="200" y={175 - steinerProgress * 0.85 - 12} textAnchor="middle" fill={colors.success} fontSize="10">{junctionAngle}</text>
+                        <text x="200" y={175 - steinerProgress * 0.85 - 12} textAnchor="middle" fill={colors.success} fontSize="11">{junctionAngle}</text>
                       </>
                     )}
                     <rect x="10" y="190" width="380" height="20" rx="4" fill="#0f172a" opacity="0.8" />

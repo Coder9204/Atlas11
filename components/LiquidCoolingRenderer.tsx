@@ -896,7 +896,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
               {/* Heat source */}
               <rect x="20" y="40" width="80" height="80" rx="8" fill="#dc2626" />
               <text x="60" y="75" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">500W</text>
-              <text x="60" y="95" textAnchor="middle" fill="white" fontSize="10">Heat</text>
+              <text x="60" y="95" textAnchor="middle" fill="white" fontSize="11">Heat</text>
 
               {/* Arrow */}
               <path d="M110 80 L140 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
@@ -909,7 +909,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
               {/* Coolant */}
               <rect x="150" y="40" width="100" height="80" rx="8" fill={colors.accent + '44'} stroke={colors.accent} strokeWidth="2" />
               <text x="200" y="75" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="bold">Coolant</text>
-              <text x="200" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Q = m*Cp*dT</text>
+              <text x="200" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Q = m*Cp*dT</text>
 
               {/* Arrow */}
               <path d="M260 80 L290 80" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
@@ -917,7 +917,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
               {/* Cool chip */}
               <rect x={isMobile ? 240 : 300} y="40" width="80" height="80" rx="8" fill={colors.success} />
               <text x={isMobile ? 280 : 340} y="75" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">Cool</text>
-              <text x={isMobile ? 280 : 340} y="95" textAnchor="middle" fill="white" fontSize="10">Chip</text>
+              <text x={isMobile ? 280 : 340} y="95" textAnchor="middle" fill="white" fontSize="11">Chip</text>
             </svg>
           </div>
 
@@ -1351,7 +1351,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
 
               {/* Chip at bottom */}
               <rect x="150" y="85" width="100" height="25" rx="4" fill="#dc2626" />
-              <text x="200" y="102" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Hot Chip</text>
+              <text x="200" y="102" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Hot Chip</text>
 
               {/* Bubbles rising */}
               <circle cx="170" cy="70" r="6" fill="white" opacity="0.6" />
@@ -1360,10 +1360,10 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
 
               {/* Condenser at top */}
               <rect x="100" y="5" width="200" height="15" rx="3" fill="#374151" stroke="#60a5fa" strokeWidth="2" />
-              <text x="200" y="15" textAnchor="middle" fill="#60a5fa" fontSize="9">Condenser</text>
+              <text x="200" y="15" textAnchor="middle" fill="#60a5fa" fontSize="11">Condenser</text>
 
               {/* Labels */}
-              <text x="200" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Liquid boils → Vapor rises → Condenses → Drips back</text>
+              <text x="200" y="135" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Liquid boils → Vapor rises → Condenses → Drips back</text>
             </svg>
           </div>
 

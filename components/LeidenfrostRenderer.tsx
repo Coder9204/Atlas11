@@ -548,7 +548,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     const isAboveLeidenfrost = surfaceTemp >= LEIDENFROST_POINT;
 
     return (
-      <svg viewBox="0 0 400 280" style={{ width: '100%', maxWidth: '400px' }}>
+      <svg viewBox="0 0 400 280" style={{ width: '100%' }}>
         <defs>
           {/* Premium background gradient */}
           <linearGradient id="leidLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -956,7 +956,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     const isAboveLeidenfrost = twistTemp >= LEIDENFROST_POINT;
 
     return (
-      <svg viewBox="0 0 400 260" style={{ width: '100%', maxWidth: '400px' }}>
+      <svg viewBox="0 0 400 260" style={{ width: '100%' }}>
         <defs>
           {/* Background gradient */}
           <linearGradient id="leidTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1491,7 +1491,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
   // Static predict visualization
   const renderPredictVisualization = () => (
-    <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', marginBottom: '20px' }}>
+    <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '20px' }}>
       <defs>
         <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#0f172a" />
@@ -1791,7 +1791,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Temperature Paradox</h2>
 
           {/* Preview visualization */}
-          <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '24px' }}>
             <rect width="400" height="200" fill="#0f172a" rx="8" />
             <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="bold">Droplet Lifetime vs Temperature</text>
             <line x1="60" y1="160" x2="340" y2="160" stroke="#475569" strokeWidth="2" />

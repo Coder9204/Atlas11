@@ -1305,7 +1305,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // Review phase SVG diagram
   const renderReviewDiagram = () => (
-    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ margin: '0 auto', display: 'block' }}>
       <defs>
         <linearGradient id="reviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor={colors.dopant} />
@@ -1515,7 +1515,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // Twist review SVG diagram
   const renderTwistReviewDiagram = () => (
-    <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+    <svg width="100%" height="180" viewBox="0 0 400 180" style={{ margin: '0 auto', display: 'block' }}>
       <defs>
         <linearGradient id="channelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor={colors.warning} />

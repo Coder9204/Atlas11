@@ -916,7 +916,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
               {/* Cold aisle left */}
               <rect x="20" y="40" width="80" height="100" fill="#3B82F633" stroke="#3B82F6" strokeWidth="2" rx="4" />
               <text x="60" y="90" fill="#3B82F6" fontSize="12" textAnchor="middle" fontWeight="600">COLD</text>
-              <text x="60" y="105" fill="#3B82F6" fontSize="10" textAnchor="middle">AISLE</text>
+              <text x="60" y="105" fill="#3B82F6" fontSize="11" textAnchor="middle">AISLE</text>
 
               {/* Server rack 1 */}
               <rect x="110" y="30" width="40" height="120" fill="#374151" stroke="#64748b" strokeWidth="1" rx="4" />
@@ -929,7 +929,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
               {/* Hot aisle */}
               <rect x="160" y="40" width="80" height="100" fill="#EF444433" stroke="#EF4444" strokeWidth="2" rx="4" />
               <text x="200" y="90" fill="#EF4444" fontSize="12" textAnchor="middle" fontWeight="600">HOT</text>
-              <text x="200" y="105" fill="#EF4444" fontSize="10" textAnchor="middle">AISLE</text>
+              <text x="200" y="105" fill="#EF4444" fontSize="11" textAnchor="middle">AISLE</text>
 
               {/* Server rack 2 */}
               <rect x="250" y="30" width="40" height="120" fill="#374151" stroke="#64748b" strokeWidth="1" rx="4" />
@@ -942,7 +942,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
               {/* Cold aisle right */}
               <rect x="300" y="40" width="80" height="100" fill="#3B82F633" stroke="#3B82F6" strokeWidth="2" rx="4" />
               <text x="340" y="90" fill="#3B82F6" fontSize="12" textAnchor="middle" fontWeight="600">COLD</text>
-              <text x="340" y="105" fill="#3B82F6" fontSize="10" textAnchor="middle">AISLE</text>
+              <text x="340" y="105" fill="#3B82F6" fontSize="11" textAnchor="middle">AISLE</text>
 
               {/* Arrows showing airflow direction */}
               <path d="M60 130 L60 150 L130 150 L130 145" stroke="#3B82F6" strokeWidth="2" fill="none" markerEnd="url(#arrowBlue)" />

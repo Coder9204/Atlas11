@@ -831,18 +831,18 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
           {/* Surface diver */}
           <circle cx="60" cy="32" r="12" fill="#fbbf24" />
-          <text x="60" y="36" textAnchor="middle" fill={colors.bgDeep} fontSize="8" fontWeight="bold">1atm</text>
+          <text x="60" y="36" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">1atm</text>
 
           {/* Deep diver */}
           <circle cx={isMobile ? 170 : 210} cy="105" r="12" fill="#f59e0b" />
-          <text x={isMobile ? 170 : 210} y="109" textAnchor="middle" fill={colors.bgDeep} fontSize="8" fontWeight="bold">2atm</text>
+          <text x={isMobile ? 170 : 210} y="109" textAnchor="middle" fill={colors.bgDeep} fontSize="11" fontWeight="bold">2atm</text>
 
           {/* Pressure indicator bar */}
           <rect x={isMobile ? 220 : 275} y="18" width="8" height="104" fill="url(#hookPressureGrad)" rx="4" />
 
           {/* Depth labels */}
-          <text x="26" y="22" textAnchor="end" fill={colors.textMuted} fontSize="8">0m</text>
-          <text x="26" y="122" textAnchor="end" fill={colors.textMuted} fontSize="8">10m</text>
+          <text x="26" y="22" textAnchor="end" fill={colors.textMuted} fontSize="11">0m</text>
+          <text x="26" y="122" textAnchor="end" fill={colors.textMuted} fontSize="11">10m</text>
         </svg>
 
         <p style={{ color: colors.primary, fontSize: typo.bodyLarge, fontWeight: 600, marginTop: '16px', textAlign: 'center' }}>

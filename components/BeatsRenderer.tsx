@@ -811,7 +811,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
           {/* Beat frequency display */}
           <rect x="100" y="165" width="100" height="28" rx="6" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
-          <text x="150" y="177" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600">BEAT FREQUENCY</text>
+          <text x="150" y="177" textAnchor="middle" fill={design.colors.textMuted} fontSize="11" fontWeight="600">BEAT FREQUENCY</text>
           <text x="150" y="189" textAnchor="middle" fill={design.colors.warning} fontSize="11" fontWeight="700">4 Hz</text>
         </svg>
       );
@@ -878,7 +878,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             </circle>
             {/* Display */}
             <rect x="8" y="8" width="35" height="18" rx="2" fill={design.colors.bgDeep} />
-            <text x="25" y="20" textAnchor="middle" fill={design.colors.success} fontSize="8" fontFamily={design.font.mono}>72 mph</text>
+            <text x="25" y="20" textAnchor="middle" fill={design.colors.success} fontSize="11" fontFamily={design.font.mono}>72 mph</text>
           </g>
 
           {/* Transmitted waves */}
@@ -929,7 +929,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
           {/* Info panel */}
           <rect x="85" y="145" width="130" height="48" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
-          <text x="150" y="160" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600">DOPPLER BEAT</text>
+          <text x="150" y="160" textAnchor="middle" fill={design.colors.textMuted} fontSize="11" fontWeight="600">DOPPLER BEAT</text>
           <text x="150" y="177" textAnchor="middle" fill={design.colors.warning} fontSize="14" fontWeight="700">72 mph</text>
           <text x="150" y="189" textAnchor="middle" fill={design.colors.textMuted} fontSize="7">v = c * f_beat / 2f0</text>
         </svg>
@@ -1012,12 +1012,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           <g transform="translate(65, 72)">
             <rect x="0" y="0" width="75" height="22" rx="3" fill="#0a0f14" stroke={design.colors.accentPrimary} strokeWidth="1" strokeOpacity="0.5" />
             <text x="37" y="9" textAnchor="middle" fill={design.colors.textMuted} fontSize="6" fontWeight="600">OSC 1</text>
-            <text x="37" y="18" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="10" fontWeight="700" filter="url(#beatsLedGlow)">440 Hz</text>
+            <text x="37" y="18" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="11" fontWeight="700" filter="url(#beatsLedGlow)">440 Hz</text>
           </g>
           <g transform="translate(160, 72)">
             <rect x="0" y="0" width="75" height="22" rx="3" fill="#0a0f14" stroke={design.colors.cyan} strokeWidth="1" strokeOpacity="0.5" />
             <text x="37" y="9" textAnchor="middle" fill={design.colors.textMuted} fontSize="6" fontWeight="600">OSC 2</text>
-            <text x="37" y="18" textAnchor="middle" fill={design.colors.cyan} fontSize="10" fontWeight="700" filter="url(#beatsLedGlow)">443 Hz</text>
+            <text x="37" y="18" textAnchor="middle" fill={design.colors.cyan} fontSize="11" fontWeight="700" filter="url(#beatsLedGlow)">443 Hz</text>
           </g>
 
           {/* LED indicators */}

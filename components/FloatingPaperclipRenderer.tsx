@@ -1091,8 +1091,8 @@ export default function FloatingPaperclipRenderer({
           </g>
           <text x="150" y="35" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">Steel Paperclip</text>
           <text x="150" y="115" textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="bold">Water Surface</text>
-          <text x="60" y="195" fill="#64748b" fontSize="10">Density: 7,850 kg/m³</text>
-          <text x="200" y="195" fill="#3b82f6" fontSize="10">1,000 kg/m³</text>
+          <text x="60" y="195" fill="#64748b" fontSize="11">Density: 7,850 kg/m³</text>
+          <text x="200" y="195" fill="#3b82f6" fontSize="11">1,000 kg/m³</text>
         </svg>
       </div>
 

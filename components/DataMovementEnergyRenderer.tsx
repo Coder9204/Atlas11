@@ -935,7 +935,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               <svg width={isMobile ? 300 : 400} height={120} viewBox={`0 0 ${isMobile ? 300 : 400} 120`}>
                 {/* Memory box */}
                 <rect x={10} y={30} width={70} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
-                <text x={45} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Memory</text>
+                <text x={45} y={55} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Memory</text>
                 <text x={45} y={75} fill={colors.dram} fontSize="20" textAnchor="middle">💾</text>
 
                 {/* Arrow with ? */}
@@ -944,7 +944,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
                 {/* CPU box */}
                 <rect x={150} y={30} width={80} height={60} rx={6} fill={`${colors.accent}33`} stroke={colors.accent} strokeWidth={2} />
-                <text x={190} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">CPU</text>
+                <text x={190} y={55} fill={colors.textSecondary} fontSize="11" textAnchor="middle">CPU</text>
                 <text x={190} y={75} fill={colors.accent} fontSize="20" textAnchor="middle">⚙️</text>
 
                 {/* Arrow */}
@@ -952,7 +952,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
 
                 {/* Multiply box */}
                 <rect x={290} y={30} width={70} height={60} rx={6} fill={`${colors.success}33`} stroke={colors.success} strokeWidth={2} />
-                <text x={325} y={55} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Multiply</text>
+                <text x={325} y={55} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Multiply</text>
                 <text x={325} y={75} fill={colors.success} fontSize="20" textAnchor="middle">✖️</text>
 
                 {/* Arrow marker definition */}

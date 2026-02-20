@@ -1552,11 +1552,11 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       <circle r="40" fill="url(#sphereGrad)" />
                       <path d="M 40 -5 Q 60 -30 90 -35 L 90 35 Q 60 30 40 5" fill="url(#wakeGradRed)" />
                       <text x="0" y="60" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="600">SMOOTH</text>
-                      <text x="0" y="75" fill={colors.textMuted} fontSize="9" textAnchor="middle">Large wake = High drag</text>
+                      <text x="0" y="75" fill={colors.textMuted} fontSize="11" textAnchor="middle">Large wake = High drag</text>
                       <circle cx="40" cy="0" r="4" fill={colors.error}>
                         <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
                       </circle>
-                      <text x="55" y="-15" fill={colors.error} fontSize="8">Early separation</text>
+                      <text x="55" y="-15" fill={colors.error} fontSize="11">Early separation</text>
                     </g>
 
                     {/* VS */}
@@ -1572,11 +1572,11 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       })}
                       <path d="M 40 -5 Q 50 -30 65 -35 L 65 35 Q 50 30 40 5" fill="url(#wakeGradGreen)" />
                       <text x="0" y="60" fill={colors.success} fontSize="11" textAnchor="middle" fontWeight="600">DIMPLED</text>
-                      <text x="0" y="75" fill={colors.textMuted} fontSize="9" textAnchor="middle">Small wake = 50% less drag!</text>
+                      <text x="0" y="75" fill={colors.textMuted} fontSize="11" textAnchor="middle">Small wake = 50% less drag!</text>
                       <circle cx="38" cy="20" r="4" fill={colors.success}>
                         <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
                       </circle>
-                      <text x="55" y="30" fill={colors.success} fontSize="8">Late separation</text>
+                      <text x="55" y="30" fill={colors.success} fontSize="11">Late separation</text>
                     </g>
                   </>
                 )}
@@ -1586,7 +1586,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                     <ellipse rx="100" ry="35" fill="url(#sphereGrad)" />
                     <path d="M 100 -5 Q 110 -30 120 -35 L 120 35 Q 110 30 100 5" fill="url(#wakeGradGreen)" />
                     <text x="0" y="55" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="600">STREAMLINED</text>
-                    <text x="0" y="70" fill={colors.textMuted} fontSize="10" textAnchor="middle">Flow stays attached - Minimal drag</text>
+                    <text x="0" y="70" fill={colors.textMuted} fontSize="11" textAnchor="middle">Flow stays attached - Minimal drag</text>
                   </g>
                 )}
 
@@ -1601,7 +1601,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
                       </circle>
                     ))}
                     <text x="0" y="70" fill={colors.error} fontSize="12" textAnchor="middle" fontWeight="600">FLAT PLATE</text>
-                    <text x="0" y="85" fill={colors.textMuted} fontSize="10" textAnchor="middle">Immediate separation - Maximum drag</text>
+                    <text x="0" y="85" fill={colors.textMuted} fontSize="11" textAnchor="middle">Immediate separation - Maximum drag</text>
                   </g>
                 )}
               </svg>

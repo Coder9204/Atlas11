@@ -553,9 +553,9 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           {/* Support beam */}
           <g><rect x="60" y="20" width="240" height="8" rx="3" fill="#3a3a48" /><path d="M 80 20 L 90 -30 L 270 -30 L 280 20" fill="#2a2a36" /></g>
           {/* Heavy pendulum */}
-          <g><line x1="120" y1="28" x2="120" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="120" cy="140" r="20" fill="url(#predHeavy)" filter="url(#predPendGlow)" /><text x="120" y="175" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="600">Heavy (5 kg)</text></g>
+          <g><line x1="120" y1="28" x2="120" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="120" cy="140" r="20" fill="url(#predHeavy)" filter="url(#predPendGlow)" /><text x="120" y="175" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="600">Heavy (5 kg)</text></g>
           {/* Light pendulum */}
-          <g><line x1="240" y1="28" x2="240" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="240" cy="135" r="12" fill="url(#predLight)" filter="url(#predPendGlow)" /><text x="240" y="175" fill={colors.primary} fontSize="10" textAnchor="middle" fontWeight="600">Light (1 kg)</text></g>
+          <g><line x1="240" y1="28" x2="240" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="240" cy="135" r="12" fill="url(#predLight)" filter="url(#predPendGlow)" /><text x="240" y="175" fill={colors.primary} fontSize="11" textAnchor="middle" fontWeight="600">Light (1 kg)</text></g>
           {/* Question marks */}
           <g opacity="0.6"><text x="180" y="80" fill={colors.primary} fontSize="28" fontWeight="700" textAnchor="middle">?</text><text x="50" y="100" fill={colors.accent} fontSize="18" fontWeight="700">?</text><text x="310" y="90" fill={colors.warning} fontSize="16" fontWeight="700">?</text></g>
         </svg>
@@ -673,9 +673,9 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           </defs>
           <rect width="360" height="180" fill="url(#twistPendBg)" rx="12" />
           {/* Earth side */}
-          <g><circle cx="90" cy="140" r="30" fill="url(#twistEarth)" filter="url(#twistPendGlow)" /><text x="90" y="148" fill="white" fontSize="10" textAnchor="middle" fontWeight="600">Earth</text><line x1="90" y1="30" x2="90" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="90" cy="95" r="10" fill={colors.primary} /></g>
+          <g><circle cx="90" cy="140" r="30" fill="url(#twistEarth)" filter="url(#twistPendGlow)" /><text x="90" y="148" fill="white" fontSize="11" textAnchor="middle" fontWeight="600">Earth</text><line x1="90" y1="30" x2="90" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="90" cy="95" r="10" fill={colors.primary} /></g>
           {/* Moon side */}
-          <g><circle cx="270" cy="140" r="20" fill="url(#twistMoon)" filter="url(#twistPendGlow)" /><text x="270" y="145" fill="white" fontSize="9" textAnchor="middle" fontWeight="600">Moon</text><line x1="270" y1="30" x2="270" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="270" cy="95" r="10" fill={colors.accent} /></g>
+          <g><circle cx="270" cy="140" r="20" fill="url(#twistMoon)" filter="url(#twistPendGlow)" /><text x="270" y="145" fill="white" fontSize="11" textAnchor="middle" fontWeight="600">Moon</text><line x1="270" y1="30" x2="270" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="270" cy="95" r="10" fill={colors.accent} /></g>
           {/* Question */}
           <g><text x="180" y="60" fill={colors.primary} fontSize="24" fontWeight="700" textAnchor="middle">?</text><text x="180" y="110" fill={colors.warning} fontSize="14" fontWeight="600" textAnchor="middle">Same pendulum</text><text x="180" y="130" fill={colors.warning} fontSize="14" fontWeight="600" textAnchor="middle">Different gravity</text></g>
         </svg>

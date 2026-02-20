@@ -727,7 +727,7 @@ export default function HeliumBalloonCarRenderer({
           <line x1="170" y1="95" x2="160" y2="65" stroke="#d8b4fe" strokeWidth="1.5" />
           <ellipse cx="160" cy="45" rx="20" ry="22" fill="url(#hbcBalloonGloss)" filter="url(#hbcGlow)" />
           <ellipse cx="153" cy="37" rx="7" ry="8" fill="url(#hbcBalloonHighlight)" />
-          <text x="160" y="50" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">He</text>
+          <text x="160" y="50" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">He</text>
 
           {/* Pendulum */}
           <line x1="240" y1="75" x2="255" y2="95" stroke="#94a3b8" strokeWidth="2" />
@@ -816,13 +816,13 @@ export default function HeliumBalloonCarRenderer({
               {/* Balloon - static at center */}
               <line x1="165" y1="55" x2="165" y2="30" stroke="#d8b4fe" strokeWidth="1.5" />
               <ellipse cx="165" cy="15" rx="14" ry="16" fill="url(#hbcBalloonGloss)" />
-              <text x="165" y="20" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+              <text x="165" y="20" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">He</text>
               {/* Question marks */}
               <text x="130" y="15" fill="#fbbf24" fontSize="16" fontWeight="bold">?</text>
               <text x="200" y="15" fill="#fbbf24" fontSize="16" fontWeight="bold">?</text>
               {/* Acceleration arrow */}
               <path d="M 300,60 L 340,60" stroke="#22c55e" strokeWidth="3" markerEnd="url(#hbcArrowGreen)" />
-              <text x="320" y="80" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">ACCEL</text>
+              <text x="320" y="80" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">ACCEL</text>
             </svg>
           </div>
 
@@ -1498,7 +1498,7 @@ export default function HeliumBalloonCarRenderer({
 
               {/* Y-axis */}
               <line x1="10" y1="5" x2="10" y2="160" stroke="#e2e8f0" strokeWidth="1.5" />
-              <text x="2" y="10" fill="#e2e8f0" fontSize="8" fontWeight="600">Tilt</text>
+              <text x="2" y="10" fill="#e2e8f0" fontSize="11" fontWeight="600">Tilt</text>
               <line x1="7" y1="40" x2="13" y2="40" stroke="#e2e8f0" strokeWidth="1" />
               <line x1="7" y1="80" x2="13" y2="80" stroke="#e2e8f0" strokeWidth="1" />
               <line x1="7" y1="120" x2="13" y2="120" stroke="#e2e8f0" strokeWidth="1" />
@@ -1506,7 +1506,7 @@ export default function HeliumBalloonCarRenderer({
 
               {/* X-axis */}
               <line x1="10" y1="160" x2="440" y2="160" stroke="#e2e8f0" strokeWidth="1.5" />
-              <text x="410" y="156" fill="#e2e8f0" fontSize="8" fontWeight="600">Scenarios →</text>
+              <text x="410" y="156" fill="#e2e8f0" fontSize="11" fontWeight="600">Scenarios →</text>
               <line x1="110" y1="157" x2="110" y2="163" stroke="#e2e8f0" strokeWidth="1" />
               <line x1="225" y1="157" x2="225" y2="163" stroke="#e2e8f0" strokeWidth="1" />
               <line x1="340" y1="157" x2="340" y2="163" stroke="#e2e8f0" strokeWidth="1" />
@@ -1517,19 +1517,19 @@ export default function HeliumBalloonCarRenderer({
               {/* Balloon section */}
               <g transform="translate(60, 30)">
                 <rect x="0" y="0" width="100" height="100" fill="rgba(30, 64, 175, 0.3)" rx="8" />
-                <text x="50" y="115" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="600">Balloon</text>
+                <text x="50" y="115" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="600">Balloon</text>
 
                 <g transform={`rotate(${twistBalloonAngle}, 50, 80)`}>
                   <line x1="50" y1="80" x2="50" y2="45" stroke="#d8b4fe" strokeWidth="1.5" />
                   <ellipse cx="50" cy="30" rx="16" ry="18" fill="url(#hbcBalloonGloss)" filter="url(#hbcGlow)" />
-                  <text x="50" y="35" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+                  <text x="50" y="35" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">He</text>
                 </g>
               </g>
 
               {/* Bubble in water section */}
               <g transform="translate(175, 30)">
                 <rect x="0" y="0" width="100" height="100" fill="rgba(59, 130, 246, 0.4)" rx="8" />
-                <text x="50" y="115" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="600">Bubble</text>
+                <text x="50" y="115" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="600">Bubble</text>
 
                 <ellipse
                   cx={50 + twistBalloonAngle * 0.7}
@@ -1544,7 +1544,7 @@ export default function HeliumBalloonCarRenderer({
               {/* Pendulum section */}
               <g transform="translate(290, 30)">
                 <rect x="0" y="0" width="100" height="100" fill="rgba(239, 68, 68, 0.2)" rx="8" />
-                <text x="50" y="115" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">Weight</text>
+                <text x="50" y="115" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="600">Weight</text>
 
                 <g transform={`rotate(${twistPendulumAngle}, 50, 20)`}>
                   <line x1="50" y1="20" x2="50" y2="60" stroke="#94a3b8" strokeWidth="2" />

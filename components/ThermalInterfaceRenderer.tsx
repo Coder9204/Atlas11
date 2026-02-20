@@ -781,7 +781,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', height: 'auto' }}>
               <defs>
                 <linearGradient id="predictHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#DC2626" />
@@ -1328,7 +1328,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
 
           {/* SVG comparison of TIM types */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg viewBox="0 0 300 160" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+            <svg viewBox="0 0 300 160" style={{ width: '100%', height: 'auto' }}>
               <defs>
                 <linearGradient id="twistBarGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#9CA3AF" />

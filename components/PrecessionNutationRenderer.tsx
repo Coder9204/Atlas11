@@ -958,7 +958,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
           x={width / 2 + 75}
           y={height / 2 + 10}
           fill={colors.textSecondary}
-          fontSize="10"
+          fontSize="11"
         >
           Tilt: {earthTiltAngle.toFixed(1)}deg
         </text>

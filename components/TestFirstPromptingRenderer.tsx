@@ -617,7 +617,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         {/* Property definitions */}
         <g transform="translate(15, 45)">
           <rect width={width - 30} height="120" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="20" fill={colors.textSecondary} fontSize="10" fontWeight="600">PROPERTIES</text>
+          <text x="10" y="20" fill={colors.textSecondary} fontSize="11" fontWeight="600">PROPERTIES</text>
 
           {[
             { name: 'Commutativity', formula: 'f(a, b) = f(b, a)', enabled: propertyTestEnabled },
@@ -629,8 +629,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             return (
               <g key={i}>
                 <circle cx="20" cy={y} r="6" fill={prop.enabled ? colors.success : colors.testPending} />
-                <text x="35" y={y + 4} fill={colors.textPrimary} fontSize="10">{prop.name}</text>
-                <text x={width - 50} y={y + 4} fill={colors.code} fontSize="9" textAnchor="end" fontFamily="monospace">
+                <text x="35" y={y + 4} fill={colors.textPrimary} fontSize="11">{prop.name}</text>
+                <text x={width - 50} y={y + 4} fill={colors.code} fontSize="11" textAnchor="end" fontFamily="monospace">
                   {prop.formula}
                 </text>
               </g>
@@ -641,11 +641,11 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         {/* Generated test cases */}
         <g transform={`translate(15, 175)`}>
           <rect width={width - 30} height="50" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">AUTO-GENERATED TEST CASES</text>
+          <text x="10" y="18" fill={colors.textSecondary} fontSize="11" fontWeight="600">AUTO-GENERATED TEST CASES</text>
           <text x={width/2 - 15} y="38" fill={colors.coverage} fontSize="20" fontWeight="700" textAnchor="middle">
             {propertyTestEnabled ? '1,000+' : '8'}
           </text>
-          <text x={width/2 - 15} y="48" fill={colors.textMuted} fontSize="9" textAnchor="middle">
+          <text x={width/2 - 15} y="48" fill={colors.textMuted} fontSize="11" textAnchor="middle">
             {propertyTestEnabled ? 'random inputs tested' : 'manual test cases'}
           </text>
         </g>
@@ -653,17 +653,17 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
         {/* Coverage comparison */}
         <g transform={`translate(15, 235)`}>
           <rect width={width - 30} height="70" rx="8" fill={colors.bgSecondary} />
-          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">EDGE CASE COVERAGE</text>
+          <text x="10" y="18" fill={colors.textSecondary} fontSize="11" fontWeight="600">EDGE CASE COVERAGE</text>
 
-          <text x="10" y="38" fill={colors.textMuted} fontSize="10">Unit Tests Only:</text>
+          <text x="10" y="38" fill={colors.textMuted} fontSize="11">Unit Tests Only:</text>
           <rect x="110" y="28" width={width - 160} height="12" rx="3" fill={colors.border} />
           <rect x="110" y="28" width={(width - 160) * 0.4} height="12" rx="3" fill={colors.warning} />
-          <text x={width - 40} y="38" fill={colors.warning} fontSize="10">40%</text>
+          <text x={width - 40} y="38" fill={colors.warning} fontSize="11">40%</text>
 
-          <text x="10" y="58" fill={colors.textMuted} fontSize="10">+ Property Tests:</text>
+          <text x="10" y="58" fill={colors.textMuted} fontSize="11">+ Property Tests:</text>
           <rect x="110" y="48" width={width - 160} height="12" rx="3" fill={colors.border} />
           <rect x="110" y="48" width={(width - 160) * (testCoverage / 100)} height="12" rx="3" fill={colors.success} />
-          <text x={width - 40} y="58" fill={colors.success} fontSize="10">{testCoverage}%</text>
+          <text x={width - 40} y="58" fill={colors.success} fontSize="11">{testCoverage}%</text>
         </g>
       </svg>
     );
@@ -917,8 +917,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               {/* Tests box */}
               <rect x="10" y="60" width="100" height="80" rx="8" fill={`${colors.testPass}22`} stroke={colors.testPass} strokeWidth="2" />
               <text x="60" y="95" textAnchor="middle" fill={colors.testPass} fontSize="14" fontWeight="600">Tests</text>
-              <text x="60" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Pass/Fail</text>
-              <text x="60" y="128" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Criteria</text>
+              <text x="60" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Pass/Fail</text>
+              <text x="60" y="128" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Criteria</text>
 
               {/* Arrow */}
               <line x1="115" y1="100" x2="145" y2="100" stroke={colors.textMuted} strokeWidth="2" />
@@ -928,8 +928,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               {/* LLM box */}
               <rect x="150" y="60" width="100" height="80" rx="8" fill={`${colors.code}22`} stroke={colors.code} strokeWidth="2" />
               <text x="200" y="95" textAnchor="middle" fill={colors.code} fontSize="14" fontWeight="600">LLM</text>
-              <text x="200" y="115" textAnchor="middle" fill={colors.textPrimary} fontSize="10">Code</text>
-              <text x="200" y="128" textAnchor="middle" fill={colors.textPrimary} fontSize="10">Generator</text>
+              <text x="200" y="115" textAnchor="middle" fill={colors.textPrimary} fontSize="11">Code</text>
+              <text x="200" y="128" textAnchor="middle" fill={colors.textPrimary} fontSize="11">Generator</text>
 
               {/* Arrow */}
               <line x1="255" y1="100" x2="285" y2="100" stroke={colors.textMuted} strokeWidth="2" />
@@ -939,7 +939,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               {/* Question mark box */}
               <rect x="290" y="60" width="100" height="80" rx="8" fill={`${colors.textMuted}22`} stroke={colors.textMuted} strokeWidth="2" />
               <text x="340" y="105" textAnchor="middle" fill={colors.textMuted} fontSize="32">???</text>
-              <text x="340" y="133" textAnchor="middle" fill={colors.textMuted} fontSize="10">Outcome</text>
+              <text x="340" y="133" textAnchor="middle" fill={colors.textMuted} fontSize="11">Outcome</text>
 
               {/* Grid lines for reference */}
               <line x1="0" y1="60" x2={isMobile ? 340 : 480} y2="60" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />

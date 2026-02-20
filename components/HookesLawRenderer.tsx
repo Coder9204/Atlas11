@@ -962,7 +962,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
 
                 {/* Arrow to 2kg scenario */}
                 <path d="M 180 100 L 220 100" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrowhead)" />
-                <text x="200" y="90" textAnchor="middle" fill="#94a3b8" fontSize="10">Add weight</text>
+                <text x="200" y="90" textAnchor="middle" fill="#94a3b8" fontSize="11">Add weight</text>
 
                 {/* 2 kg scenario - with ? */}
                 <rect x="260" y="20" width="80" height="20" fill="#374151" rx="4" />
@@ -1298,14 +1298,14 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
                 <rect x="95" y="135" width="50" height="25" fill="#64748b" rx="4" />
                 <rect x="100" y="110" width="40" height="22" fill="#475569" rx="3" />
                 <rect x="105" y="88" width="30" height="20" fill="#4b5563" rx="2" />
-                <text x="120" y="152" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Heavy!</text>
+                <text x="120" y="152" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Heavy!</text>
                 {/* Warning indicator */}
                 <text x="180" y="90" fill="#f59e0b" fontSize="28" fontWeight="bold">?</text>
                 {/* Labels */}
                 <text x="200" y="50" fill="#f59e0b" fontSize="11">Elastic Limit</text>
                 <line x1="200" y1="55" x2="200" y2="140" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4" />
-                <text x="280" y="100" fill="#94a3b8" fontSize="10">What happens</text>
-                <text x="280" y="115" fill="#94a3b8" fontSize="10">beyond this?</text>
+                <text x="280" y="100" fill="#94a3b8" fontSize="11">What happens</text>
+                <text x="280" y="115" fill="#94a3b8" fontSize="11">beyond this?</text>
               </svg>
             </div>
 
@@ -1390,15 +1390,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
               <text x="220" y="230" textAnchor="middle" fill="#64748b" fontSize="12">Strain (Displacement)</text>
               <text x="20" y="120" textAnchor="middle" fill="#64748b" fontSize="12" transform="rotate(-90, 20, 120)">Stress (Force)</text>
               <path d="M 50 200 L 150 100" stroke="#22c55e" strokeWidth="3" fill="none" />
-              <text x="90" y="140" fill="#22c55e" fontSize="10" fontWeight="bold">Linear (Hooke's Law)</text>
+              <text x="90" y="140" fill="#22c55e" fontSize="11" fontWeight="bold">Linear (Hooke's Law)</text>
               <circle cx="150" cy="100" r="6" fill="#f59e0b" />
-              <text x="150" y="85" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">Elastic Limit</text>
+              <text x="150" y="85" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">Elastic Limit</text>
               <path d="M 150 100 Q 220 60 280 70" stroke="#ef4444" strokeWidth="3" fill="none" />
-              <text x="220" y="55" fill="#ef4444" fontSize="10" fontWeight="bold">Plastic Deformation</text>
+              <text x="220" y="55" fill="#ef4444" fontSize="11" fontWeight="bold">Plastic Deformation</text>
               <circle cx="280" cy="70" r="6" fill="#ef4444" />
-              <text x="280" y="50" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">Fracture</text>
+              <text x="280" y="50" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">Fracture</text>
               <path d="M 200 85 L 120 200" stroke="#64748b" strokeWidth="2" strokeDasharray="5" fill="none" />
-              <text x="170" y="170" fill="#64748b" fontSize="9">Permanent deformation</text>
+              <text x="170" y="170" fill="#64748b" fontSize="11">Permanent deformation</text>
             </svg>
 
             <div className="grid grid-cols-2 gap-4 mb-6">

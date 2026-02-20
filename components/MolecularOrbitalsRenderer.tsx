@@ -1658,9 +1658,9 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
                 {/* Y-axis - Energy */}
                 <line x1="40" y1="40" x2="40" y2="240" stroke={colors.textMuted} strokeWidth="2" />
                 <text x="20" y="30" fill={colors.textPrimary} fontSize="12" fontWeight="600">Energy</text>
-                <text x="10" y="60" fill={colors.textSecondary} fontSize="10">π*</text>
-                <text x="10" y="140" fill={colors.textSecondary} fontSize="10">σ</text>
-                <text x="10" y="220" fill={colors.textSecondary} fontSize="10">π</text>
+                <text x="10" y="60" fill={colors.textSecondary} fontSize="11">π*</text>
+                <text x="10" y="140" fill={colors.textSecondary} fontSize="11">σ</text>
+                <text x="10" y="220" fill={colors.textSecondary} fontSize="11">π</text>
                 {/* X-axis - Molecule type */}
                 <line x1="40" y1="240" x2="360" y2="240" stroke={colors.textMuted} strokeWidth="2" />
                 <text x="100" y="260" fill={colors.textSecondary} fontSize="11">Bond</text>

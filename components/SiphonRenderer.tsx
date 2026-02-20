@@ -2293,7 +2293,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
             <line x1="365" y1="240" x2="375" y2="240" stroke={colors.warning} strokeWidth="2" />
             <line x1="365" y1="120" x2="375" y2="120" stroke={colors.warning} strokeWidth="2" />
             <text x="378" y="180" fill={colors.warning} fontSize="12" fontWeight="600">10.3m</text>
-            <text x="378" y="195" fill={colors.warning} fontSize="9">MAX</text>
+            <text x="378" y="195" fill={colors.warning} fontSize="11">MAX</text>
 
             {/* Atmospheric pressure arrows pushing down */}
             <path d="M 115 195 L 115 205" stroke={colors.primary} strokeWidth="2" markerEnd="url(#arrowhead1)" />
@@ -2308,7 +2308,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
             {/* Danger zone above 10m */}
             <rect x="50" y="40" width="300" height="75" fill={colors.accent} opacity="0.1" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" />
             <text x="200" y="60" fill={colors.accent} fontSize="11" fontWeight="600" textAnchor="middle">⚠️ CAVITATION ZONE</text>
-            <text x="200" y="75" fill={colors.accent} fontSize="9" textAnchor="middle">Vacuum forms, siphon breaks</text>
+            <text x="200" y="75" fill={colors.accent} fontSize="11" textAnchor="middle">Vacuum forms, siphon breaks</text>
 
             {/* Arrow markers */}
             <defs>

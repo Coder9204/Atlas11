@@ -481,11 +481,11 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
         <text x="14" y={padT + plotH / 2} fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="bold" transform={`rotate(-90, 14, ${padT + plotH / 2})`}>Torque (N m)</text>
 
         {/* Tick labels */}
-        <text x={padL} y={padT + plotH + 16} fill={colors.textMuted} fontSize="10" textAnchor="middle">0</text>
-        <text x={padL + plotW * 0.25} y={padT + plotH + 16} fill={colors.textMuted} fontSize="10" textAnchor="middle">90</text>
-        <text x={padL + plotW * 0.5} y={padT + plotH + 16} fill={colors.textMuted} fontSize="10" textAnchor="middle">180</text>
-        <text x={padL + plotW * 0.75} y={padT + plotH + 16} fill={colors.textMuted} fontSize="10" textAnchor="middle">270</text>
-        <text x={padL + plotW} y={padT + plotH + 16} fill={colors.textMuted} fontSize="10" textAnchor="middle">360</text>
+        <text x={padL} y={padT + plotH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">0</text>
+        <text x={padL + plotW * 0.25} y={padT + plotH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">90</text>
+        <text x={padL + plotW * 0.5} y={padT + plotH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">180</text>
+        <text x={padL + plotW * 0.75} y={padT + plotH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">270</text>
+        <text x={padL + plotW} y={padT + plotH + 16} fill={colors.textMuted} fontSize="11" textAnchor="middle">360</text>
 
         {/* Chart title */}
         <text x={chartW / 2} y={20} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">Torque vs Angle</text>

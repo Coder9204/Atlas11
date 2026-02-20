@@ -1286,7 +1286,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
           {/* SVG diagram for review */}
           <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
               <defs>
                 <linearGradient id="reviewGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
@@ -1533,7 +1533,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
           {/* SVG diagram for twist review */}
           <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
               <rect x="10" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#f59e0b" strokeWidth="2" />
               <text x="100" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Rotational Moire</text>
               <text x="100" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Angle differences</text>

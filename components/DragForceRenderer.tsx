@@ -571,7 +571,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             {/* SVG diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg viewBox="0 0 400 200" width="100%" style={{ maxWidth: '400px', background: colors.bgCard, borderRadius: '12px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
                 <defs>
                   <linearGradient id="predAirGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
@@ -930,7 +930,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
 
               {/* SVG formula diagram */}
-              <svg viewBox="0 0 400 200" width="100%" style={{ maxWidth: '400px', display: 'block', margin: '0 auto 16px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto 16px' }}>
                 <defs>
                   <linearGradient id="revGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
@@ -1006,7 +1006,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             {/* SVG showing falling objects */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg viewBox="0 0 400 280" width="100%" style={{ maxWidth: '400px', background: colors.bgCard, borderRadius: '12px' }}>
+              <svg viewBox="0 0 400 280" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
                 <defs>
                   <linearGradient id="twistSky" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.3" />
@@ -1295,7 +1295,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
 
               {/* SVG diagram */}
-              <svg viewBox="0 0 400 200" width="100%" style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto' }}>
                 <rect x="0" y="0" width="400" height="200" fill={colors.bgCard} rx="8" />
                 <g>
                   <rect x="20" y="30" width="170" height="50" rx="8" fill={`${colors.primary}22`} stroke={colors.primary} strokeWidth="1" />

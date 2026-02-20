@@ -1541,17 +1541,17 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               {/* Temperature scale */}
               <rect x={30} y={20} width={30} height={60} rx={4} fill="#12121a" stroke="#2a2a3a" />
               <rect x={35} y={30} width={20} height={45} rx={2} fill="url(#tempGradTwist)" />
-              <text x={45} y={90} textAnchor="middle" fill="#e2e8f0" fontSize="10">Temp</text>
+              <text x={45} y={90} textAnchor="middle" fill="#e2e8f0" fontSize="11">Temp</text>
               {/* Two chips showing comparison */}
               <g transform="translate(90, 25)">
                 <rect x={0} y={0} width={60} height={50} rx={4} fill="#22C55E" opacity={0.3} />
                 <text x={30} y={30} textAnchor="middle" fill="#22C55E" fontSize="14" fontWeight="600">85C</text>
-                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="10">Normal</text>
+                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="11">Normal</text>
               </g>
               <g transform={`translate(${isMobile ? 180 : 220}, 25)`}>
                 <rect x={0} y={0} width={60} height={50} rx={4} fill="#EF4444" opacity={0.3} />
                 <text x={30} y={30} textAnchor="middle" fill="#EF4444" fontSize="14" fontWeight="600">105C</text>
-                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="10">Heat wave</text>
+                <text x={30} y={65} textAnchor="middle" fill="#e2e8f0" fontSize="11">Heat wave</text>
               </g>
               <text x={(isMobile ? 160 : 200)} y={50} textAnchor="middle" fill="#cbd5e1" fontSize="20">?</text>
             </svg>

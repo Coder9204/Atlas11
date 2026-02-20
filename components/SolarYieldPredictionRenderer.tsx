@@ -1278,7 +1278,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
           {/* Static SVG for predict phase */}
-          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', display: 'block', margin: '0 auto 24px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }}>
             <defs>
               <linearGradient id="predictSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#0c4a6e" />
@@ -1478,11 +1478,11 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             {/* Source breakdown */}
             <g id="sources">
               <rect x="30" y="130" width="120" height="18" rx="4" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1" />
-              <text x="90" y="143" textAnchor="middle" fill="#f59e0b" fontSize="10">Weather ±8%</text>
+              <text x="90" y="143" textAnchor="middle" fill="#f59e0b" fontSize="11">Weather ±8%</text>
               <rect x="165" y="130" width="120" height="18" rx="4" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1" />
-              <text x="225" y="143" textAnchor="middle" fill="#22c55e" fontSize="10">Model Error ±5%</text>
+              <text x="225" y="143" textAnchor="middle" fill="#22c55e" fontSize="11">Model Error ±5%</text>
               <rect x="300" y="130" width="120" height="18" rx="4" fill="rgba(139,92,246,0.2)" stroke="#8b5cf6" strokeWidth="1" />
-              <text x="360" y="143" textAnchor="middle" fill="#a78bfa" fontSize="10">Degradation ±0.5%</text>
+              <text x="360" y="143" textAnchor="middle" fill="#a78bfa" fontSize="11">Degradation ±0.5%</text>
             </g>
           </svg>
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>

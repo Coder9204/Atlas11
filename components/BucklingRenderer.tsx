@@ -693,7 +693,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* Cross-section visualization with premium gradients */}
           {section && (
             <g transform={`translate(55, ${height / 2})`}>
-              <text x="0" y="-25" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">Cross-section</text>
+              <text x="0" y="-25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Cross-section</text>
               {section === 'solid' && (
                 <>
                   <circle cx="0" cy="0" r="12" fill="url(#buckHollowTube)" />
@@ -743,7 +743,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
         {/* Info text with enhanced styling */}
         <g transform="translate(100, 268)">
-          <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">
+          <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="500">
             Critical: <tspan fill="#ef4444" fontWeight="bold">{criticalLoad}N</tspan> | Length: <tspan fill="#6366f1">{length}</tspan>
           </text>
         </g>
@@ -803,7 +803,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
               {/* Label with glow */}
               <rect x="-22" y="-124" width="44" height="18" fill="url(#buckSafeGlow)" rx="9" />
               <rect x="-20" y="-122" width="40" height="14" fill="#10b981" rx="7" />
-              <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">STABLE</text>
+              <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">STABLE</text>
             </g>
 
             {/* Arrow with glow effect */}
@@ -840,13 +840,13 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
               <g filter="url(#buckForceGlow)">
                 <rect x="-15" y="-125" width="30" height="20" fill="url(#buckForceArrow)" rx="4" />
                 <polygon points="0,-100 -10,-108 10,-108" fill="url(#buckForceArrow)" />
-                <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">LOAD</text>
+                <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">LOAD</text>
               </g>
               {/* Buckled label with warning glow */}
               <g transform="translate(35, -75)">
                 <rect x="-28" y="-10" width="56" height="20" fill="url(#buckStressedGlow)" rx="10" />
                 <rect x="-26" y="-8" width="52" height="16" fill="#dc2626" rx="8" />
-                <text x="0" y="4" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">BUCKLED!</text>
+                <text x="0" y="4" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">BUCKLED!</text>
               </g>
             </g>
 
@@ -928,7 +928,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
               <rect x="-6" y="-60" width="12" height="60" fill="url(#buckSteelColumn)" rx="2" />
               <rect x="-4" y="-60" width="2" height="60" fill="rgba(255,255,255,0.2)" rx="1" />
               <text x="0" y="-70" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">1m</text>
-              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="10">Short</text>
+              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="11">Short</text>
             </g>
 
             {/* Long column (2m) - RIGHT */}
@@ -936,7 +936,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
               <rect x="-6" y="-120" width="12" height="120" fill="url(#buckSteelColumn)" rx="2" />
               <rect x="-4" y="-120" width="2" height="120" fill="rgba(255,255,255,0.2)" rx="1" />
               <text x="0" y="-130" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">2m</text>
-              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="10">Long</text>
+              <text x="0" y="20" textAnchor="middle" fill="#6366f1" fontSize="11">Long</text>
             </g>
 
             {/* VS indicator */}
@@ -1467,8 +1467,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           <polygon points="280,110 272,106 272,114" fill="#64748b" />
           <polygon points="40,30 36,38 44,38" fill="#64748b" />
 
-          <text x="160" y="128" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Length (L) →</text>
-          <text x="25" y="70" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="500" transform="rotate(-90, 25, 70)">Load →</text>
+          <text x="160" y="128" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">Length (L) →</text>
+          <text x="25" y="70" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500" transform="rotate(-90, 25, 70)">Load →</text>
 
           {/* Curve with gradient stroke effect using multiple paths */}
           <path
@@ -1492,7 +1492,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             <circle cx="60" cy="38" r="6" fill="#10b981" />
             <text x="60" y="41" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">L</text>
           </g>
-          <text x="60" y="55" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">200N</text>
+          <text x="60" y="55" textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">200N</text>
 
           <g filter="url(#buckBadgeGlow)">
             {/* Medium column - medium strength */}
@@ -1500,7 +1500,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             <circle cx="140" cy="70" r="6" fill="#f59e0b" />
             <text x="140" y="73" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">2L</text>
           </g>
-          <text x="140" y="87" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="bold">50N</text>
+          <text x="140" y="87" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">50N</text>
 
           <g filter="url(#buckBadgeGlow)">
             {/* Long column - low strength */}
@@ -1508,7 +1508,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             <circle cx="260" cy="100" r="6" fill="#ef4444" />
             <text x="260" y="103" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">4L</text>
           </g>
-          <text x="260" y="117" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">12N</text>
+          <text x="260" y="117" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">12N</text>
         </svg>
 
         <div className="grid grid-cols-3 gap-2 text-center">
@@ -1712,7 +1712,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           return (
             <g transform={`translate(0, ${y})`}>
               <circle cx="0" cy="-4" r="3" fill={colors.accent} />
-              <text x="15" y="0" fill={colors.accent} fontSize="8">free</text>
+              <text x="15" y="0" fill={colors.accent} fontSize="11">free</text>
             </g>
           );
         }
@@ -1783,9 +1783,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* Material indicator */}
           <g transform="translate(280, 80)">
             <rect x="-35" y="-20" width="70" height="55" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="9">Material</text>
+            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="11">Material</text>
             <rect x="-15" y="5" width="30" height="8" fill={currentMaterial.color} rx="2" />
-            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
               {currentMaterial.name}
             </text>
           </g>
@@ -1793,11 +1793,11 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* End condition indicator */}
           <g transform="translate(60, 80)">
             <rect x="-45" y="-20" width="90" height="55" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="9">End Condition</text>
-            <text x="0" y="15" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="bold">
+            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="11">End Condition</text>
+            <text x="0" y="15" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
               K = {currentEndCondition.K}
             </text>
-            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="8">
+            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="11">
               {currentEndCondition.name.split(' ')[0]}
             </text>
           </g>
@@ -1805,7 +1805,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* Safety Factor */}
           <g transform="translate(280, 180)">
             <rect x="-35" y="-15" width="70" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">Safety</text>
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="11">Safety</text>
             <text x="0" y="18" textAnchor="middle" fill={twistSafetyFactor > 2 ? colors.success : twistSafetyFactor > 1 ? colors.accent : colors.danger} fontSize="16" fontWeight="bold">
               {twistSafetyFactor === Infinity ? '∞' : twistSafetyFactor.toFixed(1)}
             </text>
@@ -1814,14 +1814,14 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* Young's Modulus */}
           <g transform="translate(60, 180)">
             <rect x="-45" y="-15" width="90" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">E (modulus)</text>
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="11">E (modulus)</text>
             <text x="0" y="18" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
               {(currentMaterial.E / 1e9).toFixed(0)} GPa
             </text>
           </g>
 
           {/* Info text */}
-          <text x="170" y="330" textAnchor="middle" fill={colors.neutral} fontSize="10">
+          <text x="170" y="330" textAnchor="middle" fill={colors.neutral} fontSize="11">
             P_cr = {twistCriticalLoadKN.toFixed(1)} kN | K = {currentEndCondition.K} | E = {(currentMaterial.E / 1e9).toFixed(0)} GPa
           </text>
         </svg>
@@ -2060,11 +2060,11 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             {/* 3D highlight */}
             <circle cx="-6" cy="-6" r="5" fill="rgba(255,255,255,0.2)" />
             {/* Label */}
-            <text x="0" y="42" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Solid</text>
+            <text x="0" y="42" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">Solid</text>
             {/* Value badge */}
             <rect x="-22" y="48" width="44" height="18" fill="url(#buckStressedGlow)" rx="9" />
             <rect x="-20" y="50" width="40" height="14" fill="#dc2626" rx="7" />
-            <text x="0" y="60" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">50N</text>
+            <text x="0" y="60" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">50N</text>
           </g>
 
           {/* Hollow section - medium efficient */}
@@ -2078,11 +2078,11 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             {/* 3D highlight */}
             <ellipse cx="-8" cy="-8" rx="4" ry="3" fill="rgba(255,255,255,0.15)" />
             {/* Label */}
-            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Hollow</text>
+            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">Hollow</text>
             {/* Value badge */}
             <rect x="-32" y="54" width="64" height="18" fill="url(#buckWarningGlow)" rx="9" />
             <rect x="-30" y="56" width="60" height="14" fill="#f59e0b" rx="7" />
-            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">75N (1.5x)</text>
+            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">75N (1.5x)</text>
           </g>
 
           {/* I-Beam section - most efficient */}
@@ -2096,11 +2096,11 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             {/* 3D highlights */}
             <rect x="-22" y="-20" width="44" height="2" fill="rgba(255,255,255,0.15)" rx="1" />
             {/* Label */}
-            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">I-Beam</text>
+            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">I-Beam</text>
             {/* Value badge */}
             <rect x="-32" y="54" width="64" height="18" fill="url(#buckSafeGlow)" rx="9" />
             <rect x="-30" y="56" width="60" height="14" fill="#10b981" rx="7" />
-            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">125N (2.5x)</text>
+            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">125N (2.5x)</text>
           </g>
         </svg>
       </div>

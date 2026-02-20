@@ -1182,9 +1182,9 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto">
           <rect x="40" y="20" width="120" height="60" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="5" />
           <rect x="45" y="60" width="110" height="15" fill="#ef4444" opacity="0.4" />
-          <text x="100" y="70" textAnchor="middle" fill="#fca5a5" fontSize="8">HOT ZONE</text>
+          <text x="100" y="70" textAnchor="middle" fill="#fca5a5" fontSize="11">HOT ZONE</text>
           <rect x="45" y="25" width="110" height="30" fill="#3b82f6" opacity="0.3" />
-          <text x="100" y="42" textAnchor="middle" fill="#93c5fd" fontSize="8">COLD ZONE</text>
+          <text x="100" y="42" textAnchor="middle" fill="#93c5fd" fontSize="11">COLD ZONE</text>
           <path d="M100,70 L100,35" stroke="#ef4444" strokeWidth="3" markerEnd="url(#predArrow)" />
           <defs>
             <marker id="predArrow" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto">

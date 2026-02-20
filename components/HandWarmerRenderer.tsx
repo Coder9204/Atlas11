@@ -942,7 +942,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
         <text x={width / 2} y={height - 25} textAnchor="middle" fill={getTempColor(chemicalTemp)} fontSize="14" fontWeight="bold">
           {chemicalTemp.toFixed(1)}C
         </text>
-        <text x={width / 2} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+        <text x={width / 2} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="11">
           4Fe + 3O2 = 2Fe2O3 + heat
         </text>
       </svg>
@@ -1345,8 +1345,8 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               <line x1="50" y1="20" x2="50" y2={reviewHeight - 25} stroke="#94a3b8" strokeWidth="1.5" />
               <line x1="50" y1={reviewHeight - 25} x2={reviewWidth - 10} y2={reviewHeight - 25} stroke="#94a3b8" strokeWidth="1.5" />
               {/* Axis labels */}
-              <text x="14" y={reviewHeight / 2} textAnchor="middle" fill="#94a3b8" fontSize="10" transform={`rotate(-90, 14, ${reviewHeight/2})`}>Temp (C)</text>
-              <text x={reviewWidth / 2} y={reviewHeight - 8} textAnchor="middle" fill="#94a3b8" fontSize="10">Time</text>
+              <text x="14" y={reviewHeight / 2} textAnchor="middle" fill="#94a3b8" fontSize="11" transform={`rotate(-90, 14, ${reviewHeight/2})`}>Temp (C)</text>
+              <text x={reviewWidth / 2} y={reviewHeight - 8} textAnchor="middle" fill="#94a3b8" fontSize="11">Time</text>
               {/* Temperature curve */}
               <polyline
                 points={`55,${reviewHeight - 30} 70,${reviewHeight - 30} 100,${reviewHeight - 70} 130,${reviewHeight - 70} 130,${reviewHeight - 70} 160,${reviewHeight - 40} ${reviewWidth - 20},${reviewHeight - 30}`}
@@ -1354,9 +1354,9 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               {/* Formula */}
               <text x={reviewWidth / 2} y="18" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="bold">E = m × Lf = 264 kJ/kg</text>
               {/* Labels */}
-              <text x="58" y={reviewHeight - 35} fill="#3b82f6" fontSize="10">20C</text>
-              <text x="130" y={reviewHeight - 72} fill="#f97316" fontSize="10">54C</text>
-              <text x="102" y={reviewHeight - 60} fill="#e2e8f0" fontSize="9">Phase change</text>
+              <text x="58" y={reviewHeight - 35} fill="#3b82f6" fontSize="11">20C</text>
+              <text x="130" y={reviewHeight - 72} fill="#f97316" fontSize="11">54C</text>
+              <text x="102" y={reviewHeight - 60} fill="#e2e8f0" fontSize="11">Phase change</text>
             </svg>
           </div>
 
@@ -1456,14 +1456,14 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
               {/* Phase change warmer */}
               <ellipse cx={twistPredictWidth * 0.25} cy={twistPredictHeight * 0.4} rx="50" ry="35" fill="#38bdf8" stroke="#0ea5e9" strokeWidth="2" />
               <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.7} textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">Phase-Change</text>
-              <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="9">30-60 min?</text>
+              <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="11">30-60 min?</text>
               {/* vs */}
               <text x={twistPredictWidth * 0.5} y={twistPredictHeight * 0.45} textAnchor="middle" fill={colors.warning} fontSize="16" fontWeight="bold">VS</text>
               {/* Chemical warmer */}
               <rect x={twistPredictWidth * 0.75 - 50} y={twistPredictHeight * 0.4 - 30} width="100" height="60" fill="#475569" stroke="#64748b" strokeWidth="2" rx="8" />
               <circle cx={twistPredictWidth * 0.75} cy={twistPredictHeight * 0.4} r="8" fill="#f97316" />
               <text x={twistPredictWidth * 0.75} y={twistPredictHeight * 0.7} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">Chemical</text>
-              <text x={twistPredictWidth * 0.75} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="9">6-12 hours?</text>
+              <text x={twistPredictWidth * 0.75} y={twistPredictHeight * 0.85} textAnchor="middle" fill="#e2e8f0" fontSize="11">6-12 hours?</text>
             </svg>
           </div>
 

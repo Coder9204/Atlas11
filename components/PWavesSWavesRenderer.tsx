@@ -1959,9 +1959,9 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
                      {/* Seismometer icons */}
                      <rect x="96" y="78" width="16" height="14" rx="2" fill="#22c55e" opacity="0.8" />
-                     <text x="88" y="66" fill="rgba(148,163,184,0.7)" fontSize="10" fontWeight="400">Station</text>
+                     <text x="88" y="66" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="400">Station</text>
                      <rect x="404" y="78" width="16" height="14" rx="2" fill="#ef4444" opacity="0.8" />
-                     <text x="402" y="66" fill="rgba(148,163,184,0.7)" fontSize="10" fontWeight="400">No S</text>
+                     <text x="402" y="66" fill="rgba(148,163,184,0.7)" fontSize="11" fontWeight="400">No S</text>
                   </svg>
                </div>
 

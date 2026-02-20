@@ -1178,7 +1178,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
             {/* 800mm2 die */}
             <rect x="230" y="30" width="120" height="120" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" rx="4" />
             <text x="290" y="170" fill="#e2e8f0" fontSize="12" textAnchor="middle">800mm2</text>
-            <text x="290" y="185" fill="#f59e0b" fontSize="10" textAnchor="middle">(2x area)</text>
+            <text x="290" y="185" fill="#f59e0b" fontSize="11" textAnchor="middle">(2x area)</text>
           </svg>
         </div>
 

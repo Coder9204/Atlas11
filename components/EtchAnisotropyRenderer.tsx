@@ -1750,7 +1750,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
         {/* Visual diagram showing passivation effect */}
         <div style={{ display: 'flex', justifyContent: 'center', margin: '16px' }}>
-          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ maxWidth: '400px', transition: 'all 0.3s ease' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet" style={{ transition: 'all 0.3s ease' }}>
             <defs>
               <linearGradient id="twistSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#64748b" />

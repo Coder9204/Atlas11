@@ -595,19 +595,31 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   // =============================================================================
   const renderBimetallicStrip = () => {
     const pair = currentPair;
-    const bendFactor = bending;
+    const rawBend = bending;
+    const bendFactor = Math.max(-8, Math.min(8, rawBend));
     const stripLength = 150;
+    const deltaT = temperature - 20;
+    const tempRatio = Math.max(0, Math.min(1, temperature / 100));
+
+    // Temperature-based strip tint (blend toward warm color as temp rises)
+    const stripWarmth = Math.max(0, Math.min(1, (temperature - 20) / 80));
+    const metal1Warm = stripWarmth > 0.3 ? `rgba(255, ${Math.round(160 - stripWarmth * 80)}, ${Math.round(80 - stripWarmth * 60)}, ${stripWarmth * 0.3})` : 'none';
 
     return (
-      <svg viewBox="0 0 300 280" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+      <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }} role="img" aria-label="Bimetallic Strip Thermostat visualization">
         <defs>
-          <linearGradient id="metal1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="metal1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={pair.metal1.color} />
-            <stop offset="100%" stopColor={pair.metal1.color} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={pair.metal1.color} stopOpacity="0.85" />
           </linearGradient>
-          <linearGradient id="metal2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="metal2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={pair.metal2.color} />
-            <stop offset="100%" stopColor={pair.metal2.color} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={pair.metal2.color} stopOpacity="0.85" />
+          </linearGradient>
+          <linearGradient id="tempBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="50%" stopColor={colors.warning} />
+            <stop offset="100%" stopColor={colors.error} />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -619,14 +631,31 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
         </defs>
 
         {/* Background */}
-        <rect x="0" y="0" width="300" height="280" fill="#1e293b" rx="12" />
+        <rect x="0" y="0" width="300" height="200" fill="#1e293b" rx="12" />
+
+        {/* Title */}
+        <text x="150" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="500">
+          Bimetallic Strip Thermostat
+        </text>
 
         {/* Fixed mounting point */}
-        <rect x="25" y="100" width="30" height="40" fill="#475569" rx="4" />
-        <text x="40" y="155" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Mount</text>
+        <rect x="25" y="70" width="30" height="40" fill="#475569" rx="4" />
+        <text x="40" y="122" textAnchor="middle" fill={colors.textMuted} fontSize="11">Mount</text>
 
         {/* Bimetallic strip - two layers */}
-        <g transform="translate(55, 120)">
+        <g transform="translate(55, 90)">
+          {/* Temperature warmth overlay on strip (visible when heated) */}
+          {stripWarmth > 0.3 && (
+            <path
+              d={`M0,-2 Q${stripLength/2},${-2 - bendFactor * 40} ${stripLength},${-2 + bendFactor * -20}`}
+              fill="none"
+              stroke={metal1Warm}
+              strokeWidth="24"
+              strokeLinecap="round"
+              opacity="0.4"
+            />
+          )}
+
           {/* Top metal (higher expansion) */}
           <path
             d={`M0,0 Q${stripLength/2},${-bendFactor * 40} ${stripLength},${bendFactor * -20}`}
@@ -635,8 +664,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             strokeWidth="10"
             strokeLinecap="round"
           />
-          <text x={stripLength + 10} y={bendFactor * -20 - 5} fill={pair.metal1.color} fontSize="11" fontWeight="bold">
-            {pair.metal1.name}
+          <text x={stripLength + 10} y={bendFactor * -20 - 7} fill={pair.metal1.color} fontSize="11" fontWeight="bold">
+            {pair.metal1.name} ({'\u03B1'}={pair.metal1.alpha})
           </text>
 
           {/* Bottom metal (lower expansion) */}
@@ -647,8 +676,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             strokeWidth="10"
             strokeLinecap="round"
           />
-          <text x={stripLength + 10} y={10 + bendFactor * -20 + 15} fill={pair.metal2.color} fontSize="11" fontWeight="bold">
-            {pair.metal2.name}
+          <text x={stripLength + 10} y={10 + bendFactor * -20 + 22} fill={pair.metal2.color} fontSize="11" fontWeight="bold">
+            {pair.metal2.name} ({'\u03B1'}={pair.metal2.alpha})
           </text>
 
           {/* Contact point on strip */}
@@ -661,75 +690,99 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             strokeWidth="2"
             filter={isContactMade ? "url(#glow)" : "none"}
           />
+
+          {/* Lightning bolt icon when contact is made */}
+          {isContactMade && (
+            <text x={stripLength + 1} y={5 + bendFactor * -20 + 4} textAnchor="middle" fontSize="11" fill="#fff">
+              {'\u26A1'}
+            </text>
+          )}
         </g>
 
         {/* Fixed contact point */}
         <g>
-          <rect x={55 + stripLength - 5} y={95} width="20" height="15" fill="#475569" rx="2" />
+          <rect x={55 + stripLength - 5} y={65} width="20" height="15" fill="#475569" rx="2" />
           <circle
             cx={55 + stripLength + 5}
-            cy={102}
+            cy={72}
             r="6"
             fill={isContactMade ? colors.success : "#94a3b8"}
             stroke="white"
             strokeWidth="2"
           />
-          <text x={55 + stripLength + 5} y={85} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-            Contact
+          <text x={55 + stripLength + 5} y={55} textAnchor="middle" fill={colors.textMuted} fontSize="11">
+            Fixed Contact
           </text>
         </g>
 
-        {/* Connection indicator */}
+        {/* Circuit path when ON */}
         {isContactMade && (
           <g>
             <path
-              d="M220,102 L260,102 L260,60"
+              d={`M${55 + stripLength + 11},72 L260,72 L260,40 L270,40`}
               fill="none"
               stroke={colors.success}
-              strokeWidth="2"
+              strokeWidth="1.5"
               strokeDasharray="4 2"
             />
-            <text x="265" y="55" fill={colors.success} fontSize="12" fontWeight="bold">ON</text>
+            <path
+              d="M270,36 L270,44 M274,38 L274,42"
+              stroke={colors.success}
+              strokeWidth="1.5"
+            />
+            <path
+              d={`M270,44 L270,55 L240,55 L240,72`}
+              fill="none"
+              stroke={colors.success}
+              strokeWidth="1.5"
+              strokeDasharray="4 2"
+              opacity="0.5"
+            />
+            <text x="276" y="43" fill={colors.success} fontSize="11">Load</text>
+          </g>
+        )}
+
+        {/* Bend direction annotation */}
+        {Math.abs(bendFactor) > 1 && (
+          <g>
+            <text x="10" y="45" fill={colors.textMuted} fontSize="11" opacity="0.8">
+              {bendFactor > 0 ? '\u2191 bends toward' : '\u2193 bends toward'}
+            </text>
+            <text x="10" y="58" fill={pair.metal2.color} fontSize="11" opacity="0.8">
+              {pair.metal2.name} (lower {'\u03B1'})
+            </text>
           </g>
         )}
 
         {/* Grid reference lines */}
-        <line x1="55" y1="60" x2="55" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
-        <line x1="130" y1="60" x2="130" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
-        <line x1="205" y1="60" x2="205" y2="190" stroke="#475569" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="55" y1="30" x2="55" y2="140" stroke="#475569" strokeDasharray="4 4" opacity="0.2" />
+        <line x1="130" y1="30" x2="130" y2="140" stroke="#475569" strokeDasharray="4 4" opacity="0.2" />
+        <line x1="205" y1="30" x2="205" y2="140" stroke="#475569" strokeDasharray="4 4" opacity="0.2" />
 
-        {/* Temperature bar */}
-        <rect x="20" y="200" width="260" height="60" fill="rgba(0,0,0,0.3)" rx="8" />
-        <text x="150" y="220" textAnchor="middle" fill={colors.textSecondary} fontSize="12">Temperature</text>
+        {/* Delta-T label */}
+        <text x="285" y="145" textAnchor="end" fill={colors.textMuted} fontSize="11">
+          {'\u0394'}T = {deltaT > 0 ? '+' : ''}{deltaT}{'\u00B0'}
+        </text>
 
-        <rect x="40" y="235" width="180" height="12" fill="#374151" rx="6" />
+        {/* Temperature bar — compact */}
+        <rect x="20" y="160" width="260" height="35" fill="rgba(0,0,0,0.3)" rx="6" />
+        <text x="30" y="176" fill={colors.textSecondary} fontSize="11">Temperature</text>
+
+        <rect x="60" y="170" width="160" height="10" fill="#374151" rx="5" />
         <rect
-          x="40"
-          y="235"
-          width={Math.max(0, Math.min(180, (temperature / 100) * 180))}
-          height="12"
+          x="60"
+          y="170"
+          width={Math.max(0, Math.min(160, tempRatio * 160))}
+          height="10"
           fill={temperature > 60 ? colors.error : temperature > 40 ? colors.warning : '#22d3ee'}
-          rx="6"
+          rx="5"
         />
 
-        <text x="235" y="245" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
-          {temperature}C
+        <text x="230" y="179" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+          {temperature}{'\u00B0'}C
         </text>
-
-        {/* Status */}
-        <rect
-          x="230"
-          y="10"
-          width="60"
-          height="30"
-          fill={isContactMade ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)'}
-          stroke={isContactMade ? colors.success : '#64748b'}
-          strokeWidth="2"
-          rx="6"
-        />
-        <text x="260" y="30" textAnchor="middle" fill={isContactMade ? colors.success : colors.textSecondary} fontSize="12" fontWeight="bold">
-          {isContactMade ? 'ON' : 'OFF'}
-        </text>
+        <text x="60" y="192" fill={colors.textMuted} fontSize="11">0</text>
+        <text x="215" y="192" fill={colors.textMuted} fontSize="11" textAnchor="end">100</text>
       </svg>
     );
   };

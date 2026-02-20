@@ -697,7 +697,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
           return (
             <g key={`ytick-${frac}`}>
               <line x1={pad.left - 4} y1={yPos} x2={pad.left} y2={yPos} stroke="#475569" strokeWidth="1" />
-              <text x={pad.left - 7} y={yPos + 3} fill="#64748b" fontSize="9" textAnchor="end">{eVal.toFixed(1)}</text>
+              <text x={pad.left - 7} y={yPos + 3} fill="#64748b" fontSize="11" textAnchor="end">{eVal.toFixed(1)}</text>
               <line x1={pad.left} y1={yPos} x2={pad.left + plotW} y2={yPos} stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4,4" />
             </g>
           );
@@ -736,7 +736,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
         {/* Transition state label at peak */}
         <circle cx={xPeak} cy={peakY} r="5" fill="#EF4444" filter="url(#eaDropShadow)" />
-        <text x={xPeak} y={peakY - 10} fill="#f87171" fontSize="10" textAnchor="middle">Transition State</text>
+        <text x={xPeak} y={peakY - 10} fill="#f87171" fontSize="11" textAnchor="middle">Transition State</text>
 
         {/* Reactant marker and label */}
         <circle cx={xReactant} cy={reactantY} r="7" fill="#10B981" filter="url(#eaDropShadow)" />
@@ -748,11 +748,11 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
 
         {/* Thermal energy (kT) indicator at reactant position */}
         <rect x={xReactant - 12} y={reactantY - kTBarH} width="8" height={kTBarH} rx="2" fill="#3B82F6" opacity="0.7" />
-        <text x={xReactant - 8} y={reactantY - kTBarH - 4} fill="#60a5fa" fontSize="9" textAnchor="middle">kT</text>
+        <text x={xReactant - 8} y={reactantY - kTBarH - 4} fill="#60a5fa" fontSize="11" textAnchor="middle">kT</text>
 
         {/* Temperature readout */}
         <rect x={pad.left + 4} y={pad.top + plotH - 22} width={70} height="18" rx="4" fill="#1e293b" stroke="#3B82F6" strokeWidth="0.5" />
-        <text x={pad.left + 39} y={pad.top + plotH - 9} fill="#93c5fd" fontSize="10" textAnchor="middle">
+        <text x={pad.left + 39} y={pad.top + plotH - 9} fill="#93c5fd" fontSize="11" textAnchor="middle">
           T = {temp}°C
         </text>
       </svg>

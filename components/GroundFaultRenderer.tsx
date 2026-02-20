@@ -799,7 +799,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               {/* Power source */}
               <rect x="20" y="60" width="50" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
               <text x="45" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">120V</text>
-              <text x="45" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="10">Source</text>
+              <text x="45" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">Source</text>
 
               {/* Hot wire */}
               <line x1="70" y1="75" x2="140" y2="75" stroke={colors.hot} strokeWidth="3" />
@@ -809,7 +809,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               {/* Load */}
               <rect x="140" y="55" width="80" height="90" rx="6" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
               <text x="180" y="95" textAnchor="middle" fill={colors.warning} fontSize="14" fontWeight="bold">LOAD</text>
-              <text x="180" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="10">10A</text>
+              <text x="180" y="115" textAnchor="middle" fill={colors.textMuted} fontSize="11">10A</text>
 
               {/* Neutral wire */}
               <line x1="70" y1="125" x2="140" y2="125" stroke={colors.neutral} strokeWidth="3" />
@@ -828,7 +828,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
               <line x1="306" y1="165" x2="314" y2="165" stroke={colors.ground} strokeWidth="1" />
 
               {/* Leakage label */}
-              <text x="330" y="130" fill={colors.warning} fontSize="10" fontWeight="600">5 mA</text>
+              <text x="330" y="130" fill={colors.warning} fontSize="11" fontWeight="600">5 mA</text>
             </svg>
             <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
               <p style={{ ...typo.small, color: colors.warning }}>

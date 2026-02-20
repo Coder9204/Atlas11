@@ -1664,7 +1664,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
               height="160"
               viewBox="0 0 400 160"
               preserveAspectRatio="xMidYMid meet"
-              style={{ maxWidth: '400px', display: 'block', margin: '0 auto' }}
+              style={{ display: 'block', margin: '0 auto' }}
             >
               {/* Y-axis label */}
               <text x="10" y="50" fill={colors.textSecondary} fontSize="11" fontWeight="600">Structured</text>

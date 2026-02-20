@@ -1364,7 +1364,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 const curLoadY = yScale(currentCOP);
 
                 return (
-                  <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+                  <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ margin: '0 auto', display: 'block' }}>
                     {/* Interactive point - first in DOM */}
                     <circle cx={curLoadX} cy={curLoadY} r={8} filter="url(#glowTwist)" stroke="#fff" strokeWidth={2} fill={colors.warning} />
 

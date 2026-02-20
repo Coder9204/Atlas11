@@ -713,7 +713,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     const peakY = padT + plotH * (1 - peakYNorm);
 
     return (
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
         {renderSvgDefs()}
 
         {/* Title */}
@@ -1107,7 +1107,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
               {/* SVG diagram for review */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
                   {renderSvgDefs()}
 
                   {/* Title */}

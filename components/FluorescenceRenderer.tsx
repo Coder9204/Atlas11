@@ -1225,7 +1225,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', margin: '0 auto', display: 'block' }}>
                 <rect width="300" height="200" fill="#1a1a24" rx="8" />
                 {/* Ground state */}
                 <rect x="40" y="155" width="100" height="8" rx="2" fill="#4b5563" />

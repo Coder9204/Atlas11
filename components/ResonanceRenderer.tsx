@@ -601,7 +601,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   // Static resonance SVG for predict phases
   const renderStaticResonanceSVG = () => {
     return (
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
         <defs>
           <linearGradient id="springGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#c084fc" />

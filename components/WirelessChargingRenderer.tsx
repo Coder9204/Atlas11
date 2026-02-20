@@ -2493,7 +2493,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
             {/* Ground coil */}
             <ellipse cx="150" cy="145" rx="40" ry="8" fill={colors.coilTx} opacity="0.8" />
-            <text x="150" y="170" fontSize="9" fill={colors.textMuted} textAnchor="middle">Ground Pad (Tx)</text>
+            <text x="150" y="170" fontSize="11" fill={colors.textMuted} textAnchor="middle">Ground Pad (Tx)</text>
 
             {/* Car body */}
             <rect x="90" y="70" width="120" height="50" rx="10" fill={colors.bgSurface} stroke={colors.textMuted} strokeWidth="2" />
@@ -2505,7 +2505,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
             {/* Car coil */}
             <ellipse cx="150" cy="125" rx="30" ry="6" fill={colors.coilRx} opacity="0.8" />
-            <text x="230" y="125" fontSize="9" fill={colors.coilRx}>Rx Coil</text>
+            <text x="230" y="125" fontSize="11" fill={colors.coilRx}>Rx Coil</text>
 
             {/* Magnetic field */}
             <path d="M 130 145 Q 150 135, 170 145" stroke={colors.accent} strokeWidth="2" fill="none" strokeDasharray="4" opacity="0.6" />
@@ -2513,7 +2513,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
             {/* Alignment arrow */}
             <path d="M 70 100 L 85 100" stroke={colors.success} strokeWidth="2" markerEnd="url(#arrow)" />
-            <text x="50" y="95" fontSize="8" fill={colors.success}>Align</text>
+            <text x="50" y="95" fontSize="11" fill={colors.success}>Align</text>
 
             <text x="150" y="20" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">EV Wireless Charging</text>
           </svg>
@@ -2522,24 +2522,24 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }}>
             {/* Skin layer */}
             <rect x="100" y="60" width="100" height="80" fill="#fcd5b5" rx="10" />
-            <text x="150" y="155" fontSize="9" fill={colors.textMuted} textAnchor="middle">Skin/Tissue</text>
+            <text x="150" y="155" fontSize="11" fill={colors.textMuted} textAnchor="middle">Skin/Tissue</text>
 
             {/* External charger */}
             <rect x="60" y="80" width="50" height="40" rx="5" fill={colors.bgSurface} stroke={colors.coilTx} strokeWidth="2" />
             <ellipse cx="85" cy="100" rx="15" ry="10" fill={colors.coilTx} opacity="0.8" />
-            <text x="85" y="75" fontSize="8" fill={colors.textMuted} textAnchor="middle">External</text>
+            <text x="85" y="75" fontSize="11" fill={colors.textMuted} textAnchor="middle">External</text>
 
             {/* Implant */}
             <rect x="140" y="85" width="40" height="30" rx="5" fill={colors.bgElevated} stroke={colors.coilRx} strokeWidth="2" />
             <ellipse cx="160" cy="100" rx="12" ry="8" fill={colors.coilRx} opacity="0.8" />
-            <text x="160" y="130" fontSize="8" fill={colors.textMuted} textAnchor="middle">Implant</text>
+            <text x="160" y="130" fontSize="11" fill={colors.textMuted} textAnchor="middle">Implant</text>
 
             {/* Magnetic coupling */}
             <path d="M 100 100 C 120 95, 130 95, 145 100" stroke={colors.accent} strokeWidth="2" fill="none" strokeDasharray="3" />
 
             {/* Distance label */}
             <line x1="100" y1="110" x2="140" y2="110" stroke={colors.warning} strokeWidth="1" strokeDasharray="2" />
-            <text x="120" y="125" fontSize="8" fill={colors.warning} textAnchor="middle">5-15mm</text>
+            <text x="120" y="125" fontSize="11" fill={colors.warning} textAnchor="middle">5-15mm</text>
 
             <text x="150" y="20" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">Medical Implant Charging</text>
           </svg>
@@ -2565,12 +2565,12 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
             {/* Status indicator */}
             <circle cx="150" cy="80" r="8" fill={colors.success} opacity="0.8" />
-            <text x="150" y="84" fontSize="8" fill="white" textAnchor="middle">⚡</text>
+            <text x="150" y="84" fontSize="11" fill="white" textAnchor="middle">⚡</text>
 
             {/* Path arrows */}
             <path d="M 50 120 L 110 120" stroke={colors.textMuted} strokeWidth="1" markerEnd="url(#arrow)" strokeDasharray="4" />
             <path d="M 190 120 L 250 120" stroke={colors.textMuted} strokeWidth="1" markerEnd="url(#arrow)" strokeDasharray="4" />
-            <text x="50" y="115" fontSize="8" fill={colors.textMuted}>Route</text>
+            <text x="50" y="115" fontSize="11" fill={colors.textMuted}>Route</text>
 
             <text x="150" y="20" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">AGV Opportunity Charging</text>
           </svg>
@@ -2596,10 +2596,10 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
 
             {/* Alignment marker on surface */}
             <circle cx="150" cy="95" r="2" fill={colors.primary} opacity="0.6" />
-            <text x="180" y="80" fontSize="8" fill={colors.textMuted}>Phone</text>
+            <text x="180" y="80" fontSize="11" fill={colors.textMuted}>Phone</text>
 
             {/* Multi-coil label */}
-            <text x="150" y="135" fontSize="8" fill={colors.textMuted} textAnchor="middle">Multi-coil array under surface</text>
+            <text x="150" y="135" fontSize="11" fill={colors.textMuted} textAnchor="middle">Multi-coil array under surface</text>
 
             <text x="150" y="20" fontSize="11" fill={colors.textPrimary} textAnchor="middle" fontWeight="600">Furniture-Integrated Charging</text>
           </svg>

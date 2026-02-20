@@ -710,7 +710,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
     const tempColor = temperature < 350 ? '#3b82f6' : temperature < 500 ? '#f59e0b' : '#ef4444';
 
     return (
-      <svg viewBox="0 0 320 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+      <svg viewBox="0 0 320 200" style={{ width: '100%', height: 'auto' }}>
         <defs>
           <linearGradient id="piston" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />

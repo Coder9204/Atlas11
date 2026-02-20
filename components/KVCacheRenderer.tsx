@@ -409,7 +409,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             x={padding.left - 5}
             y={padding.top + 30 + layerIdx * (cellSize + 4) + cellSize / 2}
             fill={colors.textMuted}
-            fontSize="10"
+            fontSize="11"
             textAnchor="end"
             dominantBaseline="middle"
           >
@@ -463,7 +463,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
             x={padding.left + 20 + tokenIdx * (cellSize + 4) + cellSize / 2}
             y={height - 10}
             fill={tokenIdx < generationStep ? colors.textSecondary : colors.textMuted}
-            fontSize="10"
+            fontSize="11"
             textAnchor="middle"
           >
             T{tokenIdx + 1}
@@ -473,11 +473,11 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
         {/* Legend */}
         <g transform={`translate(${width - 100}, ${padding.top + 30})`}>
           <rect x="0" y="0" width="12" height="12" fill={colors.cached} rx="2" />
-          <text x="18" y="10" fill={colors.textSecondary} fontSize="10">Keys (K)</text>
+          <text x="18" y="10" fill={colors.textSecondary} fontSize="11">Keys (K)</text>
           <rect x="0" y="18" width="12" height="12" fill={colors.memory} rx="2" />
-          <text x="18" y="28" fill={colors.textSecondary} fontSize="10">Values (V)</text>
+          <text x="18" y="28" fill={colors.textSecondary} fontSize="11">Values (V)</text>
           <rect x="0" y="36" width="12" height="12" fill={colors.bgSecondary} stroke={colors.border} rx="2" />
-          <text x="18" y="46" fill={colors.textSecondary} fontSize="10">Empty</text>
+          <text x="18" y="46" fill={colors.textSecondary} fontSize="11">Empty</text>
         </g>
       </svg>
     );
@@ -1456,7 +1456,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               <text x={isMobile ? 160 : 225} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
                 Memory Usage vs Context Length
               </text>
-              <text x={isMobile ? 160 : 225} y={175} fill={colors.textDecorative} fontSize="10" textAnchor="middle">
+              <text x={isMobile ? 160 : 225} y={175} fill={colors.textDecorative} fontSize="11" textAnchor="middle">
                 Tokens (in thousands)
               </text>
             </svg>

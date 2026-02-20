@@ -918,13 +918,13 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             <rect x="20" y="40" width="120" height="100" rx="4" fill="url(#predictCold)" stroke="#3b82f6" strokeWidth="2" />
             <circle cx="80" cy="70" r="12" fill="#d946ef" opacity="0.8" />
             <text x="80" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">Cold Water</text>
-            <text x="80" y="25" textAnchor="middle" fill="#3b82f6" fontSize="10">5C</text>
+            <text x="80" y="25" textAnchor="middle" fill="#3b82f6" fontSize="11">5C</text>
 
             {/* Hot water beaker */}
             <rect x="180" y="40" width="120" height="100" rx="4" fill="url(#predictHot)" stroke="#ef4444" strokeWidth="2" />
             <circle cx="240" cy="70" r="12" fill="#d946ef" opacity="0.8" />
             <text x="240" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">Hot Water</text>
-            <text x="240" y="25" textAnchor="middle" fill="#ef4444" fontSize="10">80C</text>
+            <text x="240" y="25" textAnchor="middle" fill="#ef4444" fontSize="11">80C</text>
 
             {/* Dye drops */}
             <ellipse cx="80" cy="50" rx="6" ry="8" fill="#d946ef" />
@@ -1561,18 +1561,18 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             {/* Bottom heat container */}
             <rect x="20" y="30" width="120" height="100" rx="4" fill="rgba(30,41,59,0.6)" stroke="#64748b" strokeWidth="2" />
             <rect x="20" y="115" width="120" height="15" rx="2" fill="#ef4444" opacity="0.8" />
-            <text x="80" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="10">Bottom Heat</text>
+            <text x="80" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11">Bottom Heat</text>
             <text x="80" y="75" textAnchor="middle" fill="#cbd5e1" fontSize="14">?</text>
 
             {/* Side heat container */}
             <rect x="180" y="30" width="120" height="100" rx="4" fill="rgba(30,41,59,0.6)" stroke="#64748b" strokeWidth="2" />
             <rect x="180" y="30" width="15" height="100" rx="2" fill="#ef4444" opacity="0.8" />
-            <text x="240" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="10">Side Heat</text>
+            <text x="240" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11">Side Heat</text>
             <text x="248" y="75" textAnchor="middle" fill="#cbd5e1" fontSize="14">?</text>
 
             {/* Heat source labels */}
-            <text x="80" y="20" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
-            <text x="240" y="20" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
+            <text x="80" y="20" textAnchor="middle" fill="#f97316" fontSize="11">Heat Source</text>
+            <text x="240" y="20" textAnchor="middle" fill="#f97316" fontSize="11">Heat Source</text>
           </svg>
         </div>
 
@@ -1889,8 +1889,8 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
               {/* Educational labels in SVG */}
               <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Convection Currents</text>
-              <text x="150" y="240" textAnchor="middle" fill="#cbd5e1" fontSize="10">Water Container</text>
-              {heatSource !== 'none' && <text x="150" y="120" textAnchor="middle" fill="#f97316" fontSize="9">Heat rises, cold sinks</text>}
+              <text x="150" y="240" textAnchor="middle" fill="#cbd5e1" fontSize="11">Water Container</text>
+              {heatSource !== 'none' && <text x="150" y="120" textAnchor="middle" fill="#f97316" fontSize="11">Heat rises, cold sinks</text>}
             </svg>
 
             {/* Legend outside SVG using typo system */}

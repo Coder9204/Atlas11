@@ -2642,14 +2642,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                        {/* Wave through BOTH slits */}
                                        <path d="M 58 85 Q 78 60, 100 65" fill="none" stroke={currentApp.color} strokeWidth="2" opacity="0.7" />
                                        <path d="M 58 85 Q 78 110, 100 105" fill="none" stroke={currentApp.color} strokeWidth="2" opacity="0.7" />
-                                       <text x="78" y="88" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.accent}>Both!</text>
+                                       <text x="78" y="88" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.accent}>Both!</text>
 
                                        {/* Screen with interference pattern */}
                                        <rect x="170" y="40" width="22" height="90" fill={colors.bgCardLight} rx="3" stroke={colors.border} />
                                        {[0,1,2,3,4,5].map((i) => (
                                           <rect key={i} x="173" y={45 + i*14} width="16" height="9" fill={currentApp.color} opacity={i % 2 === 0 ? 0.9 : 0.3} rx="2" />
                                        ))}
-                                       <text x="181" y="145" textAnchor="middle" fontSize="10" fill={colors.textSecondary}>Pattern</text>
+                                       <text x="181" y="145" textAnchor="middle" fontSize="11" fill={colors.textSecondary}>Pattern</text>
                                     </g>
 
                                     {/* Equals sign in middle */}
@@ -2663,7 +2663,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                                        {/* Classical bit - coin landed (heads OR tails) */}
                                        <g transform="translate(10, 28)">
-                                          <text x="50" y="10" textAnchor="middle" fontSize="8" fontWeight="bold" fill={colors.textMuted}>CLASSICAL BIT</text>
+                                          <text x="50" y="10" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textMuted}>CLASSICAL BIT</text>
                                           <text x="50" y="20" textAnchor="middle" fontSize="7" fill={colors.textSecondary}>Coin landed</text>
 
                                           {/* Coin showing heads */}
@@ -2671,7 +2671,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                           <text x="30" y="53" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>0</text>
 
                                           {/* OR text */}
-                                          <text x="50" y="50" textAnchor="middle" fontSize="8" fill={colors.textMuted}>OR</text>
+                                          <text x="50" y="50" textAnchor="middle" fontSize="11" fill={colors.textMuted}>OR</text>
 
                                           {/* Coin showing tails */}
                                           <circle cx="70" cy="48" r="18" fill={colors.warning} opacity="0.3" stroke={colors.warning} strokeWidth="2" />
@@ -2685,7 +2685,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                                        {/* Quantum qubit - spinning coin (both at once) */}
                                        <g transform="translate(130, 28)">
-                                          <text x="50" y="10" textAnchor="middle" fontSize="8" fontWeight="bold" fill={currentApp.color}>QUANTUM QUBIT</text>
+                                          <text x="50" y="10" textAnchor="middle" fontSize="11" fontWeight="bold" fill={currentApp.color}>QUANTUM QUBIT</text>
                                           <text x="50" y="20" textAnchor="middle" fontSize="7" fill={currentApp.color}>Coin spinning!</text>
 
                                           {/* Spinning coin - ellipse to show rotation */}
@@ -2694,17 +2694,17 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                           </ellipse>
 
                                           {/* Both states shown */}
-                                          <text x="50" y="45" textAnchor="middle" fontSize="9" fontWeight="bold" fill={currentApp.color}>0</text>
-                                          <text x="50" y="56" textAnchor="middle" fontSize="8" fill={currentApp.color}>AND</text>
-                                          <text x="50" y="65" textAnchor="middle" fontSize="9" fontWeight="bold" fill={currentApp.color}>1</text>
+                                          <text x="50" y="45" textAnchor="middle" fontSize="11" fontWeight="bold" fill={currentApp.color}>0</text>
+                                          <text x="50" y="56" textAnchor="middle" fontSize="11" fill={currentApp.color}>AND</text>
+                                          <text x="50" y="65" textAnchor="middle" fontSize="11" fontWeight="bold" fill={currentApp.color}>1</text>
 
                                           <text x="50" y="78" textAnchor="middle" fontSize="7" fill={colors.success}>Both until measured!</text>
                                        </g>
 
                                        {/* Bottom explanation */}
                                        <rect x="8" y="108" width="224" height="46" rx="6" fill={`${currentApp.color}15`} />
-                                       <text x="120" y="122" textAnchor="middle" fontSize="8" fontWeight="bold" fill={currentApp.color}>⚛️ SUPERPOSITION</text>
-                                       <text x="120" y="134" textAnchor="middle" fontSize="8" fill={colors.textPrimary}>Like electrons through BOTH slits at once</text>
+                                       <text x="120" y="122" textAnchor="middle" fontSize="11" fontWeight="bold" fill={currentApp.color}>⚛️ SUPERPOSITION</text>
+                                       <text x="120" y="134" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>Like electrons through BOTH slits at once</text>
                                        <text x="120" y="146" textAnchor="middle" fontSize="7" fill={colors.textMuted}>50 qubits = 1 quadrillion possibilities!</text>
                                     </g>
 
@@ -2753,7 +2753,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                        <g transform="translate(0, 26)">
                                           {/* Alice */}
                                           <rect x="20" y="0" width="55" height="28" rx="5" fill={`${currentApp.color}20`} stroke={currentApp.color} />
-                                          <text x="47" y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.textPrimary}>👩 Alice</text>
+                                          <text x="47" y="18" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>👩 Alice</text>
 
                                           {/* Arrow 1 */}
                                           <line x1="80" y1="14" x2="140" y2="14" stroke={colors.danger} strokeWidth="2" markerEnd="url(#arrowhead)" />
@@ -2762,7 +2762,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                           {/* Eve */}
                                           <rect x="145" y="0" width="60" height="28" rx="5" fill={`${colors.danger}20`} stroke={colors.danger} strokeWidth="2" />
                                           <text x="175" y="12" textAnchor="middle" fontSize="12">👁️</text>
-                                          <text x="175" y="24" textAnchor="middle" fontSize="8" fontWeight="bold" fill={colors.danger}>Eve</text>
+                                          <text x="175" y="24" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.danger}>Eve</text>
 
                                           {/* Arrow 2 with "disturbed" label */}
                                           <line x1="210" y1="14" x2="270" y2="14" stroke={colors.danger} strokeWidth="2" strokeDasharray="4,2" />
@@ -2770,7 +2770,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                                           {/* Bob */}
                                           <rect x="275" y="0" width="55" height="28" rx="5" fill={`${currentApp.color}20`} stroke={currentApp.color} />
-                                          <text x="302" y="18" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.textPrimary}>👨 Bob</text>
+                                          <text x="302" y="18" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>👨 Bob</text>
 
                                           {/* Arrow 3 */}
                                           <line x1="335" y1="14" x2="395" y2="14" stroke={colors.danger} strokeWidth="2" />
@@ -2778,14 +2778,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                                           {/* Alert */}
                                           <rect x="400" y="0" width="80" height="28" rx="5" fill={colors.danger} />
-                                          <text x="440" y="18" textAnchor="middle" fontSize="9" fontWeight="bold" fill="white">🚨 DETECTED</text>
+                                          <text x="440" y="18" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white">🚨 DETECTED</text>
                                        </g>
 
                                        {/* Explanation - well spaced */}
-                                       <text x="280" y="72" textAnchor="middle" fontSize="9" fontWeight="bold" fill={colors.danger}>
+                                       <text x="280" y="72" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.danger}>
                                           Observation disturbs quantum state → Intrusion detected!
                                        </text>
-                                       <text x="280" y="88" textAnchor="middle" fontSize="8" fill={colors.textMuted}>
+                                       <text x="280" y="88" textAnchor="middle" fontSize="11" fill={colors.textMuted}>
                                           Physics guarantees: Any spy MUST leave evidence
                                        </text>
                                     </g>
@@ -2793,12 +2793,12 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                     {/* Key insight box */}
                                     <rect x="20" y="210" width="560" height="45" rx="8" fill={`${currentApp.color}20`} stroke={currentApp.color} strokeWidth="2" />
                                     <text x="300" y="228" textAnchor="middle" fontSize="11" fontWeight="bold" fill={currentApp.color}>💡 OBSERVER EFFECT = UNBREAKABLE SECURITY</text>
-                                    <text x="300" y="245" textAnchor="middle" fontSize="10" fill={colors.textPrimary}>Any eavesdropping changes quantum state → Impossible to hide!</text>
+                                    <text x="300" y="245" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>Any eavesdropping changes quantum state → Impossible to hide!</text>
 
                                     {/* Bottom info */}
                                     <rect x="20" y="265" width="560" height="45" rx="8" fill={colors.bgCard} stroke={colors.border} />
-                                    <text x="300" y="283" textAnchor="middle" fontSize="10" fontWeight="bold" fill={colors.textPrimary}>🌐 Real-world: China's 4,600km quantum network operational</text>
-                                    <text x="300" y="300" textAnchor="middle" fontSize="9" fill={colors.textMuted}>Banks & governments use quantum encryption for ultra-secure communications</text>
+                                    <text x="300" y="283" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>🌐 Real-world: China's 4,600km quantum network operational</text>
+                                    <text x="300" y="300" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Banks & governments use quantum encryption for ultra-secure communications</text>
                                  </g>
                               )}
                               {selectedApp === 2 && (
@@ -2809,7 +2809,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                        {/* Light Microscope */}
                                        <rect x="0" y="0" width="250" height="140" rx="10" fill={colors.bgCard} stroke={colors.warning} strokeWidth="2" />
                                        <text x="125" y="22" textAnchor="middle" fontSize="13" fontWeight="bold" fill={colors.warning}>🔦 LIGHT MICROSCOPE</text>
-                                       <text x="125" y="40" textAnchor="middle" fontSize="10" fill={colors.textMuted}>λ = 500 nm</text>
+                                       <text x="125" y="40" textAnchor="middle" fontSize="11" fill={colors.textMuted}>λ = 500 nm</text>
 
                                        {/* Long wavelength */}
                                        <path d="M 30 65 Q 55 50, 80 65 T 130 65 T 180 65 T 220 65" fill="none" stroke={colors.warning} strokeWidth="3" opacity="0.7" />
@@ -2827,7 +2827,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                     <g transform="translate(330, 10)">
                                        <rect x="0" y="0" width="250" height="140" rx="10" fill={colors.bgCard} stroke={currentApp.color} strokeWidth="2" />
                                        <text x="125" y="22" textAnchor="middle" fontSize="13" fontWeight="bold" fill={currentApp.color}>⚡ ELECTRON MICROSCOPE</text>
-                                       <text x="125" y="40" textAnchor="middle" fontSize="10" fill={colors.textMuted}>λ = 0.005 nm (100,000× shorter)</text>
+                                       <text x="125" y="40" textAnchor="middle" fontSize="11" fill={colors.textMuted}>λ = 0.005 nm (100,000× shorter)</text>
 
                                        {/* Short wavelength */}
                                        <path d="M 30 65 Q 33 60, 36 65 T 42 65 T 48 65 T 54 65 T 60 65 T 66 65 T 72 65 T 78 65 T 84 65 T 90 65 T 96 65 T 102 65 T 108 65 T 114 65 T 120 65 T 126 65 T 132 65 T 138 65 T 144 65 T 150 65 T 156 65 T 162 65 T 168 65 T 174 65 T 180 65 T 186 65 T 192 65 T 198 65 T 204 65 T 210 65 T 216 65 T 220 65" fill="none" stroke={currentApp.color} strokeWidth="2" />
@@ -2847,24 +2847,24 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                     {/* Key insight row */}
                                     <rect x="20" y="165" width="280" height="45" rx="8" fill={`${colors.primary}15`} stroke={colors.primary} strokeWidth="1" />
                                     <text x="160" y="185" textAnchor="middle" fontSize="12" fontWeight="bold" fill={colors.primary}>🔗 Double-Slit Connection</text>
-                                    <text x="160" y="202" textAnchor="middle" fontSize="10" fill={colors.textPrimary}>Interference proves electrons are waves</text>
+                                    <text x="160" y="202" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>Interference proves electrons are waves</text>
 
                                     <rect x="310" y="165" width="270" height="45" rx="8" fill={`${currentApp.color}20`} stroke={currentApp.color} strokeWidth="1" />
                                     <text x="445" y="185" textAnchor="middle" fontSize="12" fontWeight="bold" fill={currentApp.color}>💡 Shorter wavelength = Finer details</text>
-                                    <text x="445" y="202" textAnchor="middle" fontSize="10" fill={colors.textPrimary}>See viruses, proteins, atoms!</text>
+                                    <text x="445" y="202" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>See viruses, proteins, atoms!</text>
 
                                     {/* Resolution bar */}
                                     <rect x="20" y="220" width="560" height="40" rx="8" fill={colors.bgCard} stroke={colors.border} />
                                     <text x="60" y="245" fontSize="11" fontWeight="bold" fill={colors.textMuted}>Resolution:</text>
                                     <rect x="130" y="232" width="180" height="16" rx="3" fill={colors.warning} opacity="0.4" />
-                                    <text x="220" y="244" textAnchor="middle" fontSize="10" fill={colors.textPrimary}>Light: ~200nm (cells)</text>
+                                    <text x="220" y="244" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>Light: ~200nm (cells)</text>
                                     <rect x="330" y="232" width="40" height="16" rx="3" fill={currentApp.color} />
-                                    <text x="420" y="244" fontSize="10" fill={colors.textPrimary}>Electron: 0.5Å (atoms)</text>
+                                    <text x="420" y="244" fontSize="11" fill={colors.textPrimary}>Electron: 0.5Å (atoms)</text>
 
                                     {/* Bottom fact */}
                                     <rect x="20" y="270" width="560" height="40" rx="8" fill={colors.bgCard} stroke={colors.border} />
                                     <text x="300" y="290" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>🏆 2017 Nobel Prize: Cryo-EM imaged COVID-19 spike protein structure</text>
-                                    <text x="300" y="305" textAnchor="middle" fontSize="10" fill={colors.textMuted}>Enabled rapid vaccine development by revealing virus structure at atomic level</text>
+                                    <text x="300" y="305" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Enabled rapid vaccine development by revealing virus structure at atomic level</text>
                                  </g>
                               )}
                               {selectedApp === 3 && (
@@ -2875,7 +2875,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                        {/* Step 1: ALIGN */}
                                        <rect x="0" y="0" width="165" height="120" rx="10" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
                                        <text x="82" y="20" textAnchor="middle" fontSize="12" fontWeight="bold" fill={colors.textMuted}>1️⃣ ALIGN</text>
-                                       <text x="82" y="35" textAnchor="middle" fontSize="9" fill={colors.textMuted}>Magnetic field</text>
+                                       <text x="82" y="35" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Magnetic field</text>
 
                                        {/* Aligned spins */}
                                        {[40, 82, 124].map((x, i) => (
@@ -2885,7 +2885,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                              <polygon points="0,-24 -4,-16 4,-16" fill={currentApp.color} />
                                           </g>
                                        ))}
-                                       <text x="82" y="110" textAnchor="middle" fontSize="9" fill={colors.textMuted}>H atoms aligned ↑</text>
+                                       <text x="82" y="110" textAnchor="middle" fontSize="11" fill={colors.textMuted}>H atoms aligned ↑</text>
                                     </g>
 
                                     {/* Arrow 1 */}
@@ -2895,7 +2895,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                     <g transform="translate(218, 10)">
                                        <rect x="0" y="0" width="165" height="120" rx="10" fill={colors.bgCard} stroke={colors.danger} strokeWidth="2" />
                                        <text x="82" y="20" textAnchor="middle" fontSize="12" fontWeight="bold" fill={colors.danger}>2️⃣ OBSERVE</text>
-                                       <text x="82" y="35" textAnchor="middle" fontSize="9" fill={colors.textMuted}>Radio pulse flips</text>
+                                       <text x="82" y="35" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Radio pulse flips</text>
 
                                        {/* Wobbling spins */}
                                        {[40, 82, 124].map((x, i) => (
@@ -2906,7 +2906,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                              </line>
                                           </g>
                                        ))}
-                                       <text x="82" y="110" textAnchor="middle" fontSize="9" fill={colors.danger}>Spins disturbed ↺</text>
+                                       <text x="82" y="110" textAnchor="middle" fontSize="11" fill={colors.danger}>Spins disturbed ↺</text>
                                     </g>
 
                                     {/* Arrow 2 */}
@@ -2916,13 +2916,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                                     <g transform="translate(416, 10)">
                                        <rect x="0" y="0" width="165" height="120" rx="10" fill={colors.bgCard} stroke={currentApp.color} strokeWidth="2" />
                                        <text x="82" y="20" textAnchor="middle" fontSize="12" fontWeight="bold" fill={currentApp.color}>3️⃣ IMAGE</text>
-                                       <text x="82" y="35" textAnchor="middle" fontSize="9" fill={colors.textMuted}>Relaxation → contrast</text>
+                                       <text x="82" y="35" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Relaxation → contrast</text>
 
                                        {/* Brain scan */}
                                        <ellipse cx="82" cy="72" rx="35" ry="30" fill={currentApp.color} opacity="0.15" stroke={currentApp.color} strokeWidth="1.5" />
                                        <path d="M 58 65 Q 82 58, 106 65" fill="none" stroke={currentApp.color} strokeWidth="1.5" />
                                        <path d="M 62 80 Q 82 86, 102 80" fill="none" stroke={currentApp.color} strokeWidth="1.5" />
-                                       <text x="82" y="115" textAnchor="middle" fontSize="9" fill={currentApp.color}>MRI Scan 🧠</text>
+                                       <text x="82" y="115" textAnchor="middle" fontSize="11" fill={currentApp.color}>MRI Scan 🧠</text>
                                     </g>
 
                                     {/* Tissue contrast */}
@@ -2932,26 +2932,26 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                                        <rect x="35" y="22" width="100" height="14" rx="3" fill={colors.bgCardLight} />
                                        <rect x="35" y="22" width="85" height="14" rx="3" fill={currentApp.color} opacity="0.7" />
-                                       <text x="85" y="33" textAnchor="middle" fontSize="9" fontWeight="bold" fill="white">Fat: Fast ⚡</text>
+                                       <text x="85" y="33" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white">Fat: Fast ⚡</text>
 
                                        <rect x="230" y="22" width="100" height="14" rx="3" fill={colors.bgCardLight} />
                                        <rect x="230" y="22" width="50" height="14" rx="3" fill={currentApp.color} opacity="0.5" />
-                                       <text x="280" y="33" textAnchor="middle" fontSize="9" fontWeight="bold" fill={colors.textPrimary}>Muscle: Med</text>
+                                       <text x="280" y="33" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>Muscle: Med</text>
 
                                        <rect x="425" y="22" width="100" height="14" rx="3" fill={colors.bgCardLight} />
                                        <rect x="425" y="22" width="25" height="14" rx="3" fill={currentApp.color} opacity="0.3" />
-                                       <text x="475" y="33" textAnchor="middle" fontSize="9" fontWeight="bold" fill={colors.textPrimary}>Water: Slow 🐢</text>
+                                       <text x="475" y="33" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>Water: Slow 🐢</text>
                                     </g>
 
                                     {/* Key insight */}
                                     <rect x="20" y="192" width="560" height="48" rx="8" fill={`${currentApp.color}20`} stroke={currentApp.color} strokeWidth="2" />
                                     <text x="300" y="212" textAnchor="middle" fontSize="12" fontWeight="bold" fill={currentApp.color}>💡 QUANTUM SPIN + OBSERVATION = DETAILED IMAGES</text>
-                                    <text x="300" y="230" textAnchor="middle" fontSize="10" fill={colors.textPrimary}>Radio waves "observe" hydrogen spins → No radiation, soft tissue visibility!</text>
+                                    <text x="300" y="230" textAnchor="middle" fontSize="11" fill={colors.textPrimary}>Radio waves "observe" hydrogen spins → No radiation, soft tissue visibility!</text>
 
                                     {/* Bottom fact */}
                                     <rect x="20" y="250" width="560" height="55" rx="8" fill={colors.bgCard} stroke={colors.border} />
                                     <text x="300" y="272" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.textPrimary}>🏥 MRI scans 40+ million patients/year worldwide</text>
-                                    <text x="300" y="290" textAnchor="middle" fontSize="10" fill={colors.textMuted}>Detects tumors, injuries, brain activity - all using quantum spin observation</text>
+                                    <text x="300" y="290" textAnchor="middle" fontSize="11" fill={colors.textMuted}>Detects tumors, injuries, brain activity - all using quantum spin observation</text>
                                  </g>
                               )}
                            </svg>

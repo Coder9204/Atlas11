@@ -1061,7 +1061,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
 
           {/* Force arrow */}
           <line x1="80" y1="60" x2="130" y2="60" stroke={colors.danger} strokeWidth="3" markerEnd="url(#forceArrow)" />
-          <text x="80" y="50" fill={colors.danger} fontSize="10">Force</text>
+          <text x="80" y="50" fill={colors.danger} fontSize="11">Force</text>
 
           {/* Question mark */}
           <text x="250" y="60" fill={colors.textMuted} fontSize="24">?</text>

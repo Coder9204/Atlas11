@@ -654,7 +654,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             {[0, 1, 2, 3].map(i => (
               <line key={i} x1={155 + i * 12} y1="35" x2={155 + i * 12} y2="50" stroke="#fbbf24" strokeWidth="2" />
             ))}
-            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="9">Tension affects pitch</text>
+            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="11">Tension affects pitch</text>
           </svg>
         );
 
@@ -675,7 +675,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             <circle cx="56" cy="50" r="8" fill="#f59e0b" opacity="0.3">
               <animate attributeName="r" values="4;12;4" dur="1.5s" repeatCount="indefinite" />
             </circle>
-            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="9">Cable health monitoring</text>
+            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="11">Cable health monitoring</text>
           </svg>
         );
 
@@ -696,7 +696,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             <circle cx="100" cy="65" r="5" fill="#fbbf24">
               <animate attributeName="r" values="3;6;3" dur="0.8s" repeatCount="indefinite" />
             </circle>
-            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="9">Tissue imaging via wave speed</text>
+            <text x="100" y="115" textAnchor="middle" fill="#6b7488" fontSize="11">Tissue imaging via wave speed</text>
           </svg>
         );
 
@@ -717,7 +717,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             <circle cx="100" cy="15" r="6" fill="#f59e0b">
               <animate attributeName="r" values="4;8;4" dur="0.5s" repeatCount="indefinite" />
             </circle>
-            <text x="100" y="10" textAnchor="middle" fill="#fef3c7" fontSize="8" fontWeight="bold">EPICENTER</text>
+            <text x="100" y="10" textAnchor="middle" fill="#fef3c7" fontSize="11" fontWeight="bold">EPICENTER</text>
           </svg>
         );
 

@@ -823,7 +823,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           {/* Dropped ball */}
           <circle cx="60" cy="50" r="10" fill="url(#predRedBall)" filter="url(#predGlow)" />
           <path d="M 60 65 L 60 100" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,4" opacity="0.5" />
-          <text x="60" y="120" fill="#ef4444" fontSize="10" textAnchor="middle">Drop</text>
+          <text x="60" y="120" fill="#ef4444" fontSize="11" textAnchor="middle">Drop</text>
 
           {/* Thrown ball */}
           <circle cx="80" cy="50" r="10" fill="url(#predGreenBall)" filter="url(#predGlow)" />
@@ -833,7 +833,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           <g>
             <line x1="95" y1="45" x2="140" y2="45" stroke={colors.warning} strokeWidth="2.5" strokeLinecap="round" />
             <polygon points="140,45 132,40 132,50" fill={colors.warning} />
-            <text x="118" y="38" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Throw</text>
+            <text x="118" y="38" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">Throw</text>
           </g>
 
           {/* Question marks */}
@@ -1077,11 +1077,11 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
           {/* No-air path (dashed) */}
           <path d="M 80 40 Q 160 40 240 140" stroke={colors.accent} strokeWidth="2" strokeDasharray="6,4" opacity="0.4" fill="none" />
-          <text x="200" y="80" fill={colors.accent} fontSize="9" opacity="0.6">No air</text>
+          <text x="200" y="80" fill={colors.accent} fontSize="11" opacity="0.6">No air</text>
 
           {/* With-air path (solid) */}
           <path d="M 80 40 Q 140 45 180 140" stroke={colors.warning} strokeWidth="2" opacity="0.6" fill="none" />
-          <text x="140" y="100" fill={colors.warning} fontSize="9" opacity="0.6">With air</text>
+          <text x="140" y="100" fill={colors.warning} fontSize="11" opacity="0.6">With air</text>
 
           {/* Ball */}
           <circle cx="80" cy="40" r="10" fill="url(#twistBall)" filter="url(#twistGlow)" />

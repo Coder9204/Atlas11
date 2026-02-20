@@ -936,7 +936,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" viewBox="0 0 300 200" style={{ display: 'block', margin: '0 auto', maxWidth: '400px' }}>
+            <svg width="100%" viewBox="0 0 300 200" style={{ display: 'block', margin: '0 auto' }}>
               <rect width="300" height="200" fill="#08050c" />
               {/* Wall */}
               <rect x="10" y="20" width="30" height="160" fill="#3f3f46" rx="2" />

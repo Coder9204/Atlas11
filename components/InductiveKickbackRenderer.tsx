@@ -970,7 +970,7 @@ export default function InductiveKickbackRenderer({
           <circle cx="140" cy="70" r="6" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
           <line x1="140" y1="70" x2="160" y2="50" stroke="#374151" strokeWidth="3" strokeLinecap="round" />
           <circle cx="170" cy="70" r="5" fill="#F3F4F6" stroke="#374151" strokeWidth="2" />
-          <text x="155" y="40" textAnchor="middle" fill="#e2e8f0" fontSize="10">OPEN</text>
+          <text x="155" y="40" textAnchor="middle" fill="#e2e8f0" fontSize="11">OPEN</text>
 
           {/* Wire to coil */}
           <path d="M 180 70 L 220 70" stroke="#6B7280" strokeWidth="3" fill="none" />
@@ -978,11 +978,11 @@ export default function InductiveKickbackRenderer({
           {/* Inductor coil */}
           <rect x="220" y="45" width="80" height="50" fill="none" stroke="#6366F1" strokeWidth="2" rx="6" />
           <path d="M 235 70 C 240 55, 250 55, 255 70 C 260 85, 270 85, 275 70 C 280 55, 290 55, 295 70" fill="none" stroke="#6366F1" strokeWidth="2" />
-          <text x="260" y="110" textAnchor="middle" fill="#e2e8f0" fontSize="10">COIL</text>
+          <text x="260" y="110" textAnchor="middle" fill="#e2e8f0" fontSize="11">COIL</text>
 
           {/* Question mark */}
           <text x="340" y="75" textAnchor="middle" fill="#f59e0b" fontSize="28" fontWeight="bold">?</text>
-          <text x="340" y="95" textAnchor="middle" fill="#e2e8f0" fontSize="10">Voltage</text>
+          <text x="340" y="95" textAnchor="middle" fill="#e2e8f0" fontSize="11">Voltage</text>
 
           {/* Return wire */}
           <path d="M 300 70 L 330 70 L 330 120 L 50 120 L 50 100" stroke="#6B7280" strokeWidth="3" fill="none" />

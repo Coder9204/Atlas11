@@ -1043,7 +1043,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Static SVG for predict phase - shows idle phone concept
   const renderPredictVisualization = () => (
-    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', display: 'block', margin: '0 auto 24px' }}>
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }}>
       <defs>
         <linearGradient id="phoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#334155" />
@@ -1071,8 +1071,8 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
       {/* Labels */}
       <text x="80" y="132" fill="#e2e8f0" fontSize="11" textAnchor="middle">Power</text>
       <text x="80" y="148" fill="#e2e8f0" fontSize="11" textAnchor="middle">Usage</text>
-      <text x="320" y="130" fill="#e2e8f0" fontSize="10" textAnchor="middle">Battery</text>
-      <text x="320" y="145" fill="#e2e8f0" fontSize="10" textAnchor="middle">Drain</text>
+      <text x="320" y="130" fill="#e2e8f0" fontSize="11" textAnchor="middle">Battery</text>
+      <text x="320" y="145" fill="#e2e8f0" fontSize="11" textAnchor="middle">Drain</text>
     </svg>
   );
 

@@ -1592,8 +1592,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               </defs>
 
               {/* Labels */}
-              <text x="150" y="35" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Feedback Loop</text>
-              <text x="150" y="95" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Creates Bistable States</text>
+              <text x="150" y="35" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Feedback Loop</text>
+              <text x="150" y="95" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Creates Bistable States</text>
             </svg>
 
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
@@ -1818,8 +1818,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
               <circle cx={150 + supplyVoltage * 50} cy={75 - supplyVoltage * 20} r="5" fill={colors.accent} filter="url(#sramNodeGlow)" />
 
               {/* Labels */}
-              <text x="150" y="130" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Supply Voltage →</text>
-              <text x="25" y="75" fill={colors.textSecondary} fontSize="10" transform="rotate(-90 25 75)">SNM →</text>
+              <text x="150" y="130" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Supply Voltage →</text>
+              <text x="25" y="75" fill={colors.textSecondary} fontSize="11" transform="rotate(-90 25 75)">SNM →</text>
 
               {/* Grid lines */}
               <line x1="40" y1="65" x2="260" y2="65" stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.3" />

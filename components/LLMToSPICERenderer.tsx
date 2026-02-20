@@ -649,7 +649,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
         <text x="407" y="60" fill="#f8fafc" fontSize="11" textAnchor="middle">Solves physics</text>
         <text x="407" y="74" fill="#f8fafc" fontSize="11" textAnchor="middle">equations</text>
         <text x="407" y="92" fill="#f8fafc" fontSize="11" textAnchor="middle">(truth source)</text>
-        {simRunning && <text x="407" y="104" fill="#f59e0b" fontSize="10" textAnchor="middle">Running...</text>}
+        {simRunning && <text x="407" y="104" fill="#f59e0b" fontSize="11" textAnchor="middle">Running...</text>}
 
         {/* Arrow LLM → DESIGN (vertical) */}
         <path d="M 235 114 L 235 128" stroke="#475569" strokeWidth="2" markerEnd="url(#arrow2)" />

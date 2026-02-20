@@ -1572,7 +1572,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG diagram for review */}
       <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+        <svg viewBox="0 0 400 180" style={{ width: '100%', height: 'auto' }}>
           <defs>
             <linearGradient id="reviewBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
@@ -1909,7 +1909,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG diagram */}
       <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+        <svg viewBox="0 0 400 160" style={{ width: '100%', height: 'auto' }}>
           <rect width="400" height="160" fill="#0f172a" rx="8" />
           {/* Left: Laser with speckle */}
           <g transform="translate(10, 20)">

@@ -794,7 +794,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       {/* Premium Card */}
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '24px', padding: isMobile ? '24px' : '32px', maxWidth: '700px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-        <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '400px', margin: '0 auto 24px', display: 'block' }}>
+        <svg viewBox="0 0 400 300" style={{ width: '100%', margin: '0 auto 24px', display: 'block' }}>
           <defs>
             {/* Premium background gradient showing potential field */}
             <radialGradient id="epotHookBg" cx="25%" cy="50%" r="80%">

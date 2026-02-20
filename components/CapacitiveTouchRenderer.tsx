@@ -2539,7 +2539,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
         <ellipse cx="200" cy="60" rx="30" ry="40" fill="url(#twistGloveGrad)" stroke="#6b7280" strokeWidth="2" />
         <line x1="200" y1="100" x2="200" y2="128" stroke="url(#twistBlockedGrad)" strokeWidth="3" strokeDasharray="3 5" />
         <text x="260" y="60" fill="#ef4444" fontSize="11">Blocked!</text>
-        <text x="200" y="168" textAnchor="middle" fill="#60a5fa" fontSize="10">Electrode Grid</text>
+        <text x="200" y="168" textAnchor="middle" fill="#60a5fa" fontSize="11">Electrode Grid</text>
       </svg>
       <p style={{ color: '#e2e8f0', fontSize: '13px', textAlign: 'center' }}>Why don&apos;t regular gloves work on touchscreens?</p>
     </div>

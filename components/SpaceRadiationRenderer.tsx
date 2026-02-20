@@ -1906,7 +1906,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             <MemoryVisualization />
 
             {/* Process Node SVG Visualization - directly reflects processNode slider */}
-            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '12px auto 0' }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto', display: 'block', margin: '12px auto 0' }}>
               <rect x="0" y="0" width="400" height="120" fill={colors.bgSecondary} rx="8" />
               {/* Transistor size visualization - size scales with processNode */}
               {[0, 1, 2, 3, 4].map(i => {

@@ -1288,10 +1288,10 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               {/* Gravity force arrow */}
               <line x1="200" y1="70" x2="140" y2="70" stroke={colors.warning} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.7" />
               {/* Labels */}
-              <text x="170" y="62" textAnchor="middle" fill={colors.warning} fontSize="10">gravity</text>
+              <text x="170" y="62" textAnchor="middle" fill={colors.warning} fontSize="11">gravity</text>
               {/* Bulge label */}
-              <text x="50" y="50" textAnchor="middle" fill="#60a5fa" fontSize="10">tidal</text>
-              <text x="50" y="61" textAnchor="middle" fill="#60a5fa" fontSize="10">bulge</text>
+              <text x="50" y="50" textAnchor="middle" fill="#60a5fa" fontSize="11">tidal</text>
+              <text x="50" y="61" textAnchor="middle" fill="#60a5fa" fontSize="11">bulge</text>
             </svg>
             <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
               Ocean tides create friction as they slosh against the ocean floor

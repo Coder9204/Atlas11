@@ -751,7 +751,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
                   x={x + warpWidth / 2}
                   y={y + warpHeight / 2 + 4}
                   fill={colors.bgPrimary}
-                  fontSize="10"
+                  fontSize="11"
                   fontWeight="600"
                   textAnchor="middle"
                 >
@@ -774,7 +774,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         <g transform={`translate(20, ${height - 25})`}>
           <rect x="0" y="0" width={width - 40} height="12" rx="6" fill={colors.border} />
           <rect x="0" y="0" width={(width - 40) * 0.5} height="12" rx="6" fill={colors.warning} />
-          <text x={(width - 40) / 2} y="10" fill={colors.textPrimary} fontSize="9" fontWeight="600" textAnchor="middle">
+          <text x={(width - 40) / 2} y="10" fill={colors.textPrimary} fontSize="11" fontWeight="600" textAnchor="middle">
             50% Occupancy (32 of 64 warps)
           </text>
         </g>

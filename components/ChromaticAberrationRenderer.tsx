@@ -1569,7 +1569,7 @@ export default function ChromaticAberrationRenderer({
         {/* Labels */}
         <text x="40" y={lensY - 25} fill="#e2e8f0" fontSize="11" textAnchor="middle">White Light</text>
         <text x={lensX} y={lensY - lensHeight / 2 - 10} fill="#e2e8f0" fontSize="11" textAnchor="middle">Glass Lens</text>
-        <text x={lensX + 100} y={lensY + 35} fill="#e2e8f0" fontSize="10" textAnchor="middle">Different focal points?</text>
+        <text x={lensX + 100} y={lensY + 35} fill="#e2e8f0" fontSize="11" textAnchor="middle">Different focal points?</text>
       </svg>
     );
   };
@@ -1732,7 +1732,7 @@ export default function ChromaticAberrationRenderer({
 
         {/* Incoming white light */}
         <line x1={width*0.15} y1={height*0.5} x2={width*0.35} y2={height*0.5} stroke="white" strokeWidth="3" />
-        <text x={width*0.15} y={height*0.5 - 10} fill="#e2e8f0" fontSize="10" textAnchor="middle">White</text>
+        <text x={width*0.15} y={height*0.5 - 10} fill="#e2e8f0" fontSize="11" textAnchor="middle">White</text>
 
         {/* Separated colors */}
         <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.3} stroke="#EF4444" strokeWidth="2" />
@@ -1741,11 +1741,11 @@ export default function ChromaticAberrationRenderer({
         <line x1={width*0.55} y1={height*0.5} x2={width*0.85} y2={height*0.7} stroke="#8B5CF6" strokeWidth="2" />
 
         {/* Labels */}
-        <text x={width*0.88} y={height*0.32} fill="#EF4444" fontSize="10">Red (least bent)</text>
-        <text x={width*0.88} y={height*0.72} fill="#8B5CF6" fontSize="10">Violet (most bent)</text>
+        <text x={width*0.88} y={height*0.32} fill="#EF4444" fontSize="11">Red (least bent)</text>
+        <text x={width*0.88} y={height*0.72} fill="#8B5CF6" fontSize="11">Violet (most bent)</text>
 
         {/* Formula hint */}
-        <text x={width*0.45} y={height*0.9} fill="#e2e8f0" fontSize="10" textAnchor="middle">n increases as wavelength decreases</text>
+        <text x={width*0.45} y={height*0.9} fill="#e2e8f0" fontSize="11" textAnchor="middle">n increases as wavelength decreases</text>
       </svg>
     );
   };
@@ -1844,10 +1844,10 @@ export default function ChromaticAberrationRenderer({
 
         {/* Question mark */}
         <text x={width*0.7} y={height*0.5} fill="#8B5CF6" fontSize="36" textAnchor="middle" fontWeight="bold">?</text>
-        <text x={width*0.7} y={height*0.72} fill="#e2e8f0" fontSize="10" textAnchor="middle">How to fix?</text>
+        <text x={width*0.7} y={height*0.72} fill="#e2e8f0" fontSize="11" textAnchor="middle">How to fix?</text>
 
         {/* Labels */}
-        <text x={width*0.5} y={height*0.95} fill="#94a3b8" fontSize="9" textAnchor="middle">Colors focus at different points</text>
+        <text x={width*0.5} y={height*0.95} fill="#94a3b8" fontSize="11" textAnchor="middle">Colors focus at different points</text>
       </svg>
     );
   };
@@ -2009,8 +2009,8 @@ export default function ChromaticAberrationRenderer({
 
         {/* Crown glass lens (biconvex) */}
         <ellipse cx={width*0.38} cy={height*0.5} rx="12" ry="45" fill="url(#crownGrad)" stroke="rgba(96, 165, 250, 0.6)" strokeWidth="1.5" />
-        <text x={width*0.38} y={height*0.5 + 60} fill="#60a5fa" fontSize="9" textAnchor="middle">Crown</text>
-        <text x={width*0.38} y={height*0.5 + 72} fill="#60a5fa" fontSize="8" textAnchor="middle">(low disp.)</text>
+        <text x={width*0.38} y={height*0.5 + 60} fill="#60a5fa" fontSize="11" textAnchor="middle">Crown</text>
+        <text x={width*0.38} y={height*0.5 + 72} fill="#60a5fa" fontSize="11" textAnchor="middle">(low disp.)</text>
 
         {/* Flint glass lens (plano-concave) */}
         <path d={`M ${width*0.44} ${height*0.5 - 40}
@@ -2018,8 +2018,8 @@ export default function ChromaticAberrationRenderer({
                   L ${width*0.52} ${height*0.5 + 40}
                   L ${width*0.52} ${height*0.5 - 40} Z`}
               fill="url(#flintGrad)" stroke="rgba(251, 191, 36, 0.6)" strokeWidth="1.5" />
-        <text x={width*0.52} y={height*0.5 + 60} fill="#fbbf24" fontSize="9" textAnchor="middle">Flint</text>
-        <text x={width*0.52} y={height*0.5 + 72} fill="#fbbf24" fontSize="8" textAnchor="middle">(high disp.)</text>
+        <text x={width*0.52} y={height*0.5 + 60} fill="#fbbf24" fontSize="11" textAnchor="middle">Flint</text>
+        <text x={width*0.52} y={height*0.5 + 72} fill="#fbbf24" fontSize="11" textAnchor="middle">(high disp.)</text>
 
         {/* Incoming rays */}
         <line x1={width*0.12} y1={height*0.4} x2={width*0.38} y2={height*0.45} stroke="white" strokeWidth="2" opacity="0.8" />
@@ -2033,10 +2033,10 @@ export default function ChromaticAberrationRenderer({
 
         {/* Common focal point */}
         <circle cx={width*0.82} cy={height*0.5} r="6" fill="white" opacity="0.9" />
-        <text x={width*0.82} y={height*0.5 + 20} fill="#10b981" fontSize="9" textAnchor="middle">Common focus</text>
+        <text x={width*0.82} y={height*0.5 + 20} fill="#10b981" fontSize="11" textAnchor="middle">Common focus</text>
 
         {/* Explanation arrow */}
-        <text x={width*0.12} y={height*0.88} fill="#e2e8f0" fontSize="9">Flint glass dispersion cancels crown glass dispersion</text>
+        <text x={width*0.12} y={height*0.88} fill="#e2e8f0" fontSize="11">Flint glass dispersion cancels crown glass dispersion</text>
       </svg>
     );
   };

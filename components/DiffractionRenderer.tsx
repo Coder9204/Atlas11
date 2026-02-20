@@ -1935,7 +1935,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         Make Your Prediction
       </h2>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
         <defs>
           <linearGradient id="predLaser" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
@@ -2306,7 +2306,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         New Variable: Young's Double-Slit Experiment
       </h2>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
         <rect x="0" y="0" width="400" height="200" fill="#0F172A" rx="8" />
         <text x="30" y="25" fill="#F59E0B" fontSize="12" fontFamily="sans-serif">Double Slit Setup</text>
         <circle cx="40" cy="100" r="12" fill="#EF4444" opacity="0.6" />
@@ -2316,7 +2316,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         <rect x="175" y="50" width="6" height="80" fill="#334155" />
         <rect x="175" y="78" width="6" height="10" fill="#0F172A" />
         <rect x="175" y="108" width="6" height="10" fill="#0F172A" />
-        <text x="178" y="45" fill="#94A3B8" fontSize="10" fontFamily="sans-serif" textAnchor="middle">Two Slits</text>
+        <text x="178" y="45" fill="#94A3B8" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Two Slits</text>
         {[60,75,85,95,100,105,115,125,140].map((y, i) => (
           <line key={i} x1="181" y1="83" x2="350" y2={y} stroke="#EF4444" strokeWidth="1" opacity={0.3 + 0.4 * Math.exp(-Math.pow((y-100)/20, 2))} />
         ))}

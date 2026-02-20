@@ -915,13 +915,13 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
         {/* Spacing indicator */}
         <line x1={width - 60} y1="70" x2={width - 60} y2="130" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="3,3" />
-        <text x={width - 55} y="100" fill={colors.textMuted} fontSize="10">spacing</text>
+        <text x={width - 55} y="100" fill={colors.textMuted} fontSize="11">spacing</text>
 
         {/* Legend */}
         <circle cx="50" cy={height - 25} r="6" fill={colors.aggressor} />
-        <text x="62" y={height - 21} fill={colors.textSecondary} fontSize="10">Active Signal</text>
+        <text x="62" y={height - 21} fill={colors.textSecondary} fontSize="11">Active Signal</text>
         <circle cx="160" cy={height - 25} r="6" fill={colors.victim} />
-        <text x="172" y={height - 21} fill={colors.textSecondary} fontSize="10">Quiet Trace</text>
+        <text x="172" y={height - 21} fill={colors.textSecondary} fontSize="11">Quiet Trace</text>
       </svg>
     );
   };

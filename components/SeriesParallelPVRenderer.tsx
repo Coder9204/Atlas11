@@ -1407,16 +1407,16 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
               {[0, 1, 2, 3].map(i => (
                 <g key={i}>
                   <rect x={30 + i * 55} y={25} width={45} height={35} fill={i === 1 ? `${colors.warning}44` : colors.bgCard} stroke={i === 1 ? colors.warning : colors.border} strokeWidth="2" rx="3" />
-                  <text x={52 + i * 55} y={47} fill={i === 1 ? colors.warning : colors.textMuted} fontSize="10" textAnchor="middle">{i === 1 ? '50%' : '40V'}</text>
+                  <text x={52 + i * 55} y={47} fill={i === 1 ? colors.warning : colors.textMuted} fontSize="11" textAnchor="middle">{i === 1 ? '50%' : '40V'}</text>
                   {i < 3 && <line x1={75 + i * 55} y1={42} x2={85 + i * 55} y2={42} stroke={colors.accent} strokeWidth="2" />}
                 </g>
               ))}
-              <text x="270" y="47" fill={colors.error} fontSize="10" fontWeight="600">LOSS</text>
+              <text x="270" y="47" fill={colors.error} fontSize="11" fontWeight="600">LOSS</text>
               {/* Voltage label */}
-              <text x="160" y="72" fill={colors.textMuted} fontSize="10" textAnchor="middle">Voltage: series adds panels, shading reduces current</text>
-              <text x="160" y="85" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Which loses more power when 1 panel is 50% shaded?</text>
+              <text x="160" y="72" fill={colors.textMuted} fontSize="11" textAnchor="middle">Voltage: series adds panels, shading reduces current</text>
+              <text x="160" y="85" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">Which loses more power when 1 panel is 50% shaded?</text>
               {/* Axis reference */}
-              <text x="10" y="105" fill={colors.textMuted} fontSize="9">Current →</text>
+              <text x="10" y="105" fill={colors.textMuted} fontSize="11">Current →</text>
               <line x1="30" y1="98" x2="290" y2="98" stroke={colors.border} strokeDasharray="3 3" opacity="0.4" />
             </svg>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>

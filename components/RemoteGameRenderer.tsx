@@ -632,8 +632,8 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
         {showLagCompensation && (
           <g transform="translate(350, 85)">
             <rect x="-60" y="-15" width="120" height="50" rx="6" fill="#0f172a" stroke="#a855f7" strokeWidth="1" />
-            <text x="0" y="3" textAnchor="middle" fontSize="10" fill="#c084fc" fontWeight="600">Server Rewind</text>
-            <text x="0" y="18" textAnchor="middle" fontSize="9" fill="#e2e8f0">Checks hit at t-{actualLatency}ms</text>
+            <text x="0" y="3" textAnchor="middle" fontSize="11" fill="#c084fc" fontWeight="600">Server Rewind</text>
+            <text x="0" y="18" textAnchor="middle" fontSize="11" fill="#e2e8f0">Checks hit at t-{actualLatency}ms</text>
             <circle cx="-40" cy="0" r="3" fill="#ef4444">
               <animate attributeName="cx" values="-40;40;-40" dur="2s" repeatCount="indefinite" />
             </circle>

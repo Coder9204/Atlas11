@@ -1367,7 +1367,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block', maxWidth: '400px' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }}>
             <defs>
               <linearGradient id="reviewDiffGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent} />
@@ -1555,7 +1555,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block', maxWidth: '400px' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }}>
             <defs>
               <linearGradient id="twistRevGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.warning} />

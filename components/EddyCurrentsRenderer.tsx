@@ -1503,7 +1503,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
         {/* Static prediction graphic */}
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }}>
             <rect width="300" height="200" fill="#0f172a" />
             {/* Grid lines */}
             <line x1="0" y1="100" x2="300" y2="100" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />

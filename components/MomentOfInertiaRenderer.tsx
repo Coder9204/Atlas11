@@ -678,11 +678,11 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
 
         {/* Start line */}
         <line x1="60" y1={height - 125} x2="60" y2={height - 140} stroke={colors.success} strokeWidth="3" />
-        <text x="60" y={height - 145} textAnchor="middle" fill={colors.success} fontSize="10">START</text>
+        <text x="60" y={height - 145} textAnchor="middle" fill={colors.success} fontSize="11">START</text>
 
         {/* Finish line */}
         <line x1={width - 60} y1={height - 45} x2={width - 60} y2={height - 60} stroke={colors.error} strokeWidth="3" />
-        <text x={width - 60} y={height - 65} textAnchor="middle" fill={colors.error} fontSize="10">FINISH</text>
+        <text x={width - 60} y={height - 65} textAnchor="middle" fill={colors.error} fontSize="11">FINISH</text>
 
         {/* Racing shapes */}
         {Object.entries(shapeFactors).map(([key, shape], index) => {
@@ -722,7 +722,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           {Object.entries(shapeFactors).map(([key, shape], index) => (
             <g key={key} transform={`translate(${index * (isMobile ? 80 : 110)}, 0)`}>
               <circle cx="8" cy="0" r="6" fill={shape.color} opacity={key === 'ring' ? 0 : 1} stroke={shape.color} strokeWidth="2" />
-              <text x="20" y="4" fill={colors.textSecondary} fontSize="10">{shape.name}</text>
+              <text x="20" y="4" fill={colors.textSecondary} fontSize="11">{shape.name}</text>
             </g>
           ))}
         </g>

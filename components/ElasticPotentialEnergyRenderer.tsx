@@ -1417,7 +1417,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
           <text x="250" y="95" textAnchor="middle" fill="#e2e8f0" fontSize="11">x = 2mm → ??J</text>
           {/* Bottom annotation */}
           <line x1="20" y1="155" x2="300" y2="155" stroke="#334155" strokeWidth="1" />
-          <text x="160" y="170" textAnchor="middle" fill="#94a3b8" fontSize="10">How does doubling compression affect stored energy?</text>
+          <text x="160" y="170" textAnchor="middle" fill="#94a3b8" fontSize="11">How does doubling compression affect stored energy?</text>
         </svg>
       </div>
 

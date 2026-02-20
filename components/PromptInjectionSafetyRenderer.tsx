@@ -703,25 +703,25 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         <g transform="translate(30, 50)">
           {/* User instructions node */}
           <circle cx="60" cy="30" r="25" fill="#3B82F6" stroke="#2563EB" strokeWidth="2" />
-          <text x="60" y="35" textAnchor="middle" fill="white" fontSize="10" fontWeight="500">User</text>
+          <text x="60" y="35" textAnchor="middle" fill="white" fontSize="11" fontWeight="500">User</text>
 
           {/* Webpage content node */}
           <circle cx="180" cy="30" r="25" fill={colors.warning} stroke="#D97706" strokeWidth="2" />
-          <text x="180" y="35" textAnchor="middle" fill="white" fontSize="10" fontWeight="500">Web</text>
+          <text x="180" y="35" textAnchor="middle" fill="white" fontSize="11" fontWeight="500">Web</text>
 
           {/* File content node */}
           <circle cx="300" cy="30" r="25" fill={colors.danger} stroke="#DC2626" strokeWidth="2" />
-          <text x="300" y="35" textAnchor="middle" fill="white" fontSize="10" fontWeight="500">File</text>
+          <text x="300" y="35" textAnchor="middle" fill="white" fontSize="11" fontWeight="500">File</text>
 
           {/* Actions */}
           <rect x="30" y="100" width="80" height="25" rx="4" fill={colors.bgSecondary} stroke="#3B82F6" strokeWidth="1" />
-          <text x="70" y="117" textAnchor="middle" fill="#3B82F6" fontSize="9">All Actions</text>
+          <text x="70" y="117" textAnchor="middle" fill="#3B82F6" fontSize="11">All Actions</text>
 
           <rect x="140" y="100" width="80" height="25" rx="4" fill={colors.bgSecondary} stroke={permissionLevel >= 1 ? colors.safe : colors.textMuted} strokeWidth="1" />
-          <text x="180" y="117" textAnchor="middle" fill={permissionLevel >= 1 ? colors.safe : colors.textMuted} fontSize="9">Read Only</text>
+          <text x="180" y="117" textAnchor="middle" fill={permissionLevel >= 1 ? colors.safe : colors.textMuted} fontSize="11">Read Only</text>
 
           <rect x="250" y="100" width="80" height="25" rx="4" fill={colors.bgSecondary} stroke={permissionLevel >= 2 ? colors.safe : colors.textMuted} strokeWidth="1" />
-          <text x="290" y="117" textAnchor="middle" fill={permissionLevel >= 2 ? colors.safe : colors.textMuted} fontSize="9">{contentTainting ? 'Tainted Data' : 'No Execute'}</text>
+          <text x="290" y="117" textAnchor="middle" fill={permissionLevel >= 2 ? colors.safe : colors.textMuted} fontSize="11">{contentTainting ? 'Tainted Data' : 'No Execute'}</text>
 
           {/* Arrows */}
           <line x1="60" y1="55" x2="70" y2="100" stroke="#3B82F6" strokeWidth="2" markerEnd="url(#arrowhead)" />
@@ -734,7 +734,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           <rect x="0" y="0" width="160" height="60" rx="8" fill={colors.bgSecondary} stroke={
             defenseScore >= 80 ? colors.safe : defenseScore >= 40 ? colors.warning : colors.danger
           } strokeWidth="2" />
-          <text x="80" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="10">Security Score</text>
+          <text x="80" y="22" textAnchor="middle" fill={colors.textMuted} fontSize="11">Security Score</text>
           <text x="80" y="48" textAnchor="middle" fill={
             defenseScore >= 80 ? colors.safe : defenseScore >= 40 ? colors.warning : colors.danger
           } fontSize="24" fontWeight="700">
@@ -745,11 +745,11 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
         {/* Legend */}
         <g transform={`translate(30, ${height - 50})`}>
           <circle cx="10" cy="8" r="6" fill="#3B82F6" />
-          <text x="22" y="12" fill={colors.textMuted} fontSize="9">User = Full trust</text>
+          <text x="22" y="12" fill={colors.textMuted} fontSize="11">User = Full trust</text>
           <circle cx="120" cy="8" r="6" fill={colors.warning} />
-          <text x="132" y="12" fill={colors.textMuted} fontSize="9">Web = Partial trust</text>
+          <text x="132" y="12" fill={colors.textMuted} fontSize="11">Web = Partial trust</text>
           <circle cx="240" cy="8" r="6" fill={colors.danger} />
-          <text x="252" y="12" fill={colors.textMuted} fontSize="9">File = No trust</text>
+          <text x="252" y="12" fill={colors.textMuted} fontSize="11">File = No trust</text>
         </g>
 
         <defs>
@@ -1511,7 +1511,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 <rect x="170" y="35" width="120" height="80" rx="6" fill="rgba(239,68,68,0.1)" stroke={colors.danger} strokeWidth="2" strokeDasharray="6,3" />
                 <text x="230" y="52" textAnchor="middle" fill={colors.danger} fontSize="11" fontWeight="600">/home/ BLOCKED</text>
                 <circle cx="80" cy="90" r="10" fill={colors.safe} filter="url(#predictGlow)" />
-                <text x="80" y="94" textAnchor="middle" fill="white" fontSize="9" fontWeight="600">✓</text>
+                <text x="80" y="94" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">✓</text>
                 <circle cx="230" cy="90" r="10" fill={colors.danger} />
                 <line x1="225" y1="85" x2="235" y2="95" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 <line x1="235" y1="85" x2="225" y2="95" stroke="white" strokeWidth="2" strokeLinecap="round" />

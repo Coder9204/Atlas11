@@ -1673,7 +1673,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
 
           {/* Precision comparison graphic (no sliders) */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px 8px' }}>
-            <svg viewBox="0 0 400 160" style={{ width: '100%', maxWidth: '400px', borderRadius: '10px' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', borderRadius: '10px' }}>
               <defs>
                 <linearGradient id="precGradA" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#8b5cf6" />

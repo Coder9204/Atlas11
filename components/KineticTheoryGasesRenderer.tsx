@@ -1224,7 +1224,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <circle cx={isMobile ? 70 : 80} cy="130" r="5" fill="url(#heGrad)" />
                 <line x1={isMobile ? 55 : 65} y1="68" x2={isMobile ? 75 : 95} y2="58" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
                 <line x1={isMobile ? 95 : 125} y1="98" x2={isMobile ? 115 : 155} y2="85" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
-                <text x={isMobile ? 85 : 110} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">Fast?</text>
+                <text x={isMobile ? 85 : 110} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="11">Fast?</text>
               </g>
               <g>
                 <text x={isMobile ? 170 : 225} y="100" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="16">vs</text>
@@ -1236,7 +1236,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                 <circle cx={isMobile ? 280 : 370} cy="110" r="8" fill="url(#n2Grad)" filter="url(#twGlow)" />
                 <circle cx={isMobile ? 260 : 340} cy="60" r="8" fill="url(#n2Grad)" />
                 <line x1={isMobile ? 237 : 307} y1="78" x2={isMobile ? 247 : 317} y2="73" stroke="rgba(252,165,165,0.8)" strokeWidth="1.5" />
-                <text x={isMobile ? 265 : 350} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="10">Slow?</text>
+                <text x={isMobile ? 265 : 350} y="175" textAnchor="middle" fill="rgba(156,163,175,0.9)" fontSize="11">Slow?</text>
               </g>
             </svg>
             <p style={{ ...typo.small, color: 'rgba(156,163,175,0.7)', marginTop: '16px' }}>

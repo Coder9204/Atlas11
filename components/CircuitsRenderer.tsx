@@ -829,8 +829,8 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             <g transform="translate(25, 70)">
               <rect x="0" y="0" width="15" height="40" fill="#3A3A4A" stroke="#555" strokeWidth="1" rx="2" />
               <rect x="4" y="-3" width="7" height="4" fill="#FFD700" rx="1" />
-              <text x="7" y="16" fill="#FFD700" fontSize="8" textAnchor="middle" fontWeight="bold">+</text>
-              <text x="7" y="32" fill="#888" fontSize="8" textAnchor="middle">-</text>
+              <text x="7" y="16" fill="#FFD700" fontSize="11" textAnchor="middle" fontWeight="bold">+</text>
+              <text x="7" y="32" fill="#888" fontSize="11" textAnchor="middle">-</text>
             </g>
             {/* Battery label */}
             <text x="32" y="125" fill={premiumDesign.colors.voltage} fontSize="11" textAnchor="middle" fontWeight="bold">Battery</text>
@@ -850,15 +850,15 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
               <rect x="6" y="10" width="8" height="6" fill="#666" rx="1" />
             </g>
             {/* Bulb label */}
-            <text x="150" y="165" fill={premiumDesign.colors.text.secondary} fontSize="10" textAnchor="middle">Bulb</text>
+            <text x="150" y="165" fill={premiumDesign.colors.text.secondary} fontSize="11" textAnchor="middle">Bulb</text>
             {/* Question mark - what happens to current? */}
             <text x="240" y="95" fill={premiumDesign.colors.warning} fontSize="24" fontWeight="bold">?</text>
-            <text x="240" y="110" fill={premiumDesign.colors.text.muted} fontSize="8" textAnchor="middle">Current</text>
+            <text x="240" y="110" fill={premiumDesign.colors.text.muted} fontSize="11" textAnchor="middle">Current</text>
             {/* Voltage label */}
-            <text x="60" y="20" fill={premiumDesign.colors.voltage} fontSize="10" fontWeight="600">V = Voltage</text>
+            <text x="60" y="20" fill={premiumDesign.colors.voltage} fontSize="11" fontWeight="600">V = Voltage</text>
             {/* Current direction arrow */}
             <polygon points="200,38 210,42 200,46" fill={premiumDesign.colors.current} />
-            <text x="195" y="55" fill={premiumDesign.colors.current} fontSize="9">I = ?</text>
+            <text x="195" y="55" fill={premiumDesign.colors.current} fontSize="11">I = ?</text>
           </svg>
           <p style={{ color: premiumDesign.colors.text.muted, fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
             Observe: A simple circuit with battery, resistor, and bulb
@@ -1464,10 +1464,10 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             <text x="100" y="20" fill={premiumDesign.colors.text.primary} fontSize="12" textAnchor="middle" fontWeight="bold">SERIES</text>
             <rect x="20" y="40" width="160" height="60" fill="none" stroke="#CD7F32" strokeWidth="2" rx="4" />
             <rect x="50" y="55" width="30" height="15" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
-            <text x="65" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1</text>
+            <text x="65" y="85" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R1</text>
             <rect x="110" y="55" width="30" height="15" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
-            <text x="125" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2</text>
-            <text x="100" y="115" fill={premiumDesign.colors.text.muted} fontSize="10" textAnchor="middle">R_total = R1 + R2</text>
+            <text x="125" y="85" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R2</text>
+            <text x="100" y="115" fill={premiumDesign.colors.text.muted} fontSize="11" textAnchor="middle">R_total = R1 + R2</text>
 
             {/* Parallel circuit on right */}
             <text x="300" y="20" fill={premiumDesign.colors.text.primary} fontSize="12" textAnchor="middle" fontWeight="bold">PARALLEL</text>
@@ -1478,10 +1478,10 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             <line x1="270" y1="50" x2="270" y2="90" stroke="#CD7F32" strokeWidth="1" />
             <line x1="330" y1="50" x2="330" y2="90" stroke="#CD7F32" strokeWidth="1" />
             <rect x="255" y="60" width="30" height="12" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
-            <text x="270" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1</text>
+            <text x="270" y="85" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R1</text>
             <rect x="315" y="60" width="30" height="12" fill="#5A4A3A" stroke="#8B4513" strokeWidth="1" />
-            <text x="330" y="85" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2</text>
-            <text x="300" y="115" fill={premiumDesign.colors.text.muted} fontSize="9" textAnchor="middle">1/R_total = 1/R1 + 1/R2</text>
+            <text x="330" y="85" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R2</text>
+            <text x="300" y="115" fill={premiumDesign.colors.text.muted} fontSize="11" textAnchor="middle">1/R_total = 1/R1 + 1/R2</text>
 
             {/* Question mark */}
             <text x="200" y="75" fill={premiumDesign.colors.warning} fontSize="20" textAnchor="middle" fontWeight="bold">?</text>
@@ -1767,9 +1767,9 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
                   </polygon>
 
                   {/* Dynamic labels inside SVG */}
-                  <text x="100" y="115" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1: {r1}Ohm</text>
-                  <text x="200" y="115" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2: {r2}Ohm</text>
-                  <text x="150" y="200" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+                  <text x="100" y="115" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R1: {r1}Ohm</text>
+                  <text x="200" y="115" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R2: {r2}Ohm</text>
+                  <text x="150" y="200" fill={premiumDesign.colors.current} fontSize="11" textAnchor="middle">
                     Total: {parallelVals.totalR.toFixed(2)}Ohm
                   </text>
                 </g>
@@ -1778,9 +1778,9 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
               {/* Common dynamic labels for both circuit types */}
               {circuitType === 'series' && (
                 <g>
-                  <text x="105" y="55" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R1: {r1}Ohm</text>
-                  <text x="195" y="55" fill={premiumDesign.colors.resistance} fontSize="9" textAnchor="middle">R2: {r2}Ohm</text>
-                  <text x="150" y="195" fill={premiumDesign.colors.current} fontSize="10" textAnchor="middle">
+                  <text x="105" y="55" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R1: {r1}Ohm</text>
+                  <text x="195" y="55" fill={premiumDesign.colors.resistance} fontSize="11" textAnchor="middle">R2: {r2}Ohm</text>
+                  <text x="150" y="195" fill={premiumDesign.colors.current} fontSize="11" textAnchor="middle">
                     Total: {seriesVals.totalR}Ohm
                   </text>
                 </g>

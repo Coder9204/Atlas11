@@ -968,7 +968,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
         {/* Static ruler visualization */}
         <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
-          <svg viewBox="0 0 300 240" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '0 auto' }}>
+          <svg viewBox="0 0 300 240" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}>
             <defs>
               <linearGradient id="predictRuler" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#fbbf24" />
@@ -1356,7 +1356,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           ].map((item, i) => (
             <g key={i} transform={`translate(${40 + i * 42}, 60)`}>
               <rect x="-18" y="-20" width="36" height="55" fill={getReactionRating(item.t).color} opacity="0.2" rx="5" />
-              <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="10">{item.d}cm</text>
+              <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="11">{item.d}cm</text>
               <text x="0" y="15" textAnchor="middle" fill={getReactionRating(item.t).color} fontSize="11" fontWeight="bold">{item.t}ms</text>
             </g>
           ))}
@@ -1410,7 +1410,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
         {/* Static visualization showing distraction effect */}
         <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
-          <svg viewBox="0 0 320 180" style={{ width: '100%', maxWidth: '400px', height: 'auto', display: 'block', margin: '0 auto' }}>
+          <svg viewBox="0 0 320 180" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}>
             <defs>
               <linearGradient id="twistBrain" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#818cf8" />

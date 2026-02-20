@@ -1207,7 +1207,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
         {/* Instruction text for supercooled state */}
         {waterState === 'supercooled' && (
-          <text x="125" y="268" textAnchor="middle" fontSize="10" fill="#f59e0b" fontWeight="500">
+          <text x="125" y="268" textAnchor="middle" fontSize="11" fill="#f59e0b" fontWeight="500">
             Add a seed crystal to trigger instant freezing!
           </text>
         )}
@@ -1504,7 +1504,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           </text>
 
           {/* Label */}
-          <text x="0" y="45" textAnchor="middle" fontSize="10" fill="#94a3b8">
+          <text x="0" y="45" textAnchor="middle" fontSize="11" fill="#94a3b8">
             Temperature
           </text>
 

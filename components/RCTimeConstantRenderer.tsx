@@ -1087,8 +1087,8 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               <rect x="0" y="0" width="18" height="40" fill="url(#rctcBatteryGradient)" rx="2"
                 stroke="#a16207" strokeWidth="1" />
               <rect x="5" y="-3" width="8" height="4" fill="#fbbf24" rx="1" />
-              <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">+</text>
-              <text x="9" y="35" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">-</text>
+              <text x="9" y="22" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">+</text>
+              <text x="9" y="35" textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">-</text>
               <text x="9" y="58" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">Battery</text>
             </g>
 
@@ -1343,7 +1343,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                 </g>
 
                 {/* Observation guidance */}
-                <text x="150" y="165" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
+                <text x="150" y="165" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="11">
                   {isCharging ? '▶ Watch how voltage rises fast then slows' : '▶ Adjust sliders, then click Start to observe charging'}
                 </text>
               </svg>
@@ -1883,7 +1883,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                   <rect x="-6" y="10" width="12" height="8" fill="#78350f" rx="1" />
                   <line x1="-5" y1="12" x2="5" y2="12" stroke="#a16207" strokeWidth="1" />
                   <line x1="-5" y1="15" x2="5" y2="15" stroke="#a16207" strokeWidth="1" />
-                  <text x="0" y="32" textAnchor="middle" fill={dischargePercent > 10 ? '#fbbf24' : '#9ca3af'} fontSize="10" fontWeight="bold">
+                  <text x="0" y="32" textAnchor="middle" fill={dischargePercent > 10 ? '#fbbf24' : '#9ca3af'} fontSize="11" fontWeight="bold">
                     BULB
                   </text>
                 </g>
@@ -1896,13 +1896,13 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
                     stroke={isDischarging ? "url(#rctcSwitchContact)" : '#6b7280'} strokeWidth="2" strokeLinecap="round" />
                   <circle cx="16" cy="0" r="4" fill={isDischarging ? "url(#rctcSwitchContact)" : '#4b5563'}
                     stroke={isDischarging ? '#059669' : '#374151'} strokeWidth="1" />
-                  <text x="8" y="13" textAnchor="middle" fill={isDischarging ? '#10b981' : '#9ca3af'} fontSize="9" fontWeight="bold">
+                  <text x="8" y="13" textAnchor="middle" fill={isDischarging ? '#10b981' : '#9ca3af'} fontSize="11" fontWeight="bold">
                     {isDischarging ? 'ON' : 'OFF'}
                   </text>
                 </g>
 
                 {/* Observation guidance */}
-                <text x="140" y="158" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
+                <text x="140" y="158" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="11">
                   {isDischarging ? '▶ Watch exponential decay - voltage drops fast then slows' : '▶ Click Start to discharge through bulb'}
                 </text>
               </svg>

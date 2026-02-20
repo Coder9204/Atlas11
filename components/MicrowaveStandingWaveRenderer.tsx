@@ -678,7 +678,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
     return (
       <svg
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{ width: '100%', maxWidth: '400px', height: 'auto' }}
+        style={{ width: '100%', height: 'auto' }}
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
@@ -1463,7 +1463,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             textAlign: 'center',
           }}>
             {/* SVG showing fixed standing wave pattern with rotating food */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
               <defs>
                 <linearGradient id="tpBg" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#1a1a2e" /><stop offset="100%" stopColor="#0f0f1a" />
@@ -1486,15 +1486,15 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
               {/* Wavelength axis label */}
               <text x="200" y="195" fill={colors.textMuted} fontSize="11" textAnchor="middle">Wavelength (position in cavity)</text>
               {/* Labels */}
-              <text x="130" y="18" fill="#ef4444" fontSize="10" textAnchor="middle">HOT</text>
-              <text x="270" y="18" fill="#ef4444" fontSize="10" textAnchor="middle">HOT</text>
+              <text x="130" y="18" fill="#ef4444" fontSize="11" textAnchor="middle">HOT</text>
+              <text x="270" y="18" fill="#ef4444" fontSize="11" textAnchor="middle">HOT</text>
               {/* Turntable circle (dashed = food moves) */}
               <circle cx="200" cy="100" r="50" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="8 4" opacity="0.6" />
               {/* Food item on turntable */}
               <ellipse cx="200" cy="55" rx="16" ry="12" fill="#92400E" stroke="#78350F" strokeWidth="1.5" filter="url(#tpGlow)" />
-              <text x="200" y="60" fill="#FEF3C7" fontSize="10" textAnchor="middle">Food</text>
+              <text x="200" y="60" fill="#FEF3C7" fontSize="11" textAnchor="middle">Food</text>
               {/* Amplitude label */}
-              <text x="10" y="100" fill={colors.textMuted} fontSize="10" textAnchor="middle" transform="rotate(-90, 10, 100)">Amplitude</text>
+              <text x="10" y="100" fill={colors.textMuted} fontSize="11" textAnchor="middle" transform="rotate(-90, 10, 100)">Amplitude</text>
             </svg>
             <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '8px' }}>
               The standing wave pattern stays fixed. The turntable rotates the food through the hot spots.

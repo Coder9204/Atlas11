@@ -1494,7 +1494,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* Visual diagram SVG for review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="160" viewBox="0 0 400 160" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="160" viewBox="0 0 400 160" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
               <defs>
                 <linearGradient id="reviewBusGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#06b6d4" />
@@ -1523,13 +1523,13 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
               <text x={340} y={70} fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">Bandwidth</text>
 
               {/* Bottom explanation */}
-              <text x={200} y={110} fill="#94a3b8" fontSize="10" textAnchor="middle">256 bits x 2000 MHz x 2 (DDR) / 8 = 128 GB/s</text>
+              <text x={200} y={110} fill="#94a3b8" fontSize="11" textAnchor="middle">256 bits x 2000 MHz x 2 (DDR) / 8 = 128 GB/s</text>
               <text x={200} y={130} fill="#06b6d4" fontSize="11" textAnchor="middle">Both factors multiply together!</text>
 
               {/* Legend */}
               <g className="legend-panel">
                 <rect x={130} y={140} width={140} height={16} rx={4} fill="rgba(30, 41, 59, 0.9)" />
-                <text x={200} y={152} fill="#e2e8f0" fontSize="9" textAnchor="middle">Bandwidth = Width x Speed x DDR / 8</text>
+                <text x={200} y={152} fill="#e2e8f0" fontSize="11" textAnchor="middle">Bandwidth = Width x Speed x DDR / 8</text>
               </g>
             </svg>
           </div>
@@ -1586,13 +1586,13 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* HBM vs GDDR comparison SVG visualization */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
               {/* GDDR side */}
               <text x={100} y={25} fill="#e2e8f0" fontSize="14" fontWeight="bold" textAnchor="middle">GDDR6</text>
               <rect x={50} y={40} width={100} height={60} rx={4} fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
-              <text x={100} y={75} fill="#e2e8f0" fontSize="10" textAnchor="middle">256-bit bus</text>
+              <text x={100} y={75} fill="#e2e8f0" fontSize="11" textAnchor="middle">256-bit bus</text>
               <text x={100} y={120} fill="#e2e8f0" fontSize="11" textAnchor="middle">~1 TB/s</text>
-              <text x={100} y={140} fill="#94a3b8" fontSize="9" textAnchor="middle">Side-by-side chips</text>
+              <text x={100} y={140} fill="#94a3b8" fontSize="11" textAnchor="middle">Side-by-side chips</text>
 
               {/* VS */}
               <text x={200} y={80} fill="#f59e0b" fontSize="16" fontWeight="bold" textAnchor="middle">vs</text>
@@ -1603,16 +1603,16 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                 <rect x={260} y={70} width={80} height={15} rx={2} fill="#14b8a6" stroke="#2dd4bf" strokeWidth="0.5" />
                 <rect x={260} y={55} width={80} height={15} rx={2} fill="#0d9488" stroke="#2dd4bf" strokeWidth="0.5" />
                 <rect x={260} y={40} width={80} height={15} rx={2} fill="#0f766e" stroke="#2dd4bf" strokeWidth="0.5" />
-                <text x={300} y={63} fill="#e2e8f0" fontSize="8" textAnchor="middle">Stacked Dies</text>
+                <text x={300} y={63} fill="#e2e8f0" fontSize="11" textAnchor="middle">Stacked Dies</text>
               </g>
-              <text x={300} y={105} fill="#e2e8f0" fontSize="10" textAnchor="middle">1024-bit bus</text>
+              <text x={300} y={105} fill="#e2e8f0" fontSize="11" textAnchor="middle">1024-bit bus</text>
               <text x={300} y={120} fill="#e2e8f0" fontSize="11" textAnchor="middle">~3+ TB/s</text>
-              <text x={300} y={140} fill="#94a3b8" fontSize="9" textAnchor="middle">Vertically stacked</text>
+              <text x={300} y={140} fill="#94a3b8" fontSize="11" textAnchor="middle">Vertically stacked</text>
 
               {/* Legend */}
               <g className="legend-panel">
                 <rect x={130} y={155} width={140} height={20} rx={4} fill="rgba(30, 41, 59, 0.9)" />
-                <text x={200} y={169} fill="#e2e8f0" fontSize="9" textAnchor="middle">Memory Architecture Comparison</text>
+                <text x={200} y={169} fill="#e2e8f0" fontSize="11" textAnchor="middle">Memory Architecture Comparison</text>
               </g>
             </svg>
           </div>
@@ -1789,7 +1789,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* Visual diagram SVG for twist review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
               <defs>
                 <linearGradient id="twistHbmGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                   <stop offset="0%" stopColor="#0d9488" />
@@ -1805,7 +1805,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
               <rect x={55} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
               <rect x={90} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
               <rect x={125} y={55} width={30} height={25} rx={2} fill="#3b82f6" />
-              <text x={80} y={100} fill="#94a3b8" fontSize="9" textAnchor="middle">256-bit bus (limited by PCB space)</text>
+              <text x={80} y={100} fill="#94a3b8" fontSize="11" textAnchor="middle">256-bit bus (limited by PCB space)</text>
 
               {/* Arrow */}
               <text x={200} y={75} fill="#f59e0b" fontSize="16" fontWeight="bold" textAnchor="middle">vs</text>
@@ -1815,17 +1815,17 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
               <rect x={290} y={80} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
               <rect x={290} y={66} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
               <rect x={290} y={52} width={60} height={12} rx={2} fill="url(#twistHbmGrad)" />
-              <text x={320} y={100} fill="#94a3b8" fontSize="9" textAnchor="middle">1024-bit bus (TSVs)</text>
+              <text x={320} y={100} fill="#94a3b8" fontSize="11" textAnchor="middle">1024-bit bus (TSVs)</text>
 
               {/* Key insight */}
               <rect x={50} y={115} width={300} height={35} rx={6} fill="rgba(6, 182, 212, 0.2)" />
-              <text x={200} y={133} fill="#06b6d4" fontSize="10" fontWeight="bold" textAnchor="middle">Stacking memory vertically allows 4x wider bus</text>
-              <text x={200} y={146} fill="#e2e8f0" fontSize="9" textAnchor="middle">in the same footprint = 3-4x more bandwidth!</text>
+              <text x={200} y={133} fill="#06b6d4" fontSize="11" fontWeight="bold" textAnchor="middle">Stacking memory vertically allows 4x wider bus</text>
+              <text x={200} y={146} fill="#e2e8f0" fontSize="11" textAnchor="middle">in the same footprint = 3-4x more bandwidth!</text>
 
               {/* Legend */}
               <g className="legend-panel">
                 <rect x={140} y={158} width={120} height={16} rx={4} fill="rgba(30, 41, 59, 0.9)" />
-                <text x={200} y={170} fill="#e2e8f0" fontSize="9" textAnchor="middle">HBM vs GDDR Architecture</text>
+                <text x={200} y={170} fill="#e2e8f0" fontSize="11" textAnchor="middle">HBM vs GDDR Architecture</text>
               </g>
             </svg>
           </div>
