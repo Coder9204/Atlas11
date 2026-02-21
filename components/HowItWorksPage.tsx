@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getHowItWorksBySlug, howItWorks } from '../src/data/howItWorks';
+import { getHowItWorksBySlug, howItWorksEntries } from '../src/data/howItWorks';
 import { updateMeta } from '../lib/seo';
 import { howItWorksSchema } from '../lib/seoSchemas';
 import Breadcrumbs from './Breadcrumbs';
@@ -247,7 +247,7 @@ export default function HowItWorksPage() {
             More Explanations
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {howItWorks
+            {howItWorksEntries
               .filter(h => h.slug !== entry.slug)
               .map(h => (
                 <a
