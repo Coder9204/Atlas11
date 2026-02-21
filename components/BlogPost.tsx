@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { updateMeta } from '../lib/seo';
+import { getBlogPostBySlug } from '../src/data/blogPostsIndex';
+import { blogArticleSchema, faqPageSchema } from '../lib/seoSchemas';
+import ComparisonPostBody from './ComparisonPostBody';
+import RoundupPostBody from './RoundupPostBody';
 import Breadcrumbs from './Breadcrumbs';
 
-/** Placeholder blog post data. Replace with MDX content loading. */
-const blogPostData: Record<string, {
+/** Legacy placeholder blog post data for the original 8 posts. */
+const legacyPostData: Record<string, {
   title: string;
   author: string;
   date: string;
@@ -120,19 +124,45 @@ const blogPostData: Record<string, {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const post = slug ? blogPostData[slug] : undefined;
+
+  // Try data-driven posts first
+  const dataPost = slug ? getBlogPostBySlug(slug) : undefined;
+  // Fallback to legacy posts
+  const legacyPost = !dataPost && slug ? legacyPostData[slug] : undefined;
 
   useEffect(() => {
-    if (!post) return;
-    updateMeta({
-      title: `${post.title} | Atlas Coach Blog`,
-      description: post.description,
-      canonicalUrl: `/blog/${slug}`,
-      ogType: 'article',
-    });
-  }, [post, slug]);
+    if (dataPost) {
+      const jsonLdItems: Record<string, unknown>[] = [
+        blogArticleSchema({
+          title: dataPost.title,
+          description: dataPost.metaDescription,
+          url: `/blog/${dataPost.slug}`,
+          datePublished: dataPost.date,
+          author: dataPost.author,
+        }),
+      ];
+      if (dataPost.faqItems.length > 0) {
+        jsonLdItems.push(faqPageSchema(dataPost.faqItems));
+      }
+      updateMeta({
+        title: dataPost.metaTitle,
+        description: dataPost.metaDescription,
+        canonicalUrl: `/blog/${dataPost.slug}`,
+        ogType: 'article',
+        jsonLd: jsonLdItems,
+      });
+    } else if (legacyPost) {
+      updateMeta({
+        title: `${legacyPost.title} | Atlas Coach Blog`,
+        description: legacyPost.description,
+        canonicalUrl: `/blog/${slug}`,
+        ogType: 'article',
+      });
+    }
+  }, [dataPost, legacyPost, slug]);
 
-  if (!post) {
+  // Not found
+  if (!dataPost && !legacyPost) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -152,6 +182,94 @@ export default function BlogPost() {
     );
   }
 
+  // Data-driven post rendering
+  if (dataPost) {
+    const breadcrumbItems = [
+      { name: 'Home', url: '/' },
+      { name: 'Blog', url: '/blog' },
+      { name: dataPost.title.length > 50 ? dataPost.title.slice(0, 47) + '...' : dataPost.title, url: `/blog/${slug}` },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#0a0a0f',
+        color: '#f0f0f5',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px' }}>
+          <Breadcrumbs items={breadcrumbItems} />
+
+          <header style={{ padding: '40px 0 32px', borderBottom: '1px solid #2a2a3a' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <span style={{
+                padding: '4px 12px',
+                background: '#3B82F618',
+                border: '1px solid #3B82F640',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#3B82F6',
+              }}>
+                {dataPost.category}
+              </span>
+              <span style={{ color: '#4a4a5a', fontSize: '13px' }}>
+                {dataPost.readTime} read
+              </span>
+            </div>
+            <h1 style={{
+              fontSize: '36px',
+              fontWeight: 800,
+              lineHeight: 1.2,
+              margin: '0 0 16px',
+            }}>
+              {dataPost.title}
+            </h1>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              color: '#94a3b8',
+              fontSize: '14px',
+            }}>
+              <span>By {dataPost.author}</span>
+              <span style={{ color: '#2a2a3a' }}>|</span>
+              <time dateTime={dataPost.date}>
+                {new Date(dataPost.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </time>
+            </div>
+          </header>
+
+          {dataPost.type === 'comparison' ? (
+            <ComparisonPostBody post={dataPost} />
+          ) : (
+            <RoundupPostBody post={dataPost} />
+          )}
+
+          <div style={{ padding: '24px 0' }}>
+            <a
+              href="/blog"
+              style={{
+                color: '#3B82F6',
+                textDecoration: 'none',
+                fontSize: '15px',
+                fontWeight: 500,
+              }}
+            >
+              &larr; Back to all articles
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy post rendering (original 8 placeholder posts)
+  const post = legacyPost!;
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
     { name: 'Blog', url: '/blog' },
@@ -166,10 +284,8 @@ export default function BlogPost() {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     }}>
       <div style={{ maxWidth: '750px', margin: '0 auto', padding: '24px' }}>
-        {/* Breadcrumbs */}
         <Breadcrumbs items={breadcrumbItems} />
 
-        {/* Article header */}
         <header style={{ padding: '40px 0 32px', borderBottom: '1px solid #2a2a3a' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
             <span style={{
@@ -214,7 +330,6 @@ export default function BlogPost() {
           </div>
         </header>
 
-        {/* Article content placeholder */}
         <article style={{ padding: '32px 0 48px' }}>
           <div style={{
             padding: '24px',
@@ -235,7 +350,6 @@ export default function BlogPost() {
             </p>
           </div>
 
-          {/* Placeholder content blocks */}
           <div style={{ color: '#e2e8f0', fontSize: '16px', lineHeight: 1.8 }}>
             <p style={{ marginBottom: '20px' }}>
               This article is coming soon. We are preparing in-depth content with
@@ -247,7 +361,6 @@ export default function BlogPost() {
             </p>
           </div>
 
-          {/* Placeholder for MDX content */}
           <div style={{
             padding: '48px 32px',
             background: '#12121a',
@@ -262,7 +375,6 @@ export default function BlogPost() {
           </div>
         </article>
 
-        {/* Related games */}
         <section style={{
           padding: '32px 0',
           borderTop: '1px solid #2a2a3a',
@@ -304,7 +416,6 @@ export default function BlogPost() {
           </div>
         </section>
 
-        {/* Back to blog */}
         <div style={{ padding: '24px 0' }}>
           <a
             href="/blog"

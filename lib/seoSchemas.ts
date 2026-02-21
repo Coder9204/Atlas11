@@ -134,3 +134,127 @@ export function howItWorksSchema(data: {
     })),
   };
 }
+
+export function webSiteSchema(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SEO_CONFIG.siteName,
+    url: SEO_CONFIG.baseUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SEO_CONFIG.baseUrl}/games?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+export function organizationSchema(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SEO_CONFIG.siteName,
+    url: SEO_CONFIG.baseUrl,
+    logo: `${SEO_CONFIG.baseUrl}/og-image.png`,
+    description: 'Interactive physics, engineering, and AI education platform with 342 games and AI-powered coaching.',
+    sameAs: [],
+  };
+}
+
+export function itemListSchema(data: {
+  name: string;
+  description: string;
+  url: string;
+  items: { name: string; url: string }[];
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: data.name,
+    description: data.description,
+    url: data.url.startsWith('http') ? data.url : `${SEO_CONFIG.baseUrl}${data.url}`,
+    numberOfItems: data.items.length,
+    itemListElement: data.items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      url: item.url.startsWith('http') ? item.url : `${SEO_CONFIG.baseUrl}${item.url}`,
+    })),
+  };
+}
+
+export function definedTermSchema(data: {
+  term: string;
+  definition: string;
+  url: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    name: data.term,
+    description: data.definition,
+    url: data.url.startsWith('http') ? data.url : `${SEO_CONFIG.baseUrl}${data.url}`,
+    inDefinedTermSet: {
+      '@type': 'DefinedTermSet',
+      name: `${SEO_CONFIG.siteName} Physics & Engineering Glossary`,
+      url: `${SEO_CONFIG.baseUrl}/glossary`,
+    },
+  };
+}
+
+export function blogArticleSchema(data: {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  author: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: data.title,
+    description: data.description,
+    url: data.url.startsWith('http') ? data.url : `${SEO_CONFIG.baseUrl}${data.url}`,
+    datePublished: data.datePublished,
+    dateModified: data.datePublished,
+    author: {
+      '@type': 'Organization',
+      name: data.author,
+      url: SEO_CONFIG.baseUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SEO_CONFIG.siteName,
+      url: SEO_CONFIG.baseUrl,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SEO_CONFIG.baseUrl}/og-image.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': data.url.startsWith('http') ? data.url : `${SEO_CONFIG.baseUrl}${data.url}`,
+    },
+  };
+}
+
+export function collectionPageSchema(data: {
+  name: string;
+  description: string;
+  url: string;
+  numberOfItems: number;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: data.name,
+    description: data.description,
+    url: data.url.startsWith('http') ? data.url : `${SEO_CONFIG.baseUrl}${data.url}`,
+    provider: {
+      '@type': 'Organization',
+      name: SEO_CONFIG.siteName,
+      url: SEO_CONFIG.baseUrl,
+    },
+    numberOfItems: data.numberOfItems,
+  };
+}

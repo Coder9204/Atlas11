@@ -874,6 +874,746 @@ export const howItWorksEntries: HowItWorksEntry[] = [
       { question: 'Why does compressed gas feel cold when released?', answer: 'Rapid adiabatic expansion converts internal energy to work, dropping the temperature. This is the principle behind refrigeration.' },
     ],
   },
+// ----------------------------------------------------------------
+  // THERMODYNAMICS (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'evaporative-cooling',
+    title: 'How Does Evaporative Cooling Work?',
+    shortAnswer:
+      'Evaporative cooling occurs when liquid water absorbs latent heat from its surroundings to transition into vapor. The fastest-moving molecules escape the surface, lowering the average kinetic energy of the remaining liquid and thus its temperature.',
+    relatedGameSlugs: ['evaporative-cooling', 'latent-heat', 'phase-change-energy'],
+    category: 'thermodynamics',
+    steps: [
+      { title: 'Molecular Energy Distribution', explanation: 'Liquid molecules have a range of kinetic energies described by the Maxwell-Boltzmann distribution. Only molecules in the high-energy tail have enough energy to overcome intermolecular attractions and escape the surface.' },
+      { title: 'Latent Heat Absorption', explanation: 'Each molecule that escapes carries away significant kinetic energy — about 2,260 kJ per kilogram of water evaporated. This energy is drawn from the thermal energy of the remaining liquid and the surface it contacts.' },
+      { title: 'Temperature Reduction', explanation: 'As high-energy molecules leave, the average kinetic energy of the remaining liquid drops, which is measured as a temperature decrease. The wet-bulb temperature is the lowest achievable temperature through evaporation at a given humidity.' },
+      { title: 'Humidity Dependence', explanation: 'Evaporation rate depends on the vapor pressure difference between the liquid surface and the surrounding air. In humid air, the vapor pressure gradient is small, slowing evaporation and reducing the cooling effect.' },
+    ],
+    realWorldApps: [
+      'Swamp coolers (evaporative coolers) for arid climate air conditioning',
+      'Human sweating as a thermoregulation mechanism',
+      'Cooling towers at power plants dissipating waste heat',
+      'Wet-bulb thermometers for measuring humidity',
+    ],
+    faqItems: [
+      { question: 'Why does evaporative cooling work better in dry climates?', answer: 'In dry air the vapor pressure is low, creating a large gradient that drives rapid evaporation. In humid air the gradient is small, so evaporation is slow and cooling is minimal. This is why swamp coolers are effective in deserts but useless in tropical climates.' },
+      { question: 'How much can evaporative cooling lower the temperature?', answer: 'The theoretical limit is the wet-bulb temperature, which depends on humidity. In a dry desert with 10% humidity and 40°C air, evaporative cooling can reach about 21°C — a nearly 20°C drop. At 80% humidity the drop may be only 2-3°C.' },
+      { question: 'Why do you feel cold stepping out of a pool?', answer: 'The thin film of water on your skin evaporates rapidly in air, absorbing latent heat from your skin at about 2,260 kJ per kg. Wind increases evaporation rate, amplifying the chill — this is the wind chill effect combined with evaporative cooling.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // ELECTRICITY & MAGNETISM (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'faraday-cage',
+    title: 'How Does a Faraday Cage Work?',
+    shortAnswer:
+      'A Faraday cage is a conductive enclosure that blocks external electric fields. When an external field is applied, free charges in the conductor redistribute to cancel the field inside, shielding the interior from electromagnetic radiation.',
+    relatedGameSlugs: ['faraday-cage', 'eddy-currents', 'electromagnetic-induction'],
+    category: 'electricity',
+    steps: [
+      { title: 'Charge Redistribution', explanation: 'When an external electric field reaches the conductive shell, free electrons in the metal move in response, accumulating on one side and leaving a deficit on the other. This charge separation creates an internal field that exactly cancels the external one inside the cage.' },
+      { title: 'Electrostatic Shielding', explanation: 'In the static case, the interior field is exactly zero regardless of the external field strength. This is a consequence of Gauss\'s law: a conductor in equilibrium has zero internal electric field.' },
+      { title: 'Electromagnetic Shielding', explanation: 'For time-varying fields (radio waves, microwaves), the cage works by inducing currents in the conductor that generate opposing fields. Effectiveness depends on the skin depth of the conductor and the mesh size relative to wavelength.' },
+      { title: 'Mesh and Gap Considerations', explanation: 'A solid conductor provides perfect shielding, but a mesh works as long as hole size is much smaller than the wavelength. A microwave oven door mesh blocks 12 cm microwaves with 1 mm holes. Gaps and seams degrade shielding at high frequencies.' },
+    ],
+    realWorldApps: [
+      'Microwave oven door mesh preventing radiation leakage',
+      'MRI rooms shielded from external radio interference',
+      'Lightning protection for aircraft (aluminum fuselage acts as a cage)',
+      'EMI shielding enclosures for sensitive electronics',
+    ],
+    faqItems: [
+      { question: 'Why does my phone lose signal inside an elevator?', answer: 'The metal elevator car acts as a Faraday cage, blocking cellular radio waves (wavelength ~15-30 cm). Small gaps around the doors may allow some signal through, but shielding is substantial.' },
+      { question: 'Can a Faraday cage protect against lightning?', answer: 'Yes. A car\'s metal body acts as a Faraday cage during a lightning strike. The current flows around the outside of the conductor, and the interior field remains near zero. The occupants are safe as long as they don\'t touch the metal shell.' },
+      { question: 'Does a Faraday cage block all frequencies equally?', answer: 'No. A mesh cage blocks wavelengths much larger than the mesh opening but becomes transparent to shorter wavelengths. A solid cage blocks all frequencies, but skin depth decreases shielding effectiveness for very low frequencies in thin conductors.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // THERMAL MANAGEMENT
+  // ----------------------------------------------------------------
+  {
+    slug: 'heat-sink',
+    title: 'How Does a Heat Sink Work?',
+    shortAnswer:
+      'A heat sink is a passive thermal management device that absorbs heat from a component and dissipates it into the surrounding air through conduction and convection. Its extended fin structure dramatically increases the surface area available for heat transfer.',
+    relatedGameSlugs: ['heat-sink-design', 'thermal-conductivity', 'convection'],
+    category: 'thermodynamics',
+    steps: [
+      { title: 'Thermal Conduction from Source', explanation: 'Heat flows by conduction from the hot component (e.g., CPU die) through thermal interface material (paste or pad) into the heat sink base. The base is made of high-conductivity material, typically aluminum (205 W/mK) or copper (400 W/mK).' },
+      { title: 'Spreading Through the Base', explanation: 'The heat spreads laterally through the base plate from the small contact area to the full footprint of the heat sink. Copper\'s higher conductivity reduces the spreading resistance, which is why premium heat sinks use copper bases.' },
+      { title: 'Fin Array Convection', explanation: 'Thin fins extend upward from the base, providing a large surface area exposed to air. Heat conducted to the fin surfaces transfers to the passing air by convection. The thermal resistance depends on fin geometry, spacing, and airflow.' },
+      { title: 'Natural vs Forced Convection', explanation: 'In passive cooling, hot air rises naturally (natural convection). Adding a fan (forced convection) dramatically increases heat transfer by 5-10x, maintaining a larger temperature difference between fins and air.' },
+    ],
+    realWorldApps: [
+      'CPU and GPU cooling in computers',
+      'LED lighting thermal management',
+      'Power electronics and voltage regulators',
+      'Automotive engine heat exchangers',
+    ],
+    faqItems: [
+      { question: 'Why is thermal paste necessary between a CPU and heat sink?', answer: 'Even with a flat heat sink and CPU, microscopic surface roughness leaves tiny air gaps (air has thermal conductivity of only 0.025 W/mK). Thermal paste fills these gaps with a material that conducts 50-100x better than air, dramatically reducing contact resistance.' },
+      { question: 'Is copper always better than aluminum for heat sinks?', answer: 'Copper conducts heat nearly twice as well as aluminum but is 3x heavier and more expensive. For large heat sinks, the weight penalty matters. Many designs use a copper base for spreading and aluminum fins for the array, combining both advantages.' },
+      { question: 'Why do heat sink fins have specific spacing?', answer: 'Wider spacing allows more airflow but reduces surface area. Narrower spacing increases area but restricts airflow and creates a boundary layer overlap. The optimal spacing balances these effects and depends on whether cooling is natural or forced convection.' },
+    ],
+  },
+  {
+    slug: 'thermal-throttling',
+    title: 'How Does Thermal Throttling Work?',
+    shortAnswer:
+      'Thermal throttling is a protective mechanism where a processor reduces its clock speed and voltage when its temperature exceeds a safe threshold. This reduces power dissipation to prevent permanent damage to the silicon, at the cost of reduced performance.',
+    relatedGameSlugs: ['thermal-throttling', 'heat-sink-design', 'thermal-conductivity'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'Temperature Monitoring', explanation: 'Modern processors have multiple on-die thermal sensors (digital thermal diodes) that report junction temperature to the power management unit. Readings are sampled hundreds of times per second with accuracy of about 1°C.' },
+      { title: 'Threshold Detection', explanation: 'Each processor has a T_junction_max specification (typically 100-110°C for modern CPUs). When any sensor approaches this limit, the throttling logic activates. Multiple thresholds allow graduated responses.' },
+      { title: 'Clock and Voltage Reduction', explanation: 'The processor reduces its operating frequency and supply voltage using DVFS (Dynamic Voltage and Frequency Scaling). Since dynamic power scales as P = C*V^2*f, reducing both voltage and frequency yields a cubic reduction in power.' },
+      { title: 'Feedback Loop', explanation: 'Throttling operates as a closed-loop control system. If temperature continues to rise, clock speed is reduced further. If temperature drops, speed is gradually restored. Extreme overheating triggers an emergency shutdown.' },
+    ],
+    realWorldApps: [
+      'Laptop and smartphone processor protection during heavy workloads',
+      'Data center server thermal management',
+      'Gaming console performance regulation',
+      'Electric vehicle battery management during fast charging',
+    ],
+    faqItems: [
+      { question: 'Why does my laptop slow down when it gets hot?', answer: 'Your laptop\'s CPU is thermal throttling — intentionally reducing clock speed to lower heat output. This happens when the cooling system (fan and heat sink) cannot remove heat fast enough to keep the processor below its thermal limit, typically 100°C.' },
+      { question: 'Does thermal throttling damage the processor?', answer: 'No, thermal throttling prevents damage. It is a protection mechanism that activates well before temperatures reach destructive levels. Sustained operation at the throttling threshold reduces performance but not processor lifespan.' },
+      { question: 'How can I prevent thermal throttling?', answer: 'Improve cooling: clean dust from vents and fans, replace dried thermal paste, use a laptop cooling pad, or ensure adequate airflow in a desktop case. Undervolting the CPU can also reduce heat without sacrificing performance.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // POWER ELECTRONICS
+  // ----------------------------------------------------------------
+  {
+    slug: 'solar-inverter',
+    title: 'How Does a Solar Inverter Work?',
+    shortAnswer:
+      'A solar inverter converts the direct current (DC) output from solar panels into alternating current (AC) compatible with the electrical grid and household appliances. It uses high-speed switching transistors and filtering to synthesize a clean sinusoidal waveform.',
+    relatedGameSlugs: ['solar-inverter', 'mosfet-switching', 'solar-cell'],
+    category: 'solar',
+    steps: [
+      { title: 'DC Input from Solar Panels', explanation: 'Solar panels produce DC at a voltage that varies with sunlight intensity and temperature (typically 30-50V per panel, 300-600V for a string). The inverter\'s MPPT stage adjusts the operating point to extract maximum power.' },
+      { title: 'DC-to-DC Conversion (Boost Stage)', explanation: 'A boost converter raises the variable panel voltage to a stable, higher DC bus voltage (typically 350-400V for single-phase or 600-800V for three-phase). This provides the headroom needed to synthesize AC output.' },
+      { title: 'DC-to-AC Inversion (H-Bridge)', explanation: 'An H-bridge of MOSFETs or IGBTs switches the DC bus voltage at high frequency (typically 10-50 kHz) using pulse-width modulation (PWM). By varying the pulse widths, the average output approximates a sinusoidal waveform.' },
+      { title: 'Output Filtering and Grid Synchronization', explanation: 'An LC filter smooths the PWM output into a clean sine wave. The inverter synchronizes its output frequency, phase, and voltage to the grid using a phase-locked loop (PLL), enabling safe parallel operation.' },
+      { title: 'Anti-Islanding Protection', explanation: 'If the grid goes down, the inverter must shut off within milliseconds to prevent energizing dead lines (islanding), which would endanger utility workers. This is a critical safety requirement in all grid-tied inverters.' },
+    ],
+    realWorldApps: [
+      'Residential rooftop solar power systems',
+      'Utility-scale solar farms feeding the power grid',
+      'Battery storage systems requiring bidirectional DC-AC conversion',
+      'Solar-powered water pumping in agriculture',
+    ],
+    faqItems: [
+      { question: 'What is the difference between string inverters and microinverters?', answer: 'String inverters connect to a series string of panels and convert all their DC output centrally. Microinverters are mounted on each panel individually, converting DC to AC at the source. Microinverters handle partial shading better but cost more.' },
+      { question: 'Why do solar inverters have MPPT?', answer: 'Solar panel output varies with sunlight and temperature. The maximum power point tracker continuously adjusts the operating voltage to keep the panels at their peak power output, typically recovering 20-30% more energy than a fixed voltage system.' },
+      { question: 'How efficient are modern solar inverters?', answer: 'Modern inverters achieve 96-99% efficiency (weighted CEC efficiency). The main losses are switching losses in the transistors, conduction losses, and magnetic losses in the filter inductors. Even 1% efficiency improvement matters at utility scale.' },
+    ],
+  },
+  {
+    slug: 'ups-system',
+    title: 'How Does a UPS Work?',
+    shortAnswer:
+      'An uninterruptible power supply (UPS) provides emergency power during mains outages by storing energy in batteries and instantly switching to battery-powered AC output. It protects equipment from power interruptions, surges, and brownouts.',
+    relatedGameSlugs: ['ups-system', 'series-parallel-circuits', 'capacitor-charging'],
+    category: 'electricity',
+    steps: [
+      { title: 'Normal Mode (Charging)', explanation: 'During normal operation, mains AC power passes through to the load while simultaneously charging the battery bank via a rectifier/charger circuit. The battery is kept at full charge, ready for an outage.' },
+      { title: 'Outage Detection', explanation: 'Voltage monitoring circuits detect when mains power drops below a threshold (typically 80% of nominal). In online UPS designs, the switch to battery is seamless; in standby designs, a transfer switch activates within 5-12 milliseconds.' },
+      { title: 'Battery Discharge and Inversion', explanation: 'The battery provides DC power to an inverter that synthesizes AC output at the correct voltage and frequency. Runtime depends on battery capacity and load: a typical 1500VA UPS provides 5-15 minutes at full load.' },
+      { title: 'Return to Mains', explanation: 'When mains power returns and stabilizes, the UPS transfers the load back to mains and begins recharging the battery. The transfer is automatic and designed to be seamless to connected equipment.' },
+    ],
+    realWorldApps: [
+      'Data center power protection preventing server downtime',
+      'Hospital critical equipment backup power',
+      'Home office computer and networking equipment protection',
+      'Industrial process control systems requiring clean power',
+    ],
+    faqItems: [
+      { question: 'What is the difference between online and standby UPS?', answer: 'A standby (offline) UPS passes mains power directly and switches to battery on outage (5-12 ms gap). An online (double-conversion) UPS continuously converts AC to DC to AC, providing zero transfer time and perfect output regardless of input quality.' },
+      { question: 'How long does a UPS battery last?', answer: 'Runtime depends on load and battery size. A typical 1500VA UPS runs a desktop PC for 5-15 minutes — enough for safe shutdown. Battery lifespan is 3-5 years before capacity degrades enough to need replacement.' },
+      { question: 'Does a UPS protect against lightning?', answer: 'Most UPS units include basic surge protection (MOVs), but a direct lightning strike can overwhelm this. For lightning-prone areas, a dedicated whole-house surge protector at the electrical panel provides better primary protection.' },
+    ],
+  },
+  {
+    slug: 'esd-protection',
+    title: 'How Does ESD Protection Work?',
+    shortAnswer:
+      'Electrostatic discharge (ESD) protection uses specialized circuits and materials to safely divert sudden high-voltage static electricity spikes away from sensitive electronic components. Protection devices clamp voltage and shunt current to ground before damage occurs.',
+    relatedGameSlugs: ['esd-protection', 'capacitor-charging', 'faraday-cage'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'Static Charge Buildup', explanation: 'Triboelectric charging occurs when two materials contact and separate, transferring electrons. A person walking on carpet can accumulate 10,000-25,000 volts. Sensitive MOSFET gates can be destroyed by as little as 10-100 volts.' },
+      { title: 'ESD Event', explanation: 'When a charged object contacts a circuit, the stored charge discharges in nanoseconds with peak currents of several amperes. This energy can melt bond wires, punch through gate oxides, or create latent damage that causes later failure.' },
+      { title: 'Clamping and Shunting', explanation: 'ESD protection devices (TVS diodes, Zener diodes, or on-chip protection circuits) activate when voltage exceeds a threshold, clamping the voltage and diverting current to ground. They respond in sub-nanosecond timescales.' },
+      { title: 'Prevention Strategies', explanation: 'Beyond circuit protection, ESD prevention includes grounding wrist straps, conductive workstation mats, humidity control (higher humidity reduces charge buildup), and antistatic packaging for sensitive components.' },
+    ],
+    realWorldApps: [
+      'Semiconductor manufacturing cleanroom protocols',
+      'USB and HDMI port protection in consumer electronics',
+      'Automotive electronics surviving harsh static environments',
+      'Data center equipment handling and installation procedures',
+    ],
+    faqItems: [
+      { question: 'Why are some components more sensitive to ESD than others?', answer: 'MOSFET gates have extremely thin oxide layers (1-5 nm) that can be punctured by even moderate voltages. Bipolar transistors are more robust because current flows through bulk silicon. Components with finer geometries are generally more vulnerable.' },
+      { question: 'Can ESD damage be invisible?', answer: 'Yes. Latent ESD damage weakens a component without causing immediate failure. The degraded device may work initially but fail prematurely in the field. This makes ESD damage particularly costly because it creates reliability problems that are hard to trace.' },
+      { question: 'Why do ESD bags have that metallic appearance?', answer: 'ESD bags use a metallized layer that acts as a Faraday cage, shielding contents from external static fields. The inner dissipative layer prevents charge accumulation on the bag surface. Together they prevent both direct discharge and field-induced damage.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // SEMICONDUCTOR FABRICATION
+  // ----------------------------------------------------------------
+  {
+    slug: 'doping-semiconductors',
+    title: 'How Does Semiconductor Doping Work?',
+    shortAnswer:
+      'Doping is the intentional introduction of impurity atoms into a pure semiconductor crystal to control its electrical conductivity. Adding atoms with extra electrons (n-type) or missing electrons (p-type) creates free charge carriers that enable transistors, diodes, and solar cells.',
+    relatedGameSlugs: ['doping-semiconductors', 'mosfet-switching', 'solar-cell'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'Intrinsic Semiconductor', explanation: 'Pure silicon has 4 valence electrons forming covalent bonds with neighbors. At room temperature, thermal energy frees a few electrons, creating sparse electron-hole pairs. Intrinsic silicon is a poor conductor (~1500 ohm-cm resistivity).' },
+      { title: 'N-Type Doping', explanation: 'Adding group V elements (phosphorus, arsenic) with 5 valence electrons provides one extra electron per dopant atom. At typical doping levels (10^15 to 10^18 atoms/cm^3), resistivity drops to 0.01-10 ohm-cm. Electrons are the majority carriers.' },
+      { title: 'P-Type Doping', explanation: 'Adding group III elements (boron, gallium) with 3 valence electrons creates one "hole" (missing electron) per dopant atom. Holes act as positive charge carriers. The material conducts via hole migration through the crystal lattice.' },
+      { title: 'P-N Junction Formation', explanation: 'When p-type and n-type regions meet, electrons diffuse into the p-side and holes into the n-side, creating a depletion zone with a built-in electric field. This junction is the basis of diodes, transistors, and solar cells.' },
+      { title: 'Ion Implantation', explanation: 'Modern doping uses ion implantation: dopant ions are accelerated to 10-500 keV and shot into the silicon surface. Dose and energy precisely control the concentration and depth profile. Annealing at 900-1100°C repairs crystal damage.' },
+    ],
+    realWorldApps: [
+      'Transistor fabrication in all integrated circuits',
+      'Solar cell p-n junction creation for photovoltaic power',
+      'LED manufacturing using compound semiconductor doping',
+      'Sensor fabrication for photodetectors and radiation detectors',
+    ],
+    faqItems: [
+      { question: 'How many dopant atoms are needed?', answer: 'Silicon has about 5x10^22 atoms/cm^3. Typical doping levels of 10^15-10^18 atoms/cm^3 mean only about 1 in 10,000 to 1 in 10 million atoms is a dopant. This tiny fraction is enough to increase conductivity by factors of 10,000 or more.' },
+      { question: 'Why is silicon the most common semiconductor?', answer: 'Silicon is abundant (second most common element in Earth\'s crust), has a convenient bandgap (1.12 eV), forms an excellent native oxide (SiO2) for insulation, and can be purified to 99.999999999% (eleven nines) purity at reasonable cost.' },
+      { question: 'What happens if you dope too much?', answer: 'Excessive doping (degenerate doping, above ~10^19/cm^3) causes the semiconductor to behave more like a metal. The bandgap effectively narrows, carrier mobility decreases due to impurity scattering, and the material loses its useful semiconducting properties.' },
+    ],
+  },
+  {
+    slug: 'etching-process',
+    title: 'How Does Chip Etching Work?',
+    shortAnswer:
+      'Chip etching selectively removes material from a semiconductor wafer to create the intricate patterns of transistors and interconnects. Plasma-based dry etching uses reactive ions to achieve nanometer-precision vertical cuts, while wet etching uses chemical solutions for less critical features.',
+    relatedGameSlugs: ['etching-process', 'photolithography', 'mosfet-switching'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'Pattern Transfer from Photoresist', explanation: 'Photolithography first creates a pattern in photoresist on the wafer surface. The resist serves as a mask during etching: areas covered by resist are protected, while exposed areas are etched away.' },
+      { title: 'Dry (Plasma) Etching', explanation: 'Reactive Ion Etching (RIE) generates a plasma of reactive gases (e.g., CF4, Cl2, SF6). Ions are accelerated toward the wafer surface, where they chemically react with and physically sputter the exposed material, achieving highly anisotropic (vertical) etching.' },
+      { title: 'Selectivity and Etch Stop', explanation: 'The etch chemistry must remove the target material much faster than the underlying layer or the photoresist mask. Selectivity ratios of 10:1 to 100:1 are typical. Etch stop layers of different materials provide precise depth control.' },
+      { title: 'Profile Control', explanation: 'By tuning gas composition, pressure, power, and temperature, engineers control the etch profile from perfectly vertical (anisotropic) to rounded (isotropic). Sidewall passivation gases deposit protective films on vertical surfaces to prevent lateral etching.' },
+      { title: 'Post-Etch Cleaning', explanation: 'After etching, polymer residues and damaged surface layers must be removed. Oxygen plasma ashing strips remaining photoresist, and wet chemical cleaning removes residues that could degrade device performance.' },
+    ],
+    realWorldApps: [
+      'Transistor gate patterning in CPU and GPU fabrication',
+      'MEMS device fabrication (accelerometers, pressure sensors)',
+      'Fiber optic component manufacturing',
+      'Hard drive read/write head fabrication',
+    ],
+    faqItems: [
+      { question: 'What is the difference between wet and dry etching?', answer: 'Wet etching uses liquid chemicals and is isotropic (etches equally in all directions), limiting resolution. Dry (plasma) etching uses reactive ions and can be highly anisotropic, cutting straight down. Modern chips require dry etching for features below ~1 micrometer.' },
+      { question: 'How small can etching features be?', answer: 'State-of-the-art dry etching achieves features below 5 nm with atomic-level precision. Atomic Layer Etching (ALE) removes material one atomic layer at a time, providing sub-angstrom depth control.' },
+      { question: 'Why is etching so difficult for advanced nodes?', answer: 'At 3-5 nm nodes, features are only 10-20 atoms wide. Etching must be perfectly uniform across a 300mm wafer, with no variation in depth, width, or profile. Even single-atom irregularities can affect device performance.' },
+    ],
+  },
+  {
+    slug: 'cmp-process',
+    title: 'How Does CMP Work?',
+    shortAnswer:
+      'Chemical Mechanical Planarization (CMP) uses a combination of chemical etching and mechanical abrasion to flatten and smooth wafer surfaces during semiconductor fabrication. A rotating pad with a chemically reactive slurry removes high spots, achieving angstrom-level flatness.',
+    relatedGameSlugs: ['cmp-process', 'photolithography', 'etching-process'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'The Planarization Problem', explanation: 'After depositing layers of metal and insulator, the wafer surface becomes uneven with height variations of hundreds of nanometers. Photolithography requires extreme flatness (within the depth of focus), so each layer must be planarized.' },
+      { title: 'Chemical Action', explanation: 'The CMP slurry contains chemical agents that soften or oxidize the wafer surface material. For copper CMP, an oxidizer converts surface copper to softer copper oxide. For oxide CMP, the slurry pH is tuned to weaken the silica surface.' },
+      { title: 'Mechanical Abrasion', explanation: 'The wafer is pressed face-down against a rotating polyurethane pad while slurry flows between them. Abrasive particles in the slurry (typically silica or ceria, 50-200 nm diameter) physically remove the chemically weakened surface material.' },
+      { title: 'Selective Removal', explanation: 'High spots on the wafer experience more pressure and contact, so they are removed faster than low spots. This differential removal rate is what achieves planarization. The process self-terminates as the surface becomes flat.' },
+      { title: 'Endpoint Detection', explanation: 'Optical or electrical sensors monitor the wafer surface in real-time to detect when the target thickness is reached. Over-polishing wastes material; under-polishing leaves surface topography that degrades lithography.' },
+    ],
+    realWorldApps: [
+      'Copper interconnect planarization in every modern processor',
+      'Shallow trench isolation (STI) for transistor separation',
+      'Back-end-of-line (BEOL) dielectric planarization',
+      'Advanced packaging wafer thinning and bonding surface preparation',
+    ],
+    faqItems: [
+      { question: 'Why can\'t we just use etching instead of CMP?', answer: 'Etching removes material uniformly from the entire surface, preserving topography rather than flattening it. CMP preferentially removes high spots because they experience more pressure, making it unique in its ability to achieve global planarization.' },
+      { question: 'How flat does CMP make a wafer?', answer: 'CMP achieves surface roughness below 0.5 nm RMS (root mean square) — smoother than a few atomic layers. Global planarity across the 300mm wafer is within a few tens of nanometers.' },
+      { question: 'What are CMP slurries made of?', answer: 'CMP slurries contain abrasive particles (silica, ceria, or alumina), chemical agents (oxidizers, pH buffers, complexing agents), and surfactants, all in deionized water. Different materials (copper, tungsten, oxide) require completely different slurry formulations.' },
+    ],
+  },
+  {
+    slug: 'chiplet-design',
+    title: 'How Do Chiplets Work?',
+    shortAnswer:
+      'Chiplets are small, modular semiconductor dies that are interconnected within a single package to function as one processor. Instead of building one massive monolithic chip, multiple smaller chips are manufactured separately and linked together, improving yield, enabling mix-and-match designs, and reducing costs.',
+    relatedGameSlugs: ['chiplet-design', 'mosfet-switching', 'photolithography'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'The Monolithic Scaling Problem', explanation: 'As chips grow larger, the probability of a defect killing the die increases exponentially. A 800 mm^2 chip at 5nm might have only 20-30% yield, while four 200 mm^2 chiplets could each achieve 80%+ yield, dramatically reducing cost.' },
+      { title: 'Die-to-Die Interconnect', explanation: 'Chiplets communicate through high-bandwidth, low-latency interconnects. Technologies include silicon interposers (2.5D), direct die-to-die bonding (3D), organic substrates, or embedded bridges (like Intel\'s EMIB) that provide thousands of connections.' },
+      { title: 'Heterogeneous Integration', explanation: 'Different chiplets can use different process nodes. A CPU compute chiplet might use cutting-edge 3nm while the I/O chiplet uses cheaper 6nm. Memory, analog, and specialized accelerators each use their optimal process.' },
+      { title: 'Standardization and Reuse', explanation: 'Chiplets enable a Lego-like approach to chip design. The same I/O chiplet can be paired with different numbers of compute chiplets to create product families. UCIe (Universal Chiplet Interconnect Express) is emerging as a standard interface.' },
+    ],
+    realWorldApps: [
+      'AMD EPYC and Ryzen processors using compute and I/O chiplets',
+      'Apple M-series Ultra chips bonding two dies together',
+      'Intel Ponte Vecchio GPU with 47 active chiplets',
+      'High-bandwidth memory (HBM) stacking DRAM on logic',
+    ],
+    faqItems: [
+      { question: 'Why not just make one big chip?', answer: 'Defect density makes large chips expensive. If a wafer has 0.1 defects/cm^2, a 100 mm^2 die has ~63% yield but a 800 mm^2 die has ~0.03% yield. Chiplets achieve the same total silicon area with far better combined yield.' },
+      { question: 'Do chiplets have performance penalties?', answer: 'Yes, die-to-die communication has higher latency (1-5 ns) and lower bandwidth per pin than on-die wires. But advanced packaging technologies are narrowing this gap, and careful architecture design minimizes the impact on real workloads.' },
+      { question: 'What is the difference between 2.5D and 3D packaging?', answer: '2.5D places chiplets side-by-side on a silicon interposer that provides interconnect. 3D stacks chiplets vertically with through-silicon vias (TSVs) connecting layers. 3D offers shorter connections but creates thermal challenges from stacked heat sources.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // AI & COMPUTING
+  // ----------------------------------------------------------------
+  {
+    slug: 'kv-cache',
+    title: 'How Does KV Cache Work?',
+    shortAnswer:
+      'KV (Key-Value) cache stores the previously computed attention key and value tensors during autoregressive text generation in transformer models. By caching these tensors, each new token only requires computing attention for one position instead of recomputing the entire sequence, reducing generation time from quadratic to linear.',
+    relatedGameSlugs: ['kv-cache', 'neural-network-inference', 'gpu-memory-bandwidth'],
+    category: 'ai',
+    steps: [
+      { title: 'Transformer Attention Mechanism', explanation: 'In a transformer, each token attends to all previous tokens by computing Query, Key, and Value matrices. The attention output is softmax(Q*K^T / sqrt(d_k)) * V. Without caching, generating token N requires recomputing all N rows of K and V.' },
+      { title: 'Caching Keys and Values', explanation: 'During generation, the K and V matrices for all previous positions are stored in GPU memory. When generating the next token, only the new token\'s Q, K, and V vectors need to be computed. The new K and V are appended to the cache.' },
+      { title: 'Memory-Compute Tradeoff', explanation: 'KV cache trades memory for computation. For a model with L layers, H heads, and dimension D, the cache for a sequence of length N requires 2 * L * H * D * N values. For large models (70B+ parameters) and long contexts (128K tokens), this can exceed 100 GB.' },
+      { title: 'Optimization Techniques', explanation: 'Grouped Query Attention (GQA) shares K/V heads to reduce cache size. Paged attention (vLLM) manages cache memory like virtual memory pages. Quantizing the cache to FP8 or INT4 halves or quarters memory usage with minimal quality loss.' },
+    ],
+    realWorldApps: [
+      'ChatGPT and other LLM chatbot inference serving',
+      'Real-time code completion and suggestion engines',
+      'Long-context document analysis and summarization',
+      'Batch inference in data processing pipelines',
+    ],
+    faqItems: [
+      { question: 'Why does KV cache matter for inference speed?', answer: 'Without KV cache, generating a sequence of N tokens requires O(N^2) total computation because each new token recomputes attention over all previous tokens. With KV cache, total computation is O(N), making long sequence generation practical.' },
+      { question: 'Why does long context require so much GPU memory?', answer: 'KV cache grows linearly with sequence length. A 70B parameter model with 128K context and FP16 cache can require 80-160 GB just for the cache. This is often the bottleneck limiting context length, not the model weights themselves.' },
+      { question: 'What is paged attention?', answer: 'Inspired by virtual memory paging in operating systems, paged attention (used in vLLM) allocates KV cache in fixed-size blocks rather than contiguous memory. This eliminates memory fragmentation and enables efficient batch processing of requests with different lengths.' },
+    ],
+  },
+  {
+    slug: 'quantization-ai',
+    title: 'How Does AI Quantization Work?',
+    shortAnswer:
+      'AI quantization reduces the numerical precision of neural network weights and activations from 32-bit or 16-bit floating point to lower bit widths (8-bit, 4-bit, or even 2-bit). This shrinks model size, reduces memory bandwidth requirements, and accelerates inference with minimal accuracy loss.',
+    relatedGameSlugs: ['quantization-ai', 'neural-network-inference', 'gpu-memory-bandwidth'],
+    category: 'ai',
+    steps: [
+      { title: 'Full Precision Baseline', explanation: 'Neural networks are typically trained in FP32 or BF16 (16-bit brain float). A 70B parameter model in FP16 requires 140 GB of memory just for weights, exceeding the capacity of a single high-end GPU.' },
+      { title: 'Mapping to Lower Precision', explanation: 'Quantization maps floating-point values to a reduced set of discrete levels. For INT8 quantization, values are scaled and rounded to 256 levels. For INT4, only 16 levels are used. The mapping can be linear (uniform) or non-linear (e.g., NF4 for normal distributions).' },
+      { title: 'Calibration and Error Minimization', explanation: 'Post-training quantization (PTQ) uses a small calibration dataset to determine optimal scale factors that minimize quantization error. More advanced methods like GPTQ and AWQ selectively protect salient weights that have outsized impact on output quality.' },
+      { title: 'Hardware Acceleration', explanation: 'Modern GPUs and NPUs have dedicated low-precision compute units. NVIDIA Tensor Cores compute INT8 at 2x the rate of FP16, and INT4 at 4x. This directly translates to faster inference when the model is quantized.' },
+      { title: 'Quality-Efficiency Tradeoff', explanation: 'INT8 quantization typically preserves 99%+ of model quality. INT4 may lose 1-3% on benchmarks. 2-bit quantization shows noticeable degradation. The acceptable tradeoff depends on the application\'s quality requirements and hardware constraints.' },
+    ],
+    realWorldApps: [
+      'Running large language models on consumer GPUs (GGUF format)',
+      'Mobile AI inference on smartphones and edge devices',
+      'Data center cost reduction for AI serving at scale',
+      'Real-time AI applications requiring low-latency inference',
+    ],
+    faqItems: [
+      { question: 'Does quantization require retraining the model?', answer: 'Not necessarily. Post-training quantization (PTQ) works on a pretrained model with a small calibration set. Quantization-aware training (QAT) inserts fake quantization during training for better results but requires the full training pipeline. Most practical deployments use PTQ.' },
+      { question: 'Why does 4-bit quantization work so well for LLMs?', answer: 'LLM weight distributions are approximately Gaussian with most values near zero and few outliers. Non-uniform quantization formats like NF4 (Normal Float 4) allocate more representation levels near zero where most weights cluster, preserving the important information.' },
+      { question: 'What is the difference between weight quantization and activation quantization?', answer: 'Weight quantization compresses the static model parameters, reducing storage and memory. Activation quantization also compresses the dynamic intermediate values during inference, further reducing memory bandwidth. Activation quantization is harder because activation distributions vary with input.' },
+    ],
+  },
+  {
+    slug: 'tensor-computation',
+    title: 'How Does Tensor Computation Work?',
+    shortAnswer:
+      'Tensor computation performs mathematical operations on multi-dimensional arrays (tensors) that represent data in neural networks and scientific computing. GPUs and specialized hardware like TPUs accelerate these operations through massive parallelism, processing thousands of multiply-accumulate operations simultaneously.',
+    relatedGameSlugs: ['tensor-computation', 'neural-network-inference', 'gpu-memory-bandwidth'],
+    category: 'ai',
+    steps: [
+      { title: 'Tensors as Data Structures', explanation: 'A tensor is a multi-dimensional array: a scalar is rank-0, a vector is rank-1, a matrix is rank-2, and higher-rank tensors generalize further. Neural network layers operate on tensors: a batch of RGB images is a rank-4 tensor (batch, height, width, channels).' },
+      { title: 'Matrix Multiplication as the Core Operation', explanation: 'Most neural network computation reduces to matrix multiplication (GEMM). A fully connected layer computes Y = X*W + b. Attention computes softmax(Q*K^T/sqrt(d))*V. Convolutions can be reshaped into matrix multiplications via im2col.' },
+      { title: 'Parallelism on GPUs', explanation: 'A modern GPU has thousands of CUDA cores organized into streaming multiprocessors. Matrix multiplication is inherently parallel: each output element is an independent dot product. GPUs tile the matrices and compute many elements simultaneously.' },
+      { title: 'Tensor Cores and Specialized Hardware', explanation: 'NVIDIA Tensor Cores perform 4x4 matrix multiply-accumulate in a single cycle, achieving 10-100x throughput over standard cores. Google TPUs have massive systolic arrays optimized for matrix multiplication. These accelerators make large-scale AI training and inference practical.' },
+      { title: 'Memory Hierarchy Optimization', explanation: 'Tensor computation is often memory-bandwidth limited, not compute-limited. Data must flow from HBM through L2 cache to registers. Techniques like operator fusion, tiling, and flash attention minimize data movement to keep compute units fed.' },
+    ],
+    realWorldApps: [
+      'Training and running large language models and image generators',
+      'Scientific simulations (weather forecasting, molecular dynamics)',
+      'Real-time graphics and ray tracing in games',
+      'Financial modeling and risk analysis using matrix operations',
+    ],
+    faqItems: [
+      { question: 'Why are GPUs better than CPUs for tensor computation?', answer: 'GPUs have thousands of simple cores optimized for parallel arithmetic, while CPUs have a few powerful cores optimized for sequential logic. Matrix multiplication is embarrassingly parallel, perfectly matching GPU architecture. A top GPU achieves 1000+ TFLOPS vs ~1 TFLOPS for a top CPU.' },
+      { question: 'What is a Tensor Core?', answer: 'A Tensor Core is a specialized hardware unit in NVIDIA GPUs that computes a 4x4 matrix multiply-accumulate in a single clock cycle. It supports multiple precision formats (FP16, BF16, INT8, FP8) and provides the bulk of AI compute throughput.' },
+      { question: 'What does it mean for AI to be memory-bandwidth limited?', answer: 'Modern GPUs can compute faster than they can feed data from memory. If a model has 70B parameters and each inference pass reads them once, that is 140 GB of data transfer at FP16. Even at 3 TB/s bandwidth (H100), just reading the weights takes ~47 ms, limiting tokens per second regardless of compute.' },
+    ],
+  },
+  {
+    slug: 'memory-bandwidth-ai',
+    title: 'How Does Memory Bandwidth Limit AI?',
+    shortAnswer:
+      'Memory bandwidth is the rate at which data can be read from or written to GPU memory (HBM). For large AI models, inference speed is often limited not by computational power but by how fast model weights can be streamed from memory to the compute units, making bandwidth the primary bottleneck.',
+    relatedGameSlugs: ['gpu-memory-bandwidth', 'neural-network-inference', 'kv-cache'],
+    category: 'ai',
+    steps: [
+      { title: 'The Arithmetic Intensity Problem', explanation: 'Arithmetic intensity is the ratio of compute operations to memory accesses. Matrix multiplication has high intensity (O(n^3) ops / O(n^2) memory). But many AI operations (element-wise, attention, small batches) have low intensity, making them memory-bound.' },
+      { title: 'Weight Loading Bottleneck', explanation: 'During autoregressive generation, each token requires reading all model weights from HBM. A 70B model at FP16 is 140 GB. At 3.35 TB/s (H100 HBM3), just loading the weights takes ~42 ms per token, limiting throughput to ~24 tokens/second regardless of compute capacity.' },
+      { title: 'The Roofline Model', explanation: 'The roofline model plots achievable performance against arithmetic intensity. Below the "roofline," performance is bandwidth-limited. Above it, performance is compute-limited. Most LLM inference operations fall in the bandwidth-limited region.' },
+      { title: 'Mitigation Strategies', explanation: 'Quantization (INT4, INT8) reduces the bytes per weight, directly increasing effective bandwidth. Batching amortizes weight loading across multiple requests. Model parallelism across GPUs multiplies available bandwidth. Speculative decoding generates multiple tokens per weight load.' },
+    ],
+    realWorldApps: [
+      'LLM serving infrastructure design and GPU selection',
+      'Determining optimal batch sizes for AI inference',
+      'Cost-performance analysis for AI hardware purchasing',
+      'Designing custom AI accelerators with HBM configurations',
+    ],
+    faqItems: [
+      { question: 'Why do AI chips need HBM instead of regular DRAM?', answer: 'High Bandwidth Memory (HBM) stacks multiple DRAM dies vertically with thousands of through-silicon vias (TSVs), providing 3-6x the bandwidth of GDDR6. An H100 GPU achieves 3.35 TB/s with HBM3, versus ~1 TB/s for GDDR6-based designs. This bandwidth directly determines AI inference speed.' },
+      { question: 'Does buying a GPU with more TFLOPS make AI faster?', answer: 'Not necessarily. If your workload is memory-bandwidth limited (most LLM inference is), more compute power sits idle waiting for data. A GPU with 50% more TFLOPS but the same bandwidth will show minimal speedup. Bandwidth, not FLOPS, is usually the metric that matters for inference.' },
+      { question: 'How does batching help with memory bandwidth?', answer: 'When processing a batch of B requests, the model weights are loaded once and reused for all B inputs. This increases arithmetic intensity by factor B, shifting from bandwidth-limited to compute-limited. Batch size is limited by the GPU memory available for activations and KV cache.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // SOLAR (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'bypass-diode',
+    title: 'How Does a Bypass Diode Work?',
+    shortAnswer:
+      'A bypass diode is connected in reverse-parallel across a solar cell or panel to provide an alternative current path when the cell is shaded or damaged. Without it, a shaded cell becomes a resistive load that dissipates power as heat and can cause hot spots.',
+    relatedGameSlugs: ['bypass-diode', 'solar-cell', 'series-parallel-circuits'],
+    category: 'solar',
+    steps: [
+      { title: 'Series String Problem', explanation: 'Solar cells in series must all carry the same current. If one cell is shaded and cannot produce the string current, it becomes reverse-biased and dissipates power as heat instead of generating it.' },
+      { title: 'Bypass Diode Activation', explanation: 'The bypass diode is connected with its anode on the negative terminal and cathode on the positive terminal of the cell. When the cell is shaded and reverse-biased beyond about 0.4-0.7V, the diode forward-conducts, carrying the string current around the shaded cell.' },
+      { title: 'Hot Spot Prevention', explanation: 'Without the bypass diode, a shaded cell in a 20-cell string can dissipate the full string power (potentially hundreds of watts) in a small area. The diode limits reverse voltage to about 0.7V, reducing dissipation to a safe level.' },
+      { title: 'Partial Shading Performance', explanation: 'With bypass diodes, a partially shaded panel loses only the output of the shaded section rather than the entire panel. Modern panels typically have 3 bypass diodes covering substrings of 20-24 cells each.' },
+    ],
+    realWorldApps: [
+      'Residential and commercial solar panel protection',
+      'Solar arrays on satellites and space stations',
+      'Portable solar chargers for camping and hiking',
+      'Solar-powered vehicle charging systems',
+    ],
+    faqItems: [
+      { question: 'How many bypass diodes does a typical solar panel have?', answer: 'Most 60-cell or 72-cell residential panels have 3 bypass diodes, each protecting a substring of 20-24 cells. Some newer panels use cell-level optimization with more diodes for finer granularity.' },
+      { question: 'Do bypass diodes reduce power output?', answer: 'When active, a bypass diode carries the full string current at about 0.4-0.7V forward drop, dissipating a small amount of power. But this is vastly less than the power that would be lost without the diode due to the shaded cell dragging down the entire string.' },
+      { question: 'What is the difference between bypass diodes and blocking diodes?', answer: 'Bypass diodes route current around a shaded cell within a string. Blocking diodes (connected in series with a string) prevent reverse current from flowing into a string at night or when one parallel string underperforms. They serve opposite protective functions.' },
+    ],
+  },
+  {
+    slug: 'fill-factor-solar',
+    title: 'How Does Fill Factor Affect Solar Panels?',
+    shortAnswer:
+      'Fill factor (FF) is the ratio of a solar cell\'s maximum power output to the product of its open-circuit voltage and short-circuit current. It measures how closely the cell\'s current-voltage curve approaches an ideal rectangle, with higher fill factors indicating lower resistive and recombination losses.',
+    relatedGameSlugs: ['fill-factor', 'solar-cell', 'mppt'],
+    category: 'solar',
+    steps: [
+      { title: 'I-V Curve Shape', explanation: 'A solar cell\'s current vs voltage curve starts at the short-circuit current (I_sc) and drops to zero at the open-circuit voltage (V_oc). The shape of this curve determines how much power can be extracted.' },
+      { title: 'Maximum Power Point', explanation: 'The maximum power point (MPP) is the voltage-current pair that maximizes P = I * V. This occurs at the knee of the I-V curve. The fill factor is FF = (V_mpp * I_mpp) / (V_oc * I_sc).' },
+      { title: 'Loss Mechanisms', explanation: 'Series resistance (contact resistance, bulk resistance) reduces FF by causing voltage drops at high current. Shunt resistance (defects creating leakage paths) reduces FF by allowing current to bypass the junction. Recombination losses also degrade FF.' },
+      { title: 'Practical Values', explanation: 'Crystalline silicon cells achieve FF of 0.75-0.85. Thin-film cells typically reach 0.60-0.70. The theoretical maximum depends on the bandgap and temperature. Higher FF directly translates to higher efficiency for given V_oc and I_sc.' },
+    ],
+    realWorldApps: [
+      'Solar cell quality control during manufacturing',
+      'MPPT algorithm optimization for maximum energy harvest',
+      'Comparing different solar cell technologies and materials',
+      'Diagnosing degradation in installed solar panels',
+    ],
+    faqItems: [
+      { question: 'What is a good fill factor for a solar panel?', answer: 'Commercial crystalline silicon panels typically have fill factors of 0.75-0.82. High-efficiency cells from companies like SunPower achieve 0.83-0.85. Values below 0.70 suggest significant resistive losses or defects.' },
+      { question: 'How does temperature affect fill factor?', answer: 'Higher temperature increases recombination and decreases V_oc, which typically reduces fill factor by about 0.1-0.2% per degree Celsius. This is one reason solar panels perform better in cool, sunny conditions than in hot climates.' },
+      { question: 'Can fill factor exceed 1?', answer: 'No. A fill factor of 1 would mean the I-V curve is a perfect rectangle, which is physically impossible due to the exponential nature of diode behavior. Even ideal diodes with zero resistance have FF around 0.89 for silicon.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // THERMODYNAMICS & HEAT TRANSFER (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'convection-heat',
+    title: 'How Does Convection Work?',
+    shortAnswer:
+      'Convection is heat transfer through the bulk movement of a fluid (liquid or gas). Hot fluid rises because it is less dense, while cooler fluid sinks, creating circulation patterns that transport thermal energy far more effectively than conduction alone.',
+    relatedGameSlugs: ['convection', 'heat-sink-design', 'thermal-conductivity'],
+    category: 'thermodynamics',
+    steps: [
+      { title: 'Buoyancy-Driven Flow', explanation: 'Heating a fluid decreases its density. In a gravitational field, the lighter hot fluid rises while denser cold fluid sinks, creating convection currents. This natural convection requires no external pump or fan.' },
+      { title: 'Boundary Layer Formation', explanation: 'Near a hot surface, a thin thermal boundary layer forms where the fluid temperature transitions from the surface temperature to the bulk temperature. The thickness of this layer controls the rate of heat transfer.' },
+      { title: 'Newton\'s Law of Cooling', explanation: 'The convective heat flux is q = h * (T_surface - T_fluid), where h is the convection coefficient. For natural convection in air, h is typically 5-25 W/(m^2*K); for forced convection, 25-250 W/(m^2*K).' },
+      { title: 'Forced Convection Enhancement', explanation: 'Fans, pumps, or wind create forced convection that thins the boundary layer and increases h by 10-100x compared to natural convection. Turbulent flow further enhances mixing and heat transfer.' },
+      { title: 'Convection Cells', explanation: 'In enclosed or large-scale systems, convection organizes into cells (Rayleigh-Benard cells). These are seen in boiling water, atmospheric weather patterns, and mantle convection driving plate tectonics.' },
+    ],
+    realWorldApps: [
+      'Home heating systems using radiators and warm air circulation',
+      'Weather patterns and atmospheric circulation cells',
+      'Ocean current circulation distributing global heat',
+      'Cooling towers at power plants using natural draft convection',
+    ],
+    faqItems: [
+      { question: 'Why does hot air rise?', answer: 'Heating air causes it to expand and become less dense than the surrounding cooler air. Buoyancy (Archimedes\' principle in a fluid) pushes the lighter air upward, just as a helium balloon rises. The hot air doesn\'t inherently "want" to go up; it is pushed by the heavier cold air around it.' },
+      { question: 'What is the difference between convection and conduction?', answer: 'Conduction transfers heat through molecular vibrations without bulk material movement (e.g., heat traveling through a metal bar). Convection transfers heat by physically moving heated fluid from one place to another, which is typically much faster.' },
+      { question: 'Does convection work in space?', answer: 'Natural convection requires gravity to create buoyancy-driven flow. In microgravity (e.g., on the ISS), there is no natural convection, which is why cooling electronics in space requires forced convection with fans or liquid cooling loops.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // MECHANICS (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'angular-momentum',
+    title: 'How Does Angular Momentum Conservation Work?',
+    shortAnswer:
+      'The law of conservation of angular momentum states that the total angular momentum of a system remains constant when no external torque acts on it. When a spinning object reduces its moment of inertia, it must spin faster to keep L = I * omega constant.',
+    relatedGameSlugs: ['angular-momentum', 'gyroscope-stability', 'gyroscopic-precession'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Angular Momentum Defined', explanation: 'Angular momentum L = I * omega for a rigid body, where I is the moment of inertia (distribution of mass about the axis) and omega is the angular velocity. For a point particle, L = r x p (cross product of position and linear momentum).' },
+      { title: 'No External Torque Condition', explanation: 'Conservation applies when the net external torque is zero: dL/dt = tau_net = 0. Internal forces and torques can redistribute angular momentum between parts of a system, but the total remains constant.' },
+      { title: 'Moment of Inertia Changes', explanation: 'When a spinning body changes shape (changing I), omega must adjust to keep L constant. Pulling mass inward decreases I and increases omega. This is why an ice skater spins faster when pulling in their arms.' },
+      { title: 'Vector Nature', explanation: 'Angular momentum is a vector quantity — both magnitude and direction are conserved. This is why a spinning gyroscope maintains its orientation in space and why planets maintain their orbital planes.' },
+    ],
+    realWorldApps: [
+      'Figure skating spins (arms in = faster, arms out = slower)',
+      'Spacecraft attitude control using reaction wheels',
+      'Earth\'s constant rotation and the stability of its axis tilt',
+      'Helicopter tail rotors counteracting body rotation',
+    ],
+    faqItems: [
+      { question: 'Why does an ice skater spin faster when pulling in their arms?', answer: 'The skater\'s angular momentum L = I*omega is conserved (ice friction provides negligible torque). Pulling arms inward reduces moment of inertia I by perhaps 3x. To keep L constant, omega must increase by the same factor, tripling the spin rate.' },
+      { question: 'Is angular momentum always conserved?', answer: 'Only when no net external torque acts on the system. Friction, gravity (if off-center), and applied forces can exert torques that change angular momentum. But for an isolated system, conservation is absolute — it is one of the fundamental conservation laws.' },
+      { question: 'How do cats always land on their feet?', answer: 'Cats use differential rotation: they twist their front and back halves in sequence while changing their moment of inertia. By extending or tucking legs asymmetrically, they can rotate their body without any external torque, exploiting the vector nature of angular momentum conservation.' },
+    ],
+  },
+  {
+    slug: 'centripetal-force',
+    title: 'How Does Centripetal Force Work?',
+    shortAnswer:
+      'Centripetal force is the inward-directed force that keeps an object moving in a circular path. It is not a new type of force but rather the net inward force (gravity, tension, friction, or normal force) that continuously deflects an object\'s velocity toward the center of the circle.',
+    relatedGameSlugs: ['centripetal-force', 'orbital-mechanics', 'coriolis-effect'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Circular Motion Requires Acceleration', explanation: 'An object moving in a circle at constant speed is continuously changing direction, which means it is accelerating. This centripetal acceleration a = v^2/r points toward the center of the circle.' },
+      { title: 'Newton\'s Second Law', explanation: 'By F = ma, the centripetal acceleration requires a net inward force: F_c = m*v^2/r = m*omega^2*r. This force must be provided by something physical — tension, gravity, friction, or a normal force.' },
+      { title: 'What Provides the Force', explanation: 'For a ball on a string: tension. For a planet orbiting the Sun: gravity. For a car turning: friction between tires and road. For a roller coaster loop: the combination of normal force and gravity. The nature of the force depends on the situation.' },
+      { title: 'Centrifugal "Force" in the Rotating Frame', explanation: 'In a rotating reference frame, objects appear to be pushed outward by a fictitious centrifugal force. This is not a real force but an artifact of the non-inertial frame. In the inertial frame, the object simply follows Newton\'s laws with the real centripetal force.' },
+    ],
+    realWorldApps: [
+      'Banked road curves designed for safe vehicle turning',
+      'Centrifuges separating blood components or enriching uranium',
+      'Satellite orbital mechanics where gravity provides centripetal force',
+      'Washing machine spin cycles using centripetal acceleration for water extraction',
+    ],
+    faqItems: [
+      { question: 'Is centrifugal force real?', answer: 'In an inertial (non-rotating) reference frame, centrifugal force does not exist — there is only the centripetal force pulling inward. In a rotating reference frame, centrifugal force is a fictitious (pseudo) force that accounts for the frame\'s acceleration. Both descriptions give correct predictions.' },
+      { question: 'Why do you feel pushed outward in a turning car?', answer: 'Your body tends to continue in a straight line (Newton\'s first law). The car turns inward beneath you, and the seat/door pushes you inward (centripetal force). You interpret this as being pushed outward, but it is actually the car pushing you inward while your inertia resists.' },
+      { question: 'Why does a satellite not fall down?', answer: 'A satellite is falling — toward Earth\'s center. But it also has tangential velocity, so as it falls, the curved Earth drops away beneath it. The gravitational centripetal force curves its path into a circle (or ellipse), and it perpetually falls around Earth without hitting the surface.' },
+    ],
+  },
+  {
+    slug: 'pendulum-physics',
+    title: 'How Does a Pendulum Work?',
+    shortAnswer:
+      'A pendulum swings back and forth due to the restoring force of gravity. When displaced from equilibrium, the component of gravity along the arc pulls it back. For small angles, the motion is simple harmonic with a period that depends only on the pendulum length and gravitational acceleration, not on mass or amplitude.',
+    relatedGameSlugs: ['pendulum-physics', 'resonance', 'standing-waves'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Restoring Force', explanation: 'When a pendulum is displaced by angle theta from vertical, the tangential component of gravity is -mg*sin(theta), directed back toward equilibrium. This restoring force is what causes oscillation.' },
+      { title: 'Small Angle Approximation', explanation: 'For small angles (theta < ~15 degrees), sin(theta) is approximately equal to theta (in radians), making the restoring force proportional to displacement. This gives simple harmonic motion with period T = 2*pi*sqrt(L/g), independent of mass and amplitude.' },
+      { title: 'Energy Exchange', explanation: 'At the extremes of swing, the pendulum has maximum gravitational potential energy and zero kinetic energy. At the bottom, all energy is kinetic. Energy continuously converts between these forms, with total mechanical energy conserved in the ideal case.' },
+      { title: 'Damping and Driving', explanation: 'Real pendulums lose energy to air drag and friction at the pivot, causing amplitude to decay. A clock mechanism or electromagnetic drive can replenish energy each cycle, maintaining constant amplitude. Resonance occurs when the drive frequency matches the natural frequency.' },
+    ],
+    realWorldApps: [
+      'Pendulum clocks providing accurate timekeeping for centuries',
+      'Seismometers detecting earthquake ground motion',
+      'Foucault pendulum demonstrating Earth\'s rotation',
+      'Tuned mass dampers in skyscrapers reducing wind sway',
+    ],
+    faqItems: [
+      { question: 'Why doesn\'t the mass of the pendulum affect its period?', answer: 'Both the restoring force (gravity, proportional to m) and the inertia (resistance to acceleration, also proportional to m) scale with mass. These cancel in F = ma, leaving the period dependent only on length and g. This is the same reason all objects fall at the same rate.' },
+      { question: 'Does a pendulum swing forever?', answer: 'No. Air resistance and pivot friction gradually convert mechanical energy to heat, reducing amplitude until the pendulum stops. In a vacuum with a frictionless pivot, it would theoretically swing forever, but this is practically unachievable.' },
+      { question: 'Why are longer pendulums slower?', answer: 'A longer pendulum has a larger arc to travel for the same angle, while the restoring acceleration (g*sin(theta)) is the same regardless of length. The period scales as sqrt(L), so doubling length increases the period by about 41%.' },
+    ],
+  },
+  {
+    slug: 'hookes-law',
+    title: 'How Does Hooke\'s Law Work?',
+    shortAnswer:
+      'Hooke\'s law states that the force needed to extend or compress a spring is proportional to the displacement from its natural length: F = -k*x. This linear relationship holds for small deformations in elastic materials and is the basis for understanding vibrations, material elasticity, and spring-based mechanisms.',
+    relatedGameSlugs: ['hookes-law', 'resonance', 'pendulum-physics'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Linear Restoring Force', explanation: 'When a spring is stretched or compressed by distance x from equilibrium, it exerts a force F = -k*x opposing the displacement. The spring constant k (in N/m) characterizes the stiffness: higher k means a stiffer spring.' },
+      { title: 'Elastic Potential Energy', explanation: 'Work done against the spring force is stored as elastic potential energy: U = (1/2)*k*x^2. This energy can be fully recovered when the spring returns to equilibrium, making it a conservative force.' },
+      { title: 'Simple Harmonic Motion', explanation: 'A mass m on a spring oscillates with angular frequency omega = sqrt(k/m) and period T = 2*pi*sqrt(m/k). The motion is sinusoidal: x(t) = A*cos(omega*t + phi). Heavier masses oscillate more slowly; stiffer springs oscillate faster.' },
+      { title: 'Elastic Limit and Beyond', explanation: 'Hooke\'s law holds only for small deformations within the elastic limit. Beyond this, materials undergo plastic (permanent) deformation. The stress-strain curve departs from linearity, and the spring no longer returns to its original length.' },
+    ],
+    realWorldApps: [
+      'Vehicle suspension springs absorbing road bumps',
+      'Mechanical watches using balance springs for timekeeping',
+      'Force measurement in spring scales and load cells',
+      'Structural engineering predicting building deflection under load',
+    ],
+    faqItems: [
+      { question: 'Does Hooke\'s law apply to all materials?', answer: 'All solid materials obey Hooke\'s law for sufficiently small deformations. The elastic region varies enormously: rubber can stretch 500% elastically, while glass breaks at less than 0.1% strain. Beyond the elastic limit, permanent deformation occurs.' },
+      { question: 'What happens when you connect springs in series vs parallel?', answer: 'Springs in series (end to end) have a combined stiffness of 1/k_total = 1/k1 + 1/k2, making the system softer. Springs in parallel (side by side) have k_total = k1 + k2, making it stiffer. This is the opposite of how electrical resistors combine.' },
+      { question: 'Why does Hooke\'s law use a negative sign?', answer: 'The negative sign indicates the force opposes the displacement. Stretching the spring (positive x) produces a force pulling back (negative F). Compressing it (negative x) produces a pushing force (positive F). This restoring nature is what creates oscillation.' },
+    ],
+  },
+  {
+    slug: 'drag-force-physics',
+    title: 'How Does Drag Force Work?',
+    shortAnswer:
+      'Drag force is the resistive force that a fluid (air or water) exerts on an object moving through it. It opposes the direction of motion and increases with velocity, fluid density, object size, and shape, described by F_drag = (1/2)*C_d*rho*A*v^2.',
+    relatedGameSlugs: ['drag-force', 'terminal-velocity', 'bernoulli'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Pressure Drag (Form Drag)', explanation: 'As an object moves through fluid, it creates a high-pressure zone in front and a low-pressure wake behind. The pressure difference creates a net backward force. Streamlined shapes reduce the wake, dramatically lowering pressure drag.' },
+      { title: 'Skin Friction Drag', explanation: 'The fluid directly in contact with the surface sticks to it (no-slip condition), creating a velocity gradient in the boundary layer. Viscous shear stress along the surface resists motion. This dominates for streamlined bodies at moderate speeds.' },
+      { title: 'The Drag Equation', explanation: 'Drag force F = (1/2)*C_d*rho*A*v^2, where C_d is the drag coefficient (shape-dependent), rho is fluid density, A is the reference area (usually frontal area), and v is velocity. The v^2 dependence means doubling speed quadruples drag.' },
+      { title: 'Reynolds Number Effects', explanation: 'The Reynolds number Re = rho*v*L/mu determines flow regime. At low Re (slow, small, viscous), drag is proportional to velocity (Stokes drag). At high Re (fast, large, turbulent), drag follows the v^2 law. The transition is complex and shape-dependent.' },
+    ],
+    realWorldApps: [
+      'Automotive aerodynamic design reducing fuel consumption',
+      'Aircraft drag minimization for efficiency and range',
+      'Parachute design for controlled deceleration',
+      'Cycling and swimming body positions minimizing drag',
+    ],
+    faqItems: [
+      { question: 'Why does drag increase with the square of velocity?', answer: 'At high speeds, the force comes from deflecting a mass of fluid. The mass of fluid encountered per second scales with v (more fluid per second), and the momentum change of each parcel scales with v. The product gives F proportional to v^2.' },
+      { question: 'What is a drag coefficient?', answer: 'The drag coefficient C_d is a dimensionless number that encapsulates the effect of shape and surface roughness. A flat plate perpendicular to flow has C_d of about 1.2; a sphere about 0.47; a streamlined airfoil about 0.04. Lower C_d means less drag for the same area and speed.' },
+      { question: 'Can drag ever be beneficial?', answer: 'Yes. Parachutes use high drag intentionally. Aerodynamic braking uses drag for deceleration (spacecraft re-entry). Badminton shuttlecocks use drag for flight stability. Race cars use spoilers that increase drag but also create downforce for cornering.' },
+    ],
+  },
+  {
+    slug: 'terminal-velocity',
+    title: 'How Does Terminal Velocity Work?',
+    shortAnswer:
+      'Terminal velocity is the constant speed a falling object reaches when the upward drag force equals the downward gravitational force. At this point, the net force is zero, acceleration stops, and the object falls at a constant rate determined by its weight, size, and shape.',
+    relatedGameSlugs: ['terminal-velocity', 'drag-force', 'buoyancy'],
+    category: 'mechanics',
+    steps: [
+      { title: 'Initial Free Fall', explanation: 'When an object begins falling, gravity accelerates it downward at g = 9.81 m/s^2. At low speed, drag is negligible, and the object accelerates almost as if in a vacuum.' },
+      { title: 'Drag Increases with Speed', explanation: 'As velocity increases, drag force grows as v^2. The net downward force (weight minus drag) decreases, so acceleration decreases. The object still speeds up, but more and more slowly.' },
+      { title: 'Equilibrium at Terminal Velocity', explanation: 'When drag equals weight: (1/2)*C_d*rho*A*v_t^2 = mg. Solving: v_t = sqrt(2mg / (C_d*rho*A)). At this speed, net force is zero, acceleration is zero, and velocity remains constant.' },
+      { title: 'Factors Affecting Terminal Velocity', explanation: 'Heavier objects have higher terminal velocity (a bowling ball vs a tennis ball). Larger cross-section area or higher drag coefficient reduces terminal velocity (parachute). Thinner air at high altitude increases terminal velocity.' },
+    ],
+    realWorldApps: [
+      'Skydiving freefall speed (about 55 m/s belly-down, 90 m/s head-down)',
+      'Raindrop size limiting in clouds (larger drops break apart)',
+      'Parachute design for safe landing speeds',
+      'Sedimentation rates in water treatment and geology',
+    ],
+    faqItems: [
+      { question: 'What is the terminal velocity of a skydiver?', answer: 'About 55 m/s (120 mph) in a belly-down spread position, or about 90 m/s (200 mph) in a head-down streamlined position. The difference is due to the change in frontal area and drag coefficient between positions.' },
+      { question: 'Do heavier objects really fall faster?', answer: 'In a vacuum, no — all objects fall at the same rate. In air, yes — heavier objects reach higher terminal velocity because they need more drag to balance their greater weight, which requires higher speed. A bowling ball\'s terminal velocity far exceeds a feather\'s.' },
+      { question: 'Can terminal velocity change during a fall?', answer: 'Yes. As a skydiver descends into denser air at lower altitude, drag increases and terminal velocity decreases. A skydiver in freefall at 30,000 feet has higher terminal velocity than at 5,000 feet due to the thinner air at altitude.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // FLUID MECHANICS (additional)
+  // ----------------------------------------------------------------
+  {
+    slug: 'siphon-physics',
+    title: 'How Does a Siphon Work?',
+    shortAnswer:
+      'A siphon transfers liquid over a barrier from a higher reservoir to a lower one using a tube, powered by gravity and atmospheric pressure. Once started, the weight of liquid in the descending leg creates a pressure difference that pulls liquid continuously through the tube without a pump.',
+    relatedGameSlugs: ['siphon-physics', 'bernoulli', 'buoyancy'],
+    category: 'fluids',
+    steps: [
+      { title: 'Priming the Siphon', explanation: 'The tube must first be filled with liquid (by suction, submersion, or pre-filling). Once filled, the liquid forms a continuous chain from the source reservoir over the apex and down to the outlet.' },
+      { title: 'Gravity Drives the Flow', explanation: 'The descending leg contains more liquid height than the ascending leg (measured from the surface of each reservoir). The weight difference creates a net downward force that pulls liquid through the tube. Flow continues as long as the outlet is below the source surface level.' },
+      { title: 'Pressure Analysis', explanation: 'At the tube entrance, pressure is atmospheric plus the depth of submersion. At the apex, pressure drops below atmospheric (by rho*g*h where h is the height above the source surface). At the outlet, flow velocity maintains the pressure gradient.' },
+      { title: 'Maximum Height Limit', explanation: 'The siphon fails if the apex is too high. When the pressure at the apex drops to the liquid\'s vapor pressure, the liquid column breaks (cavitation). For water at sea level, the theoretical maximum height is about 10.3 meters (34 feet).' },
+    ],
+    realWorldApps: [
+      'Draining aquariums and swimming pools without pumps',
+      'Ancient Roman aqueducts crossing valleys using inverted siphons',
+      'Toilet flush mechanisms using siphon action',
+      'Transferring fuel or chemicals between containers',
+    ],
+    faqItems: [
+      { question: 'Does a siphon work in a vacuum?', answer: 'This is debated. Classical explanations require atmospheric pressure to push liquid up the ascending leg. However, experiments in partial vacuums show siphons still work, suggesting liquid cohesion (tensile strength) plays a role. A siphon definitely fails if the liquid vaporizes at the apex.' },
+      { question: 'Why does a siphon stop when air enters the tube?', answer: 'Air breaks the continuous liquid chain, eliminating the cohesive connection between the ascending and descending legs. The descending liquid drains out, the ascending liquid falls back, and the gravitational driving force can no longer pull liquid over the apex.' },
+      { question: 'Can a siphon move water uphill?', answer: 'A siphon can move water over a barrier that is higher than both reservoirs, but the outlet must always be lower than the inlet (source surface). Water always flows from the higher reservoir to the lower one — the siphon just allows it to pass over obstacles in between.' },
+    ],
+  },
+  {
+    slug: 'cavitation-physics',
+    title: 'How Does Cavitation Work?',
+    shortAnswer:
+      'Cavitation is the formation and violent collapse of vapor bubbles in a liquid when local pressure drops below the liquid\'s vapor pressure. The collapsing bubbles produce extreme pressures, temperatures, and shock waves that can erode metal surfaces and generate noise.',
+    relatedGameSlugs: ['cavitation-physics', 'bernoulli', 'venturi-effect'],
+    category: 'fluids',
+    steps: [
+      { title: 'Pressure Drop Below Vapor Pressure', explanation: 'In regions of high-speed flow (pump impellers, propeller tips, valve orifices), Bernoulli\'s principle causes local pressure to drop. When pressure falls below the liquid\'s vapor pressure, dissolved gas comes out of solution and the liquid vaporizes, forming bubbles.' },
+      { title: 'Bubble Growth', explanation: 'Vapor bubbles expand rapidly in the low-pressure zone, fed by vaporization and dissolved gas release. Bubble size depends on the pressure deficit and duration of exposure to low pressure.' },
+      { title: 'Violent Collapse', explanation: 'When bubbles are carried to higher-pressure regions, they collapse asymmetrically in microseconds. The implosion generates temperatures exceeding 5,000K and pressures above 1,000 atmospheres in a tiny volume, producing a micro-jet of liquid.' },
+      { title: 'Damage Mechanisms', explanation: 'The micro-jets and shock waves from collapsing bubbles repeatedly impact surfaces, creating pitting and erosion. Over time, this destroys pump impellers, propellers, and valve seats. The collapse also produces characteristic crackling noise and vibration.' },
+    ],
+    realWorldApps: [
+      'Propeller design to minimize cavitation erosion on ships',
+      'Ultrasonic cleaning using controlled cavitation to remove contaminants',
+      'Hydraulic machinery damage assessment and prevention',
+      'Medical lithotripsy using shock waves to break kidney stones',
+    ],
+    faqItems: [
+      { question: 'Why is cavitation destructive to propellers?', answer: 'Each cavitation bubble collapse impacts the propeller surface with a micro-jet at velocities up to 100 m/s. Millions of these impacts per second create fatigue and erosion, eventually pitting and destroying the metal surface. Bronze propellers are used for their cavitation resistance.' },
+      { question: 'Can cavitation be useful?', answer: 'Yes. Ultrasonic cleaners intentionally create cavitation bubbles near contaminated surfaces, using the micro-jets to dislodge dirt. Cavitation is also used in homogenization, water treatment, and surgical procedures. Mantis shrimp weaponize cavitation to stun prey.' },
+      { question: 'How do engineers prevent cavitation?', answer: 'By ensuring pressure never drops below vapor pressure: increasing inlet pressure, reducing flow velocities, using larger flow passages, and designing smooth blade profiles. NPSH (Net Positive Suction Head) calculations for pumps specifically guard against cavitation.' },
+    ],
+  },
+  // ----------------------------------------------------------------
+  // COMPUTER MEMORY
+  // ----------------------------------------------------------------
+  {
+    slug: 'ecc-memory',
+    title: 'How Does ECC Memory Work?',
+    shortAnswer:
+      'Error-Correcting Code (ECC) memory detects and corrects single-bit errors in RAM by storing extra parity bits alongside data. Using Hamming codes or similar algorithms, ECC memory can identify and fix one flipped bit per memory word, preventing data corruption from cosmic rays and electrical noise.',
+    relatedGameSlugs: ['ecc-memory', 'dram-refresh', 'series-parallel-circuits'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'The Problem: Bit Flips', explanation: 'DRAM stores each bit as a tiny charge on a capacitor. Cosmic rays, alpha particles from packaging materials, and electrical noise can flip a bit from 0 to 1 or vice versa. At modern densities, a typical server experiences several bit flips per GB per year.' },
+      { title: 'Hamming Code Encoding', explanation: 'For every 64 bits of data, ECC memory stores 8 additional check bits (72 bits total on a DIMM). The check bits are computed as parity across specific subsets of data bits, creating a redundant code that can locate any single-bit error.' },
+      { title: 'Error Detection and Correction', explanation: 'On each read, the memory controller recomputes the check bits and compares them to the stored values. A mismatch pattern (syndrome) identifies the exact bit position of a single-bit error, which is then flipped back to correct it. Two-bit errors are detected but not correctable.' },
+      { title: 'SECDED Codes', explanation: 'The standard ECC scheme is SECDED: Single Error Correction, Double Error Detection. It corrects any 1-bit error silently and detects (but cannot fix) 2-bit errors, triggering a machine check exception. Three or more simultaneous errors may go undetected.' },
+    ],
+    realWorldApps: [
+      'Server and data center memory ensuring data integrity',
+      'Scientific computing where a single bit flip can invalidate results',
+      'Financial systems where memory errors could corrupt transactions',
+      'Aerospace and medical systems requiring high reliability',
+    ],
+    faqItems: [
+      { question: 'Do consumer PCs need ECC memory?', answer: 'Most consumer PCs do not use ECC because bit flip rates are low enough that the occasional error rarely causes noticeable problems. However, for workstations running long computations or handling irreplaceable data, ECC provides valuable protection. AMD Ryzen supports ECC; most Intel consumer chips do not.' },
+      { question: 'How much does ECC memory cost compared to non-ECC?', answer: 'ECC DIMMs cost about 10-20% more than equivalent non-ECC modules due to the extra memory chips (9 chips instead of 8 per rank). The memory controller must also support ECC, which limits compatible platforms.' },
+      { question: 'Can ECC fix multi-bit errors?', answer: 'Standard SECDED ECC corrects only single-bit errors. Chipkill (AMD) or SDDC (Intel) extends protection to handle an entire failed memory chip by distributing data across chips. Advanced ECC schemes in HBM can correct multi-bit errors within a single chip.' },
+    ],
+  },
+  {
+    slug: 'dram-refresh',
+    title: 'How Does DRAM Refresh Work?',
+    shortAnswer:
+      'DRAM stores each bit as a charge on a tiny capacitor, but this charge leaks away in milliseconds. To prevent data loss, the memory controller periodically reads and rewrites every row in the memory array, typically every 32-64 milliseconds, in a process called refresh.',
+    relatedGameSlugs: ['dram-refresh', 'ecc-memory', 'capacitor-charging'],
+    category: 'semiconductors',
+    steps: [
+      { title: 'Capacitor-Based Storage', explanation: 'Each DRAM cell consists of one transistor and one capacitor. A charged capacitor represents a "1" and a discharged one represents a "0". The capacitor is extremely small (femtofarads) and stores only a tiny amount of charge.' },
+      { title: 'Charge Leakage', explanation: 'The access transistor and surrounding silicon are not perfect insulators. Junction leakage, sub-threshold conduction, and dielectric absorption cause the stored charge to decay over time. Without refresh, data is lost within about 64-256 milliseconds.' },
+      { title: 'Row-by-Row Refresh', explanation: 'The memory controller issues refresh commands that activate one row at a time. Reading the row amplifies the decayed charges through sense amplifiers, then writes the refreshed values back. All rows must be refreshed within the retention time (typically 64 ms for DDR4/DDR5).' },
+      { title: 'Performance and Power Impact', explanation: 'During refresh, the refreshed row (and often the entire bank) is unavailable for read/write operations. In a large DRAM chip with thousands of rows, refresh occupies 5-10% of total time and consumes significant power, especially in mobile devices.' },
+    ],
+    realWorldApps: [
+      'All modern computers, phones, and servers using DRAM',
+      'Low-power mobile DRAM with temperature-dependent refresh rates',
+      'High-capacity server memory requiring careful refresh scheduling',
+      'Embedded systems using DRAM for cost-effective high-density storage',
+    ],
+    faqItems: [
+      { question: 'Why not use SRAM instead of DRAM to avoid refresh?', answer: 'SRAM stores data in flip-flops that don\'t need refresh, but each cell requires 6 transistors versus 1 for DRAM. SRAM is about 6x larger per bit and much more expensive. DRAM\'s density advantage makes it the only practical choice for main memory (gigabytes), while SRAM is used for small caches (megabytes).' },
+      { question: 'Does DRAM data survive a power outage?', answer: 'No. DRAM is volatile memory — when power is lost, the capacitor charges dissipate within milliseconds and all data is lost. This is why computers lose unsaved work on power failure and why persistent storage (SSD, HDD) is needed for long-term data retention.' },
+      { question: 'What is the cold boot attack?', answer: 'DRAM charge decays slowly at low temperatures. By cooling DRAM chips to -50°C (e.g., with compressed air spray), data can persist for minutes without power. Attackers can remove the DIMMs, install them in another system, and read encryption keys from memory. This is a real security vulnerability.' },
+    ],
+  },
 ];
 
 // ============================================================

@@ -3,7 +3,7 @@
  *
  * Each entry provides a meta title, description, concept tags, difficulty,
  * estimated completion time, and FAQ items for structured data (JSON-LD).
- * Covers 50+ of the most important game modules across all categories.
+ * Covers all 301 game modules across all categories.
  */
 
 // ============================================================
@@ -715,5 +715,3139 @@ export function getGameSEO(slug: string): GameSEOResult {
     title,
     description: `Explore ${title} through an interactive simulation. Predict outcomes, experiment with variables, and test your understanding.`,
     estimatedMinutes: 10,
-  };
+  
+
+
+  // ================================================================
+  // BATCH 1
+  // ================================================================
+
+'adiabatic-heating': {
+    metaTitle: 'Adiabatic Heating & Cooling — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate adiabatic heating and cooling of gases. Compress or expand gas without heat exchange and observe temperature changes governed by the first law of thermodynamics.',
+    concepts: ['adiabatic process', 'gas compression', 'thermodynamics', 'first law of thermodynamics'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is an adiabatic process?', answer: 'An adiabatic process is one where no heat is exchanged with the surroundings. All energy changes come from work done on or by the gas, causing temperature to rise during compression and fall during expansion.' },
+      { question: 'Why does a bicycle pump get hot?', answer: 'Compressing air in the pump does work on the gas adiabatically. Since no heat escapes quickly, the internal energy and temperature of the gas increase, warming the pump barrel.' }
+    ],
+  },
+
+  'angular-momentum-transfer': {
+    metaTitle: 'Angular Momentum Transfer — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore angular momentum transfer between rotating objects. Visualize how torque and collisions redistribute rotational motion while total angular momentum is conserved.',
+    concepts: ['angular momentum', 'torque', 'moment of inertia', 'rotational collision'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'How is angular momentum transferred between objects?', answer: 'Angular momentum transfers through torques applied over time (impulse). When two rotating objects interact, one gains angular momentum while the other loses an equal amount, keeping the total constant.' },
+      { question: 'What is a real-world example of angular momentum transfer?', answer: 'A figure skater pushing off a partner transfers angular momentum. Spacecraft use reaction wheels that spin up or down to transfer angular momentum and control orientation without fuel.' }
+    ],
+  },
+
+  'antenna-polarization': {
+    metaTitle: 'Antenna Polarization Matching — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate antenna polarization alignment and signal loss. Rotate transmitting and receiving antennas to see how polarization mismatch reduces received power by cos-squared law.',
+    concepts: ['polarization', 'antenna alignment', 'electromagnetic waves', 'signal attenuation'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What is antenna polarization?', answer: 'Antenna polarization describes the orientation of the electric field radiated by the antenna. Common types include linear (vertical or horizontal), circular, and elliptical polarization.' },
+      { question: 'Why does polarization mismatch matter?', answer: 'When transmitting and receiving antennas have mismatched polarization, signal power is reduced. A 90-degree mismatch can cause complete signal loss, following the cos-squared law.' }
+    ],
+  },
+
+  'anti-reflective-coating': {
+    metaTitle: 'Anti-Reflective Coating — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design anti-reflective thin film coatings interactively. Adjust coating thickness and refractive index to minimize reflection through destructive interference of light waves.',
+    concepts: ['thin film interference', 'anti-reflection', 'refractive index', 'optical coating'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How do anti-reflective coatings work?', answer: 'They use thin films whose thickness causes reflected waves from the top and bottom surfaces to destructively interfere. When the film is a quarter-wavelength thick, reflections cancel out.' },
+      { question: 'Why do coated lenses appear slightly purple or green?', answer: 'AR coatings are optimized for a specific wavelength, usually in the middle of the visible spectrum. Wavelengths at the edges (red and blue) are not fully cancelled, giving a residual tint.' }
+    ],
+  },
+
+  'arrhenius': {
+    metaTitle: 'Arrhenius Equation — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the Arrhenius equation and temperature-dependent reaction rates. Adjust activation energy and temperature to see how chemical reaction speeds change exponentially.',
+    concepts: ['Arrhenius equation', 'activation energy', 'reaction rate', 'temperature dependence'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What does the Arrhenius equation describe?', answer: 'It relates reaction rate to temperature: k = A * exp(-Ea/RT). Higher temperatures provide more molecules with enough energy to overcome the activation energy barrier, speeding up the reaction.' },
+      { question: 'What is activation energy?', answer: 'Activation energy (Ea) is the minimum energy molecules must have to react. A catalyst lowers Ea without being consumed, allowing reactions to proceed faster at the same temperature.' }
+    ],
+  },
+
+  'ask-for-assumptions': {
+    metaTitle: 'Ask for Assumptions — Interactive AI Prompt Simulator | Atlas Coach',
+    metaDescription: 'Practice the "ask for assumptions" prompting technique. Learn how explicitly requesting an LLM to state its assumptions improves response clarity and reduces errors.',
+    concepts: ['prompt engineering', 'LLM assumptions', 'AI reasoning', 'chain-of-thought'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'Why should you ask an LLM to state its assumptions?', answer: 'LLMs make implicit assumptions that can lead to incorrect or misleading answers. By asking the model to list assumptions first, you can catch errors early and steer the response.' },
+      { question: 'How does this technique improve AI output quality?', answer: 'Stating assumptions forces the model to reason more carefully before answering. It also gives you the chance to correct wrong assumptions, leading to more accurate and relevant responses.' }
+    ],
+  },
+
+  'attention-loves-bandwidth': {
+    metaTitle: 'Attention Loves Bandwidth — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize how attention mechanisms consume memory bandwidth in transformers. Adjust sequence length and model size to see GPU bandwidth bottlenecks in real time.',
+    concepts: ['attention mechanism', 'memory bandwidth', 'GPU utilization', 'transformer performance'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'Why is attention memory-bandwidth bound?', answer: 'Attention computes Q*K^T and softmax for every token pair, requiring massive memory reads. The arithmetic intensity is low compared to data movement, making it bandwidth-limited on modern GPUs.' },
+      { question: 'How does sequence length affect bandwidth requirements?', answer: 'Attention scales quadratically with sequence length (O(n^2)). Doubling the sequence length quadruples the memory traffic for the attention layer, quickly saturating available bandwidth.' }
+    ],
+  },
+
+  'attention-memory': {
+    metaTitle: 'Attention Memory in Transformers — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how transformer attention allocates memory across layers and heads. Visualize KV cache growth and understand memory scaling with sequence length and batch size.',
+    concepts: ['KV cache', 'transformer memory', 'attention heads', 'sequence length scaling'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What is the KV cache in transformers?', answer: 'The KV cache stores key and value tensors from previous tokens during autoregressive generation. This avoids recomputing attention over the entire sequence at each step, trading memory for speed.' },
+      { question: 'How does attention memory scale with sequence length?', answer: 'KV cache memory grows linearly with sequence length per layer. With many layers and large hidden dimensions, a 100K-token context can require tens of gigabytes of GPU memory.' }
+    ],
+  },
+
+  'ballistic-pendulum': {
+    metaTitle: 'Ballistic Pendulum — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Measure projectile velocity using a ballistic pendulum simulation. Fire a projectile into a pendulum bob and apply conservation of momentum and energy to find the speed.',
+    concepts: ['ballistic pendulum', 'momentum conservation', 'energy conservation', 'projectile velocity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does a ballistic pendulum measure bullet speed?', answer: 'A bullet embeds in the pendulum bob (inelastic collision conserving momentum). The bob then swings upward (conserving energy). Measuring the swing height lets you calculate the bullet\'s velocity.' },
+      { question: 'Why can\'t you use energy conservation alone for the collision step?', answer: 'The bullet embedding in the bob is a perfectly inelastic collision where kinetic energy is not conserved. You must use momentum conservation for the collision, then energy conservation for the swing.' }
+    ],
+  },
+
+  'batching-latency': {
+    metaTitle: 'Batching Latency in GPU Inference — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate the tradeoff between batching requests and inference latency. Adjust batch size, arrival rate, and GPU throughput to optimize AI serving performance.',
+    concepts: ['request batching', 'inference latency', 'GPU throughput', 'queuing theory'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does batching improve GPU inference throughput?', answer: 'GPUs are massively parallel. Processing one request uses a fraction of available cores. Batching fills more cores per pass, amortizing fixed overhead and increasing tokens processed per second.' },
+      { question: 'What is the tradeoff between batch size and latency?', answer: 'Larger batches improve throughput but increase latency because each request waits for the batch to fill. Finding the optimal batch size balances per-request latency against overall system throughput.' }
+    ],
+  },
+
+  'battery-internal-resistance': {
+    metaTitle: 'Battery Internal Resistance — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how battery internal resistance affects voltage and power delivery. Adjust load resistance and observe voltage drop, heat dissipation, and maximum power transfer.',
+    concepts: ['internal resistance', 'voltage drop', 'maximum power transfer', 'battery efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is battery internal resistance?', answer: 'Internal resistance is the opposition to current flow inside the battery itself. It causes the terminal voltage to drop below the EMF when current flows, and generates heat inside the battery.' },
+      { question: 'How does internal resistance affect battery performance?', answer: 'Higher internal resistance means more voltage drop under load, more wasted heat, and less power delivered to the external circuit. Aged batteries have higher internal resistance and poorer performance.' }
+    ],
+  },
+
+  'beats': {
+    metaTitle: 'Beat Frequency — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Hear and visualize beat frequencies from two close sound waves. Adjust the frequency of each wave and observe the amplitude modulation pattern that produces audible beats.',
+    concepts: ['beat frequency', 'superposition', 'wave interference', 'amplitude modulation'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'What causes beats in sound?', answer: 'Beats occur when two waves of slightly different frequencies interfere. The waves alternately reinforce and cancel, producing a pulsing volume at the beat frequency equal to the difference of the two frequencies.' },
+      { question: 'How are beats used in music?', answer: 'Musicians use beats to tune instruments. When two notes are slightly out of tune, audible beats are heard. As the frequencies get closer, the beats slow down and vanish when perfectly in tune.' }
+    ],
+  },
+
+  'bifacial-albedo': {
+    metaTitle: 'Bifacial Solar Module Albedo — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate bifacial solar panel energy gain from ground-reflected light. Adjust ground albedo, module height, and tilt to maximize rear-side irradiance and total energy yield.',
+    concepts: ['bifacial gain', 'ground albedo', 'rear irradiance', 'solar energy yield'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What is bifacial gain in solar modules?', answer: 'Bifacial gain is the extra energy produced by the rear side of a bifacial solar panel from ground-reflected light. Typical gains range from 5-30% depending on ground albedo and mounting height.' },
+      { question: 'How does ground albedo affect bifacial performance?', answer: 'Higher albedo surfaces (white gravel, snow) reflect more sunlight to the rear of the panel. Grass has ~25% albedo while white surfaces can exceed 60%, significantly boosting bifacial energy yield.' }
+    ],
+  },
+
+  'bimetal-thermostat': {
+    metaTitle: 'Bimetallic Strip Thermostat — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate a bimetallic strip thermostat switching on and off. Adjust temperature and see how differential thermal expansion bends the strip to open or close a circuit.',
+    concepts: ['thermal expansion', 'bimetallic strip', 'thermostat', 'temperature control'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a bimetallic strip thermostat work?', answer: 'Two metals with different expansion coefficients are bonded together. When heated, one expands more than the other, causing the strip to bend. This bending opens or closes an electrical contact.' },
+      { question: 'What metals are typically used in bimetallic strips?', answer: 'Common pairs include brass (high expansion) bonded to invar or steel (low expansion). The greater the difference in thermal expansion coefficients, the more the strip bends per degree of temperature change.' }
+    ],
+  },
+
+  'boiling-pressure': {
+    metaTitle: 'Boiling Point & Pressure — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how atmospheric pressure affects boiling point. Adjust altitude and pressure to see water boil at different temperatures using the Clausius-Clapeyron relation.',
+    concepts: ['boiling point', 'vapor pressure', 'Clausius-Clapeyron equation', 'phase transition'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does water boil at a lower temperature at high altitude?', answer: 'Atmospheric pressure decreases with altitude. Water boils when its vapor pressure equals atmospheric pressure, so lower pressure means a lower boiling temperature — about 95°C at 1500m elevation.' },
+      { question: 'What is the Clausius-Clapeyron equation?', answer: 'It relates vapor pressure to temperature: dP/dT = L/(T*deltaV). It quantifies how much the boiling point changes with pressure, using the latent heat and volume change of vaporization.' }
+    ],
+  },
+
+  'bottle-tornado': {
+    metaTitle: 'Bottle Tornado Vortex — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Create a virtual bottle tornado and explore vortex dynamics. Swirl water between connected bottles and observe how angular momentum creates a stable air-core vortex.',
+    concepts: ['vortex dynamics', 'angular momentum', 'fluid rotation', 'Bernoulli effect'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a bottle tornado form?', answer: 'Swirling the bottle gives the water angular momentum. As water drains through the neck, conservation of angular momentum speeds up the rotation, creating a funnel-shaped vortex with an air core.' },
+      { question: 'Why does the vortex make water drain faster?', answer: 'The air core created by the vortex allows air to flow up into the top bottle while water flows down. Without the vortex, air and water compete for the narrow neck, causing slow glug-glug draining.' }
+    ],
+  },
+
+  'brachistochrone': {
+    metaTitle: 'Brachistochrone Curve — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Race balls down different curves to find the fastest path. Compare straight lines, parabolas, and the cycloid brachistochrone to discover the curve of fastest descent.',
+    concepts: ['brachistochrone', 'cycloid', 'calculus of variations', 'optimization'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What is the brachistochrone curve?', answer: 'It is the curve of fastest descent between two points under gravity. Discovered independently by Newton, Bernoulli, and others, the solution is an inverted cycloid — the curve traced by a point on a rolling circle.' },
+      { question: 'Why is the brachistochrone faster than a straight line?', answer: 'The cycloid dips steeply at first, converting potential energy to kinetic energy quickly. The ball reaches high speed early, covering the flatter section fast enough to beat the shorter but slower straight path.' }
+    ],
+  },
+
+  'brewster-angle': {
+    metaTitle: 'Brewster\'s Angle — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate Brewster\'s angle and complete polarization of reflected light. Adjust the angle of incidence and refractive index to find where reflected light becomes fully polarized.',
+    concepts: ['Brewster\'s angle', 'polarization', 'reflection', 'refractive index'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is Brewster\'s angle?', answer: 'Brewster\'s angle is the angle of incidence at which reflected light is completely polarized (p-polarization has zero reflectance). It equals arctan(n2/n1), about 56.3° for glass in air.' },
+      { question: 'Why are polarized sunglasses effective near Brewster\'s angle?', answer: 'Light reflected off roads and water near Brewster\'s angle is strongly horizontally polarized. Polarized lenses block this horizontal component, dramatically reducing glare.' }
+    ],
+  },
+
+  'buckling': {
+    metaTitle: 'Column Buckling — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate Euler column buckling under compressive loads. Adjust column length, cross-section, and end conditions to find the critical buckling load and observe failure modes.',
+    concepts: ['Euler buckling', 'critical load', 'slenderness ratio', 'structural stability'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What is Euler buckling?', answer: 'Euler buckling is the sudden lateral deflection of a slender column under axial compression. The critical load is P_cr = pi^2*E*I/L^2, depending on material stiffness, cross-section, and length.' },
+      { question: 'How do end conditions affect buckling load?', answer: 'Fixed ends resist rotation and increase the effective buckling load by up to 4x compared to pinned ends. The effective length factor K ranges from 0.5 (fixed-fixed) to 2.0 (fixed-free cantilever).' }
+    ],
+  },
+
+  'bypass-diodes': {
+    metaTitle: 'Bypass Diodes in Solar Modules — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate bypass diode operation in partially shaded solar panels. See how bypass diodes prevent hot spots and maintain power output when individual cells are shaded.',
+    concepts: ['bypass diode', 'partial shading', 'hot spot', 'solar module I-V curve'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What do bypass diodes do in a solar panel?', answer: 'Bypass diodes provide an alternative current path around shaded or damaged cells. Without them, shaded cells become reverse-biased, dissipating power as heat and potentially causing hot spot damage.' },
+      { question: 'How many bypass diodes does a typical solar panel have?', answer: 'Most standard 60 or 72-cell panels have three bypass diodes, each protecting a substring of 20-24 cells. When one substring is shaded, its bypass diode activates and the other substrings continue producing power.' }
+    ],
+  },
+
+  'c-m-p-planarization': {
+    metaTitle: 'CMP Planarization — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate chemical mechanical planarization in semiconductor fabrication. Adjust pressure, slurry chemistry, and pad speed to achieve wafer surface flatness at nanometer scale.',
+    concepts: ['CMP', 'wafer planarization', 'semiconductor fabrication', 'surface flatness'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is chemical mechanical planarization?', answer: 'CMP combines chemical etching with mechanical abrasion to flatten wafer surfaces. A rotating pad with abrasive slurry removes material from high points, achieving sub-nanometer surface uniformity.' },
+      { question: 'Why is planarization critical in chip manufacturing?', answer: 'Modern chips have dozens of metal layers. Each layer must be flat for accurate photolithography. Without CMP, topography accumulates and depth-of-focus limits prevent printing fine features.' }
+    ],
+  },
+
+  'cable-sizing': {
+    metaTitle: 'Electrical Cable Sizing — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Size electrical cables for voltage drop and current capacity. Input load current, cable length, and material to find the minimum wire gauge that meets code requirements.',
+    concepts: ['voltage drop', 'wire gauge', 'current capacity', 'electrical resistance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does cable sizing matter for voltage drop?', answer: 'Long cable runs have significant resistance that drops voltage before reaching the load. Undersized cables waste energy as heat and may cause equipment to malfunction from low supply voltage.' },
+      { question: 'What is the typical maximum allowable voltage drop?', answer: 'Most electrical codes recommend no more than 3% voltage drop for branch circuits and 5% total from service entrance to load. Solar installations often target 1-2% to maximize energy harvest.' }
+    ],
+  },
+
+  'camera-obscura': {
+    metaTitle: 'Camera Obscura — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build a virtual camera obscura and explore pinhole imaging. Adjust aperture size and distance to see how inverted images form and how sharpness trades off with brightness.',
+    concepts: ['pinhole imaging', 'camera obscura', 'geometric optics', 'image formation'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'How does a camera obscura form an image?', answer: 'Light from each point of a scene passes through a small pinhole and hits the opposite wall. Because light travels in straight lines, the image appears inverted both vertically and horizontally.' },
+      { question: 'Why does a smaller pinhole produce a sharper but dimmer image?', answer: 'A smaller hole limits each scene point to a tighter cone of light, sharpening the image. However, less total light enters, making the image dimmer. Too small a hole causes diffraction blur.' }
+    ],
+  },
+
+  'capacitive-touch': {
+    metaTitle: 'Capacitive Touch Sensing — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate capacitive touch screen technology. See how a finger changes the local capacitance of a sensor grid and how the controller detects touch position from charge changes.',
+    concepts: ['capacitive sensing', 'mutual capacitance', 'touch detection', 'electric field'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does capacitive touch sensing work?', answer: 'A grid of electrodes creates an electric field above the screen. A finger (conductive) disturbs this field, changing the capacitance at that location. The controller measures these changes to determine touch position.' },
+      { question: 'Why don\'t gloves work on capacitive touch screens?', answer: 'Standard gloves are insulating and block the finger\'s conductivity from coupling to the sensor grid. Special touchscreen gloves use conductive threads in the fingertips to pass the electrical signal through.' }
+    ],
+  },
+
+  'capillary-action': {
+    metaTitle: 'Capillary Action — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate capillary action in narrow tubes. Adjust tube diameter, liquid surface tension, and contact angle to see how liquids rise or fall against gravity in thin channels.',
+    concepts: ['capillary action', 'surface tension', 'contact angle', 'meniscus'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'What causes capillary action?', answer: 'Capillary action results from the balance between adhesive forces (liquid attracted to the tube wall) and cohesive forces (liquid molecules attracted to each other). When adhesion dominates, liquid rises in the tube.' },
+      { question: 'Why does capillary rise increase in narrower tubes?', answer: 'The Jurin height formula h = 2*gamma*cos(theta)/(rho*g*r) shows height is inversely proportional to tube radius. Narrower tubes have a higher surface-to-volume ratio, so surface tension lifts more liquid per unit weight.' }
+    ],
+  },
+
+  // ================================================================
+  // BATCH 2
+  // ================================================================
+
+'cartesian-diver': {
+    metaTitle: 'Cartesian Diver - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Squeeze the bottle and watch the diver sink. Explore how pressure changes affect buoyancy, gas compressibility, and density in this classic fluid mechanics demo.',
+    concepts: ['buoyancy', 'pressure', 'compressibility', 'density', 'Cartesian diver'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a Cartesian diver work?', answer: 'Squeezing the bottle increases pressure, compressing the air bubble inside the diver. This increases the diver\'s average density above that of water, causing it to sink.' },
+      { question: 'Why does the diver rise when you release pressure?', answer: 'Releasing pressure lets the trapped air expand, lowering the diver\'s average density below water. Buoyant force then exceeds gravity and the diver floats back up.' },
+    ],
+  },
+
+  'cavitation': {
+    metaTitle: 'Cavitation - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize cavitation bubbles forming in low-pressure fluid zones. Adjust flow speed and pressure to see how vapor cavities collapse and damage surfaces.',
+    concepts: ['cavitation', 'vapor pressure', 'bubble collapse', 'fluid dynamics', 'erosion'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes cavitation?', answer: 'When local fluid pressure drops below the vapor pressure, tiny vapor bubbles form. These bubbles collapse violently when they enter higher-pressure regions, generating shock waves.' },
+      { question: 'Why is cavitation harmful to pumps and propellers?', answer: 'Collapsing bubbles produce micro-jets and pressures exceeding 1 GPa, eroding metal surfaces over time. Cavitation can destroy pump impellers and propeller blades within months.' },
+    ],
+  },
+
+  'cell-to-module-losses': {
+    metaTitle: 'Cell to Module Losses - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Trace power losses from individual solar cells to assembled modules. Quantify resistive, optical, and mismatch losses that reduce real-world panel efficiency.',
+    concepts: ['cell-to-module loss', 'resistive loss', 'optical loss', 'cell mismatch', 'module efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the main cell-to-module losses?', answer: 'Resistive losses in ribbons and busbars, optical losses from glass and encapsulant absorption, cell mismatch, and inactive area between cells. Total losses are typically 2-5%.' },
+      { question: 'Can cell-to-module losses be negative?', answer: 'Yes. Light trapping and edge reflection can boost module power above the sum of individual cell powers, giving a cell-to-module gain of up to 2-3% in some designs.' },
+    ],
+  },
+
+  'center-of-mass': {
+    metaTitle: 'Center of Mass - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Position masses on a plane and watch the center of mass update in real time. Explore stability, balance points, and how mass distribution affects motion.',
+    concepts: ['center of mass', 'balance', 'stability', 'mass distribution', 'torque'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the center of mass?', answer: 'The weighted average position of all mass in a system. An object supported at its center of mass balances perfectly. Free objects rotate around this point.' },
+      { question: 'Why do high jumpers arch their backs?', answer: 'The Fosbury Flop lets the athlete\'s center of mass pass under the bar while their body goes over it. This reduces the required jump height by 10-15 cm.' },
+    ],
+  },
+
+  'chain-fountain': {
+    metaTitle: 'Chain Fountain - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch a bead chain leap upward from a jar in the mesmerizing chain fountain effect. Explore the physics of momentum, rigidity, and the Mould effect.',
+    concepts: ['chain fountain', 'Mould effect', 'momentum', 'rigid body dynamics', 'self-siphoning'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does the chain rise above the jar?', answer: 'As beads are picked up, the rigid links push off the pile, providing an upward kick force. This extra force launches the chain above the jar rim, creating the fountain arc.' },
+      { question: 'What factors affect the fountain height?', answer: 'Drop height, bead size, chain rigidity, and link length all matter. Longer drops and more rigid chains produce taller fountains. Ball chains work best due to their link structure.' },
+    ],
+  },
+
+  'chiller-c-o-p': {
+    metaTitle: 'Chiller COP - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate a chiller system and calculate its coefficient of performance. Adjust condenser and evaporator temperatures to optimize cooling efficiency in real time.',
+    concepts: ['coefficient of performance', 'chiller', 'refrigeration cycle', 'Carnot COP', 'evaporator'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is chiller COP?', answer: 'COP = cooling output / electrical input. A COP of 5 means 5 kW of cooling per 1 kW of electricity. Modern chillers achieve COP values of 4-7 under design conditions.' },
+      { question: 'How does temperature affect chiller COP?', answer: 'COP drops as the temperature difference between evaporator and condenser increases. Raising chilled water temperature by 1 degree C can improve COP by 2-4%.' },
+    ],
+  },
+
+  'chiplet-architecture': {
+    metaTitle: 'Chiplet Architecture - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design a chiplet-based processor and explore yield, interconnect, and heterogeneous integration tradeoffs. See why chiplets dominate modern chip packaging.',
+    concepts: ['chiplet', 'advanced packaging', 'die-to-die interconnect', 'heterogeneous integration', 'yield'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What advantages do chiplets offer over monolithic dies?', answer: 'Higher yield from smaller dies, ability to mix process nodes, modular design reuse, and lower cost. A defect kills only a small chiplet instead of a large expensive die.' },
+      { question: 'What are the challenges of chiplet architecture?', answer: 'Die-to-die interconnects add latency and power overhead. Packaging complexity increases cost. Thermal management and signal integrity across chiplet boundaries require careful design.' },
+    ],
+  },
+
+  'chladni-patterns': {
+    metaTitle: 'Chladni Patterns - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Drive a virtual plate at resonant frequencies and watch sand form Chladni patterns. Explore nodal lines, mode shapes, and how vibration creates geometric beauty.',
+    concepts: ['Chladni patterns', 'vibration modes', 'nodal lines', 'resonant frequency', 'standing waves'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How do Chladni patterns form?', answer: 'Sand bounces off vibrating regions and settles on nodal lines where the plate is stationary. Each resonant frequency produces a unique pattern of nodes.' },
+      { question: 'What do Chladni patterns reveal about instruments?', answer: 'Violin makers use Chladni patterns to visualize plate vibrations. Symmetric, well-defined patterns indicate uniform wood properties and predict the instrument\'s tonal quality.' },
+    ],
+  },
+
+  'chromatic-aberration': {
+    metaTitle: 'Chromatic Aberration - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Observe color fringing as a lens focuses different wavelengths at different points. Adjust lens curvature and material to understand and correct chromatic aberration.',
+    concepts: ['chromatic aberration', 'dispersion', 'achromatic doublet', 'Abbe number', 'color fringing'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes chromatic aberration?', answer: 'Glass refracts shorter wavelengths (blue) more than longer ones (red) due to dispersion. A single lens focuses blue light closer than red, creating color fringes at edges.' },
+      { question: 'How is chromatic aberration corrected?', answer: 'An achromatic doublet combines a convex crown glass lens with a concave flint glass lens. Their dispersions cancel, bringing two wavelengths to the same focus.' },
+    ],
+  },
+
+  'circuits': {
+    metaTitle: 'Circuits - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build and analyze electric circuits with resistors, batteries, and switches. Apply Ohm\'s law, trace current paths, and measure voltage drops in real time.',
+    concepts: ['electric circuit', 'Ohm\'s law', 'series circuit', 'parallel circuit', 'voltage'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is Ohm\'s law?', answer: 'V = IR. Voltage across a resistor equals current times resistance. Double the resistance and current halves for the same voltage. This is the foundation of circuit analysis.' },
+      { question: 'What is the difference between series and parallel circuits?', answer: 'In series, components share the same current and voltages add. In parallel, components share the same voltage and currents add. Most real circuits use both.' },
+    ],
+  },
+
+  'classic-d-c-motor': {
+    metaTitle: 'Classic DC Motor - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Spin a virtual DC motor and explore torque, back-EMF, and speed control. Adjust voltage and load to understand how brushed DC motors convert electricity to motion.',
+    concepts: ['DC motor', 'back-EMF', 'torque', 'commutator', 'armature'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does a DC motor work?', answer: 'Current through the armature coil creates a magnetic field that interacts with permanent magnets, producing torque. The commutator reverses current each half-turn to maintain rotation.' },
+      { question: 'What is back-EMF in a DC motor?', answer: 'As the armature spins, it generates a voltage opposing the supply (back-EMF). At steady speed, back-EMF nearly equals supply voltage, limiting current and balancing torque with load.' },
+    ],
+  },
+
+  'cleanroom-yield': {
+    metaTitle: 'Cleanroom Yield - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate semiconductor cleanroom contamination and its effect on die yield. Adjust particle density and die size to predict wafer yield using Poisson models.',
+    concepts: ['cleanroom', 'particle contamination', 'die yield', 'defect density', 'Poisson model'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How do particles affect semiconductor yield?', answer: 'A single particle on a wafer can short or open a circuit trace, killing that die. Yield drops exponentially with defect density and die area according to the Poisson yield model.' },
+      { question: 'What cleanroom class is needed for chip manufacturing?', answer: 'Modern fabs use ISO Class 1-3 (fewer than 10-1000 particles per cubic meter). For comparison, outdoor air contains millions of particles per cubic meter.' },
+    ],
+  },
+
+  'clock-distribution': {
+    metaTitle: 'Clock Distribution - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design a clock distribution network for a digital chip. Balance skew, manage buffers, and explore H-tree and mesh topologies to synchronize billions of transistors.',
+    concepts: ['clock distribution', 'clock skew', 'clock tree', 'H-tree', 'buffer insertion'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is clock skew?', answer: 'The difference in clock arrival times at different parts of a chip. Excessive skew causes timing violations. Modern designs target skew below 5% of the clock period.' },
+      { question: 'Why is clock distribution so challenging?', answer: 'The clock must reach billions of transistors simultaneously. Wire delays, capacitive loading, and process variations all cause skew. Clock networks consume 30-40% of total chip power.' },
+    ],
+  },
+
+  'clock-jitter': {
+    metaTitle: 'Clock Jitter - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize timing uncertainty in digital clock signals. Measure period jitter, cycle-to-cycle jitter, and explore how noise sources degrade timing margins.',
+    concepts: ['clock jitter', 'timing uncertainty', 'phase noise', 'PLL', 'timing margin'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is clock jitter?', answer: 'Random variation in the timing of clock edges from their ideal positions. It reduces the available timing window for data capture and limits maximum operating frequency.' },
+      { question: 'How does jitter affect high-speed data converters?', answer: 'In ADCs, jitter causes sampling at the wrong moment, adding noise. At 1 GHz sampling, just 1 ps of jitter limits SNR to about 56 dB, regardless of converter resolution.' },
+    ],
+  },
+
+  'cloud-in-bottle': {
+    metaTitle: 'Cloud in a Bottle - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Create a cloud inside a virtual bottle by changing pressure and temperature. Explore adiabatic cooling, condensation nuclei, and how real clouds form in the atmosphere.',
+    concepts: ['cloud formation', 'adiabatic cooling', 'condensation nuclei', 'vapor pressure', 'dew point'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a cloud form in a bottle?', answer: 'Releasing pressure causes air to expand and cool adiabatically. When temperature drops below the dew point, water vapor condenses on smoke particles or ions, forming a visible cloud.' },
+      { question: 'Why are condensation nuclei needed?', answer: 'Pure water vapor requires extreme supersaturation to condense without nuclei. Tiny particles (dust, smoke, salt) provide surfaces where condensation starts easily at modest supersaturation.' },
+    ],
+  },
+
+  'convection': {
+    metaTitle: 'Convection - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate convective heat transfer from heated surfaces. Adjust temperature, geometry, and fluid properties to compare natural and forced convection coefficients.',
+    concepts: ['convection', 'heat transfer coefficient', 'natural convection', 'forced convection', 'Nusselt number'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between natural and forced convection?', answer: 'Natural convection is driven by buoyancy from temperature-induced density differences. Forced convection uses external means like fans or pumps. Forced convection transfers heat 5-50x faster.' },
+      { question: 'What is the Nusselt number?', answer: 'Nu = hL/k, the ratio of convective to conductive heat transfer. Higher Nu means convection dominates. For forced turbulent flow in pipes, Nu is typically 100-1000.' },
+    ],
+  },
+
+  'convection-currents': {
+    metaTitle: 'Convection Currents - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch fluid circulation patterns driven by temperature differences. Heat a fluid from below and observe how density-driven convection currents form and evolve.',
+    concepts: ['convection currents', 'Rayleigh number', 'buoyancy-driven flow', 'thermal plume', 'circulation cell'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What drives convection currents?', answer: 'Heating a fluid reduces its density. Hot fluid rises, cool fluid sinks to replace it, creating a continuous circulation loop. The temperature difference and fluid properties determine the flow strength.' },
+      { question: 'Where do convection currents occur in nature?', answer: 'In Earth\'s mantle (driving plate tectonics), in the atmosphere (creating wind and weather), in oceans (thermohaline circulation), and in stars (transporting energy from the core).' },
+    ],
+  },
+
+  'coupled-pendulums': {
+    metaTitle: 'Coupled Pendulums - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Connect two pendulums with a spring and watch energy transfer back and forth. Explore normal modes, beat frequencies, and resonant energy exchange in coupled oscillators.',
+    concepts: ['coupled oscillators', 'normal modes', 'energy transfer', 'beat frequency', 'resonance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are normal modes in coupled pendulums?', answer: 'The two normal modes are in-phase (both swing together) and anti-phase (they swing oppositely). Any motion is a superposition of these two modes at their distinct frequencies.' },
+      { question: 'Why does energy transfer between coupled pendulums?', answer: 'When the two normal mode frequencies are close, their superposition creates slow beats. Energy appears to shuttle from one pendulum to the other at the beat frequency.' },
+    ],
+  },
+
+  'crosstalk': {
+    metaTitle: 'Crosstalk - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate electromagnetic crosstalk between parallel signal traces. Adjust spacing, length, and rise time to measure near-end and far-end crosstalk coupling.',
+    concepts: ['crosstalk', 'capacitive coupling', 'inductive coupling', 'NEXT', 'FEXT'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes crosstalk in circuits?', answer: 'Capacitive coupling (electric field between traces) and inductive coupling (magnetic field from current loops) transfer energy from an aggressor signal to a nearby victim trace.' },
+      { question: 'How can crosstalk be reduced?', answer: 'Increase trace spacing, add ground planes, use shorter parallel runs, slow down rise times, or use differential signaling. The 3W rule keeps traces 3x width apart for minimal coupling.' },
+    ],
+  },
+
+  'cycloid-motion': {
+    metaTitle: 'Cycloid Motion - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Trace the cycloid curve generated by a point on a rolling circle. Explore brachistochrone and tautochrone properties of this elegant mathematical curve.',
+    concepts: ['cycloid', 'rolling motion', 'brachistochrone', 'tautochrone', 'parametric curve'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is a cycloid?', answer: 'The curve traced by a point on the rim of a circle rolling along a straight line. It has remarkable properties: it is both the brachistochrone and the tautochrone curve.' },
+      { question: 'What is the brachistochrone problem?', answer: 'Finding the fastest slide path between two points under gravity. The answer is an inverted cycloid, not a straight line. An object sliding along a cycloid arrives faster than on any other curve.' },
+    ],
+  },
+
+  'd-r-a-m-refresh': {
+    metaTitle: 'DRAM Refresh - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize how DRAM cells store data as charge and why periodic refresh is essential. Explore refresh intervals, power costs, and retention time in modern memory.',
+    concepts: ['DRAM', 'charge storage', 'refresh cycle', 'capacitor leakage', 'retention time'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does DRAM need refreshing?', answer: 'DRAM stores each bit as charge on a tiny capacitor. Leakage current drains the charge within milliseconds. Refresh reads and rewrites each cell every 32-64 ms to prevent data loss.' },
+      { question: 'How much power does DRAM refresh consume?', answer: 'Refresh accounts for 10-20% of DRAM power at idle. In large server systems with terabytes of memory, refresh power can reach hundreds of watts, driving research into longer retention times.' },
+    ],
+  },
+
+  'd-v-f-s': {
+    metaTitle: 'DVFS - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Adjust CPU voltage and frequency dynamically and observe power and performance tradeoffs. Learn how dynamic voltage frequency scaling saves energy in modern processors.',
+    concepts: ['DVFS', 'dynamic voltage scaling', 'frequency scaling', 'power consumption', 'energy efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does reducing voltage save so much power?', answer: 'Dynamic power scales as CV^2f. Lowering voltage V has a squared effect on power. A 20% voltage reduction cuts dynamic power by roughly 36%, far more than a linear frequency reduction.' },
+      { question: 'How does DVFS decide when to scale?', answer: 'The OS monitors CPU utilization. Under light load, it reduces voltage and frequency to save power. Under heavy load, it boosts both for maximum performance within thermal limits.' },
+    ],
+  },
+
+  'damped-oscillations': {
+    metaTitle: 'Damped Oscillations - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch oscillation amplitude decay over time under damping. Adjust damping ratio to explore underdamped, critically damped, and overdamped system responses.',
+    concepts: ['damped oscillation', 'damping ratio', 'exponential decay', 'quality factor', 'energy dissipation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the three damping regimes?', answer: 'Underdamped (oscillates with decaying amplitude), critically damped (returns to rest fastest without oscillation), and overdamped (returns slowly without oscillation).' },
+      { question: 'What is the damping ratio?', answer: 'The ratio of actual damping to critical damping. Zeta < 1 is underdamped, zeta = 1 is critically damped, zeta > 1 is overdamped. Car suspensions target zeta around 0.3-0.5.' },
+    ],
+  },
+
+  'damping': {
+    metaTitle: 'Damping - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how viscous, Coulomb, and structural damping affect oscillating systems. Compare damping types, measure decay rates, and design optimal damping levels.',
+    concepts: ['damping', 'viscous damping', 'Coulomb damping', 'structural damping', 'logarithmic decrement'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the main types of damping?', answer: 'Viscous damping (force proportional to velocity, e.g., shock absorbers), Coulomb damping (constant friction force), and structural damping (internal material hysteresis). Each produces different decay behavior.' },
+      { question: 'How is damping measured experimentally?', answer: 'Using the logarithmic decrement: measure the ratio of successive peak amplitudes. The natural log of this ratio gives the damping factor, from which the damping ratio is calculated.' },
+    ],
+  },
+
+  'data-movement-energy': {
+    metaTitle: 'Data Movement Energy - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize the energy cost of moving data across the memory hierarchy. Compare register access to DRAM fetch and network transfer to understand why data locality matters.',
+    concepts: ['data movement', 'energy efficiency', 'memory hierarchy', 'data locality', 'communication cost'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does data movement cost more energy than computation?', answer: 'A 64-bit floating-point multiply uses about 20 pJ, but fetching the same data from DRAM costs 1000+ pJ. Moving data off-chip or across a network costs orders of magnitude more.' },
+      { question: 'How can data movement energy be reduced?', answer: 'Use data locality (keep data near compute), compress data before transfer, use near-memory or in-memory computing, and minimize unnecessary data copies between memory levels.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 3
+  // ================================================================
+
+'decoupling-capacitor': {
+    metaTitle: 'Decoupling Capacitor — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate decoupling capacitors filtering power supply noise in digital circuits. Place bypass caps, observe voltage ripple reduction, and learn why local energy reservoirs stabilize ICs.',
+    concepts: ['decoupling capacitor', 'bypass capacitor', 'power supply noise', 'voltage ripple', 'IC power integrity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do digital circuits need decoupling capacitors?', answer: 'When transistors switch, they draw sudden current spikes from the power rail. Decoupling caps act as local energy reservoirs, supplying charge instantly and preventing voltage droops that cause logic errors.' },
+      { question: 'Where should decoupling capacitors be placed?', answer: 'As close as possible to the IC power pins. Shorter traces mean less inductance, allowing the capacitor to respond faster to current demands. Typical values are 100 nF ceramic caps per pin.' },
+    ],
+  },
+
+  'deposition-types': {
+    metaTitle: 'Deposition Types — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare CVD, PVD, and ALD thin film deposition methods in semiconductor manufacturing. Adjust parameters and observe film growth, conformality, and step coverage.',
+    concepts: ['CVD', 'PVD', 'ALD', 'thin film deposition', 'step coverage', 'semiconductor fabrication'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between CVD and PVD?', answer: 'CVD uses chemical reactions of gas precursors to deposit films, giving excellent conformality. PVD physically sputters or evaporates material in a line-of-sight process, producing denser but less conformal films.' },
+      { question: 'When is ALD preferred over CVD?', answer: 'ALD deposits one atomic layer at a time with self-limiting reactions, giving angstrom-level thickness control. It is essential for high-k gate dielectrics and features below 10 nm where uniformity is critical.' },
+    ],
+  },
+
+  'depth-of-field': {
+    metaTitle: 'Depth of Field — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore depth of field in photography and optics. Adjust aperture, focal length, and subject distance to see how the in-focus range changes in this interactive simulation.',
+    concepts: ['depth of field', 'aperture', 'focal length', 'circle of confusion', 'bokeh'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What controls depth of field?', answer: 'Three main factors: aperture (wider = shallower DOF), focal length (longer = shallower), and subject distance (closer = shallower). Sensor size also plays a role through its effect on field of view.' },
+      { question: 'Why does a wider aperture blur the background more?', answer: 'A wider aperture admits light from a larger cone. Points not at the focus distance project as larger circles of confusion on the sensor, creating more visible blur (bokeh).' },
+    ],
+  },
+
+  'design-to-fab-translation': {
+    metaTitle: 'Design-to-Fab Translation — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Map chip designs to fabrication layers interactively. Translate schematic elements to metal, via, poly, and diffusion layers and understand how layout becomes silicon.',
+    concepts: ['design-to-fabrication', 'layout', 'metal layers', 'vias', 'design rules', 'GDSII'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What happens between chip design and fabrication?', answer: 'The logical design is mapped to physical layout with metal interconnects, vias, polysilicon gates, and diffusion regions. Design rule checks ensure the layout is manufacturable at the target process node.' },
+      { question: 'What are vias in chip fabrication?', answer: 'Vias are vertical connections between metal layers. They are small holes etched through the insulating dielectric and filled with metal (typically tungsten or copper) to connect routing on different levels.' },
+    ],
+  },
+
+  'diffusion-convection': {
+    metaTitle: 'Diffusion vs Convection — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare diffusion and convection heat and mass transport. Simulate random molecular motion versus bulk fluid flow and discover when each mechanism dominates.',
+    concepts: ['diffusion', 'convection', 'mass transport', 'Peclet number', 'temperature gradient'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between diffusion and convection?', answer: 'Diffusion is transport by random molecular motion from high to low concentration (slow, short-range). Convection is transport by bulk fluid flow driven by temperature or density gradients (fast, long-range).' },
+      { question: 'When does convection dominate over diffusion?', answer: 'When the Peclet number (Pe = vL/D) is much greater than 1. In a stirred cup of coffee, convection moves heat thousands of times faster than diffusion alone.' },
+    ],
+  },
+
+  'direction-finding': {
+    metaTitle: 'Direction Finding — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Locate radio signal sources using direction-finding techniques. Rotate antenna arrays, measure signal strength, and triangulate transmitter positions interactively.',
+    concepts: ['radio direction finding', 'antenna array', 'triangulation', 'bearing', 'signal strength'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does radio direction finding work?', answer: 'A directional antenna is rotated to find the bearing of maximum (or minimum) signal strength. Two or more bearings from different locations are combined to triangulate the transmitter position.' },
+      { question: 'What is the difference between DF and TDOA methods?', answer: 'DF uses antenna rotation to find bearing angles. TDOA (time difference of arrival) uses synchronized receivers to measure signal arrival time differences, giving position without mechanical rotation.' },
+    ],
+  },
+
+  'dispersion': {
+    metaTitle: 'Dispersion — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Send light through prisms and observe wavelength-dependent refraction. Adjust material properties to see how dispersion splits white light into a rainbow spectrum.',
+    concepts: ['dispersion', 'refractive index', 'prism', 'wavelength dependence', 'chromatic aberration'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does a prism split white light into colors?', answer: 'Refractive index varies with wavelength (dispersion). Shorter wavelengths (violet) bend more than longer ones (red). A prism separates these into the visible spectrum because each color refracts at a different angle.' },
+      { question: 'What is chromatic aberration?', answer: 'A lens defect where different colors focus at different points due to dispersion. It creates colored fringes in images. Achromatic doublets combine two glass types to minimize this effect.' },
+    ],
+  },
+
+  'doping-diffusion': {
+    metaTitle: 'Doping Diffusion — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate dopant diffusion into silicon wafers. Adjust temperature, time, and dopant species to control junction depth and carrier concentration profiles interactively.',
+    concepts: ['doping', 'diffusion', 'Fick\'s law', 'junction depth', 'carrier concentration', 'p-n junction'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How does dopant diffusion create p-n junctions?', answer: 'Dopant atoms (boron for p-type, phosphorus for n-type) are driven into silicon by thermal energy. The diffusion front creates a concentration gradient, and the p-n junction forms where donor and acceptor concentrations are equal.' },
+      { question: 'Why does higher temperature increase diffusion rate?', answer: 'Diffusion follows an Arrhenius relationship: D = D0*exp(-Ea/kT). Higher temperature gives atoms more energy to jump between lattice sites, exponentially increasing the diffusion coefficient.' },
+    ],
+  },
+
+  'drag-force': {
+    metaTitle: 'Drag Force — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate aerodynamic drag on objects of different shapes and speeds. Adjust velocity, area, and drag coefficient to explore how air resistance affects motion.',
+    concepts: ['drag force', 'drag coefficient', 'air resistance', 'Reynolds number', 'aerodynamics'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the drag force equation?', answer: 'F_drag = 0.5 * rho * v^2 * Cd * A, where rho is air density, v is velocity, Cd is drag coefficient, and A is cross-sectional area. Drag scales with the square of speed.' },
+      { question: 'Why are race cars and aircraft streamlined?', answer: 'Streamlining reduces the drag coefficient (Cd) from ~1.0 for a flat plate to ~0.04 for an airfoil. At highway speeds, drag consumes 50-70% of engine power, so small Cd reductions save significant energy.' },
+    ],
+  },
+
+  'droplet-breakup': {
+    metaTitle: 'Droplet Breakup — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the Rayleigh-Plateau instability and how liquid jets break into droplets. Adjust flow rate and viscosity to observe necking, pinch-off, and droplet formation.',
+    concepts: ['Rayleigh-Plateau instability', 'surface tension', 'droplet formation', 'viscosity', 'Weber number'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do liquid jets break into droplets?', answer: 'The Rayleigh-Plateau instability: surface tension drives a cylindrical jet toward minimum surface area. Perturbations with wavelength longer than the jet circumference grow, causing necking and pinch-off into spherical droplets.' },
+      { question: 'How is controlled droplet breakup used in industry?', answer: 'Inkjet printers use piezoelectric pulses to form precise droplets. Pharmaceutical spray drying, fuel injection, and metal powder atomization all exploit controlled breakup for uniform particle sizes.' },
+    ],
+  },
+
+  'e-c-c-memory': {
+    metaTitle: 'ECC Memory — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Learn how error-correcting code memory detects and fixes bit errors using Hamming codes. Flip bits, watch parity checks, and understand why servers require ECC RAM.',
+    concepts: ['ECC', 'Hamming code', 'parity bit', 'single-bit error correction', 'memory reliability'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does ECC memory correct errors?', answer: 'ECC stores extra parity bits calculated from data bits using Hamming codes. On read, the syndrome (XOR of parity checks) identifies the flipped bit position, allowing single-bit correction and double-bit detection.' },
+      { question: 'Why do servers use ECC memory but most PCs do not?', answer: 'Servers run 24/7 with large memory. Cosmic rays and electrical noise flip roughly one bit per GB per month. For terabytes of server RAM, uncorrected errors would cause frequent crashes or silent data corruption.' },
+    ],
+  },
+
+  'e-m-i-shielding': {
+    metaTitle: 'EMI Shielding — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Test electromagnetic interference shielding with different cable types and enclosures. Compare unshielded, twisted pair, and coaxial designs to reduce EMI susceptibility.',
+    concepts: ['EMI shielding', 'electromagnetic interference', 'twisted pair', 'coaxial cable', 'shielding effectiveness'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does shielding block electromagnetic interference?', answer: 'A conductive enclosure reflects and absorbs incoming EM waves. Shielding effectiveness depends on material conductivity, thickness, and frequency. Higher frequencies are easier to shield due to shorter skin depth.' },
+      { question: 'Why does twisting wire pairs reduce EMI?', answer: 'Twisting ensures both wires are equally exposed to external fields. The induced noise appears as a common-mode signal that cancels in the differential receiver, providing 20-40 dB of noise rejection.' },
+    ],
+  },
+
+  'e-s-d-protection': {
+    metaTitle: 'ESD Protection — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design electrostatic discharge protection circuits for sensitive ICs. Simulate ESD events, place clamp diodes, and learn how chips survive kilovolt static shocks.',
+    concepts: ['ESD protection', 'electrostatic discharge', 'clamp diode', 'human body model', 'IC reliability'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How much voltage can ESD generate?', answer: 'Walking on carpet can charge a person to 15-25 kV. The human body model (HBM) standard tests ICs against a 100 pF capacitor charged to 2-8 kV, simulating a typical static discharge from a finger.' },
+      { question: 'How do ESD protection circuits work?', answer: 'Clamp diodes at each I/O pin shunt ESD current to the power rails before it reaches sensitive gate oxides. The diodes must turn on in nanoseconds and handle amperes of peak current without damage.' },
+    ],
+  },
+
+  'echo-time-of-flight': {
+    metaTitle: 'Echo Time of Flight — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Measure distances using echo timing. Send sound pulses, record return times, and calculate target distance with the speed of sound in this interactive sonar simulation.',
+    concepts: ['time of flight', 'echo', 'sonar', 'speed of sound', 'distance measurement'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does echo-based distance measurement work?', answer: 'A pulse is emitted and the round-trip time to the target is measured. Distance = (speed of sound x time) / 2. The factor of 2 accounts for the outbound and return trip.' },
+      { question: 'What are real-world applications of echo time of flight?', answer: 'Sonar for submarine navigation, ultrasonic range finders, automotive parking sensors, bat echolocation, and medical ultrasound all use echo timing to measure distance or image structures.' },
+    ],
+  },
+
+  'eddy-current-pendulum': {
+    metaTitle: 'Eddy Current Pendulum — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Swing a metal pendulum through a magnetic field and watch eddy currents brake its motion. Explore Lenz\'s law, conductor material effects, and magnetic damping.',
+    concepts: ['eddy currents', 'magnetic braking', 'Lenz\'s law', 'electromagnetic damping', 'pendulum'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does a pendulum slow down in a magnetic field?', answer: 'The swinging conductor cuts through magnetic field lines, inducing eddy currents. By Lenz\'s law, these currents create a field opposing the motion, converting kinetic energy to heat and braking the pendulum.' },
+      { question: 'Where are eddy current brakes used?', answer: 'High-speed trains (TGV, Shinkansen), roller coasters, and industrial machinery use eddy current brakes. They provide smooth, contact-free braking with no friction pads to wear out.' },
+    ],
+  },
+
+  'eddy-currents': {
+    metaTitle: 'Eddy Currents — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize circular induced currents in conductors exposed to changing magnetic fields. Explore how eddy currents cause heating, braking, and energy loss in transformers.',
+    concepts: ['eddy currents', 'electromagnetic induction', 'Lenz\'s law', 'skin effect', 'core losses'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes eddy currents?', answer: 'Any changing magnetic flux through a conductor induces circular currents (eddy currents) per Faraday\'s law. They flow in closed loops perpendicular to the flux direction and always oppose the change causing them.' },
+      { question: 'How are eddy current losses reduced in transformers?', answer: 'By laminating the iron core into thin, insulated sheets. Thinner laminations restrict eddy current loop size, reducing I^2*R losses. Silicon steel further increases resistivity to limit currents.' },
+    ],
+  },
+
+  'egg-drop': {
+    metaTitle: 'Egg Drop — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design protective packaging for an egg drop challenge. Explore impulse physics, crumple zones, and how extending impact time reduces force to keep your egg intact.',
+    concepts: ['impulse', 'momentum', 'crumple zone', 'impact force', 'deceleration time'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does padding protect an egg from breaking?', answer: 'Force equals change in momentum divided by time (F = dp/dt). Padding extends the deceleration time from milliseconds to tens of milliseconds, reducing peak force by 10-100x.' },
+      { question: 'How do car crumple zones use the same principle?', answer: 'Crumple zones deform progressively on impact, extending the collision from 5 ms to 50-100 ms. This reduces peak deceleration from lethal levels (~100g) to survivable ones (~25g).' },
+    ],
+  },
+
+  'elastic-potential-energy': {
+    metaTitle: 'Elastic Potential Energy — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compress springs and launch objects to explore elastic potential energy. Measure stored energy with Hooke\'s law and watch it convert to kinetic energy on release.',
+    concepts: ['elastic potential energy', 'Hooke\'s law', 'spring constant', 'energy conversion', 'restoring force'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How much energy does a compressed spring store?', answer: 'Elastic potential energy PE = 0.5 * k * x^2, where k is the spring constant and x is compression distance. Energy scales with the square of displacement, so double compression stores four times the energy.' },
+      { question: 'What happens when a spring is released?', answer: 'Stored elastic potential energy converts to kinetic energy. In an ideal spring, 100% converts: 0.5*k*x^2 = 0.5*m*v^2. Real springs lose some energy to heat from internal friction.' },
+    ],
+  },
+
+  'electric-field': {
+    metaTitle: 'Electric Field — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Place point charges and visualize electric field lines and vectors in real time. Explore superposition, field strength, and the inverse-square law interactively.',
+    concepts: ['electric field', 'field lines', 'Coulomb\'s law', 'superposition', 'force per unit charge'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is an electric field?', answer: 'The force per unit positive test charge at any point in space: E = F/q. For a point charge, E = kQ/r^2. Field lines point away from positive charges and toward negative charges.' },
+      { question: 'How does superposition work for electric fields?', answer: 'The total field at any point is the vector sum of fields from all charges. Each charge contributes independently. This allows complex field patterns from simple point charge combinations.' },
+    ],
+  },
+
+  'electric-field-mapping': {
+    metaTitle: 'Electric Field Mapping — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Map electric field lines and equipotential surfaces around charge configurations. Trace field patterns for dipoles, parallel plates, and arbitrary charge arrangements.',
+    concepts: ['electric field mapping', 'equipotential lines', 'field lines', 'dipole', 'parallel plates'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What do electric field lines represent?', answer: 'Field lines show the direction a positive test charge would move. Their density indicates field strength. They start on positive charges, end on negative charges, and never cross each other.' },
+      { question: 'How are equipotential lines related to field lines?', answer: 'Equipotential lines are always perpendicular to electric field lines. No work is done moving a charge along an equipotential. Closely spaced equipotentials indicate a strong electric field.' },
+    ],
+  },
+
+  'electric-potential': {
+    metaTitle: 'Electric Potential — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore voltage and electric potential around point charges. Calculate work per unit charge, visualize equipotential surfaces, and connect potential to electric field.',
+    concepts: ['electric potential', 'voltage', 'work per unit charge', 'equipotential surface', 'potential difference'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between electric potential and electric field?', answer: 'Electric potential (V) is energy per unit charge (scalar). Electric field (E) is force per unit charge (vector). They are related: E = -dV/dr. The field points from high to low potential.' },
+      { question: 'Why is voltage defined relative to a reference point?', answer: 'Only potential differences do physical work. We choose a reference (often infinity or ground) and measure all potentials relative to it. A 9V battery maintains a 9V difference between its terminals.' },
+    ],
+  },
+
+  'electromagnet': {
+    metaTitle: 'Electromagnet — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build an electromagnet by winding coils and adjusting current. Explore how number of turns, core material, and current strength control magnetic field intensity.',
+    concepts: ['electromagnet', 'solenoid', 'magnetic field', 'number of turns', 'ferromagnetic core'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What makes an electromagnet stronger?', answer: 'Three factors: more current (I), more coil turns (N), and adding a ferromagnetic core (iron). Field strength B = mu * N * I / L. An iron core amplifies the field by 100-1000x.' },
+      { question: 'How is an electromagnet different from a permanent magnet?', answer: 'Electromagnets can be turned on and off by controlling current, and their strength is adjustable. Permanent magnets maintain their field without power but cannot be varied. Electromagnets are used in MRI machines, scrapyard cranes, and relays.' },
+    ],
+  },
+
+  'electromigration': {
+    metaTitle: 'Electromigration — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate metal atom migration in IC interconnects under high current density. Observe void and hillock formation, and learn how electromigration limits chip reliability.',
+    concepts: ['electromigration', 'current density', 'void formation', 'hillock', 'Black\'s equation'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is electromigration?', answer: 'Momentum transfer from electrons to metal atoms in a conductor carrying high current density. Atoms migrate in the electron flow direction, creating voids (open circuits) upstream and hillocks (short circuits) downstream.' },
+      { question: 'How is electromigration prevented in chips?', answer: 'Black\'s equation (MTTF proportional to 1/J^n * exp(Ea/kT)) guides design rules limiting current density. Copper replaced aluminum for better resistance, and barrier layers like TaN prevent diffusion at grain boundaries.' },
+    ],
+  },
+
+  'encapsulation-u-v-aging': {
+    metaTitle: 'Encapsulation UV Aging — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate UV degradation of solar panel encapsulants over years. Observe yellowing, transmittance loss, and how material choice and UV stabilizers affect module lifetime.',
+    concepts: ['UV aging', 'encapsulant', 'EVA yellowing', 'transmittance loss', 'solar panel degradation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do solar panel encapsulants yellow over time?', answer: 'UV photons break polymer bonds in EVA (ethylene vinyl acetate), creating chromophore groups that absorb blue light. This yellowing reduces transmittance by 2-5% over 25 years, lowering panel output.' },
+      { question: 'How can encapsulant degradation be slowed?', answer: 'UV stabilizers (HALS, UV absorbers) scavenge free radicals before they break polymer chains. Switching from EVA to POE or silicone encapsulants provides inherently better UV resistance for premium modules.' },
+    ],
+  },
+
+  'endothermic-exothermic': {
+    metaTitle: 'Endothermic vs Exothermic — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Dissolve salts in water and measure temperature changes. Compare endothermic and exothermic reactions by balancing bond-breaking energy against hydration energy release.',
+    concepts: ['endothermic', 'exothermic', 'enthalpy of dissolution', 'bond energy', 'hydration energy'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What makes a reaction endothermic or exothermic?', answer: 'If breaking bonds requires more energy than forming new ones releases, the reaction is endothermic (absorbs heat, temperature drops). If bond formation releases more, it is exothermic (releases heat, temperature rises).' },
+      { question: 'Why does ammonium nitrate feel cold when dissolved?', answer: 'Breaking the ionic lattice of NH4NO3 requires 25.7 kJ/mol, but hydration releases only about 0.3 kJ/mol. The large energy deficit is absorbed from the water, dropping its temperature by up to 8 degrees C.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 4
+  // ================================================================
+
+'energy-per-token': {
+    metaTitle: 'Energy Per Token — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the energy cost of generating AI tokens. Adjust model size, hardware, and batch parameters to understand the joules and carbon footprint behind every LLM inference.',
+    concepts: ['energy per token', 'AI energy consumption', 'LLM inference cost', 'compute efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How much energy does one AI token use?', answer: 'A large language model uses roughly 0.001 to 0.01 watt-hours per token depending on model size and hardware. GPT-4-class models sit at the higher end due to massive parameter counts.' },
+      { question: 'Why does energy per token matter?', answer: 'At billions of tokens per day, even small per-token costs add up to megawatts of power and significant carbon emissions. Optimizing energy per token reduces both cost and environmental impact.' },
+    ],
+  },
+
+  'etch-anisotropy': {
+    metaTitle: 'Etch Anisotropy — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare anisotropic and isotropic etching in semiconductor fabrication. Adjust etch chemistry and see how sidewall profiles change for different process conditions.',
+    concepts: ['anisotropic etching', 'isotropic etching', 'plasma etching', 'sidewall profile', 'semiconductor fabrication'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between anisotropic and isotropic etching?', answer: 'Anisotropic etching removes material preferentially in one direction, creating vertical sidewalls. Isotropic etching removes material equally in all directions, creating undercut bowl-shaped profiles.' },
+      { question: 'Why is anisotropic etching critical for modern chips?', answer: 'Sub-10nm features require near-vertical sidewalls. Isotropic etching would undercut the mask and blur feature boundaries, making dense transistor layouts impossible.' },
+    ],
+  },
+
+  'evaporative-cooling': {
+    metaTitle: 'Evaporative Cooling — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate evaporative cooling and observe temperature drops in real time. Adjust humidity, airflow, and surface area to understand how sweat, swamp coolers, and cooling towers work.',
+    concepts: ['evaporative cooling', 'latent heat of vaporization', 'wet-bulb temperature', 'humidity'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does evaporation cause cooling?', answer: 'Evaporating molecules carry away latent heat energy. The remaining liquid loses its highest-energy molecules, so its average temperature drops.' },
+      { question: 'Does evaporative cooling work in humid climates?', answer: 'Poorly. High humidity slows evaporation because the air is already saturated. Evaporative coolers are most effective in hot, dry climates with relative humidity below 30%.' },
+    ],
+  },
+
+  'fan-laws': {
+    metaTitle: 'Fan Laws — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the fan affinity laws that relate speed, flow, pressure, and power. Change RPM and see how airflow scales linearly while power scales with the cube of speed.',
+    concepts: ['fan affinity laws', 'airflow', 'static pressure', 'fan power', 'system curve'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the three fan laws?', answer: 'Flow is proportional to speed (Q ~ N). Pressure is proportional to speed squared (P ~ N^2). Power is proportional to speed cubed (W ~ N^3). Doubling speed requires eight times the power.' },
+      { question: 'Why is the cubic power law important for energy savings?', answer: 'Reducing fan speed by just 20% cuts power by nearly 50%. Variable-speed drives exploit this to save enormous energy in HVAC and industrial ventilation systems.' },
+    ],
+  },
+
+  'fiber-signal-loss': {
+    metaTitle: 'Fiber Signal Loss — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate optical fiber signal attenuation over distance. Adjust wavelength, fiber type, and splice count to calculate total link loss and design reliable fiber optic links.',
+    concepts: ['fiber attenuation', 'optical loss', 'dB per km', 'splice loss', 'fiber optic link budget'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How much signal does optical fiber lose per kilometer?', answer: 'Single-mode fiber at 1550nm loses about 0.2 dB/km. At 1310nm it is about 0.35 dB/km. Multimode fiber loses 2-3 dB/km, limiting it to shorter distances.' },
+      { question: 'What causes signal loss in optical fiber?', answer: 'Intrinsic absorption, Rayleigh scattering, bend losses, splice losses, and connector losses. The 1550nm window has minimum attenuation because silica absorption and scattering are both low.' },
+    ],
+  },
+
+  'fill-factor': {
+    metaTitle: 'Fill Factor — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize solar cell fill factor by adjusting series resistance, shunt resistance, and temperature. Visualize how fill factor shapes the IV curve and impacts panel efficiency.',
+    concepts: ['fill factor', 'IV curve', 'series resistance', 'shunt resistance', 'solar cell efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is solar cell fill factor?', answer: 'Fill factor is the ratio of maximum power to the product of open-circuit voltage and short-circuit current: FF = Pmax / (Voc * Isc). Good silicon cells achieve 0.75 to 0.85.' },
+      { question: 'What degrades fill factor?', answer: 'High series resistance (poor contacts, thin fingers) and low shunt resistance (defects, edge leakage) both reduce fill factor. Temperature increases also lower fill factor slightly.' },
+    ],
+  },
+
+  'flip-chip-wirebond': {
+    metaTitle: 'Flip Chip vs Wire Bond — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare flip chip and wire bond packaging for semiconductors. Explore inductance, thermal performance, I/O density, and cost tradeoffs between the two interconnect methods.',
+    concepts: ['flip chip', 'wire bonding', 'die packaging', 'solder bumps', 'interconnect inductance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the main advantage of flip chip over wire bonding?', answer: 'Flip chip uses solder bumps across the entire die face, enabling higher I/O density, shorter interconnects with lower inductance, and better thermal dissipation through the die backside.' },
+      { question: 'Why is wire bonding still widely used?', answer: 'Wire bonding is cheaper, simpler, and well-suited for low-pin-count devices. It dominates in consumer, automotive, and sensor applications where cost matters more than performance.' },
+    ],
+  },
+
+  'floating-paperclip': {
+    metaTitle: 'Floating Paperclip — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Float a virtual paperclip on water using surface tension. Adjust liquid properties and object weight to explore how surface tension supports objects denser than the fluid.',
+    concepts: ['surface tension', 'meniscus', 'contact angle', 'capillary forces', 'fluid interface'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How can a steel paperclip float on water?', answer: 'Surface tension creates an elastic-like film at the water surface. A carefully placed paperclip dimples the surface without breaking through, and the upward component of surface tension supports its weight.' },
+      { question: 'What breaks the surface tension and makes the paperclip sink?', answer: 'Adding soap (surfactant) dramatically reduces surface tension from 72 mN/m to about 25 mN/m. The weakened film can no longer support the paperclip, and it sinks immediately.' },
+    ],
+  },
+
+  'fluorescence': {
+    metaTitle: 'Fluorescence — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Excite fluorescent molecules and observe light emission at longer wavelengths. Explore Stokes shift, absorption spectra, and quantum yield in this interactive optics simulator.',
+    concepts: ['fluorescence', 'Stokes shift', 'absorption spectrum', 'emission spectrum', 'quantum yield'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is fluorescent light a different color than the excitation light?', answer: 'Absorbed photon energy is partially lost to vibrational relaxation before emission. The emitted photon has less energy and thus a longer wavelength, a phenomenon called the Stokes shift.' },
+      { question: 'What are common applications of fluorescence?', answer: 'Fluorescence microscopy in biology, fluorescent lighting, security markers on banknotes, highlighter pens, and medical diagnostic assays such as ELISA and flow cytometry.' },
+    ],
+  },
+
+  'forced-oscillations': {
+    metaTitle: 'Forced Oscillations — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Drive an oscillator at varying frequencies and observe resonance. Adjust damping and driving force to map the amplitude response curve and understand phase lag behavior.',
+    concepts: ['forced oscillation', 'resonance', 'driving frequency', 'damping ratio', 'phase lag'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What happens when driving frequency equals natural frequency?', answer: 'Resonance occurs and amplitude peaks dramatically. With low damping, amplitude can grow 10-100x the static displacement. This is how the Tacoma Narrows Bridge collapsed.' },
+      { question: 'How does damping affect the resonance peak?', answer: 'Higher damping broadens and lowers the resonance peak. Critically damped systems show no resonance at all. The Q factor measures peak sharpness: Q = f_res / bandwidth.' },
+    ],
+  },
+
+  'fracture-mechanics': {
+    metaTitle: 'Fracture Mechanics — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate crack propagation in materials under stress. Adjust crack length, applied stress, and fracture toughness to predict failure using stress intensity factor analysis.',
+    concepts: ['fracture toughness', 'stress intensity factor', 'crack propagation', 'Griffith criterion', 'fatigue'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is the stress intensity factor K?', answer: 'K quantifies the stress field near a crack tip: K = Y * sigma * sqrt(pi*a), where a is crack length and Y is a geometry factor. Fracture occurs when K exceeds the material fracture toughness K_IC.' },
+      { question: 'Why do small cracks matter so much?', answer: 'Stress concentrates at crack tips, amplified far beyond the average stress. A 1mm crack in a turbine blade can grow to catastrophic failure within thousands of load cycles through fatigue.' },
+    ],
+  },
+
+  'fresnel-zones': {
+    metaTitle: 'Fresnel Zones — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize Fresnel zone clearance for radio links. Adjust frequency, distance, and obstacle height to determine whether your wireless path has adequate clearance for reliable signal.',
+    concepts: ['Fresnel zone', 'line of sight', 'radio propagation', 'diffraction loss', 'path clearance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the first Fresnel zone?', answer: 'An ellipsoidal region around the direct line-of-sight path where radio waves travel. Obstructions within the first Fresnel zone cause significant signal loss even without blocking the direct path.' },
+      { question: 'How much clearance does a radio link need?', answer: 'At least 60% of the first Fresnel zone radius should be clear of obstructions. At 5 GHz over 10 km, the first Fresnel zone radius at mid-path is about 17 meters.' },
+    ],
+  },
+
+  'g-p-u-occupancy': {
+    metaTitle: 'GPU Occupancy — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize GPU thread occupancy by adjusting block size, shared memory, and register usage. Visualize how occupancy affects latency hiding and compute throughput on CUDA GPUs.',
+    concepts: ['GPU occupancy', 'CUDA', 'warp scheduling', 'shared memory', 'register pressure'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is GPU occupancy?', answer: 'The ratio of active warps to maximum possible warps on a streaming multiprocessor. Higher occupancy helps hide memory latency by switching between warps while others wait for data.' },
+      { question: 'Is 100% occupancy always optimal?', answer: 'No. Sometimes using more registers or shared memory per thread improves per-thread performance enough to outweigh lower occupancy. Profile your kernel to find the sweet spot.' },
+    ],
+  },
+
+  'g-p-u-power-states': {
+    metaTitle: 'GPU Power States — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore GPU power state transitions from idle to full boost. Understand how clock speed, voltage scaling, and thermal throttling affect performance and power consumption.',
+    concepts: ['GPU power states', 'DVFS', 'thermal throttling', 'clock speed', 'power management'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are GPU power states?', answer: 'Discrete operating points that trade performance for power savings. Idle states use under 10W while full boost can draw 300W+. The GPU transitions between states based on workload demand.' },
+      { question: 'How does dynamic voltage and frequency scaling work?', answer: 'DVFS lowers voltage and clock speed together during light loads. Power scales roughly with V^2 * f, so halving voltage and frequency cuts power by about 8x.' },
+    ],
+  },
+
+  'galvanic-corrosion': {
+    metaTitle: 'Galvanic Corrosion — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Pair different metals and watch galvanic corrosion develop. Explore the galvanic series, electrolyte effects, and area ratios to understand why some metal joints corrode rapidly.',
+    concepts: ['galvanic corrosion', 'galvanic series', 'anode', 'cathode', 'electrode potential'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes galvanic corrosion?', answer: 'When two dissimilar metals contact in an electrolyte, the more active metal (lower electrode potential) acts as an anode and corrodes preferentially while protecting the nobler cathode metal.' },
+      { question: 'How do you prevent galvanic corrosion?', answer: 'Use metals close together in the galvanic series, isolate metals with insulating gaskets, apply protective coatings, or use sacrificial anodes such as zinc on steel ship hulls.' },
+    ],
+  },
+
+  'gas-laws': {
+    metaTitle: 'Gas Laws — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Experiment with the ideal gas law PV = nRT interactively. Adjust pressure, volume, temperature, and amount of gas to verify Boyle, Charles, and Avogadro relationships.',
+    concepts: ['ideal gas law', 'Boyle\'s law', 'Charles\'s law', 'Avogadro\'s law', 'PV = nRT'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the ideal gas law?', answer: 'PV = nRT relates pressure (P), volume (V), moles (n), gas constant (R = 8.314 J/mol-K), and temperature (T in Kelvin). It combines Boyle, Charles, and Avogadro into one equation.' },
+      { question: 'When does the ideal gas law break down?', answer: 'At high pressures or low temperatures, molecules interact strongly and occupy significant volume. Real gases deviate noticeably above ~100 atm or near their liquefaction temperature.' },
+    ],
+  },
+
+  'generator-startup': {
+    metaTitle: 'Generator Startup — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate generator startup transients from initial excitation to synchronization. Observe voltage buildup, frequency stabilization, and the process of connecting to the grid.',
+    concepts: ['generator startup', 'excitation', 'synchronization', 'voltage regulation', 'inrush current'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why can\'t a generator just be switched onto the grid instantly?', answer: 'The generator must match grid voltage, frequency, and phase angle before closing the breaker. Mismatched synchronization causes massive inrush currents that can damage windings and trip protections.' },
+      { question: 'What is residual magnetism in a generator?', answer: 'A small magnetic field retained in the iron core from previous operation. It provides the initial EMF needed to start the self-excitation process during startup.' },
+    ],
+  },
+
+  'ground-bounce': {
+    metaTitle: 'Ground Bounce — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize ground bounce noise in digital circuits when multiple outputs switch simultaneously. Adjust inductance, switching speed, and pin count to see voltage spikes.',
+    concepts: ['ground bounce', 'simultaneous switching noise', 'package inductance', 'SSO', 'signal integrity'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes ground bounce?', answer: 'When many outputs switch simultaneously, large di/dt current transients flow through parasitic package inductance (V = L*di/dt), causing the on-chip ground to bounce relative to board ground.' },
+      { question: 'How do you mitigate ground bounce?', answer: 'Add more ground pins to reduce effective inductance, stagger output switching times, use slower slew rates, and place decoupling capacitors close to the power pins.' },
+    ],
+  },
+
+  'ground-fault': {
+    metaTitle: 'Ground Fault — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate ground fault conditions and observe how protection devices respond. Explore GFCI operation, fault current paths, and the role of grounding in electrical safety.',
+    concepts: ['ground fault', 'GFCI', 'residual current device', 'fault current', 'electrical safety'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does a GFCI detect a ground fault?', answer: 'A GFCI monitors current balance between hot and neutral conductors. If current leaks to ground (even 5 mA), the imbalance triggers a fast trip in under 25 milliseconds to prevent electrocution.' },
+      { question: 'Why is grounding important for safety?', answer: 'Grounding provides a low-resistance return path for fault current, ensuring protective devices trip quickly. Without grounding, metal enclosures can remain energized indefinitely, creating shock hazards.' },
+    ],
+  },
+
+  'gyroscope-stability': {
+    metaTitle: 'Gyroscope Stability — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how spinning gyroscopes resist changes in orientation. Adjust spin rate and applied torques to understand gyroscopic rigidity used in navigation and stabilization.',
+    concepts: ['gyroscopic stability', 'angular momentum', 'rigidity in space', 'nutation', 'gimbal'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does a spinning gyroscope stay upright?', answer: 'A spinning gyroscope has large angular momentum. Any torque produces precession rather than toppling. The faster it spins, the more resistant it is to changes in axis orientation.' },
+      { question: 'Where are gyroscopes used for stabilization?', answer: 'Inertial navigation in aircraft and submarines, spacecraft attitude control, ship stabilizers, Segway balancing, and optical image stabilization in cameras and phones.' },
+    ],
+  },
+
+  'gyroscopic-precession': {
+    metaTitle: 'Gyroscopic Precession — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch a spinning gyroscope precess under gravity. Adjust spin speed, mass, and pivot distance to verify the precession rate formula and build intuition for rotational dynamics.',
+    concepts: ['gyroscopic precession', 'torque', 'angular momentum', 'precession rate', 'rotational dynamics'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is gyroscopic precession?', answer: 'When torque is applied perpendicular to a spinning object\'s angular momentum, the spin axis rotates around the torque direction rather than tilting. This is why a leaning spinning top orbits instead of falling.' },
+      { question: 'How does precession rate depend on spin speed?', answer: 'Precession rate omega_p = tau / (I * omega_s). Faster spin means slower precession. A rapidly spinning gyroscope precesses very slowly, appearing almost motionless.' },
+    ],
+  },
+
+  'h-d-d-physics': {
+    metaTitle: 'HDD Physics — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the physics of hard disk drives including platter rotation, head flying height, and magnetic recording. Understand seek time, rotational latency, and data density limits.',
+    concepts: ['hard disk drive', 'magnetic recording', 'areal density', 'seek time', 'rotational latency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How close does the read head fly to the platter?', answer: 'Modern drive heads fly just 5-10 nanometers above the platter surface at relative speeds of 100+ km/h. This is proportionally smoother than a 747 flying 1mm above the ground.' },
+      { question: 'What limits hard drive data density?', answer: 'The superparamagnetic limit: below a critical grain size, thermal energy randomly flips magnetic domains. Technologies like HAMR and SMR push density beyond 1 Tbit/in^2.' },
+    ],
+  },
+
+  'hand-warmer': {
+    metaTitle: 'Hand Warmer — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate chemical hand warmer heat release. Explore exothermic crystallization in supersaturated sodium acetate, iron oxidation warmers, and heat output over time curves.',
+    concepts: ['exothermic reaction', 'crystallization', 'supersaturation', 'sodium acetate', 'heat of reaction'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How do reusable hand warmers work?', answer: 'They contain supersaturated sodium acetate solution. Clicking a metal disc triggers crystallization, releasing stored heat of fusion. Boiling in water redissolves the crystals to reuse.' },
+      { question: 'How do disposable iron hand warmers work?', answer: 'Iron powder oxidizes when exposed to air: 4Fe + 3O2 -> 2Fe2O3 + heat. Salt and activated carbon catalyze the reaction, providing steady warmth for 8-12 hours.' },
+    ],
+  },
+
+  'heat-sink-thermal': {
+    metaTitle: 'Heat Sink Thermal — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design heat sinks by adjusting fin count, height, material, and airflow. Calculate thermal resistance, junction temperature, and heat dissipation capacity in real time.',
+    concepts: ['heat sink', 'thermal resistance', 'fin design', 'forced convection', 'junction temperature'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does a heat sink work?', answer: 'It increases surface area for convective heat transfer. Fins spread heat from a small chip into a large air-contact area. Thermal resistance drops roughly as the inverse of fin surface area.' },
+      { question: 'Aluminum or copper for heat sinks?', answer: 'Copper conducts heat 1.7x better (400 vs 235 W/m-K) but costs more and weighs 3x as much. Many designs use a copper base for spreading with aluminum fins for cost and weight savings.' },
+    ],
+  },
+
+  'heat-transfer-capacity': {
+    metaTitle: 'Heat Transfer Capacity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare conduction, convection, and radiation heat transfer rates. Adjust material properties, geometry, and temperatures to determine the dominant heat transfer mode.',
+    concepts: ['heat transfer', 'conduction', 'convection', 'radiation', 'thermal conductivity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the three modes of heat transfer?', answer: 'Conduction transfers heat through material contact (Fourier\'s law). Convection transfers heat via fluid motion. Radiation transfers heat as electromagnetic waves, requiring no medium.' },
+      { question: 'Which heat transfer mode dominates at high temperatures?', answer: 'Radiation, because it scales with T^4 (Stefan-Boltzmann law). At furnace temperatures above 1000 K, radiation typically dominates over convection and conduction combined.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 5
+  // ================================================================
+
+'helium-balloon-car': {
+    metaTitle: 'Helium Balloon in Accelerating Car — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch a helium balloon move forward in an accelerating car. Explore buoyancy in non-inertial frames, pseudo-forces, and why lighter-than-air objects defy intuition.',
+    concepts: ['buoyancy', 'non-inertial reference frame', 'pseudo-force', 'pressure gradient', 'acceleration'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does a helium balloon move forward when a car accelerates?', answer: 'Acceleration creates a pressure gradient in the air inside the car, with higher pressure at the back. The balloon, being less dense than air, moves toward lower pressure at the front.' },
+      { question: 'Is this the same as buoyancy in gravity?', answer: 'Yes. In an accelerating car, the pseudo-force acts like gravity pointing backward. The balloon floats "up" relative to this pseudo-gravity, meaning it moves forward.' },
+    ],
+  },
+
+  'homopolar-motor': {
+    metaTitle: 'Homopolar Motor — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build a virtual homopolar motor with a battery, magnet, and wire. Visualize the Lorentz force, current flow, and continuous rotation in the simplest electric motor.',
+    concepts: ['Lorentz force', 'magnetic field', 'electric current', 'torque', 'homopolar motor'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a homopolar motor work?', answer: 'Current flows through a conductor in a magnetic field. The Lorentz force (F = I x B) pushes the conductor sideways, creating continuous rotation without commutation.' },
+      { question: 'Why is it called homopolar?', answer: 'The magnetic field polarity remains the same throughout rotation, unlike conventional motors that require alternating polarity. This makes it the simplest possible electric motor.' },
+    ],
+  },
+
+  'hookes-law': {
+    metaTitle: 'Hooke\'s Law — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Stretch and compress virtual springs to verify Hooke\'s Law. Measure spring constants, plot force vs displacement, and explore elastic limits interactively.',
+    concepts: ['Hooke\'s law', 'spring constant', 'elastic force', 'displacement', 'restoring force'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is Hooke\'s Law?', answer: 'F = -kx, where F is the restoring force, k is the spring constant, and x is displacement from equilibrium. The negative sign indicates the force opposes displacement.' },
+      { question: 'When does Hooke\'s Law break down?', answer: 'Beyond the elastic limit, materials deform permanently and force is no longer proportional to displacement. Most springs follow Hooke\'s Law only for small deformations.' },
+    ],
+  },
+
+  'hotspots': {
+    metaTitle: 'Thermal Hotspots in Chips — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize thermal hotspots forming in processor chips. Adjust power density, cooling, and layout to understand how heat concentrates and affects chip performance.',
+    concepts: ['thermal hotspot', 'power density', 'heat dissipation', 'thermal throttling', 'chip design'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes thermal hotspots in chips?', answer: 'Uneven power density across the die creates localized heat concentrations. High-activity regions like ALUs generate more heat per area than cache or I/O blocks.' },
+      { question: 'How do hotspots affect chip performance?', answer: 'Hotspots trigger thermal throttling, reducing clock speed to prevent damage. Even if the average temperature is acceptable, a single hotspot can limit the entire chip\'s performance.' },
+    ],
+  },
+
+  'humidity-e-s-d': {
+    metaTitle: 'Humidity Effects on ESD — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how humidity affects electrostatic discharge risk. Simulate charge buildup at different humidity levels and learn why dry environments damage electronics.',
+    concepts: ['electrostatic discharge', 'humidity', 'charge buildup', 'surface resistivity', 'ESD protection'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does low humidity increase ESD risk?', answer: 'Dry air is a poor conductor, allowing static charge to accumulate on surfaces. At high humidity, a thin water film on surfaces provides a conductive path that bleeds charge away.' },
+      { question: 'What humidity level is safe for electronics handling?', answer: 'Generally above 40% relative humidity reduces ESD risk significantly. Below 20%, static voltages can exceed 10,000V, easily damaging sensitive semiconductor devices.' },
+    ],
+  },
+
+  'hydrostatic-pressure': {
+    metaTitle: 'Hydrostatic Pressure — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Measure pressure at different depths in virtual fluids. Verify that pressure increases linearly with depth and explore Pascal\'s law with interactive controls.',
+    concepts: ['hydrostatic pressure', 'fluid depth', 'Pascal\'s law', 'pressure gradient', 'fluid density'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does pressure change with depth?', answer: 'P = rho * g * h plus atmospheric pressure. Pressure increases linearly with depth at about 10 kPa per meter of water, or roughly 1 atm per 10 meters.' },
+      { question: 'Does container shape affect hydrostatic pressure?', answer: 'No. Pressure depends only on depth, fluid density, and gravity, not on the shape or volume of the container. This is known as the hydrostatic paradox.' },
+    ],
+  },
+
+  'i-r-drop': {
+    metaTitle: 'IR Drop in Power Grids — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate voltage drop across semiconductor power distribution networks. Visualize IR drop hotspots, adjust metal widths, and optimize power grid integrity.',
+    concepts: ['IR drop', 'power grid', 'voltage drop', 'metal resistance', 'power integrity'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is IR drop in chip design?', answer: 'IR drop is the voltage reduction across the power distribution network caused by current flowing through resistive metal interconnects. It follows Ohm\'s law: V_drop = I * R.' },
+      { question: 'Why is IR drop a problem in modern chips?', answer: 'Lower supply voltages (under 1V) leave less margin for voltage drop. Even small IR drop can cause timing failures, logic errors, or reduced performance in affected circuit regions.' },
+    ],
+  },
+
+  'inclined-plane': {
+    metaTitle: 'Inclined Plane — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Analyze forces on an inclined plane interactively. Decompose gravity into parallel and normal components, add friction, and predict acceleration and sliding.',
+    concepts: ['inclined plane', 'force decomposition', 'normal force', 'friction', 'gravitational components'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How do you decompose forces on an inclined plane?', answer: 'Gravity splits into mg*sin(theta) along the plane and mg*cos(theta) perpendicular to it. The normal force equals mg*cos(theta), and friction opposes motion along the surface.' },
+      { question: 'At what angle does an object start sliding?', answer: 'When tan(theta) exceeds the coefficient of static friction. For example, with mu_s = 0.5, sliding begins above about 26.6 degrees.' },
+    ],
+  },
+
+  'induction-heating': {
+    metaTitle: 'Induction Heating — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate electromagnetic induction heating in metals. Adjust frequency, coil geometry, and material properties to observe eddy currents and Joule heating effects.',
+    concepts: ['induction heating', 'eddy currents', 'Joule heating', 'electromagnetic induction', 'skin effect'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does induction heating work?', answer: 'An alternating magnetic field induces eddy currents in conductive materials. These currents encounter electrical resistance and generate heat directly within the workpiece.' },
+      { question: 'Why does induction heating only work on metals?', answer: 'It requires electrically conductive materials to sustain eddy currents. Non-conductive materials like glass or plastic cannot support the induced currents needed for Joule heating.' },
+    ],
+  },
+
+  'inductive-kickback': {
+    metaTitle: 'Inductive Kickback — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Observe dangerous voltage spikes when switching inductive loads. Simulate flyback diodes, snubber circuits, and learn how to protect circuits from inductive kickback.',
+    concepts: ['inductive kickback', 'flyback voltage', 'inductor', 'Lenz\'s law', 'flyback diode'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes inductive kickback?', answer: 'An inductor resists changes in current (V = L * di/dt). When current is suddenly interrupted, di/dt becomes very large, producing a voltage spike that can reach hundreds or thousands of volts.' },
+      { question: 'How does a flyback diode protect against kickback?', answer: 'The diode provides a path for inductor current to continue flowing when the switch opens. This limits the voltage spike to about 0.7V above the supply instead of destructive levels.' },
+    ],
+  },
+
+  'inelastic-collisions': {
+    metaTitle: 'Inelastic Collisions — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate perfectly and partially inelastic collisions. Track momentum conservation while measuring kinetic energy loss and coefficient of restitution in real time.',
+    concepts: ['inelastic collision', 'kinetic energy loss', 'momentum conservation', 'coefficient of restitution'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between elastic and inelastic collisions?', answer: 'In elastic collisions, both momentum and kinetic energy are conserved. In inelastic collisions, momentum is conserved but kinetic energy is partially converted to heat, sound, or deformation.' },
+      { question: 'What is a perfectly inelastic collision?', answer: 'Objects stick together after colliding, losing the maximum possible kinetic energy while still conserving momentum. The energy loss depends on the mass ratio of the objects.' },
+    ],
+  },
+
+  'inertia': {
+    metaTitle: 'Inertia — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Experience Newton\'s first law through interactive inertia demonstrations. Apply forces to objects of different masses and observe resistance to changes in motion.',
+    concepts: ['inertia', 'Newton\'s first law', 'mass', 'net force', 'equilibrium'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is inertia?', answer: 'Inertia is the tendency of an object to resist changes in its state of motion. More massive objects have more inertia and require greater force to accelerate or decelerate.' },
+      { question: 'Is inertia the same as mass?', answer: 'Mass is the quantitative measure of inertia. They are directly proportional: doubling the mass doubles the inertia, meaning twice the force is needed for the same acceleration.' },
+    ],
+  },
+
+  'infrared-emissivity': {
+    metaTitle: 'Infrared Emissivity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare infrared emission from different surfaces and materials. Adjust emissivity, temperature, and wavelength to understand thermal radiation and Kirchhoff\'s law.',
+    concepts: ['emissivity', 'infrared radiation', 'Stefan-Boltzmann law', 'Kirchhoff\'s law', 'blackbody'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is emissivity?', answer: 'Emissivity is the ratio of radiation emitted by a surface to that of a perfect blackbody at the same temperature. It ranges from 0 (perfect reflector) to 1 (perfect emitter).' },
+      { question: 'Why do shiny surfaces have low emissivity?', answer: 'Good reflectors are poor emitters by Kirchhoff\'s law. Polished metals reflect most infrared radiation and therefore emit very little, which is why thermal blankets use reflective coatings.' },
+    ],
+  },
+
+  'interconnect-topology': {
+    metaTitle: 'Interconnect Topology — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore network interconnect topologies like mesh, torus, and fat tree. Compare latency, bandwidth, and cost tradeoffs for data center and chip multiprocessor designs.',
+    concepts: ['interconnect topology', 'mesh network', 'torus', 'fat tree', 'network latency', 'bisection bandwidth'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why does interconnect topology matter?', answer: 'Topology determines latency, bandwidth, fault tolerance, and cost of communication. A poor topology creates bottlenecks that limit the scalability of parallel systems.' },
+      { question: 'What is bisection bandwidth?', answer: 'The minimum bandwidth available when the network is split into two equal halves. Fat trees have full bisection bandwidth, while meshes have bisection bandwidth proportional to sqrt(N).' },
+    ],
+  },
+
+  'inverter-sine-wave': {
+    metaTitle: 'Inverter Sine Wave Generation — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate how inverters convert DC to AC sine waves using PWM. Adjust switching frequency, filter design, and modulation to produce clean sinusoidal output.',
+    concepts: ['inverter', 'pulse width modulation', 'sine wave', 'DC to AC', 'harmonic distortion'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does an inverter create a sine wave from DC?', answer: 'It rapidly switches DC voltage on and off using PWM, varying the pulse width to approximate a sinusoidal waveform. An output filter then smooths the pulses into a clean sine wave.' },
+      { question: 'What is the difference between modified and pure sine wave inverters?', answer: 'Modified sine wave inverters use a stepped approximation that is cheaper but causes buzzing in motors and interference in electronics. Pure sine wave inverters produce clean AC identical to grid power.' },
+    ],
+  },
+
+  'ion-implantation': {
+    metaTitle: 'Ion Implantation — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate the ion implantation doping process in semiconductors. Control energy, dose, and species to shape dopant profiles and understand channeling effects.',
+    concepts: ['ion implantation', 'doping', 'dopant profile', 'channeling', 'annealing'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How does ion implantation work?', answer: 'Ions of a dopant species are accelerated to high energy and shot into the semiconductor crystal. The implant energy controls depth, and dose controls concentration of the dopant atoms.' },
+      { question: 'Why is annealing needed after implantation?', answer: 'Implanted ions damage the crystal lattice and sit in interstitial positions. Thermal annealing repairs the lattice and activates dopants by moving them to substitutional sites.' },
+    ],
+  },
+
+  'jar-lid-expansion': {
+    metaTitle: 'Jar Lid Thermal Expansion — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate how hot water loosens stuck jar lids through differential thermal expansion. Compare expansion rates of metal lids and glass jars to understand the trick.',
+    concepts: ['thermal expansion', 'differential expansion', 'expansion coefficient', 'heat transfer'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does hot water help open a stuck jar lid?', answer: 'Metal lids expand about 3x more than glass when heated. Running hot water on the lid causes it to expand faster and more than the glass jar, breaking the seal.' },
+      { question: 'How much does a metal lid expand?', answer: 'A steel lid heated by 50C expands its diameter by roughly 0.04mm. Though small, this is enough to break the vacuum seal that keeps the lid stuck on the jar.' },
+    ],
+  },
+
+  'k-v-cache': {
+    metaTitle: 'KV Cache in Transformers — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize key-value caching in transformer inference. See how KV cache eliminates redundant computation, reduces latency, and trades memory for speed in LLMs.',
+    concepts: ['KV cache', 'transformer', 'attention mechanism', 'autoregressive inference', 'memory-compute tradeoff'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a KV cache in transformers?', answer: 'During autoregressive generation, the KV cache stores previously computed key and value matrices so each new token only computes attention against cached values instead of reprocessing the entire sequence.' },
+      { question: 'Why does KV cache size matter for LLM deployment?', answer: 'KV cache memory grows linearly with sequence length and batch size. For long contexts, it can consume more GPU memory than the model weights, limiting throughput and max context length.' },
+    ],
+  },
+
+  'karman-vortex': {
+    metaTitle: 'Von Karman Vortex Street — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch von Karman vortex streets form behind obstacles in fluid flow. Adjust Reynolds number and obstacle geometry to explore periodic vortex shedding patterns.',
+    concepts: ['von Karman vortex street', 'vortex shedding', 'Strouhal number', 'Reynolds number', 'wake'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes von Karman vortex streets?', answer: 'Flow separating from both sides of a blunt body creates alternating low-pressure vortices. The asymmetric shedding produces a staggered double row of vortices in the wake.' },
+      { question: 'Where do von Karman vortex streets occur in nature?', answer: 'In cloud patterns downwind of islands, rivers flowing past bridge piers, and wind around tall chimneys. They also cause structural vibrations like the Tacoma Narrows Bridge collapse.' },
+    ],
+  },
+
+  'kinetic-theory-gases': {
+    metaTitle: 'Kinetic Theory of Gases — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate gas molecules bouncing in a container. Measure pressure, temperature, and speed distributions to verify the kinetic theory and Maxwell-Boltzmann statistics.',
+    concepts: ['kinetic theory', 'Maxwell-Boltzmann distribution', 'ideal gas law', 'molecular speed', 'gas pressure'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does kinetic theory explain gas pressure?', answer: 'Gas molecules constantly collide with container walls, transferring momentum. Pressure equals the average force per unit area from billions of molecular impacts per second.' },
+      { question: 'What is the Maxwell-Boltzmann distribution?', answer: 'It describes the probability distribution of molecular speeds in a gas at thermal equilibrium. Most molecules move near the most probable speed, with a long tail of fast-moving molecules.' },
+    ],
+  },
+
+  'l-c-resonance': {
+    metaTitle: 'LC Circuit Resonance — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build LC circuits and observe electrical resonance. Watch energy oscillate between inductor and capacitor, measure resonant frequency, and explore Q factor effects.',
+    concepts: ['LC resonance', 'resonant frequency', 'inductor', 'capacitor', 'energy oscillation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the resonant frequency of an LC circuit?', answer: 'f = 1 / (2 * pi * sqrt(L * C)). At resonance, inductive and capacitive reactances are equal and cancel, allowing maximum energy transfer between the two components.' },
+      { question: 'How is LC resonance used in practice?', answer: 'Radio tuners use LC circuits to select specific frequencies. Crystal oscillators, bandpass filters, and wireless power transfer systems all rely on LC resonance for frequency selection.' },
+    ],
+  },
+
+  'l-e-d-as-solar-cell': {
+    metaTitle: 'LED as Solar Cell — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Discover how LEDs generate electricity when exposed to light. Measure photovoltage and photocurrent from LEDs, compare efficiency to silicon solar cells.',
+    concepts: ['photovoltaic effect', 'LED', 'p-n junction', 'solar cell', 'bandgap energy'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Can an LED really work as a solar cell?', answer: 'Yes. LEDs are p-n junctions that can absorb photons and generate voltage, just like solar cells. They are less efficient but demonstrate the reciprocity of light emission and absorption.' },
+      { question: 'Why are LEDs less efficient than real solar cells?', answer: 'LEDs have small surface area, are optimized for emission not absorption, and their bandgap only captures a narrow range of the solar spectrum. Silicon cells are engineered for broadband absorption.' },
+    ],
+  },
+
+  'l-l-m-to-s-p-i-c-e': {
+    metaTitle: 'LLM to SPICE Netlist — Interactive Simulator | Atlas Coach',
+    metaDescription: 'See how large language models generate SPICE circuit netlists from natural language descriptions. Explore AI-assisted electronic design automation interactively.',
+    concepts: ['LLM', 'SPICE netlist', 'electronic design automation', 'circuit synthesis', 'natural language processing'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How can an LLM generate SPICE netlists?', answer: 'LLMs learn circuit syntax patterns from training data and can translate natural language circuit descriptions into valid SPICE netlist format, including component values and connectivity.' },
+      { question: 'Is LLM-generated SPICE reliable for production use?', answer: 'Not yet for critical designs. LLMs can produce syntactically correct but electrically flawed circuits. Human verification and simulation are essential before fabrication.' },
+    ],
+  },
+
+  'laminar-flow': {
+    metaTitle: 'Laminar Flow — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize smooth laminar flow in pipes and channels. Observe parabolic velocity profiles, measure viscous forces, and explore conditions that maintain laminar regimes.',
+    concepts: ['laminar flow', 'viscosity', 'parabolic velocity profile', 'Reynolds number', 'Hagen-Poiseuille'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What defines laminar flow?', answer: 'Laminar flow occurs when fluid moves in smooth, parallel layers without mixing. It happens at low Reynolds numbers (typically below 2300 in pipes) where viscous forces dominate inertial forces.' },
+      { question: 'What is the velocity profile in laminar pipe flow?', answer: 'It is parabolic: maximum velocity at the center is twice the average velocity, decreasing to zero at the walls. This is described by the Hagen-Poiseuille equation.' },
+    ],
+  },
+
+  'laser-speckle': {
+    metaTitle: 'Laser Speckle Patterns — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Generate and analyze laser speckle patterns interactively. Explore coherent light scattering from rough surfaces and learn how speckle reveals surface properties.',
+    concepts: ['laser speckle', 'coherence', 'interference', 'surface roughness', 'speckle contrast'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes laser speckle?', answer: 'Coherent laser light scattered from a rough surface produces many wavelets with random phases. These interfere constructively and destructively, creating a granular intensity pattern.' },
+      { question: 'How is laser speckle used in measurement?', answer: 'Speckle interferometry measures surface displacement, vibration, and strain with sub-wavelength precision. Medical imaging uses speckle contrast to map blood flow velocity in tissue.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 6
+  // ================================================================
+
+'latent-heat': {
+    metaTitle: 'Latent Heat — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore latent heat during phase changes with an interactive simulator. Observe energy absorbed and released as substances melt, boil, freeze, and condense in real time.',
+    concepts: ['latent heat', 'phase change', 'enthalpy of fusion', 'enthalpy of vaporization', 'energy transfer'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is latent heat?', answer: 'Latent heat is the energy absorbed or released during a phase change at constant temperature. It breaks or forms intermolecular bonds without changing kinetic energy.' },
+      { question: 'Why does temperature stay constant during a phase change?', answer: 'All added energy goes into breaking intermolecular bonds rather than increasing molecular speed. Temperature only rises again once the phase transition is complete.' },
+    ],
+  },
+
+  'law-of-reflection': {
+    metaTitle: 'Law of Reflection — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize the law of reflection with an interactive light ray simulator. Adjust incidence angles, swap mirror surfaces, and verify that angle in equals angle out.',
+    concepts: ['law of reflection', 'angle of incidence', 'angle of reflection', 'normal line', 'specular reflection'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the law of reflection?', answer: 'The angle of incidence equals the angle of reflection, both measured from the normal to the surface. This holds for all smooth (specular) reflecting surfaces.' },
+      { question: 'Why do rough surfaces not produce clear reflections?', answer: 'Rough surfaces cause diffuse reflection: each tiny facet obeys the law of reflection, but normals point in random directions, scattering light instead of forming an image.' },
+    ],
+  },
+
+  'leakage-current': {
+    metaTitle: 'Leakage Current — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate transistor leakage current and its impact on chip power consumption. Adjust gate oxide thickness, voltage, and temperature to explore subthreshold leakage.',
+    concepts: ['leakage current', 'subthreshold conduction', 'gate oxide', 'MOSFET off-state', 'tunneling'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes leakage current in transistors?', answer: 'Even when a MOSFET is off, current leaks through subthreshold conduction, gate oxide tunneling, and junction reverse-bias leakage. Thinner oxides and smaller nodes increase all three.' },
+      { question: 'Why is leakage current a problem for modern chips?', answer: 'At advanced nodes, leakage can consume 30-50% of total chip power. Billions of transistors each leaking a tiny current add up to significant static power dissipation.' },
+    ],
+  },
+
+  'leakage-power': {
+    metaTitle: 'Leakage Power — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore static power dissipation from transistor leakage. Adjust technology node, supply voltage, and temperature to see how leakage power scales in modern chips.',
+    concepts: ['leakage power', 'static power', 'dynamic power', 'power density', 'voltage scaling'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is the difference between leakage power and dynamic power?', answer: 'Dynamic power is consumed during switching (proportional to frequency and V^2). Leakage power flows continuously even when transistors are idle, wasting energy as heat.' },
+      { question: 'How do chip designers reduce leakage power?', answer: 'Techniques include power gating (cutting supply to idle blocks), high-k gate dielectrics, multi-threshold transistors, and body biasing to raise the effective threshold voltage.' },
+    ],
+  },
+
+  'lens-focusing': {
+    metaTitle: 'Lens Focusing — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Bend light rays through convex and concave lenses. Adjust focal length, object distance, and lens curvature to explore image formation and the thin lens equation.',
+    concepts: ['focal length', 'thin lens equation', 'convex lens', 'concave lens', 'image formation'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What determines the focal length of a lens?', answer: 'Focal length depends on the lens curvature and refractive index. The lensmaker\'s equation relates these: 1/f = (n-1)(1/R1 - 1/R2). Steeper curvature means shorter focal length.' },
+      { question: 'What is the thin lens equation?', answer: '1/f = 1/do + 1/di, where f is focal length, do is object distance, and di is image distance. It predicts image location, size, and orientation for any lens.' },
+    ],
+  },
+
+  'lift-force': {
+    metaTitle: 'Lift Force — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Generate aerodynamic lift on virtual airfoils. Adjust angle of attack, airspeed, and wing shape to explore how aircraft wings produce the force that enables flight.',
+    concepts: ['lift force', 'angle of attack', 'airfoil', 'Bernoulli principle', 'circulation theory'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How do airplane wings generate lift?', answer: 'Wings deflect air downward (Newton\'s third law) and create faster flow over the top surface (lower pressure via Bernoulli). Both explanations are correct and complementary.' },
+      { question: 'What happens at too high an angle of attack?', answer: 'Flow separates from the upper surface, causing a stall. Lift drops suddenly and drag increases sharply. Stall recovery requires reducing angle of attack to reattach airflow.' },
+    ],
+  },
+
+  'liquid-cooling': {
+    metaTitle: 'Liquid Cooling — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design a liquid cooling loop for electronics. Adjust flow rate, coolant type, radiator size, and heat load to optimize thermal performance for CPUs and GPUs.',
+    concepts: ['liquid cooling', 'thermal resistance', 'heat dissipation', 'flow rate', 'coolant properties'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is liquid cooling better than air cooling?', answer: 'Water has 4x the specific heat capacity and 24x the thermal conductivity of air. Liquid cooling moves heat away from components far more efficiently, enabling higher power densities.' },
+      { question: 'What are the risks of liquid cooling?', answer: 'Leaks can damage electronics, pumps can fail, and algae or corrosion can clog loops. Proper maintenance, quality fittings, and corrosion inhibitors mitigate these risks.' },
+    ],
+  },
+
+  'litho-focus-dose': {
+    metaTitle: 'Litho Focus-Dose — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize lithography focus and exposure dose for chip manufacturing. Map the process window, find best focus, and understand how dose affects critical dimension control.',
+    concepts: ['focus-dose matrix', 'process window', 'critical dimension', 'depth of focus', 'exposure latitude'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a focus-dose matrix?', answer: 'A systematic test varying focus and exposure dose across a wafer. The resulting CD measurements map the process window where features print within specification.' },
+      { question: 'Why is depth of focus important in lithography?', answer: 'Wafers are not perfectly flat. Depth of focus is the range of focus positions producing acceptable features. Smaller features have tighter depth of focus, requiring better wafer flatness.' },
+    ],
+  },
+
+  'magnetic-field': {
+    metaTitle: 'Magnetic Field — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize magnetic field lines around magnets, wires, and solenoids. Place sources, observe field patterns, and build intuition for how magnetic fields behave in space.',
+    concepts: ['magnetic field', 'field lines', 'magnetic dipole', 'right-hand rule', 'superposition'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What do magnetic field lines represent?', answer: 'Field lines show the direction a compass needle would point. They emerge from the north pole and enter the south pole. Closer spacing means stronger field intensity.' },
+      { question: 'Can magnetic field lines cross?', answer: 'Never. At any point in space, the field has a single unique direction. If lines crossed, the field would have two directions at that point, which is physically impossible.' },
+    ],
+  },
+
+  'magnetic-mapping': {
+    metaTitle: 'Magnetic Mapping — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Map magnetic field lines around current-carrying conductors and permanent magnets. Place virtual compasses, trace field topology, and visualize complex field geometries.',
+    concepts: ['magnetic field mapping', 'field topology', 'compass needle', 'current loops', 'magnetic flux'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How do you map a magnetic field experimentally?', answer: 'Place a small compass at many points and record needle direction. Iron filings sprinkled around a magnet align with field lines, revealing the full pattern instantly.' },
+      { question: 'What is the difference between field lines of a bar magnet and a solenoid?', answer: 'Inside, a solenoid has nearly uniform parallel field lines. Outside, both produce identical dipole-like patterns. A solenoid is essentially a series of aligned current loops.' },
+    ],
+  },
+
+  'magnus-effect': {
+    metaTitle: 'Magnus Effect — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Spin a ball and watch it curve through the air. Adjust spin rate, velocity, and ball size to explore the Magnus effect behind curveballs, topspin, and free kicks.',
+    concepts: ['Magnus effect', 'spin', 'pressure asymmetry', 'curved trajectory', 'aerodynamic force'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes the Magnus effect?', answer: 'A spinning ball drags air faster on one side and slower on the other. Bernoulli\'s principle creates a pressure difference that pushes the ball sideways, curving its path.' },
+      { question: 'How do soccer players use the Magnus effect?', answer: 'By striking the ball off-center, they impart spin. A free kick with sidespin curves around a defensive wall. Topspin makes the ball dip faster than gravity alone.' },
+    ],
+  },
+
+  'make-microphone': {
+    metaTitle: 'Make a Microphone — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build a DIY microphone from basic components. Explore how diaphragms, magnets, and coils convert sound pressure waves into electrical signals step by step.',
+    concepts: ['electromagnetic induction', 'diaphragm', 'voice coil', 'sound transducer', 'signal conversion'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a dynamic microphone work?', answer: 'Sound waves vibrate a diaphragm attached to a coil in a magnetic field. The moving coil generates voltage via electromagnetic induction, converting sound to an electrical signal.' },
+      { question: 'What materials do you need for a simple microphone?', answer: 'A thin membrane (plastic cup bottom), a small magnet, thin copper wire wound into a coil, and wires to connect to an amplifier. The coil attaches to the membrane.' },
+    ],
+  },
+
+  'manufacturing-drives-architecture': {
+    metaTitle: 'Manufacturing Drives Architecture — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Discover how semiconductor manufacturing constraints shape chip architecture decisions. Explore yield, die size, power limits, and process node tradeoffs interactively.',
+    concepts: ['chip architecture', 'manufacturing constraints', 'die yield', 'process node', 'design-technology co-optimization'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How does manufacturing yield affect chip architecture?', answer: 'Larger dies have exponentially lower yield (more chance of a defect). This drives chiplet architectures, die harvesting (disabling defective cores), and optimal die size tradeoffs.' },
+      { question: 'Why do newer process nodes not always mean better chips?', answer: 'Cutting-edge nodes cost more per transistor for some designs. Analog circuits, I/O, and memory often stay on older nodes where they perform well at lower cost.' },
+    ],
+  },
+
+  'marangoni-tears': {
+    metaTitle: 'Marangoni Tears — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch wine tears form on glass driven by surface tension gradients. Adjust alcohol concentration and evaporation rate to explore the Marangoni effect in thin films.',
+    concepts: ['Marangoni effect', 'surface tension gradient', 'wine tears', 'capillary flow', 'evaporation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes wine tears (legs)?', answer: 'Alcohol evaporates faster from the thin film on glass walls, raising local surface tension. Higher surface tension pulls liquid upward, which then flows back down as tears.' },
+      { question: 'What is the Marangoni effect?', answer: 'Flow driven by surface tension gradients. Regions of lower surface tension pull liquid toward regions of higher surface tension, creating spontaneous fluid motion along interfaces.' },
+    ],
+  },
+
+  'metastability': {
+    metaTitle: 'Metastability — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore metastable states in digital flip-flops. Trigger setup and hold violations, observe unpredictable outputs, and learn how synchronizers prevent data corruption.',
+    concepts: ['metastability', 'flip-flop', 'setup time', 'hold time', 'clock domain crossing'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is metastability in digital circuits?', answer: 'When a flip-flop samples input during the setup/hold window, it can enter an unstable state between 0 and 1. Resolution time is random and can exceed a clock period, causing errors.' },
+      { question: 'How do designers prevent metastability failures?', answer: 'Two or more synchronizer flip-flops in series reduce failure probability exponentially. Each stage gives the signal an extra clock period to resolve to a valid logic level.' },
+    ],
+  },
+
+  'metronome-sync': {
+    metaTitle: 'Metronome Sync — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch metronomes spontaneously synchronize on a shared platform. Adjust coupling strength, frequency mismatch, and damping to explore coupled oscillator physics.',
+    concepts: ['synchronization', 'coupled oscillators', 'phase locking', 'resonance coupling', 'Kuramoto model'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do metronomes on a shared platform synchronize?', answer: 'The platform moves slightly in response to each metronome, coupling them mechanically. Energy transfers until all metronomes lock to a common phase, minimizing platform motion.' },
+      { question: 'Where does synchronization appear in nature?', answer: 'Fireflies flashing in unison, cardiac pacemaker cells, circadian rhythms, and the London Millennium Bridge wobble are all examples of coupled oscillator synchronization.' },
+    ],
+  },
+
+  'microphone': {
+    metaTitle: 'Microphone — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore microphone transducer physics interactively. Compare dynamic, condenser, and ribbon designs to understand how sound pressure converts to electrical signals.',
+    concepts: ['microphone', 'transducer', 'dynamic microphone', 'condenser microphone', 'frequency response'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between dynamic and condenser microphones?', answer: 'Dynamic mics use a coil in a magnetic field (electromagnetic induction). Condensers use a charged capacitor whose plates vibrate. Condensers are more sensitive but need phantom power.' },
+      { question: 'What determines a microphone\'s frequency response?', answer: 'Diaphragm mass, stiffness, and damping create a mechanical resonance. Smaller, lighter diaphragms capture higher frequencies. Acoustic design shapes the overall response curve.' },
+    ],
+  },
+
+  'microwave-standing-wave': {
+    metaTitle: 'Microwave Standing Wave — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize standing waves inside a microwave oven. Map hot and cold spots, understand why turntables exist, and explore how 2.45 GHz waves heat food unevenly.',
+    concepts: ['standing waves', 'microwave heating', 'cavity resonance', 'wavelength', 'dielectric heating'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does a microwave oven heat food unevenly?', answer: 'Standing waves create fixed hot spots (antinodes) and cold spots (nodes) spaced about 6 cm apart. The turntable rotates food through these zones for more even heating.' },
+      { question: 'Why do microwave ovens use 2.45 GHz?', answer: 'It is an ISM band that does not require licensing. Contrary to myth, it is not tuned to water resonance. Water absorbs well across a broad microwave range; 2.45 GHz penetrates food to a useful depth.' },
+    ],
+  },
+
+  'minimal-surfaces': {
+    metaTitle: 'Minimal Surfaces — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Create soap film minimal surfaces by defining wire frame boundaries. Explore catenoids, helicoids, and how surface tension drives films to minimize their total area.',
+    concepts: ['minimal surfaces', 'surface tension', 'soap film', 'mean curvature', 'variational calculus'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a minimal surface?', answer: 'A surface with zero mean curvature at every point, meaning it locally minimizes area for its boundary. Soap films naturally form minimal surfaces because surface tension minimizes energy.' },
+      { question: 'Where are minimal surfaces used in engineering?', answer: 'Architects use them for lightweight tensile structures (e.g., Munich Olympic Stadium). They also appear in material science foams, biological membranes, and 3D printing lattice design.' },
+    ],
+  },
+
+  'model-as-reviewer': {
+    metaTitle: 'Model as Reviewer — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore using large language models as automated code reviewers. Simulate review workflows, evaluate feedback quality, and learn prompt strategies for better reviews.',
+    concepts: ['LLM code review', 'automated review', 'prompt engineering', 'code quality', 'AI-assisted development'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Can an LLM replace human code reviewers?', answer: 'Not entirely. LLMs catch style issues, common bugs, and suggest improvements quickly. But they lack project context, cannot verify correctness guarantees, and may hallucinate non-existent APIs.' },
+      { question: 'What are effective prompts for LLM code review?', answer: 'Provide the full diff with context, specify the language and framework, ask for specific categories (security, performance, readability), and request line-level comments with explanations.' },
+    ],
+  },
+
+  'moire-patterns': {
+    metaTitle: 'Moire Patterns — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Overlay grids and gratings to generate moire interference patterns. Adjust spacing, rotation, and curvature to explore how small misalignments create dramatic visual effects.',
+    concepts: ['moire pattern', 'spatial frequency', 'interference', 'aliasing', 'superposition of gratings'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes moire patterns?', answer: 'When two periodic patterns with slightly different spacings or angles overlap, their interaction creates a new low-frequency pattern. The beat frequency equals the difference of the original frequencies.' },
+      { question: 'Are moire patterns useful or just visual artifacts?', answer: 'Both. They cause unwanted artifacts in scanning and displays. But engineers exploit them for precise strain measurement, displacement sensing, and alignment in semiconductor lithography.' },
+    ],
+  },
+
+  'molecular-orbitals': {
+    metaTitle: 'Molecular Orbitals — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build molecular orbital diagrams from atomic orbitals. Visualize bonding and antibonding orbitals, calculate bond order, and predict molecular stability and magnetism.',
+    concepts: ['molecular orbital theory', 'bonding orbital', 'antibonding orbital', 'bond order', 'LCAO'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is the difference between bonding and antibonding orbitals?', answer: 'Bonding orbitals have electron density concentrated between nuclei, stabilizing the molecule. Antibonding orbitals have a node between nuclei, destabilizing it. Bond order = (bonding - antibonding) / 2.' },
+      { question: 'Why is O2 paramagnetic?', answer: 'MO theory correctly predicts two unpaired electrons in degenerate pi antibonding orbitals. Valence bond theory (Lewis structures) incorrectly predicts O2 is diamagnetic.' },
+    ],
+  },
+
+  'moment-of-inertia': {
+    metaTitle: 'Moment of Inertia — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Calculate and visualize moment of inertia for different shapes. Roll objects down ramps, redistribute mass, and see how rotational inertia governs angular acceleration.',
+    concepts: ['moment of inertia', 'rotational inertia', 'parallel axis theorem', 'angular acceleration', 'mass distribution'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is moment of inertia?', answer: 'The rotational equivalent of mass. It measures resistance to angular acceleration and depends on both mass and how far that mass is from the rotation axis. I = sum(m*r^2).' },
+      { question: 'Why does a solid sphere roll faster than a hollow one?', answer: 'A hollow sphere has more mass at greater radius, giving it higher moment of inertia. More energy goes into rotation and less into translation, so it rolls down a ramp more slowly.' },
+    ],
+  },
+
+  'network-congestion': {
+    metaTitle: 'Network Congestion — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate network congestion and observe throughput collapse. Adjust traffic load, buffer sizes, and congestion control algorithms to maintain stable network performance.',
+    concepts: ['network congestion', 'TCP congestion control', 'throughput', 'packet loss', 'buffer bloat'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes network congestion?', answer: 'When traffic demand exceeds link capacity, packets queue in buffers. If buffers overflow, packets are dropped. Retransmissions add more load, potentially causing congestion collapse.' },
+      { question: 'How does TCP congestion control work?', answer: 'TCP probes available bandwidth by slowly increasing send rate (slow start, congestion avoidance). On packet loss, it halves the rate. This AIMD approach converges to fair bandwidth sharing.' },
+    ],
+  },
+
+  'network-latency': {
+    metaTitle: 'Network Latency — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Trace packets across networks and measure end-to-end latency. Explore propagation delay, queuing delay, serialization, and optimization techniques for faster responses.',
+    concepts: ['network latency', 'propagation delay', 'queuing delay', 'round-trip time', 'CDN optimization'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What are the main components of network latency?', answer: 'Propagation delay (speed of light in fiber), serialization delay (packet size / bandwidth), queuing delay (waiting in router buffers), and processing delay (routing decisions). Propagation dominates over long distances.' },
+      { question: 'How do CDNs reduce latency?', answer: 'CDNs cache content at edge servers geographically close to users, reducing propagation delay. A request to a server 50 ms away drops to 5 ms when served from a nearby edge node.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 7
+  // ================================================================
+
+'newton-cooling': {
+    metaTitle: 'Newton\'s Law of Cooling - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate Newton\'s law of cooling in real time. Adjust initial temperature, ambient conditions, and cooling constants to watch exponential temperature decay unfold.',
+    concepts: ['Newton\'s law of cooling', 'exponential decay', 'heat transfer', 'thermal equilibrium'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is Newton\'s law of cooling?', answer: 'The rate of heat loss is proportional to the temperature difference between an object and its surroundings: dT/dt = -k(T - T_env). It produces exponential decay toward ambient temperature.' },
+      { question: 'When does Newton\'s law of cooling break down?', answer: 'At large temperature differences where radiation dominates (Stefan-Boltzmann law) or when convection patterns change. It works best for forced convection and moderate temperature gaps.' },
+    ],
+  },
+
+  'noise-margin': {
+    metaTitle: 'Noise Margin - Interactive Digital Logic Simulator | Atlas Coach',
+    metaDescription: 'Explore digital logic noise margins interactively. Adjust voltage thresholds, visualize high and low noise margins, and learn why reliable signal transfer matters.',
+    concepts: ['noise margin', 'logic levels', 'voltage threshold', 'signal integrity', 'digital logic'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is noise margin in digital circuits?', answer: 'The amount of noise voltage a signal can tolerate before being misinterpreted. NM_high = V_OH - V_IH and NM_low = V_IL - V_OL. Larger margins mean more robust logic.' },
+      { question: 'Why do different logic families have different noise margins?', answer: 'Each family (CMOS, TTL, LVDS) defines different voltage thresholds based on transistor physics. CMOS has wider margins because its outputs swing nearly rail-to-rail.' },
+    ],
+  },
+
+  'non-newtonian-armor': {
+    metaTitle: 'Non-Newtonian Fluid Armor - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Test non-Newtonian fluid body armor under impact. Vary shear rate and observe how shear-thickening fluids stiffen on impact to absorb ballistic energy.',
+    concepts: ['non-Newtonian fluid', 'shear thickening', 'impact absorption', 'ballistic protection', 'viscosity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does non-Newtonian armor work?', answer: 'Shear-thickening fluids (like colloidal silica in polyethylene glycol) flow freely under gentle handling but solidify instantly under high-velocity impact, distributing force over a wide area.' },
+      { question: 'Is non-Newtonian armor used in real products?', answer: 'Yes. STF-impregnated Kevlar is lighter and more flexible than pure Kevlar while offering equal or better stab and ballistic protection. Several military and police products exist.' },
+    ],
+  },
+
+  'oersted-experiment': {
+    metaTitle: 'Oersted\'s Experiment - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Recreate Oersted\'s 1820 discovery that electric current deflects a compass needle. Adjust current direction and magnitude to explore the magnetic field around a wire.',
+    concepts: ['Oersted\'s experiment', 'electromagnetism', 'magnetic field', 'compass deflection', 'right-hand rule'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What did Oersted discover?', answer: 'In 1820, Hans Christian Oersted found that an electric current deflects a nearby compass needle, proving that electricity and magnetism are fundamentally connected.' },
+      { question: 'How does the right-hand rule apply?', answer: 'Point your right thumb in the direction of current flow. Your curled fingers show the circular magnetic field direction around the wire. This determines which way the compass deflects.' },
+    ],
+  },
+
+  'orbital-mechanics-basics': {
+    metaTitle: 'Orbital Mechanics Basics - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Learn fundamental orbital mechanics by launching satellites. Explore circular and elliptical orbits, orbital velocity, and Kepler\'s laws through hands-on simulation.',
+    concepts: ['orbital velocity', 'Kepler\'s laws', 'circular orbit', 'elliptical orbit', 'gravitational parameter'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What keeps a satellite in orbit?', answer: 'Gravity provides centripetal acceleration while the satellite\'s tangential velocity prevents it from falling. The balance creates a continuous free-fall path around the planet.' },
+      { question: 'Why do higher orbits move slower?', answer: 'Orbital velocity decreases with altitude: v = sqrt(GM/r). At greater distances, weaker gravity requires less speed to maintain the curved path. ISS orbits at 7.66 km/s; the Moon at 1.02 km/s.' },
+    ],
+  },
+
+  'overlay-error': {
+    metaTitle: 'Lithography Overlay Error - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate overlay alignment errors in semiconductor lithography. Adjust translation, rotation, and magnification to see how misalignment degrades chip yield.',
+    concepts: ['overlay error', 'lithography alignment', 'registration', 'semiconductor yield', 'multi-patterning'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is overlay error in chip manufacturing?', answer: 'The misalignment between successive lithography layers on a wafer. At advanced nodes, overlay must be controlled to sub-2nm accuracy across a 300mm wafer.' },
+      { question: 'How is overlay error measured and corrected?', answer: 'Dedicated alignment marks on each layer are measured optically or with SEM. Feedback corrects scanner positioning in real time. Multi-patterning tightens requirements further.' },
+    ],
+  },
+
+  'p-c-ie-bandwidth': {
+    metaTitle: 'PCIe Bandwidth - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Calculate PCIe bus bandwidth across generations and lane configurations. Compare PCIe 3.0 through 6.0 and understand encoding overhead, latency, and throughput.',
+    concepts: ['PCIe', 'bus bandwidth', 'lane configuration', 'encoding overhead', 'serial interconnect'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How fast is PCIe 5.0 x16?', answer: 'About 63 GB/s in each direction (126 GB/s bidirectional). Each lane runs at 32 GT/s with 128b/130b encoding, yielding ~3.94 GB/s per lane.' },
+      { question: 'Why did PCIe switch from parallel to serial?', answer: 'Serial links avoid skew between parallel wires, enabling much higher clock rates. Fewer pins per lane also reduce cost. Multiple serial lanes scale bandwidth linearly.' },
+    ],
+  },
+
+  'p-u-e-calculator': {
+    metaTitle: 'PUE Calculator - Interactive Data Center Simulator | Atlas Coach',
+    metaDescription: 'Calculate Power Usage Effectiveness for data centers. Adjust cooling, lighting, and IT load to optimize PUE and reduce energy waste in facility operations.',
+    concepts: ['PUE', 'data center efficiency', 'cooling overhead', 'IT load', 'energy management'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is PUE?', answer: 'Power Usage Effectiveness = Total Facility Power / IT Equipment Power. A PUE of 1.0 means all power goes to computing. The industry average is about 1.58; top facilities achieve 1.1.' },
+      { question: 'How can PUE be improved?', answer: 'Hot/cold aisle containment, free cooling with outside air, liquid cooling, raising server inlet temperatures, and efficient UPS systems. Each can reduce PUE by 0.05-0.2 points.' },
+    ],
+  },
+
+  'p-waves-s-waves': {
+    metaTitle: 'P-Waves and S-Waves - Interactive Seismology Simulator | Atlas Coach',
+    metaDescription: 'Visualize P-waves and S-waves traveling through Earth. Compare compression and shear wave speeds, observe arrival times, and learn seismograph interpretation.',
+    concepts: ['P-waves', 'S-waves', 'seismology', 'wave propagation', 'earthquake location'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the difference between P-waves and S-waves?', answer: 'P-waves are compressional (push-pull) and travel through solids, liquids, and gases at ~6 km/s. S-waves are shear (side-to-side) and only travel through solids at ~3.5 km/s.' },
+      { question: 'How do seismologists locate an earthquake?', answer: 'By measuring the time difference between P-wave and S-wave arrivals at three or more stations. Larger S-P time gaps mean greater distance. Triangulation pinpoints the epicenter.' },
+    ],
+  },
+
+  'pascal-law': {
+    metaTitle: 'Pascal\'s Law - Interactive Hydraulic Simulator | Atlas Coach',
+    metaDescription: 'Explore Pascal\'s law of pressure transmission in fluids. Apply force to pistons of different areas and see how hydraulic systems multiply force in real time.',
+    concepts: ['Pascal\'s law', 'hydraulic press', 'pressure transmission', 'force multiplication', 'fluid statics'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is Pascal\'s law?', answer: 'Pressure applied to a confined fluid is transmitted equally in all directions. A small force on a small piston creates the same pressure on a large piston, producing a larger force.' },
+      { question: 'How does a hydraulic jack multiply force?', answer: 'If the output piston has 10x the area of the input piston, the output force is 10x larger. Energy is conserved: the small piston must travel 10x farther than the large one moves.' },
+    ],
+  },
+
+  'passivation-recombination': {
+    metaTitle: 'Surface Passivation and Recombination - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate surface recombination in solar cells. Adjust passivation quality and see how dangling bonds at silicon surfaces reduce carrier lifetime and cell efficiency.',
+    concepts: ['surface passivation', 'recombination velocity', 'carrier lifetime', 'dangling bonds', 'solar cell efficiency'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why does surface recombination matter in solar cells?', answer: 'Unpassivated silicon surfaces have dangling bonds that trap and recombine charge carriers before they reach contacts. This can reduce cell efficiency by 5-10 absolute percentage points.' },
+      { question: 'How is surface passivation achieved?', answer: 'Thin dielectric layers (SiO2, Al2O3, SiNx) saturate dangling bonds and provide field-effect passivation. Modern PERC and HJT cells use these layers to achieve surface recombination velocities below 10 cm/s.' },
+    ],
+  },
+
+  'patch-discipline': {
+    metaTitle: 'Patch Discipline - Interactive AI Prompting Simulator | Atlas Coach',
+    metaDescription: 'Practice disciplined patch-based prompting for AI systems. Learn to write focused, minimal edits that reduce errors and improve reliability in code generation.',
+    concepts: ['patch-based prompting', 'prompt engineering', 'code generation', 'minimal edits', 'AI reliability'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is patch discipline in AI prompting?', answer: 'A strategy of requesting small, targeted code changes rather than large rewrites. Smaller patches are easier for AI to generate correctly and simpler for humans to review.' },
+      { question: 'Why do smaller patches improve AI output quality?', answer: 'Large changes increase the chance of hallucination and context loss. Focused patches keep the AI within a narrow scope, making errors easier to catch and reducing cascading mistakes.' },
+    ],
+  },
+
+  'phase-change-energy': {
+    metaTitle: 'Phase Change Energy - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize energy absorption during phase transitions. Heat ice through melting and boiling, observe temperature plateaus, and explore latent heat concepts.',
+    concepts: ['latent heat', 'phase transition', 'melting point', 'boiling point', 'specific heat capacity'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does temperature stay constant during a phase change?', answer: 'All added energy goes into breaking intermolecular bonds rather than increasing kinetic energy. Temperature resumes rising only after the phase transition is complete.' },
+      { question: 'How much energy does it take to boil water?', answer: 'The latent heat of vaporization for water is 2260 kJ/kg, about 5.4 times the energy needed to heat water from 0 to 100 degrees C. Steam burns are severe because of this stored energy.' },
+    ],
+  },
+
+  'phone-seismometer': {
+    metaTitle: 'Phone Seismometer - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Turn a smartphone accelerometer into a seismometer. Visualize vibration data, filter noise, and detect micro-tremors using the sensors in your pocket.',
+    concepts: ['accelerometer', 'seismometer', 'vibration sensing', 'signal filtering', 'MEMS sensor'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Can a phone really detect earthquakes?', answer: 'Yes. Modern MEMS accelerometers in phones can detect magnitude 5+ earthquakes within ~200 km. Networks like MyShake aggregate phone data to provide early warnings.' },
+      { question: 'How does a phone accelerometer work?', answer: 'A tiny MEMS proof mass on silicon springs deflects under acceleration. Capacitive plates measure the displacement, providing three-axis acceleration data at 100+ Hz sampling rates.' },
+    ],
+  },
+
+  'photoelasticity': {
+    metaTitle: 'Photoelasticity - Interactive Stress Visualization Simulator | Atlas Coach',
+    metaDescription: 'Visualize stress distributions using photoelasticity. Apply loads to transparent models and observe colorful fringe patterns that reveal internal stress fields.',
+    concepts: ['photoelasticity', 'stress birefringence', 'fringe pattern', 'polarized light', 'stress analysis'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is photoelasticity?', answer: 'A technique where stressed transparent materials become birefringent, splitting polarized light into two components. The resulting fringe patterns directly map the stress distribution.' },
+      { question: 'Where is photoelasticity used in engineering?', answer: 'For stress analysis of complex shapes difficult to model analytically: gear teeth, turbine blades, bone implants, and bridge components. It validates finite element simulations.' },
+    ],
+  },
+
+  'poisson-ratio': {
+    metaTitle: 'Poisson\'s Ratio - Interactive Material Simulator | Atlas Coach',
+    metaDescription: 'Stretch and compress materials to observe Poisson\'s ratio. Measure lateral contraction under axial loading and compare values for metals, rubber, and cork.',
+    concepts: ['Poisson\'s ratio', 'lateral strain', 'axial strain', 'elastic deformation', 'auxetic materials'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is Poisson\'s ratio?', answer: 'The negative ratio of lateral strain to axial strain: nu = -epsilon_lateral / epsilon_axial. Most materials have nu between 0.2 and 0.5. Steel is about 0.3; rubber is nearly 0.5.' },
+      { question: 'Can Poisson\'s ratio be negative?', answer: 'Yes. Auxetic materials expand laterally when stretched. Re-entrant foam structures and certain metamaterials exhibit negative Poisson\'s ratios, useful for impact absorption.' },
+    ],
+  },
+
+  'polarized-sky': {
+    metaTitle: 'Polarized Sky - Interactive Skylight Simulator | Atlas Coach',
+    metaDescription: 'Explore how sunlight becomes polarized by atmospheric scattering. Rotate a virtual polarizer across the sky and discover the Rayleigh scattering polarization pattern.',
+    concepts: ['skylight polarization', 'Rayleigh scattering', 'polarization pattern', 'atmospheric optics', 'navigation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is skylight polarized?', answer: 'Rayleigh scattering of sunlight by air molecules produces partially polarized light. Maximum polarization occurs 90 degrees from the sun, where the scattering angle creates strong linear polarization.' },
+      { question: 'How do animals use sky polarization?', answer: 'Bees, ants, and many insects detect polarization patterns to navigate even under cloudy skies. Vikings may have used calcite sunstones to read sky polarization for ocean navigation.' },
+    ],
+  },
+
+  'power-delivery-network': {
+    metaTitle: 'Chip Power Delivery Network - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design a chip power delivery network from VRM to transistor. Manage voltage droop, decoupling capacitors, and IR drop across the PDN impedance profile.',
+    concepts: ['power delivery network', 'voltage droop', 'decoupling capacitors', 'IR drop', 'PDN impedance'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a power delivery network?', answer: 'The complete path from voltage regulator to on-die transistors: PCB planes, package traces, C4 bumps, and on-die metal layers. Each stage must maintain stable voltage under transient current demands.' },
+      { question: 'Why are decoupling capacitors critical?', answer: 'They act as local charge reservoirs, supplying instantaneous current during transients before the VRM can respond. Without them, voltage droops cause timing errors and chip malfunction.' },
+    ],
+  },
+
+  'power-factor': {
+    metaTitle: 'Power Factor Correction - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize AC power factor with phasor diagrams. Adjust reactive loads, add correction capacitors, and see how power factor affects real power delivery efficiency.',
+    concepts: ['power factor', 'reactive power', 'apparent power', 'phasor diagram', 'capacitor correction'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is power factor?', answer: 'The ratio of real power (watts) to apparent power (VA): PF = cos(phi). A PF of 1.0 means all current does useful work. Low PF wastes capacity with reactive current that delivers no real energy.' },
+      { question: 'How does power factor correction work?', answer: 'Capacitors supply leading reactive current that cancels the lagging current drawn by inductive loads (motors, transformers). This brings the net power factor closer to unity.' },
+    ],
+  },
+
+  'power-loss': {
+    metaTitle: 'Power Loss in Transmission - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Calculate power loss in electrical transmission lines. Vary voltage, current, distance, and conductor size to understand why high-voltage transmission is essential.',
+    concepts: ['transmission loss', 'I-squared-R loss', 'high voltage transmission', 'conductor resistance', 'grid efficiency'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why is electricity transmitted at high voltage?', answer: 'Power loss equals I^2 * R. For a given power level, higher voltage means lower current, and losses drop quadratically. Doubling voltage cuts transmission losses by 75%.' },
+      { question: 'How much power is lost in transmission?', answer: 'About 5-6% in developed grids. Long rural lines can lose 10-15%. Superconducting cables would eliminate resistive losses entirely but require cryogenic cooling.' },
+    ],
+  },
+
+  'precession-nutation': {
+    metaTitle: 'Precession and Nutation - Interactive Gyroscope Simulator | Atlas Coach',
+    metaDescription: 'Spin a virtual gyroscope and observe precession and nutation. Adjust spin rate, torque, and moment of inertia to explore rotational dynamics in three dimensions.',
+    concepts: ['precession', 'nutation', 'gyroscope', 'angular momentum', 'torque'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What causes gyroscopic precession?', answer: 'Gravity applies torque to a spinning gyroscope. Instead of falling, the angular momentum vector rotates perpendicular to the torque, causing the spin axis to sweep out a cone.' },
+      { question: 'What is nutation?', answer: 'A small wobble superimposed on precession. When a gyroscope is released, it bobs up and down as it precesses. Nutation amplitude decreases with higher spin speed due to greater angular momentum.' },
+    ],
+  },
+
+  'pressure-drop': {
+    metaTitle: 'Pressure Drop in Pipes - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Calculate pressure drop through pipe systems. Adjust flow rate, pipe diameter, length, and roughness to apply the Darcy-Weisbach equation interactively.',
+    concepts: ['pressure drop', 'Darcy-Weisbach equation', 'friction factor', 'pipe flow', 'Moody chart'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the Darcy-Weisbach equation?', answer: 'Delta_P = f * (L/D) * (rho*v^2/2), where f is the friction factor, L is pipe length, D is diameter, and v is flow velocity. It predicts pressure loss from pipe friction.' },
+      { question: 'How does pipe diameter affect pressure drop?', answer: 'Pressure drop is inversely proportional to the fifth power of diameter. Doubling the pipe diameter reduces pressure drop by about 97%, making pipe sizing critical in system design.' },
+    ],
+  },
+
+  'process-variation': {
+    metaTitle: 'Process Variation - Interactive Semiconductor Simulator | Atlas Coach',
+    metaDescription: 'Explore semiconductor manufacturing process variation. Simulate threshold voltage shifts, gate length variation, and their impact on chip speed and power distribution.',
+    concepts: ['process variation', 'threshold voltage', 'gate length', 'yield', 'statistical design'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is process variation in semiconductors?', answer: 'Random and systematic deviations in transistor parameters during manufacturing. At advanced nodes, atomic-scale differences cause measurable variation in speed, power, and leakage across a chip.' },
+      { question: 'How do designers handle process variation?', answer: 'Statistical design methods, guard-banding timing margins, adaptive voltage scaling, and post-silicon speed binning. Monte Carlo simulation during design verifies yield under worst-case variation.' },
+    ],
+  },
+
+  'projectile-independence': {
+    metaTitle: 'Projectile Motion Independence - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Prove that horizontal and vertical motions are independent. Drop and launch projectiles simultaneously and watch them hit the ground at the same time.',
+    concepts: ['projectile motion', 'independence of motion', 'free fall', 'horizontal velocity', 'superposition'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why do horizontal and vertical motions not affect each other?', answer: 'Gravity acts only vertically. Horizontal velocity has no vertical component and vice versa. The two directions obey independent equations of motion that can be solved separately.' },
+      { question: 'Does a bullet fired horizontally hit the ground at the same time as one dropped?', answer: 'Yes, ignoring air resistance. Both experience identical downward acceleration. The fired bullet travels farther horizontally but falls the same vertical distance in the same time.' },
+    ],
+  },
+
+  'prompt-injection-safety': {
+    metaTitle: 'Prompt Injection Safety - Interactive AI Security Simulator | Atlas Coach',
+    metaDescription: 'Learn to defend against prompt injection attacks on AI systems. Test malicious inputs, build guardrails, and understand how to keep language models secure.',
+    concepts: ['prompt injection', 'AI safety', 'input sanitization', 'guardrails', 'adversarial inputs'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is a prompt injection attack?', answer: 'An attack where malicious user input overrides the system prompt, causing an AI to ignore instructions, leak data, or perform unintended actions. It exploits the lack of separation between instructions and data.' },
+      { question: 'How can prompt injection be mitigated?', answer: 'Input validation, output filtering, privilege separation, using structured tool calls instead of free-form generation, and defense-in-depth approaches. No single method is foolproof.' },
+    ],
+  },
+
+  'quantization-precision': {
+    metaTitle: 'Model Quantization Precision - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore AI model quantization tradeoffs interactively. Compare FP32, FP16, INT8, and INT4 precision to see how reducing bit width affects accuracy and speed.',
+    concepts: ['quantization', 'model compression', 'floating point precision', 'inference speed', 'accuracy tradeoff'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is model quantization?', answer: 'Reducing the numerical precision of model weights and activations from 32-bit floats to lower bit widths (16, 8, or 4 bits). This shrinks model size and speeds inference with minimal accuracy loss.' },
+      { question: 'How much speedup does INT8 quantization provide?', answer: 'Typically 2-4x faster inference and 4x memory reduction versus FP32. Modern GPUs and NPUs have dedicated INT8 tensor cores that multiply throughput with minimal quality degradation.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 8
+  // ================================================================
+
+// ================================================================
+  // SEMICONDUCTOR — RC & RADIATION
+  // ================================================================
+
+  'r-c-delay': {
+    metaTitle: 'RC Delay in Interconnects - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate RC time delay in semiconductor interconnects. Adjust wire dimensions, materials, and spacing to minimize signal propagation delay in integrated circuits.',
+    concepts: ['RC delay', 'interconnect resistance', 'parasitic capacitance', 'signal propagation', 'wire scaling'],
+    difficulty: 'advanced',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'Why does RC delay matter in chip design?', answer: 'As transistors shrink, interconnect wires become thinner and closer together, increasing resistance and capacitance. RC delay now dominates over gate delay at advanced nodes.' },
+      { question: 'How can RC delay be reduced?', answer: 'Use lower-resistivity metals like copper instead of aluminum, low-k dielectrics to reduce capacitance, and wider or shorter wires. Repeater insertion also helps on long routes.' },
+    ],
+  },
+
+  'r-c-delay-interconnect': {
+    metaTitle: 'Interconnect RC Delay Optimization - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize interconnect RC delay by tuning wire width, spacing, and dielectric properties. Compare metal layers and routing strategies for faster chip performance.',
+    concepts: ['interconnect optimization', 'wire resistance', 'coupling capacitance', 'metal layers', 'signal integrity'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is the Elmore delay model?', answer: 'A first-order RC delay estimate that sums resistance-capacitance products along a signal path. It gives a quick approximation useful for early-stage routing and buffer placement.' },
+      { question: 'Why are multiple metal layers used in chips?', answer: 'Lower layers with thin wires handle local connections. Upper layers with thicker, wider wires carry global signals and power with lower RC delay over long distances.' },
+    ],
+  },
+
+  // ================================================================
+  // ELECTRICITY — RC CIRCUIT
+  // ================================================================
+
+  'r-c-time-constant': {
+    metaTitle: 'RC Time Constant - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Charge and discharge an RC circuit in real time. Measure the time constant tau, plot exponential curves, and understand how capacitors store and release energy.',
+    concepts: ['RC circuit', 'time constant', 'capacitor charging', 'exponential decay', 'tau'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'What is the RC time constant?', answer: 'Tau = R * C, measured in seconds. After one time constant, a charging capacitor reaches 63.2% of the supply voltage. After five time constants, it is over 99% charged.' },
+      { question: 'Where are RC circuits used in practice?', answer: 'Timing circuits, audio filters, debounce circuits for switches, power supply smoothing, and signal coupling. The RC time constant sets the cutoff frequency in filters.' },
+    ],
+  },
+
+  // ================================================================
+  // SEMICONDUCTOR — RADIATION
+  // ================================================================
+
+  'radiation-effects': {
+    metaTitle: 'Radiation Effects on Electronics - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how radiation damages semiconductor devices. Simulate single-event upsets, total ionizing dose, and displacement damage in space-grade electronics.',
+    concepts: ['radiation hardening', 'single-event upset', 'total ionizing dose', 'displacement damage', 'latchup'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a single-event upset?', answer: 'A high-energy particle strikes a transistor and deposits enough charge to flip a memory bit. SEUs are soft errors that can be corrected with ECC but may cause system crashes if undetected.' },
+      { question: 'How are space electronics protected from radiation?', answer: 'Radiation-hardened designs use larger transistors, redundant logic (triple modular redundancy), shielding, and special process techniques to tolerate high radiation environments.' },
+    ],
+  },
+
+  // ================================================================
+  // EXPERIMENTS
+  // ================================================================
+
+  'rattleback': {
+    metaTitle: 'Rattleback Reversal Spin - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Spin a virtual rattleback and watch it reverse direction. Explore asymmetric mass distribution, chirality, and the physics behind this counter-intuitive toy.',
+    concepts: ['rattleback', 'asymmetric inertia', 'chirality', 'rotational dynamics', 'instability'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 7,
+    faqItems: [
+      { question: 'Why does a rattleback reverse its spin?', answer: 'Its asymmetric mass distribution couples rotational and pitching modes. Spinning the wrong way excites a pitching oscillation that extracts rotational energy and reverses the spin direction.' },
+      { question: 'Does a rattleback violate angular momentum conservation?', answer: 'No. The friction force from the surface provides an external torque. Angular momentum is exchanged with the Earth, though the change is immeasurably small for Earth.' },
+    ],
+  },
+
+  // ================================================================
+  // OPTICS
+  // ================================================================
+
+  'rayleigh-mie-scattering': {
+    metaTitle: 'Rayleigh and Mie Scattering - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate light scattering by particles of different sizes. Compare Rayleigh and Mie regimes to understand why the sky is blue and sunsets are red.',
+    concepts: ['Rayleigh scattering', 'Mie scattering', 'particle size parameter', 'wavelength dependence', 'atmospheric optics'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is the sky blue?', answer: 'Air molecules are much smaller than visible wavelengths, causing Rayleigh scattering proportional to 1/wavelength^4. Blue light scatters about 5.5 times more than red light.' },
+      { question: 'What is the difference between Rayleigh and Mie scattering?', answer: 'Rayleigh applies when particles are much smaller than the wavelength and scatters short wavelengths preferentially. Mie applies to larger particles and scatters all wavelengths more equally, producing white haze.' },
+    ],
+  },
+
+  'reflection': {
+    metaTitle: 'Light Reflection - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Bounce light rays off mirrors and surfaces. Verify the law of reflection, build corner reflectors, and explore specular versus diffuse reflection interactively.',
+    concepts: ['law of reflection', 'specular reflection', 'diffuse reflection', 'mirror', 'angle of incidence'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the law of reflection?', answer: 'The angle of incidence equals the angle of reflection, measured from the surface normal. This holds for all smooth surfaces regardless of material.' },
+      { question: 'What is the difference between specular and diffuse reflection?', answer: 'Specular reflection occurs on smooth surfaces and preserves the image. Diffuse reflection occurs on rough surfaces where micro-facets scatter light in many directions, making objects visible from all angles.' },
+    ],
+  },
+
+  'refraction': {
+    metaTitle: 'Light Refraction - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Bend light rays at material interfaces and explore how refractive index changes light speed and direction. Visualize refraction through prisms, lenses, and water.',
+    concepts: ['refraction', 'refractive index', 'Snell\'s law', 'dispersion', 'optical density'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does light bend when entering glass?', answer: 'Light slows down in denser media. The wavefront pivots at the boundary because one side enters the medium first, changing the direction of propagation according to Snell\'s law.' },
+      { question: 'What causes a rainbow?', answer: 'Sunlight refracts into a raindrop, reflects off the back, and refracts again on exit. Different wavelengths refract at slightly different angles (dispersion), separating white light into colors.' },
+    ],
+  },
+
+  'retroreflection': {
+    metaTitle: 'Retroreflection - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore retroreflective surfaces that bounce light back to its source. Simulate corner cubes, glass beads, and understand road signs, bike reflectors, and lunar ranging.',
+    concepts: ['retroreflection', 'corner cube reflector', 'glass bead retroreflector', 'road safety', 'lunar laser ranging'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 7,
+    faqItems: [
+      { question: 'How does a corner cube retroreflector work?', answer: 'Three mutually perpendicular mirrors reflect any incoming ray back exactly parallel to the source direction after three bounces. This works regardless of the entry angle.' },
+      { question: 'Where are retroreflectors used?', answer: 'Road signs, vehicle reflectors, safety vests, bicycle reflectors, surveying targets, and even on the Moon for laser ranging experiments placed by Apollo astronauts.' },
+    ],
+  },
+
+  // ================================================================
+  // WAVES
+  // ================================================================
+
+  'reverberation': {
+    metaTitle: 'Sound Reverberation - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate sound reverberation in rooms of different sizes and materials. Adjust absorption coefficients, calculate RT60, and design ideal acoustic spaces.',
+    concepts: ['reverberation time', 'RT60', 'acoustic absorption', 'Sabine equation', 'room acoustics'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is RT60?', answer: 'The time for sound intensity to decay by 60 dB (a factor of one million) after the source stops. Concert halls aim for 1.5-2.0 seconds; recording studios target 0.3-0.5 seconds.' },
+      { question: 'What is the Sabine equation?', answer: 'RT60 = 0.161 * V / A, where V is room volume in cubic meters and A is total absorption in sabins. Larger rooms and less absorbent surfaces produce longer reverberation.' },
+    ],
+  },
+
+  // ================================================================
+  // MECHANICS
+  // ================================================================
+
+  'rolling-race': {
+    metaTitle: 'Rolling Race Down an Incline - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Race different shaped objects down a ramp. Discover why solid spheres beat hollow cylinders and learn how moment of inertia determines rolling acceleration.',
+    concepts: ['moment of inertia', 'rolling motion', 'rotational kinetic energy', 'inclined plane', 'angular acceleration'],
+    difficulty: 'beginner',
+    estimatedMinutes: 6,
+    faqItems: [
+      { question: 'Which shape wins the rolling race?', answer: 'A solid sphere wins because it has the smallest moment of inertia ratio (I/MR^2 = 2/5). Less energy goes into rotation, leaving more for translation down the ramp.' },
+      { question: 'Does mass affect the rolling race result?', answer: 'No. Mass cancels in the equations of motion for rolling without slipping. A heavy solid sphere and a light solid sphere reach the bottom at the same time.' },
+    ],
+  },
+
+  // ================================================================
+  // EXPERIMENTS
+  // ================================================================
+
+  'rolling-shutter': {
+    metaTitle: 'Rolling Shutter Effect - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize how rolling shutter distorts fast-moving objects. Compare global vs rolling shutter capture, adjust scan speed, and understand wobble and skew artifacts.',
+    concepts: ['rolling shutter', 'CMOS sensor', 'temporal aliasing', 'image distortion', 'scan rate'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What causes rolling shutter distortion?', answer: 'CMOS sensors read rows sequentially rather than all at once. Fast-moving objects shift position between row exposures, causing skew, wobble, and partial exposure artifacts.' },
+      { question: 'How is rolling shutter different from global shutter?', answer: 'Global shutter exposes all pixels simultaneously, eliminating motion distortion. Rolling shutter scans rows top-to-bottom, which is cheaper but produces artifacts with fast motion or camera panning.' },
+    ],
+  },
+
+  // ================================================================
+  // MECHANICS
+  // ================================================================
+
+  'rolling-vs-sliding': {
+    metaTitle: 'Rolling vs Sliding Friction - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare rolling and sliding friction on different surfaces. Measure friction coefficients, energy losses, and understand why wheels revolutionized transportation.',
+    concepts: ['rolling friction', 'sliding friction', 'friction coefficient', 'energy dissipation', 'deformation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 7,
+    faqItems: [
+      { question: 'Why is rolling friction much less than sliding friction?', answer: 'Rolling involves small surface deformation rather than surface-to-surface shearing. Typical rolling friction coefficients are 0.001-0.01, versus 0.3-1.0 for sliding friction.' },
+      { question: 'What causes rolling friction if surfaces don\'t slide?', answer: 'Surface deformation at the contact patch dissipates energy as heat. Softer materials and higher loads increase deformation, producing more rolling resistance.' },
+    ],
+  },
+
+  // ================================================================
+  // SEMICONDUCTOR — SRAM
+  // ================================================================
+
+  's-r-a-m-cell': {
+    metaTitle: 'SRAM Memory Cell Design - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the 6-transistor SRAM cell used in CPU caches. Toggle read and write operations, adjust transistor ratios, and understand static memory stability.',
+    concepts: ['SRAM', '6T cell', 'cross-coupled inverters', 'read stability', 'write margin'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How does a 6T SRAM cell store data?', answer: 'Two cross-coupled inverters form a bistable latch that holds one bit. Two access transistors controlled by the word line connect the cell to bit lines for reading and writing.' },
+      { question: 'Why is SRAM faster than DRAM?', answer: 'SRAM uses active transistor feedback to hold data with no refresh needed. DRAM stores charge on a capacitor that must be periodically refreshed, adding latency and complexity.' },
+    ],
+  },
+
+  's-r-a-m-yield-redundancy': {
+    metaTitle: 'SRAM Yield and Redundancy - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate SRAM array yield improvement through redundant rows and columns. Explore defect density, repair algorithms, and how redundancy boosts chip manufacturing yield.',
+    concepts: ['SRAM yield', 'redundancy', 'defect density', 'repair algorithm', 'manufacturing yield'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why is SRAM yield critical for chip manufacturing?', answer: 'SRAM arrays are the densest structures on a chip and most sensitive to defects. A single faulty bit can kill the chip. SRAM yield often determines overall die yield.' },
+      { question: 'How does redundancy improve yield?', answer: 'Extra rows and columns of SRAM cells are included on the die. Post-fabrication testing identifies defective cells, and fuses or anti-fuses remap addresses to spare cells.' },
+    ],
+  },
+
+  // ================================================================
+  // SPACE
+  // ================================================================
+
+  'satellite-doppler': {
+    metaTitle: 'Satellite Doppler Shift - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Track a satellite and observe Doppler frequency shift as it passes overhead. Calculate velocity from frequency data and understand GPS and satellite communication.',
+    concepts: ['Doppler shift', 'satellite tracking', 'frequency offset', 'relative velocity', 'LEO communication'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How large is the Doppler shift from a LEO satellite?', answer: 'A satellite at 400 km altitude moves at 7.66 km/s. At 2 GHz, the maximum Doppler shift is about +/- 50 kHz, requiring receivers to continuously track and compensate.' },
+      { question: 'How does GPS use Doppler measurements?', answer: 'GPS receivers use Doppler shift to determine satellite relative velocity, improving position accuracy and enabling velocity measurement. It also aids rapid satellite signal acquisition.' },
+    ],
+  },
+
+  'satellite-solar-angle': {
+    metaTitle: 'Satellite Solar Panel Angle - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize satellite solar panel orientation for maximum power generation. Adjust orbital parameters, panel tilt, and sun angle to maximize energy harvest in orbit.',
+    concepts: ['solar panel angle', 'sun incidence angle', 'orbital geometry', 'power generation', 'cosine loss'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does solar panel angle matter in orbit?', answer: 'Power output follows a cosine law: tilting panels away from the sun reduces output proportionally. Optimal pointing can mean the difference between full power and mission failure.' },
+      { question: 'How do satellites keep panels pointed at the sun?', answer: 'Most use solar array drive assemblies (SADAs) that rotate panels on one or two axes to track the sun. Some small satellites use body-mounted panels with no active tracking.' },
+    ],
+  },
+
+  'satellite-thermal': {
+    metaTitle: 'Satellite Thermal Control - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Balance heating and cooling on a virtual satellite. Manage solar flux, albedo, and IR radiation to keep components within operating temperature limits in orbit.',
+    concepts: ['thermal control', 'radiative equilibrium', 'solar absorptance', 'thermal emissivity', 'MLI blankets'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'Why is thermal control challenging in space?', answer: 'Space has no convection, so all heat transfer is by radiation. Sunlit surfaces can reach 150C while shadowed ones drop to -150C, creating extreme gradients across the spacecraft.' },
+      { question: 'What are MLI blankets?', answer: 'Multi-layer insulation consists of many thin reflective films separated by spacers. They block radiative heat transfer and are the gold-colored blankets seen on most satellites and spacecraft.' },
+    ],
+  },
+
+  // ================================================================
+  // SOLAR
+  // ================================================================
+
+  'screen-printing-metallization': {
+    metaTitle: 'Screen Printing Metallization - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate the screen printing process for solar cell metallization. Adjust paste composition, screen mesh, and print speed to optimize contact finger quality.',
+    concepts: ['screen printing', 'metallization', 'contact resistance', 'finger width', 'silver paste'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is screen printing used for solar cell contacts?', answer: 'It is fast, low-cost, and high-throughput, printing metal contacts on thousands of cells per hour. Silver paste is squeezed through a patterned mesh onto the wafer surface.' },
+      { question: 'What tradeoffs exist in metallization finger design?', answer: 'Wider fingers have lower resistance but shade more cell area. Narrower fingers reduce shading but increase resistance. Optimal design balances resistive losses against optical shading losses.' },
+    ],
+  },
+
+  // ================================================================
+  // THERMODYNAMICS
+  // ================================================================
+
+  'server-airflow': {
+    metaTitle: 'Server Rack Airflow Management - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize server rack cooling by managing hot and cold aisles. Adjust fan speeds, blanking panels, and containment to prevent hot air recirculation and overheating.',
+    concepts: ['hot aisle', 'cold aisle', 'airflow management', 'thermal management', 'data center cooling'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is the hot aisle/cold aisle layout?', answer: 'Server racks face alternating directions so cold air intakes share one aisle and hot exhausts share another. This prevents mixing and improves cooling efficiency by 20-40%.' },
+      { question: 'Why do blanking panels matter?', answer: 'Empty rack spaces allow hot exhaust air to recirculate to server intakes, raising inlet temperatures. Blanking panels seal gaps and force air through servers rather than around them.' },
+    ],
+  },
+
+  // ================================================================
+  // FLUIDS
+  // ================================================================
+
+  'shear-thinning': {
+    metaTitle: 'Shear Thinning Viscosity - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore shear-thinning fluids that become less viscous under stress. Adjust shear rate and see viscosity drop in ketchup, paint, blood, and polymer solutions.',
+    concepts: ['shear thinning', 'non-Newtonian fluid', 'viscosity', 'power-law fluid', 'pseudoplastic'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 7,
+    faqItems: [
+      { question: 'What causes shear thinning?', answer: 'Long polymer chains or suspended particles align with flow direction under shear stress, reducing internal resistance. At rest, random entanglements increase viscosity.' },
+      { question: 'What everyday fluids are shear thinning?', answer: 'Ketchup, paint, blood, shampoo, and toothpaste. This is why ketchup flows easily once you start shaking the bottle but sits still on your plate.' },
+    ],
+  },
+
+  'shower-curtain': {
+    metaTitle: 'Shower Curtain Bernoulli Effect - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Discover why shower curtains blow inward when the water is running. Explore the Bernoulli effect, vortex theory, and buoyancy-driven convection explanations.',
+    concepts: ['Bernoulli effect', 'pressure differential', 'convection', 'vortex', 'fluid dynamics'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does the shower curtain blow inward?', answer: 'The dominant cause is a horizontal vortex created by the shower spray that produces a low-pressure zone inside. Buoyancy from heated air rising also contributes to the inward pull.' },
+      { question: 'Is it really the Bernoulli effect?', answer: 'Bernoulli alone is insufficient. Research by David Schmidt showed the shower spray creates a vortex whose center has low pressure, pulling the curtain inward more than simple airspeed differences can explain.' },
+    ],
+  },
+
+  // ================================================================
+  // SOLAR — DEFECTS & TEXTURING
+  // ================================================================
+
+  'shunt-series-defects': {
+    metaTitle: 'Shunt and Series Resistance Defects - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Diagnose solar cell defects by analyzing shunt and series resistance effects on IV curves. Adjust resistance values and see how each degrades cell performance.',
+    concepts: ['shunt resistance', 'series resistance', 'IV curve degradation', 'fill factor loss', 'solar cell defects'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What does low shunt resistance indicate?', answer: 'Current leakage paths through the cell, often from manufacturing defects, edge damage, or localized shunts. Low shunt resistance reduces voltage and fill factor, especially at low light levels.' },
+      { question: 'How does series resistance affect solar cells?', answer: 'High series resistance from poor contacts, thin fingers, or resistive emitters reduces fill factor and current at high irradiance. It flattens the IV curve near the maximum power point.' },
+    ],
+  },
+
+  'silicon-texturing': {
+    metaTitle: 'Silicon Surface Texturing - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate silicon wafer texturing to reduce reflection losses. Compare random pyramids, inverted pyramids, and black silicon for optimal light trapping in solar cells.',
+    concepts: ['surface texturing', 'anti-reflection', 'random pyramids', 'light trapping', 'KOH etching'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why is silicon texturing important for solar cells?', answer: 'Polished silicon reflects over 35% of incident light. Texturing creates micro-pyramids that give light multiple chances to enter, reducing reflection to under 10% before anti-reflection coatings.' },
+      { question: 'How are random pyramids formed?', answer: 'Anisotropic KOH or NaOH etching preferentially removes silicon along crystal planes, naturally forming square-based pyramids on (100) wafers. The process is self-masking and low-cost.' },
+    ],
+  },
+
+  // ================================================================
+  // FLUIDS
+  // ================================================================
+
+  'siphon': {
+    metaTitle: 'Siphon Fluid Transfer - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Start a virtual siphon and watch fluid flow uphill before draining to a lower level. Explore atmospheric pressure, gravity, and the maximum siphon height limit.',
+    concepts: ['siphon', 'atmospheric pressure', 'gravity-driven flow', 'fluid column', 'cavitation limit'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a siphon work?', answer: 'Gravity pulls the fluid down the longer outlet leg, reducing pressure at the top. Atmospheric pressure on the source pushes fluid up and over the bend to maintain continuous flow.' },
+      { question: 'What is the maximum height a siphon can work?', answer: 'About 10.3 meters for water at sea level, limited by atmospheric pressure. Above this height, the water column cavitates and the siphon breaks. In practice, dissolved gases limit it to around 8-9 meters.' },
+    ],
+  },
+
+  // ================================================================
+  // MECHANICS
+  // ================================================================
+
+  'sleeping-top': {
+    metaTitle: 'Sleeping Top Gyroscopic Motion - Interactive Simulator | Atlas Coach',
+    metaDescription: 'Spin a top and watch it stand upright through gyroscopic effects. Explore precession, nutation, and the stability transition that makes a spinning top sleep.',
+    concepts: ['gyroscopic precession', 'nutation', 'angular momentum', 'spin stability', 'sleeping top'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 7,
+    faqItems: [
+      { question: 'What does it mean for a top to sleep?', answer: 'A sleeping top spins perfectly upright with no precession or wobble. This occurs when spin angular momentum is high enough that friction at the tip quickly damps any tilt.' },
+      { question: 'Why does a spinning top eventually fall?', answer: 'Friction at the contact point gradually slows the spin. As angular momentum decreases, gravitational torque overcomes gyroscopic stability, precession widens, and the top eventually topples.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 9
+  // ================================================================
+
+'soap-boat': {
+    metaTitle: 'Soap Boat — Interactive Surface Tension Simulator | Atlas Coach',
+    metaDescription: 'Build a soap-powered boat and explore surface tension and the Marangoni effect. Adjust surfactant type and concentration to see how reducing surface tension propels objects across water.',
+    concepts: ['surface tension', 'Marangoni effect', 'surfactants', 'cohesive forces'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a soap boat work?', answer: 'Soap reduces surface tension behind the boat but not in front. The imbalance in surface tension pulls the boat forward, a phenomenon called the Marangoni effect.' },
+      { question: 'What is the Marangoni effect?', answer: 'Flow driven by surface tension gradients. Fluid moves from regions of low surface tension toward regions of high surface tension, creating a net force on nearby objects.' },
+    ],
+  },
+
+  'solar-temp-coefficient': {
+    metaTitle: 'Solar Panel Temperature Coefficient — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how temperature affects solar cell voltage, current, and power output. Adjust panel temperature and see the temperature coefficient reduce efficiency in real time.',
+    concepts: ['temperature coefficient', 'solar cell efficiency', 'open circuit voltage', 'thermal losses'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do solar panels lose power when hot?', answer: 'Higher temperature increases carrier recombination and reduces the bandgap voltage. Silicon cells lose about 0.3-0.5% of rated power per degree C above 25C.' },
+      { question: 'What is the temperature coefficient of a solar panel?', answer: 'A value in %/C that quantifies power loss with temperature. A typical silicon panel has a coefficient of -0.35%/C, meaning it loses 0.35% power for each degree above STC.' },
+    ],
+  },
+
+  'solar-thermal-derating': {
+    metaTitle: 'Solar Thermal Derating — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate how hot weather derates solar panel output. Visualize the gap between nameplate and real-world power as cell temperature rises above standard test conditions.',
+    concepts: ['thermal derating', 'NOCT', 'cell temperature', 'real-world solar performance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is solar thermal derating?', answer: 'The reduction in solar panel output caused by elevated operating temperatures. Panels rated at 25C STC often run at 50-70C in the field, losing 10-20% of nameplate power.' },
+      { question: 'What is NOCT and why does it matter?', answer: 'Nominal Operating Cell Temperature is the cell temperature at 800 W/m2, 20C ambient, and 1 m/s wind. It predicts real-world cell temperature more accurately than STC for system design.' },
+    ],
+  },
+
+  'solar-vs-i-c-purity': {
+    metaTitle: 'Solar vs IC Silicon Purity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Compare silicon purity requirements for solar cells and integrated circuits. Explore why ICs need 11 nines purity while solar panels work at 6 nines, and the cost implications.',
+    concepts: ['silicon purity', 'semiconductor grade', 'solar grade', 'carrier lifetime', 'defect density'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do ICs need purer silicon than solar cells?', answer: 'ICs rely on individual nanometer-scale transistors where a single impurity atom can cause failure. Solar cells use bulk material properties where moderate impurities reduce but do not eliminate performance.' },
+      { question: 'How pure is semiconductor-grade silicon?', answer: 'IC-grade silicon is 99.9999999% pure (9-11 nines). Solar-grade is 99.9999% (6 nines). This 1000x difference in purity requirements is why solar panels are far cheaper to produce.' },
+    ],
+  },
+
+  'solar-yield-prediction': {
+    metaTitle: 'Solar Yield Prediction — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Estimate annual solar energy yield by combining irradiance data, temperature effects, and system losses. Learn how P50 and P90 confidence intervals guide project finance.',
+    concepts: ['solar yield', 'irradiance', 'performance ratio', 'P50/P90', 'system losses'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What factors determine solar yield?', answer: 'Solar irradiance (location and weather), panel orientation, temperature derating, shading, soiling, inverter efficiency, and wiring losses. A typical system delivers 75-85% of theoretical maximum.' },
+      { question: 'What is the difference between P50 and P90?', answer: 'P50 is the median expected yield exceeded 50% of years. P90 is exceeded 90% of years, representing a conservative estimate. Banks typically finance based on P90 to reduce risk.' },
+    ],
+  },
+
+  'sound-interference': {
+    metaTitle: 'Sound Interference — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize constructive and destructive sound interference patterns. Position two speakers, adjust frequency, and map the regions of loud and quiet in real time.',
+    concepts: ['constructive interference', 'destructive interference', 'path difference', 'superposition'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes sound interference?', answer: 'When two sound waves overlap, their pressures add. If crests align (path difference = whole wavelengths), they amplify. If a crest meets a trough (half wavelength difference), they cancel.' },
+      { question: 'How do noise-canceling headphones use interference?', answer: 'A microphone captures ambient noise and a speaker emits the inverted waveform. The original and anti-sound undergo destructive interference at the eardrum, reducing noise by up to 30 dB.' },
+    ],
+  },
+
+  'space-radiation': {
+    metaTitle: 'Space Radiation & Bit Flips — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how cosmic rays and solar particles cause single-event upsets in space electronics. Shield circuits and add redundancy to protect spacecraft computers from bit flips.',
+    concepts: ['single-event upset', 'cosmic rays', 'radiation hardening', 'triple modular redundancy'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a single-event upset?', answer: 'A bit flip in memory or logic caused by an ionizing particle depositing charge in a transistor. A single cosmic ray can change a 0 to a 1, potentially corrupting critical data or commands.' },
+      { question: 'How do spacecraft protect against radiation?', answer: 'Triple modular redundancy runs three copies of each computation and votes on the result. Radiation-hardened chips use larger transistors and error-correcting memory to resist bit flips.' },
+    ],
+  },
+
+  'sparsity': {
+    metaTitle: 'Neural Network Sparsity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Discover how zeros in neural network weights enable faster, more efficient AI. Prune model weights, measure accuracy, and see how sparsity accelerates computation.',
+    concepts: ['model sparsity', 'weight pruning', 'sparse matrix', 'AI efficiency', 'inference acceleration'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is sparsity in neural networks?', answer: 'The fraction of weights that are zero. A 90% sparse model stores and computes only 10% of parameters. Specialized hardware skips zero multiplications for major speedups.' },
+      { question: 'Does pruning hurt model accuracy?', answer: 'Moderate pruning (50-90%) often maintains accuracy within 1%. The brain is similarly sparse. Extreme pruning beyond 95% typically causes noticeable quality degradation.' },
+    ],
+  },
+
+  'speaker-principle': {
+    metaTitle: 'Speaker Electromagnetic Principle — Interactive Simulator | Atlas Coach',
+    metaDescription: 'See how speakers convert electricity into sound using the Lorentz force. Adjust current, magnetic field, and frequency to control cone movement and sound output.',
+    concepts: ['Lorentz force', 'voice coil', 'electromagnetic transducer', 'audio signal conversion'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How does a speaker produce sound?', answer: 'Alternating current flows through a coil in a permanent magnetic field. The Lorentz force pushes the coil back and forth, driving an attached cone that compresses air into sound waves.' },
+      { question: 'Why do speakers have magnets?', answer: 'The permanent magnet provides a static field that interacts with the voice coil current. Without the magnetic field, there would be no Lorentz force and no cone movement to create sound.' },
+    ],
+  },
+
+  'spec-first-prompting': {
+    metaTitle: 'Specification-First Prompting — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Learn the spec-first prompting technique for AI. Write structured specifications before generating code, reducing ambiguity and improving LLM output quality.',
+    concepts: ['spec-first prompting', 'prompt engineering', 'structured specification', 'LLM output quality'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is spec-first prompting?', answer: 'A technique where you write a detailed specification of desired behavior before asking the AI to generate code. Explicit requirements reduce ambiguity and produce more correct, complete output.' },
+      { question: 'How does spec-first differ from vague prompting?', answer: 'Vague prompts let the LLM guess requirements, often producing wrong assumptions. Spec-first prompts define inputs, outputs, edge cases, and constraints upfront, yielding code that matches intent.' },
+    ],
+  },
+
+  'spectral-mismatch': {
+    metaTitle: 'Spectral Mismatch — Interactive Solar Simulator | Atlas Coach',
+    metaDescription: 'Explore why sunlight spectrum matters for solar cell output. Compare how different atmospheric conditions and light sources shift spectrum and change panel performance.',
+    concepts: ['spectral mismatch', 'AM1.5 spectrum', 'spectral response', 'air mass', 'solar cell current'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is spectral mismatch in solar cells?', answer: 'The loss that occurs when the actual light spectrum differs from the standard AM1.5 spectrum used for panel ratings. Morning, evening, and cloudy conditions shift the spectrum, changing cell output.' },
+      { question: 'Why do two equally bright lights produce different solar power?', answer: 'Solar cells respond to specific wavelengths based on bandgap energy. A blue-rich spectrum may waste photons as heat, while a red-shifted spectrum may lack energy to generate electron-hole pairs.' },
+    ],
+  },
+
+  'speed-of-sound': {
+    metaTitle: 'Speed of Sound — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Measure the speed of sound through different materials. Explore how temperature, density, and stiffness determine whether sound travels at 340 m/s or 6000 m/s.',
+    concepts: ['speed of sound', 'bulk modulus', 'acoustic velocity', 'material properties', 'temperature dependence'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What determines the speed of sound?', answer: 'The ratio of stiffness to density: v = sqrt(B/rho). Stiffer materials transmit sound faster. Sound travels 343 m/s in air, 1480 m/s in water, and 5960 m/s in steel.' },
+      { question: 'Does temperature affect the speed of sound?', answer: 'Yes. In air, speed increases about 0.6 m/s per degree C because warmer molecules move faster. At 0C it is 331 m/s, at 20C it is 343 m/s.' },
+    ],
+  },
+
+  'stable-levitation': {
+    metaTitle: 'Stable Magnetic Levitation — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore why stable levitation is so difficult and how feedback control, diamagnets, and superconductors overcome Earnshaw\'s theorem to float objects in midair.',
+    concepts: ['magnetic levitation', 'Earnshaw\'s theorem', 'feedback control', 'diamagnetism', 'stability'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why can\'t static magnets levitate stably?', answer: 'Earnshaw\'s theorem proves that no arrangement of static magnets can create a stable equilibrium in all three dimensions. At least one axis is always unstable without feedback or special materials.' },
+      { question: 'How do maglev trains achieve stable levitation?', answer: 'Active feedback adjusts electromagnet current thousands of times per second to maintain a constant gap. Sensors detect position changes and controllers respond faster than the instability can grow.' },
+    ],
+  },
+
+  'static-electricity': {
+    metaTitle: 'Static Electricity — Interactive Tribocharging Simulator | Atlas Coach',
+    metaDescription: 'Rub virtual materials together and watch charge transfer through the triboelectric effect. Build up static charge, observe sparks, and learn the triboelectric series.',
+    concepts: ['triboelectric effect', 'static charge', 'electron transfer', 'triboelectric series', 'electrostatic discharge'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What causes static electricity?', answer: 'When two materials rub together, electrons transfer from one to the other based on the triboelectric series. One material becomes positively charged, the other negatively, creating a voltage difference.' },
+      { question: 'Why do you get shocked touching a doorknob?', answer: 'Walking on carpet transfers electrons to your body, building up thousands of volts. Touching a conductor creates a sudden discharge path, and the rapid current flow produces the spark and shock.' },
+    ],
+  },
+
+  'stick-slip': {
+    metaTitle: 'Stick-Slip Friction — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate stick-slip oscillation where objects alternately stick then slide. Explore how static friction builds elastic energy that releases as sudden motion, like earthquakes.',
+    concepts: ['stick-slip friction', 'static vs kinetic friction', 'elastic energy', 'seismic cycles', 'oscillation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is stick-slip motion?', answer: 'A cycle where static friction holds an object until applied force exceeds the threshold, then kinetic friction takes over and the object slides. It stops, sticks again, and the cycle repeats.' },
+      { question: 'How does stick-slip relate to earthquakes?', answer: 'Tectonic plates push against faults that are locked by friction. Stress builds for decades until it exceeds the fault strength. The sudden slip releases stored elastic energy as seismic waves.' },
+    ],
+  },
+
+  'straw-instrument': {
+    metaTitle: 'Straw Musical Instrument — Interactive Acoustics Simulator | Atlas Coach',
+    metaDescription: 'Build a straw instrument and explore how tube length determines pitch. Cut straws to different lengths, play notes, and discover the physics of resonant air columns.',
+    concepts: ['resonant frequency', 'air column', 'open tube harmonics', 'acoustic resonance', 'pitch'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does a straw produce musical notes?', answer: 'Vibrating reed lips create sound waves that resonate in the straw air column. The tube length sets the resonant frequency: shorter straws produce higher pitches, longer straws produce lower pitches.' },
+      { question: 'Why does cutting a straw shorter raise the pitch?', answer: 'The fundamental frequency of an open tube is f = v/(2L). Halving the length doubles the frequency, raising the pitch by one octave. This is the same principle used in flutes and organ pipes.' },
+    ],
+  },
+
+  'string-sizing': {
+    metaTitle: 'PV String Sizing — Interactive Solar Design Simulator | Atlas Coach',
+    metaDescription: 'Design solar panel strings by selecting the right number of modules in series. Match string voltage to inverter input range while accounting for temperature extremes.',
+    concepts: ['string sizing', 'inverter voltage window', 'Voc temperature correction', 'series wiring', 'system design'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why does string sizing matter in solar design?', answer: 'Too few panels means voltage falls below the inverter minimum and the system shuts down. Too many and cold-weather Voc exceeds the inverter maximum, risking equipment damage.' },
+      { question: 'How does temperature affect string voltage?', answer: 'Cold temperatures increase Voc (about +0.3%/C for silicon). A string designed for 25C may exceed inverter limits on a cold morning. Designers must check both hot and cold extremes.' },
+    ],
+  },
+
+  'supercooling': {
+    metaTitle: 'Supercooling — Interactive Crystallization Simulator | Atlas Coach',
+    metaDescription: 'Cool water below freezing without it turning to ice, then trigger instant crystallization. Explore nucleation, metastable states, and the physics of supercooled liquids.',
+    concepts: ['supercooling', 'nucleation', 'metastable state', 'crystallization', 'phase transition'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How can water stay liquid below 0C?', answer: 'Freezing requires nucleation sites to start crystal growth. Ultra-pure water in a smooth container lacks these sites, allowing it to remain liquid down to -48C in a metastable state.' },
+      { question: 'What triggers supercooled water to freeze?', answer: 'Any disturbance that provides a nucleation site: a tap, a dust particle, a scratch, or a seed crystal. Once nucleation begins, the entire sample freezes almost instantly, releasing latent heat.' },
+    ],
+  },
+
+  'superhydrophobic': {
+    metaTitle: 'Superhydrophobic Surfaces — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design water-repellent surfaces by tuning nanostructure and chemistry. Explore contact angles, the lotus effect, and how superhydrophobic coatings enable self-cleaning.',
+    concepts: ['superhydrophobic', 'contact angle', 'lotus effect', 'Cassie-Baxter state', 'surface energy'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What makes a surface superhydrophobic?', answer: 'A combination of nanoscale roughness and low surface energy chemistry. Air trapped in surface texture creates a composite interface where water sits on air pockets, achieving contact angles above 150 degrees.' },
+      { question: 'How does the lotus effect work?', answer: 'Lotus leaves have waxy nano-bumps that trap air beneath water droplets. Drops bead up and roll off at the slightest tilt, carrying dirt particles away. This self-cleaning effect inspired industrial coatings.' },
+    ],
+  },
+
+  'swing-pumping': {
+    metaTitle: 'Swing Pumping — Interactive Parametric Oscillation Simulator | Atlas Coach',
+    metaDescription: 'Learn the physics of pumping a swing higher without being pushed. Time your body movements to inject energy through parametric excitation at twice the natural frequency.',
+    concepts: ['parametric excitation', 'resonance', 'energy injection', 'center of mass', 'natural frequency'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How do you pump a swing without being pushed?', answer: 'By standing and squatting at the right moments, you raise your center of mass at the lowest point and lower it at the extremes. This periodically shortens the effective pendulum length, injecting energy.' },
+      { question: 'What is parametric excitation?', answer: 'Driving an oscillator by periodically varying a system parameter (like pendulum length) at twice the natural frequency. Unlike forced oscillation, energy enters through parameter change, not an external force.' },
+    ],
+  },
+
+  'systolic-array': {
+    metaTitle: 'Systolic Array Architecture — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Watch data flow through a systolic array as it computes matrix multiplications. Understand how TPUs use this architecture to accelerate AI workloads with maximum data reuse.',
+    concepts: ['systolic array', 'matrix multiplication', 'data reuse', 'TPU architecture', 'parallel computing'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a systolic array?', answer: 'A grid of processing elements where data flows rhythmically like a heartbeat. Each cell performs a multiply-accumulate and passes results to its neighbor, achieving O(n^2) parallelism for matrix operations.' },
+      { question: 'Why are systolic arrays used in AI chips?', answer: 'Deep learning is dominated by matrix multiplication. Systolic arrays maximize data reuse by passing each weight and activation through multiple cells, minimizing expensive memory accesses.' },
+    ],
+  },
+
+  'tape-birefringence': {
+    metaTitle: 'Tape Birefringence — Interactive Optics Simulator | Atlas Coach',
+    metaDescription: 'Place adhesive tape between polarizers and discover birefringence. Stack layers, rotate angles, and see vivid colors emerge as polarization splits into fast and slow axes.',
+    concepts: ['birefringence', 'polarization', 'retardation', 'crossed polarizers', 'interference colors'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does tape show colors between polarizers?', answer: 'Stretched tape is birefringent: it splits light into two polarizations traveling at different speeds. The phase difference depends on wavelength, so some colors pass the analyzer while others are blocked.' },
+      { question: 'What is birefringence?', answer: 'A material property where the refractive index differs for different polarization directions. The fast and slow axes create a phase retardation that depends on thickness and wavelength, producing interference colors.' },
+    ],
+  },
+
+  'tensor-core': {
+    metaTitle: 'Tensor Core GPU Architecture — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how NVIDIA tensor cores perform fused matrix multiply-accumulate operations. Compare FP32, FP16, and BF16 precision to see the throughput and accuracy tradeoffs in AI training.',
+    concepts: ['tensor core', 'matrix multiply-accumulate', 'mixed precision', 'BF16', 'AI training hardware'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is a tensor core?', answer: 'A specialized hardware unit in NVIDIA GPUs that performs a 4x4 matrix multiply-accumulate in a single cycle. This is 8-16x faster than standard CUDA cores for matrix math used in deep learning.' },
+      { question: 'Why does mixed precision training work?', answer: 'Forward and backward passes use FP16 or BF16 for speed, while a master copy of weights stays in FP32 for accuracy. Loss scaling prevents underflow. This doubles throughput with minimal accuracy loss.' },
+    ],
+  },
+
+  'test-first-prompting': {
+    metaTitle: 'Test-First Prompting — Interactive AI Technique Simulator | Atlas Coach',
+    metaDescription: 'Learn test-first prompting for AI code generation. Write tests before asking the LLM to implement code, dramatically improving correctness and reducing iteration cycles.',
+    concepts: ['test-first prompting', 'TDD for AI', 'prompt engineering', 'LLM code generation', 'verification'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is test-first prompting?', answer: 'A technique where you write test cases before asking an LLM to generate code. The tests serve as an unambiguous specification, helping the model converge to correct behavior faster.' },
+      { question: 'How does test-first prompting improve AI output?', answer: 'Tests eliminate ambiguity by defining exact expected inputs and outputs. The LLM can verify its own code against the tests, reducing errors from 30-50% to under 10% in typical coding tasks.' },
+    ],
+  },
+
+  'texturing-vs-lithography': {
+    metaTitle: 'Texturing vs Lithography — Interactive Solar Simulator | Atlas Coach',
+    metaDescription: 'Compare surface texturing for solar cells with lithography for chips. Explore how the same silicon surface is deliberately roughened or precisely patterned for opposite goals.',
+    concepts: ['surface texturing', 'photolithography', 'light trapping', 'feature resolution', 'silicon processing'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do solar cells want rough surfaces but chips want smooth?', answer: 'Solar cells maximize light absorption by scattering photons into the material with random pyramids. Chips need atomically smooth surfaces to print nanometer features without distortion.' },
+      { question: 'How does pyramid texturing improve solar efficiency?', answer: 'Random pyramids 1-10 micrometers tall cause light to bounce multiple times between surfaces. Each bounce gives another chance for absorption, increasing it from 70% to over 95%.' },
+    ],
+  },
+
+  // ================================================================
+  // BATCH 10
+  // ================================================================
+
+'thermal-contact': {
+    metaTitle: 'Thermal Contact Resistance — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore thermal contact resistance at material interfaces. Adjust surface roughness, pressure, and interstitial materials to see how heat flow is impeded across junctions.',
+    concepts: ['thermal contact resistance', 'heat transfer', 'surface roughness', 'thermal conductivity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What causes thermal contact resistance?', answer: 'Real surfaces are microscopically rough, so they touch only at small asperities. Heat must cross air gaps between contact points, creating resistance to heat flow at the interface.' },
+      { question: 'How can thermal contact resistance be reduced?', answer: 'Applying thermal grease, increasing contact pressure, or using softer interface materials fills the microscopic gaps and increases the effective contact area, lowering resistance.' },
+    ],
+  },
+
+  'thermal-interface': {
+    metaTitle: 'Thermal Interface Materials — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate thermal interface materials for semiconductor cooling. Compare thermal pads, greases, and phase-change compounds to optimize heat dissipation from chip to heatsink.',
+    concepts: ['thermal interface material', 'semiconductor cooling', 'thermal conductivity', 'heat dissipation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'Why are thermal interface materials necessary?', answer: 'Even polished surfaces have microscopic gaps filled with air, a poor conductor. TIMs fill those gaps with thermally conductive material, reducing junction-to-heatsink thermal resistance.' },
+      { question: 'Which thermal interface material has the best performance?', answer: 'Liquid metal compounds offer the lowest thermal resistance but can be electrically conductive and corrosive. Thermal pastes balance performance, ease of use, and safety for most applications.' },
+    ],
+  },
+
+  'thermal-throttling': {
+    metaTitle: 'Thermal Throttling — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize CPU and GPU thermal throttling in real time. Adjust workloads, cooling capacity, and TDP limits to understand how processors reduce clock speed to prevent overheating.',
+    concepts: ['thermal throttling', 'CPU temperature', 'clock speed', 'TDP'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is thermal throttling?', answer: 'Thermal throttling is a self-protection mechanism where a processor reduces its clock speed or voltage when temperature exceeds a safe threshold, preventing physical damage to the chip.' },
+      { question: 'How can I prevent thermal throttling?', answer: 'Improve cooling with better heatsinks or fans, reapply thermal paste, ensure good case airflow, and avoid blocking vents. Undervolting can also reduce heat without significant performance loss.' },
+    ],
+  },
+
+  'thin-film-interference': {
+    metaTitle: 'Thin Film Interference — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Discover thin film interference colors interactively. Adjust film thickness, refractive index, and viewing angle to see how light waves constructively and destructively interfere.',
+    concepts: ['thin film interference', 'optical path difference', 'refractive index', 'constructive interference'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'Why do soap bubbles show rainbow colors?', answer: 'Light reflects from both the front and back surfaces of the thin soap film. The path difference depends on thickness, so different wavelengths interfere constructively at different spots, producing vivid colors.' },
+      { question: 'How does film thickness affect interference colors?', answer: 'As thickness increases, longer wavelengths satisfy the constructive interference condition. Very thin films appear dark or silvery, while thicker films cycle through spectral colors repeatedly.' },
+    ],
+  },
+
+  'tidal-forces': {
+    metaTitle: 'Tidal Forces — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate tidal forces from gravity gradients. Visualize how differential gravitational pull stretches and compresses bodies, creating ocean tides and shaping moons and planets.',
+    concepts: ['tidal force', 'gravity gradient', 'Roche limit', 'ocean tides'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What causes tidal forces?', answer: 'Tidal forces arise because gravity weakens with distance. The near side of a body is pulled more strongly than the far side, creating a stretching effect along the line connecting the two bodies.' },
+      { question: 'What is the Roche limit?', answer: 'The Roche limit is the minimum orbital distance at which tidal forces exceed a satellite\'s self-gravity. Inside this limit, the body is torn apart, which is how planetary rings can form.' },
+    ],
+  },
+
+  'tidal-locking': {
+    metaTitle: 'Tidal Locking — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore tidal locking and synchronous rotation. Simulate how gravitational torques slow a moon\'s spin until one face permanently faces its planet, as with Earth\'s Moon.',
+    concepts: ['tidal locking', 'synchronous rotation', 'tidal bulge', 'gravitational torque'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why does the Moon always show the same face to Earth?', answer: 'Tidal forces created a bulge on the Moon. Gravitational torque on this bulge gradually slowed the Moon\'s rotation until its spin period matched its orbital period, locking one face toward Earth.' },
+      { question: 'How long does tidal locking take?', answer: 'It depends on the distance, masses, and internal rigidity of the bodies. For the Moon, it took roughly one billion years. Closer or less rigid bodies lock much faster.' },
+    ],
+  },
+
+  'tipping-point': {
+    metaTitle: 'Tipping Point — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Investigate center of mass and tipping stability. Tilt objects, shift loads, and find the critical angle where the center of gravity passes the support base edge.',
+    concepts: ['center of mass', 'tipping stability', 'base of support', 'torque equilibrium'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'When does an object tip over?', answer: 'An object tips when its center of mass moves past the edge of its base of support. At that point, gravity creates a net torque that rotates the object away from equilibrium.' },
+      { question: 'How can you make an object more stable against tipping?', answer: 'Lower the center of mass and widen the base of support. This increases the angle needed before the center of mass crosses the support edge, making tipping harder.' },
+    ],
+  },
+
+  'tool-aware-prompting': {
+    metaTitle: 'Tool-Aware Prompting — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Learn tool-aware prompting for large language models. Practice crafting prompts that guide LLMs to select and use external tools effectively for complex tasks.',
+    concepts: ['tool-aware prompting', 'LLM tool use', 'function calling', 'prompt engineering'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is tool-aware prompting?', answer: 'Tool-aware prompting is a technique where prompts are structured to help LLMs recognize when to invoke external tools like calculators, APIs, or search engines rather than relying solely on internal knowledge.' },
+      { question: 'Why do LLMs need tool-aware prompts?', answer: 'LLMs can hallucinate facts or struggle with precise computation. Tool-aware prompts guide the model to delegate tasks like math, data lookup, or code execution to reliable external tools.' },
+    ],
+  },
+
+  'torque': {
+    metaTitle: 'Torque — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Master torque with an interactive lever simulator. Apply forces at different distances and angles to see how rotational force depends on lever arm and force direction.',
+    concepts: ['torque', 'lever arm', 'rotational force', 'moment of force'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is torque?', answer: 'Torque is the rotational equivalent of force. It equals force multiplied by the perpendicular distance from the pivot point (lever arm), measured in newton-meters (N·m).' },
+      { question: 'Why is it easier to open a door by pushing at the handle?', answer: 'Pushing at the handle maximizes the lever arm (distance from hinge). Since torque = force × lever arm, a longer lever arm means less force is needed to produce the same rotational effect.' },
+    ],
+  },
+
+  'transmission-line': {
+    metaTitle: 'Transmission Line Reflections — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate transmission line reflections and impedance matching. Visualize signal propagation, reflections at mismatched loads, and standing wave patterns in real time.',
+    concepts: ['transmission line', 'impedance matching', 'signal reflection', 'standing waves'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'Why do signals reflect on transmission lines?', answer: 'Reflections occur at impedance discontinuities where the line\'s characteristic impedance doesn\'t match the load impedance. The reflection coefficient depends on the ratio of the mismatch.' },
+      { question: 'What is impedance matching and why does it matter?', answer: 'Impedance matching means making the load impedance equal to the line\'s characteristic impedance. It eliminates reflections, maximizes power transfer, and prevents signal distortion in high-speed circuits.' },
+    ],
+  },
+
+  'tuned-mass-damper': {
+    metaTitle: 'Tuned Mass Damper — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build and tune a mass damper to suppress vibrations. Adjust mass, stiffness, and damping ratio to cancel resonant oscillations in buildings, bridges, and machinery.',
+    concepts: ['tuned mass damper', 'vibration control', 'resonance suppression', 'dynamic absorber'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'How does a tuned mass damper work?', answer: 'A secondary mass-spring-damper system is tuned to the structure\'s resonant frequency. It oscillates out of phase with the main structure, absorbing vibrational energy and reducing peak amplitude.' },
+      { question: 'Where are tuned mass dampers used in real life?', answer: 'They are installed in skyscrapers like Taipei 101, long-span bridges, and power line conductors. They reduce wind- and earthquake-induced vibrations that could cause structural damage.' },
+    ],
+  },
+
+  'two-ball-collision': {
+    metaTitle: 'Two-Ball Collision Stacking — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore the two-ball drop stacking effect. Drop a small ball atop a large ball and watch the small ball launch dramatically higher through momentum transfer upon impact.',
+    concepts: ['elastic collision', 'momentum transfer', 'energy conservation', 'superball stacking'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'Why does the small ball bounce so much higher in a two-ball drop?', answer: 'The large ball bounces first and transfers momentum upward to the small ball. In an ideal elastic collision, the small ball can reach up to nine times the original drop height with equal masses.' },
+      { question: 'Does the mass ratio affect the bounce height?', answer: 'Yes. A heavier bottom ball transfers more momentum to the lighter top ball. The optimal ratio for maximum top-ball height is when the bottom ball is much more massive than the top ball.' },
+    ],
+  },
+
+  'u-p-s-battery-sizing': {
+    metaTitle: 'UPS Battery Sizing — Interactive Calculator | Atlas Coach',
+    metaDescription: 'Calculate UPS battery sizing for your power needs. Input load wattage, backup duration, and efficiency to determine the required battery capacity in amp-hours and watt-hours.',
+    concepts: ['UPS battery sizing', 'backup power', 'amp-hour capacity', 'power load calculation'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'How do I calculate the battery size for a UPS?', answer: 'Multiply the load power (watts) by the desired backup time (hours), then divide by battery voltage and inverter efficiency. Add a 20% margin for battery aging and temperature effects.' },
+      { question: 'What factors reduce UPS battery runtime?', answer: 'Higher loads, elevated temperatures, battery age, and inverter inefficiency all reduce runtime. Batteries lose capacity over time, so oversizing by 20-25% ensures adequate backup throughout their lifespan.' },
+    ],
+  },
+
+  'u-p-s-efficiency': {
+    metaTitle: 'UPS Efficiency — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Optimize UPS efficiency across load levels. Compare online, line-interactive, and offline topologies to minimize energy waste and heat generation in your power protection setup.',
+    concepts: ['UPS efficiency', 'double conversion', 'line-interactive UPS', 'power protection'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does UPS efficiency matter?', answer: 'Inefficient UPS systems waste energy as heat, increasing cooling costs and electricity bills. A 1% efficiency improvement on a 100 kW load saves over 8,700 kWh and significant cost annually.' },
+      { question: 'Which UPS topology is most efficient?', answer: 'Line-interactive and offline UPS designs are most efficient at 95-98% since power normally bypasses the inverter. Online double-conversion UPS is less efficient at 90-96% but offers the best power protection.' },
+    ],
+  },
+
+  'verification-harness': {
+    metaTitle: 'Verification Harness — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Build a verification harness for LLM outputs. Design test cases, define correctness criteria, and automate output validation to ensure reliable AI-generated results.',
+    concepts: ['verification harness', 'LLM output validation', 'test automation', 'correctness criteria'],
+    difficulty: 'advanced',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is a verification harness for LLMs?', answer: 'A verification harness is a framework that automatically checks LLM outputs against defined correctness criteria, test cases, and expected behaviors to catch errors, hallucinations, and format violations.' },
+      { question: 'Why is verifying LLM outputs important?', answer: 'LLMs can produce plausible but incorrect outputs. A verification harness provides systematic quality checks before deployment, reducing the risk of errors in production systems that rely on AI-generated content.' },
+    ],
+  },
+
+  'viscoelasticity': {
+    metaTitle: 'Viscoelasticity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate viscoelastic material behavior under stress. Explore creep, stress relaxation, and hysteresis with adjustable Maxwell and Kelvin-Voigt model parameters.',
+    concepts: ['viscoelasticity', 'creep', 'stress relaxation', 'Maxwell model'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is viscoelasticity?', answer: 'Viscoelasticity is a material property combining viscous (fluid-like) and elastic (solid-like) behavior. Under stress, viscoelastic materials both deform and flow, with response depending on the rate of loading.' },
+      { question: 'What is the difference between creep and stress relaxation?', answer: 'Creep is gradual deformation under constant stress over time. Stress relaxation is the decrease in stress when a material is held at constant strain. Both are hallmarks of viscoelastic behavior.' },
+    ],
+  },
+
+  'viscosity-temperature': {
+    metaTitle: 'Viscosity vs Temperature — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore how viscosity changes with temperature for liquids and gases. Adjust temperature and compare fluids using Arrhenius and Sutherland models in this simulator.',
+    concepts: ['viscosity', 'temperature dependence', 'Arrhenius equation', 'fluid dynamics'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why does liquid viscosity decrease with temperature?', answer: 'Higher temperature gives molecules more kinetic energy to overcome intermolecular attractions. With weaker cohesive forces, layers slide past each other more easily, reducing viscosity exponentially.' },
+      { question: 'Why does gas viscosity increase with temperature?', answer: 'Gas viscosity comes from molecular momentum transfer between layers. Higher temperature means faster molecules and more frequent collisions, increasing momentum exchange and thus viscosity.' },
+    ],
+  },
+
+  'vortex-rings': {
+    metaTitle: 'Vortex Rings — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate vortex ring formation and propagation. Adjust impulse strength, orifice size, and fluid viscosity to create and study toroidal vortex structures in fluid flow.',
+    concepts: ['vortex ring', 'toroidal vortex', 'fluid dynamics', 'vorticity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'How do vortex rings form?', answer: 'A sudden pulse of fluid through an orifice creates a shear layer that rolls up into a toroidal shape. The ring is self-sustaining because its rotating core induces forward motion through the surrounding fluid.' },
+      { question: 'Why can vortex rings travel long distances?', answer: 'The ring\'s toroidal circulation creates a self-induced velocity field that propels it forward. Unlike turbulent jets, the organized rotation minimizes energy dissipation, allowing travel over many ring diameters.' },
+    ],
+  },
+
+  'wagon-wheel-aliasing': {
+    metaTitle: 'Wagon Wheel Aliasing — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Demonstrate the wagon wheel effect and temporal aliasing. Adjust wheel speed and frame rate to observe apparent backward rotation when sampling rate is too low.',
+    concepts: ['temporal aliasing', 'wagon wheel effect', 'Nyquist frequency', 'stroboscopic effect'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'Why do wheels appear to spin backward on film?', answer: 'When the frame rate is below twice the wheel\'s rotation frequency, spokes advance more than half a spoke spacing between frames. The visual system interprets this as slower backward motion — a temporal aliasing artifact.' },
+      { question: 'What is the Nyquist theorem and how does it relate?', answer: 'The Nyquist theorem states that a signal must be sampled at more than twice its frequency to be faithfully captured. Below this rate, aliasing occurs, causing the wagon wheel and similar stroboscopic illusions.' },
+    ],
+  },
+
+  'water-hammer': {
+    metaTitle: 'Water Hammer — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate water hammer pressure surges in pipes. Close valves at different speeds and see how sudden flow stoppage creates dangerous pressure waves traveling through the system.',
+    concepts: ['water hammer', 'pressure surge', 'pipe flow', 'valve closure'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'What causes water hammer?', answer: 'Water hammer occurs when flowing water is suddenly stopped, typically by rapid valve closure. The kinetic energy converts to a pressure wave that can reach several times normal operating pressure.' },
+      { question: 'How can water hammer be prevented?', answer: 'Slow valve closure, install surge arrestors or air chambers, reduce flow velocity, and use pressure relief valves. These methods absorb or dissipate the kinetic energy gradually instead of abruptly.' },
+    ],
+  },
+
+  'wave-interference': {
+    metaTitle: 'Wave Interference — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize wave interference patterns from two or more sources. Adjust frequency, amplitude, and phase to create constructive and destructive interference in real time.',
+    concepts: ['wave interference', 'constructive interference', 'destructive interference', 'superposition'],
+    difficulty: 'beginner',
+    estimatedMinutes: 8,
+    faqItems: [
+      { question: 'What is constructive interference?', answer: 'Constructive interference occurs when two waves arrive in phase (crests aligned with crests). Their amplitudes add together, producing a combined wave with greater amplitude than either individual wave.' },
+      { question: 'What is destructive interference?', answer: 'Destructive interference occurs when two waves arrive out of phase (crests aligned with troughs). Their amplitudes cancel, reducing or eliminating the combined wave amplitude at that point.' },
+    ],
+  },
+
+  'wave-particle-duality': {
+    metaTitle: 'Wave-Particle Duality — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore wave-particle duality through double-slit experiments. Toggle between photon and electron sources to see how quantum objects exhibit both wave and particle behavior.',
+    concepts: ['wave-particle duality', 'double-slit experiment', 'quantum mechanics', 'de Broglie wavelength'],
+    difficulty: 'advanced',
+    estimatedMinutes: 12,
+    faqItems: [
+      { question: 'What is wave-particle duality?', answer: 'Wave-particle duality is the quantum mechanical principle that every particle exhibits wave-like behavior and every wave exhibits particle-like behavior. Which aspect dominates depends on the experimental setup.' },
+      { question: 'How does the double-slit experiment demonstrate duality?', answer: 'Single particles sent one at a time through two slits still build up an interference pattern over many detections. Each particle lands at a definite spot (particle behavior) but the overall pattern shows wave interference.' },
+    ],
+  },
+
+  'wave-speed-tension': {
+    metaTitle: 'Wave Speed vs String Tension — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Investigate how wave speed depends on string tension and linear density. Adjust tension and mass per length to verify the wave speed formula v = sqrt(T/mu) interactively.',
+    concepts: ['wave speed', 'string tension', 'linear density', 'transverse waves'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'How does tension affect wave speed on a string?', answer: 'Wave speed increases with the square root of tension. Doubling the tension increases wave speed by a factor of about 1.41. Higher tension provides a stronger restoring force, accelerating wave propagation.' },
+      { question: 'Why do thicker guitar strings produce lower pitch?', answer: 'Thicker strings have greater linear density (mass per length). Since wave speed v = sqrt(T/mu), greater mu reduces wave speed and thus frequency, producing a lower pitch at the same tension and length.' },
+    ],
+  },
+
+  'wireless-charging': {
+    metaTitle: 'Wireless Charging — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate wireless charging via electromagnetic induction. Adjust coil alignment, distance, and frequency to optimize power transfer efficiency between transmitter and receiver.',
+    concepts: ['wireless charging', 'electromagnetic induction', 'resonant coupling', 'power transfer efficiency'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 10,
+    faqItems: [
+      { question: 'How does wireless charging work?', answer: 'An alternating current in the transmitter coil creates a changing magnetic field. This field induces a voltage in the nearby receiver coil through electromagnetic induction, delivering power without physical contact.' },
+      { question: 'Why does wireless charging efficiency drop with distance?', answer: 'The magnetic field strength decreases rapidly with distance (inverse cube law for dipole fields). Greater separation means less magnetic flux links the receiver coil, reducing induced voltage and power transfer.' },
+    ],
+  },
+
+  'work-power': {
+    metaTitle: 'Work and Power — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Master work and power concepts interactively. Apply forces over distances, measure energy transferred, and compare power output across different rates of doing work.',
+    concepts: ['work', 'power', 'energy transfer', 'force times distance'],
+    difficulty: 'beginner',
+    estimatedMinutes: 5,
+    faqItems: [
+      { question: 'What is the difference between work and power?', answer: 'Work is the total energy transferred by a force over a distance (W = F·d). Power is the rate of doing work (P = W/t). The same work done faster requires more power.' },
+      { question: 'Can a force do zero work?', answer: 'Yes. If the force is perpendicular to the displacement (like gravity on an object moving horizontally), no energy is transferred and the work is zero. Only the force component along the displacement does work.' },
+    ],
+  },
+};
 }

@@ -170,7 +170,7 @@ export default function HowItWorksPage() {
             flexDirection: 'column',
             gap: '10px',
           }}>
-            {entry.applications.map((app, index) => (
+            {entry.realWorldApps.map((app, index) => (
               <li
                 key={index}
                 style={{
@@ -206,31 +206,36 @@ export default function HowItWorksPage() {
             See It in Action
           </h3>
           <p style={{ color: '#94a3b8', fontSize: '15px', marginBottom: '20px', maxWidth: '500px', margin: '0 auto 20px' }}>
-            Try the interactive {entry.relatedGameName} simulation. Predict, experiment, and test
+            Try the interactive simulation. Predict, experiment, and test
             your understanding with hands-on physics.
           </p>
-          <a
-            href={`/games/${entry.relatedGameSlug}`}
-            style={{
-              display: 'inline-block',
-              padding: '14px 36px',
-              background: '#3B82F6',
-              color: '#fff',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: '16px',
-              transition: 'background 0.2s ease',
-            }}
-            onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#2563eb'; }}
-            onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#3B82F6'; }}
-          >
-            Play {entry.relatedGameName}
-          </a>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {entry.relatedGameSlugs.map(slug => (
+              <a
+                key={slug}
+                href={`/games/${slug}`}
+                style={{
+                  display: 'inline-block',
+                  padding: '12px 28px',
+                  background: '#3B82F6',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  transition: 'background 0.2s ease',
+                }}
+                onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#2563eb'; }}
+                onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.background = '#3B82F6'; }}
+              >
+                Play {slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              </a>
+            ))}
+          </div>
         </section>
 
         {/* FAQ */}
-        <FAQSection items={entry.faq} />
+        <FAQSection items={entry.faqItems} />
 
         {/* More how-it-works articles */}
         <section style={{

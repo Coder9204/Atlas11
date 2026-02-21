@@ -24,6 +24,7 @@ const ROUTES = [
   '/pricing',
   '/paths',
   '/blog',
+  '/glossary',
   '/for/teachers',
   '/for/students',
   '/for/engineers',
@@ -41,6 +42,69 @@ const CATEGORIES = [
 ];
 for (const cat of CATEGORIES) {
   ROUTES.push(`/learn/${cat}`);
+}
+
+// Add topic pages — parse from topics.ts
+const topicsFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'topics.ts'), 'utf-8'
+);
+const topicRegex = /^\s+slug:\s*'([^']+)'/gm;
+let m2;
+while ((m2 = topicRegex.exec(topicsFile)) !== null) {
+  ROUTES.push(`/topics/${m2[1]}`);
+}
+
+// Add use-case pages — parse from useCases.ts
+const useCasesFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'useCases.ts'), 'utf-8'
+);
+const ucRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((m2 = ucRegex.exec(useCasesFile)) !== null) {
+  ROUTES.push(`/use-cases/${m2[1]}`);
+}
+
+// Add alternatives pages — parse from alternatives.ts
+const altFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'alternatives.ts'), 'utf-8'
+);
+const altRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((m2 = altRegex.exec(altFile)) !== null) {
+  ROUTES.push(`/alternatives/${m2[1]}`);
+}
+
+// Add comparison pages — parse from comparisons.ts
+const compFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'comparisons.ts'), 'utf-8'
+);
+const compRegex = /comparisonSlug:\s*'([^']+)'/g;
+while ((m2 = compRegex.exec(compFile)) !== null) {
+  ROUTES.push(`/compare/${m2[1]}`);
+}
+
+// Add how-it-works pages — parse from howItWorks.ts
+const howFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'howItWorks.ts'), 'utf-8'
+);
+const howRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((m2 = howRegex.exec(howFile)) !== null) {
+  ROUTES.push(`/how/${m2[1]}`);
+}
+
+// Add blog posts — parse from blogComparisonPosts.ts and blogRoundupPosts.ts
+const blogCompFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'blogComparisonPosts.ts'), 'utf-8'
+);
+const blogCompRegex = /slug:\s*'([^']+)'/g;
+while ((m2 = blogCompRegex.exec(blogCompFile)) !== null) {
+  ROUTES.push(`/blog/${m2[1]}`);
+}
+
+const blogRoundupFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'blogRoundupPosts.ts'), 'utf-8'
+);
+const blogRoundupRegex = /slug:\s*'([^']+)'/g;
+while ((m2 = blogRoundupRegex.exec(blogRoundupFile)) !== null) {
+  ROUTES.push(`/blog/${m2[1]}`);
 }
 
 async function prerender() {

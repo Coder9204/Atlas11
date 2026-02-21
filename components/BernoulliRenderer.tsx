@@ -491,234 +491,265 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   // ============================================================================
 
   const renderWingSimulation = () => {
-    const simWidth = isMobile ? 320 : 500;
-    const simHeight = 300;
-    const centerX = simWidth / 2;
-    const centerY = simHeight / 2;
-    const wingLength = 120;
+    const simWidth = isMobile ? 380 : 600;
+    const simHeight = isMobile ? 280 : 360;
+    const centerX = simWidth * 0.45;
+    const centerY = simHeight * 0.48;
+    const wingLen = isMobile ? 140 : 180;
+    const wingThick = isMobile ? 32 : 42;
+
+    // NACA-style airfoil path generator
+    const airfoilPath = (len: number, thick: number) => {
+      const pts = 40;
+      const upper: string[] = [];
+      const lower: string[] = [];
+      for (let i = 0; i <= pts; i++) {
+        const t = i / pts;
+        const x = -len / 2 + t * len;
+        // NACA 4-digit camber line approximation
+        const camber = thick * 0.15 * (t < 0.4
+          ? (2 * 0.4 * t - t * t) / (0.4 * 0.4)
+          : ((1 - 2 * 0.4) + 2 * 0.4 * t - t * t) / ((1 - 0.4) * (1 - 0.4)));
+        // Thickness distribution
+        const halfT = thick * 0.5 * (2.969 * Math.sqrt(t) - 1.26 * t - 3.516 * t * t + 2.843 * t * t * t - 1.015 * t * t * t * t);
+        upper.push(`${x},${-camber - halfT}`);
+        lower.unshift(`${x},${-camber + halfT}`);
+      }
+      return `M ${upper[0]} ${upper.slice(1).map(p => `L ${p}`).join(' ')} ${lower.map(p => `L ${p}`).join(' ')} Z`;
+    };
+
+    // Streamline path: flow around airfoil with proper deflection
+    const streamlinePath = (yStart: number, isTop: boolean) => {
+      const segs = 60;
+      const points: string[] = [];
+      const liftFactor = lift / 100;
+      for (let i = 0; i <= segs; i++) {
+        const t = i / segs;
+        const x = t * simWidth;
+        // Distance from wing center (normalized)
+        const dx = (x - centerX) / (wingLen * 0.7);
+        const proximity = Math.exp(-dx * dx * 1.8);
+        // Deflection: top lines curve up (low pressure spreads them), bottom curve down less
+        let deflection: number;
+        if (isTop) {
+          deflection = -proximity * (15 + liftFactor * 25) * (1 - Math.abs(yStart) / 100);
+        } else {
+          deflection = proximity * (8 + liftFactor * 12) * (1 - Math.abs(yStart) / 100);
+        }
+        // Acceleration effect: lines bunch together approaching leading edge, spread over top
+        const speedup = isTop ? proximity * liftFactor * 8 : -proximity * liftFactor * 4;
+        const y = centerY + yStart + deflection + speedup;
+        points.push(i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(1)}` : `L ${x.toFixed(1)} ${y.toFixed(1)}`);
+      }
+      return points.join(' ');
+    };
+
+    // Animated particle position along streamline
+    const particlePos = (yStart: number, isTop: boolean, offset: number) => {
+      const speed = isTop ? airSpeed * 0.6 : airSpeed * 0.4;
+      const t = ((animationTime * speed + offset) % simWidth) / simWidth;
+      const x = t * simWidth;
+      const dx = (x - centerX) / (wingLen * 0.7);
+      const proximity = Math.exp(-dx * dx * 1.8);
+      const liftFactor = lift / 100;
+      let deflection: number;
+      if (isTop) {
+        deflection = -proximity * (15 + liftFactor * 25) * (1 - Math.abs(yStart) / 100);
+      } else {
+        deflection = proximity * (8 + liftFactor * 12) * (1 - Math.abs(yStart) / 100);
+      }
+      const speedup = isTop ? proximity * liftFactor * 8 : -proximity * liftFactor * 4;
+      const y = centerY + yStart + deflection + speedup;
+      return { x, y };
+    };
+
+    const liftArrowLen = Math.min(lift * 0.8, 80);
 
     return (
-      <svg width={simWidth} height={simHeight} viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Bernoulli visualization">
+      <svg width="100%" viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Bernoulli airfoil visualization showing pressure and lift">
         <defs>
           <linearGradient id="bernSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0c1929" />
-            <stop offset="30%" stopColor="#1e3a5f" />
-            <stop offset="70%" stopColor="#0f2847" />
-            <stop offset="100%" stopColor="#0a1628" />
+            <stop offset="0%" stopColor="#0b1526" />
+            <stop offset="50%" stopColor="#142640" />
+            <stop offset="100%" stopColor="#0d1b2e" />
           </linearGradient>
-
           <linearGradient id="bernAirfoilMetal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f8fafc" />
-            <stop offset="15%" stopColor="#e2e8f0" />
-            <stop offset="50%" stopColor="#cbd5e1" />
-            <stop offset="85%" stopColor="#94a3b8" />
-            <stop offset="100%" stopColor="#64748b" />
+            <stop offset="0%" stopColor="#e8ecf1" />
+            <stop offset="30%" stopColor="#c8d0da" />
+            <stop offset="70%" stopColor="#8d9aab" />
+            <stop offset="100%" stopColor="#5a6a7e" />
           </linearGradient>
-
-          <radialGradient id="bernLowPressureGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
-            <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
-          </radialGradient>
-
-          <radialGradient id="bernHighPressureGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
-            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-          </radialGradient>
-
-          <radialGradient id="bernStreamParticleBlue" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </radialGradient>
-
-          <radialGradient id="bernStreamParticleAmber" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fde68a" stopOpacity="1" />
-            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-          </radialGradient>
-
           <linearGradient id="bernLiftArrow" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#10b981" />
-            <stop offset="50%" stopColor="#34d399" />
             <stop offset="100%" stopColor="#6ee7b7" />
           </linearGradient>
-
-          <filter id="bernPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="bernParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="bernLiftGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <pattern id="bernLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.4" />
-          </pattern>
         </defs>
 
+        {/* Clean background */}
         <rect width={simWidth} height={simHeight} fill="url(#bernSkyGrad)" />
-        <rect width={simWidth} height={simHeight} fill="url(#bernLabGrid)" />
 
-        {/* Pressure distribution curve */}
-        {(() => {
-          const pts = 24;
-          const liftScale = 0.4 + (lift / 100) * 0.6;
-          const baseY = simHeight * 0.88;
-          const topY = simHeight * 0.12;
-          const range = baseY - topY;
-          const segments: string[] = [];
-          for (let i = 0; i <= pts; i++) {
-            const t = i / pts;
-            const x = 20 + t * (simWidth - 40);
-            const gaussian = Math.exp(-((t - 0.5) * (t - 0.5)) / 0.03);
-            const y = baseY - gaussian * range * liftScale;
-            if (i === 0) {
-              segments.push(`M ${x} ${y}`);
-            } else {
-              segments.push(`L ${x} ${y}`);
-            }
-          }
-          return (
-            <path
-              d={segments.join(' ')}
-              fill="none"
-              stroke="#60a5fa"
-              strokeWidth={1.5}
-              opacity={0.5}
+        {/* Subtle pressure shading regions */}
+        {showPressure && (
+          <g>
+            <ellipse
+              cx={centerX + 10}
+              cy={centerY - wingThick - 15}
+              rx={wingLen * 0.6}
+              ry={wingThick + 20}
+              fill="#3b82f6"
+              opacity={0.06 + (lift / 100) * 0.1}
             />
-          );
-        })()}
+            <ellipse
+              cx={centerX + 10}
+              cy={centerY + wingThick * 0.4 + 15}
+              rx={wingLen * 0.55}
+              ry={wingThick + 10}
+              fill="#f59e0b"
+              opacity={0.06 + (lift / 100) * 0.08}
+            />
+          </g>
+        )}
 
         {/* Streamlines */}
         {showStreamlines && (
           <g>
-            {[-50, -35, -20].map((yOffset, i) => {
-              const compression = 1 - (lift / 200);
-              const animOffset = (animationTime * airSpeed * 0.5 + i * 50) % simWidth;
-              const yPos = centerY + yOffset * compression;
-              const deflect1 = yOffset * (3.0 + 0.5 * (lift / 100));
-              const deflect2 = yOffset * (4.0 + 0.8 * (lift / 100));
-              return (
-                <g key={`top-${i}`}>
-                  <path
-                    d={`M 0 ${yPos} Q ${centerX - 60} ${yPos + deflect1} ${centerX - 20} ${yPos + deflect2} Q ${centerX + 20} ${yPos + deflect1} ${centerX + 60} ${yPos}`}
-                    fill="none"
-                    stroke="#60a5fa"
-                    strokeWidth={1.5}
-                    opacity={0.5}
-                  />
-                  <circle cx={animOffset} cy={yPos} r={5} fill="url(#bernStreamParticleBlue)" filter="url(#bernParticleGlow)" />
-                  <circle cx={animOffset} cy={yPos} r={2} fill="#ffffff" opacity={0.9} />
-                </g>
-              );
-            })}
-            {[20, 35, 50].map((yOffset, i) => {
-              const spread = 1 + (lift / 400);
-              const animOffset = (animationTime * airSpeed * 0.35 + i * 50) % simWidth;
-              const yPos = centerY + yOffset * spread;
-              const bDeflect1 = -yOffset * (3.0 + 0.2 * (lift / 100));
-              const bDeflect2 = -yOffset * (4.0 + 0.1 * (lift / 100));
-              return (
-                <g key={`bottom-${i}`}>
-                  <path
-                    d={`M 0 ${yPos} Q ${centerX - 50} ${yPos + bDeflect1} ${centerX - 15} ${yPos + bDeflect2} Q ${centerX + 50} ${yPos + bDeflect1} ${simWidth} ${yPos}`}
-                    fill="none"
-                    stroke="#fbbf24"
-                    strokeWidth={1.5}
-                    opacity={0.5}
-                  />
-                  <circle cx={animOffset} cy={yPos} r={5} fill="url(#bernStreamParticleAmber)" filter="url(#bernParticleGlow)" />
-                  <circle cx={animOffset} cy={yPos} r={2} fill="#ffffff" opacity={0.9} />
-                </g>
-              );
-            })}
+            {/* Top streamlines (blue - faster flow, lower pressure) */}
+            {[-70, -52, -36, -22].map((yOff, i) => (
+              <g key={`top-${i}`}>
+                <path
+                  d={streamlinePath(yOff, true)}
+                  fill="none"
+                  stroke="#60a5fa"
+                  strokeWidth={1.2}
+                  opacity={0.5 - i * 0.05}
+                />
+                {/* Animated particle */}
+                {(() => {
+                  const p = particlePos(yOff, true, i * 140);
+                  return <circle cx={p.x} cy={p.y} r={2.5} fill="#93c5fd" opacity={0.9} />;
+                })()}
+                {(() => {
+                  const p = particlePos(yOff, true, i * 140 + simWidth * 0.45);
+                  return <circle cx={p.x} cy={p.y} r={2} fill="#93c5fd" opacity={0.7} />;
+                })()}
+              </g>
+            ))}
+            {/* Bottom streamlines (amber - slower flow, higher pressure) */}
+            {[22, 36, 52, 70].map((yOff, i) => (
+              <g key={`bot-${i}`}>
+                <path
+                  d={streamlinePath(yOff, false)}
+                  fill="none"
+                  stroke="#fbbf24"
+                  strokeWidth={1.2}
+                  opacity={0.45 - i * 0.05}
+                />
+                {(() => {
+                  const p = particlePos(yOff, false, i * 130);
+                  return <circle cx={p.x} cy={p.y} r={2.5} fill="#fde68a" opacity={0.8} />;
+                })()}
+                {(() => {
+                  const p = particlePos(yOff, false, i * 130 + simWidth * 0.5);
+                  return <circle cx={p.x} cy={p.y} r={2} fill="#fde68a" opacity={0.6} />;
+                })()}
+              </g>
+            ))}
           </g>
         )}
 
-        {/* Pressure regions */}
-        {showPressure && (
-          <g>
-            <ellipse
-              cx={centerX}
-              cy={centerY - 25}
-              rx={70}
-              ry={25}
-              fill="url(#bernLowPressureGlow)"
-              opacity={0.4 + (lift / 150)}
-              filter="url(#bernPressureGlow)"
-            />
-            <ellipse
-              cx={centerX}
-              cy={centerY + 40}
-              rx={60}
-              ry={20}
-              fill="url(#bernHighPressureGlow)"
-              opacity={0.4 + (lift / 200)}
-              filter="url(#bernPressureGlow)"
-            />
-          </g>
-        )}
-
-        {/* Airfoil */}
+        {/* Airfoil with rotation */}
         <g transform={`translate(${centerX}, ${centerY}) rotate(${-angleOfAttack})`}>
-          <ellipse cx={0} cy={-15} rx={wingLength / 2} ry={40} fill="#0a1628" opacity={0.4} />
           <path
-            d={`M ${-wingLength / 2} 0 Q ${-wingLength / 4} ${-50} 0 ${-60} Q ${wingLength / 4} ${-50} ${wingLength / 2} 0 Q ${wingLength / 4} 18 0 22 Q ${-wingLength / 4} 18 ${-wingLength / 2} 0`}
+            d={airfoilPath(wingLen, wingThick)}
             fill="url(#bernAirfoilMetal)"
-            stroke="#64748b"
-            strokeWidth={1.5}
+            stroke="#475569"
+            strokeWidth={1}
           />
-          <line x1={-wingLength / 2 + 15} y1={-2} x2={wingLength / 2 - 20} y2={-4} stroke="#ffffff" strokeWidth={1} opacity={0.4} />
+          {/* Highlight line on upper surface */}
+          <line
+            x1={-wingLen * 0.35}
+            y1={-wingThick * 0.35}
+            x2={wingLen * 0.3}
+            y2={-wingThick * 0.28}
+            stroke="#ffffff"
+            strokeWidth={0.8}
+            opacity={0.25}
+          />
         </g>
 
         {/* Lift arrow */}
         {lift > 5 && (
-          <g filter="url(#bernLiftGlow)">
+          <g>
             <line
               x1={centerX}
-              y1={centerY}
+              y1={centerY - 5}
               x2={centerX}
-              y2={centerY - lift * 0.7}
+              y2={centerY - 5 - liftArrowLen}
               stroke="url(#bernLiftArrow)"
-              strokeWidth={5}
+              strokeWidth={3.5}
               strokeLinecap="round"
             />
             <polygon
-              points={`${centerX},${centerY - lift * 0.7 - 14} ${centerX - 10},${centerY - lift * 0.7 + 2} ${centerX + 10},${centerY - lift * 0.7 + 2}`}
+              points={`${centerX},${centerY - 5 - liftArrowLen - 10} ${centerX - 7},${centerY - 5 - liftArrowLen + 2} ${centerX + 7},${centerY - 5 - liftArrowLen + 2}`}
               fill="#6ee7b7"
             />
+            <text
+              x={centerX + 14}
+              y={centerY - 5 - liftArrowLen * 0.5 + 4}
+              fill="#6ee7b7"
+              fontSize={isMobile ? 11 : 13}
+              fontWeight="700"
+            >LIFT</text>
           </g>
         )}
 
-        {/* Wind indicator */}
+        {/* Wind direction indicator */}
         <g>
-          <line x1={20} y1={centerY} x2={65} y2={centerY} stroke="#f8fafc" strokeWidth={3} strokeLinecap="round" opacity={0.7} />
-          <polygon points={`70,${centerY} 58,${centerY - 6} 58,${centerY + 6}`} fill="#f8fafc" opacity={0.7} />
+          <line x1={16} y1={centerY} x2={52} y2={centerY} stroke="#e2e8f0" strokeWidth={2.5} strokeLinecap="round" opacity={0.6} />
+          <polygon points={`56,${centerY} 46,${centerY - 5} 46,${centerY + 5}`} fill="#e2e8f0" opacity={0.6} />
+          <text x={36} y={centerY - 10} textAnchor="middle" fill="#cbd5e1" fontSize={isMobile ? 9 : 10} fontWeight="600">Wind</text>
         </g>
 
-        {/* Educational labels */}
-        <text x={15} y={20} fill="#93c5fd" fontSize="11" fontWeight="bold">Airfoil Cross-Section</text>
-        <text x={85} y={centerY + 2} fill="#f8fafc" fontSize="11" textAnchor="middle">Airflow</text>
-        <text x={centerX} y={simHeight - 10} textAnchor="middle" fill="#94a3b8" fontSize="11">Bernoulli Principle: Faster Flow = Lower Pressure</text>
-        <text x={centerX} y={simHeight - 25} textAnchor="middle" fill="#93c5fd" fontSize="11">P + (1/2)pv² = constant</text>
+        {/* Pressure labels */}
+        {showPressure && (
+          <g>
+            <text
+              x={centerX + wingLen * 0.45}
+              y={centerY - wingThick - 20}
+              fill="#60a5fa"
+              fontSize={isMobile ? 10 : 12}
+              fontWeight="600"
+              opacity={0.8}
+            >Low Pressure</text>
+            <text
+              x={centerX + wingLen * 0.45}
+              y={centerY - wingThick - 8}
+              fill="#60a5fa"
+              fontSize={isMobile ? 8 : 9}
+              opacity={0.5}
+            >(fast flow)</text>
+            <text
+              x={centerX + wingLen * 0.45}
+              y={centerY + wingThick * 0.6 + 18}
+              fill="#fbbf24"
+              fontSize={isMobile ? 10 : 12}
+              fontWeight="600"
+              opacity={0.8}
+            >High Pressure</text>
+            <text
+              x={centerX + wingLen * 0.45}
+              y={centerY + wingThick * 0.6 + 30}
+              fill="#fbbf24"
+              fontSize={isMobile ? 8 : 9}
+              opacity={0.5}
+            >(slow flow)</text>
+          </g>
+        )}
+
+        {/* Bottom equation */}
+        <text x={simWidth / 2} y={simHeight - 12} textAnchor="middle" fill="#64748b" fontSize={isMobile ? 10 : 11}>
+          P + ½ρv² = constant — faster flow creates lower pressure
+        </text>
       </svg>
     );
   };
@@ -1106,24 +1137,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
           <div style={{ background: 'linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))', borderRadius: '16px', padding: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', position: 'relative', overflow: 'hidden', maxWidth: '100%' }}>
             {simulationMode === 'wing' ? renderWingSimulation() : renderBallSimulation()}
 
-            {/* Labels overlay */}
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', fontSize: typo.small }}>
-              {showPressure && simulationMode === 'wing' && (
-                <>
-                  <div style={{ position: 'absolute', top: '25%', left: '50%', transform: 'translateX(-50%)', color: '#60a5fa', fontWeight: 600 }}>
-                    LOW PRESSURE
-                  </div>
-                  <div style={{ position: 'absolute', top: '62%', left: '50%', transform: 'translateX(-50%)', color: '#fbbf24', fontWeight: 600 }}>
-                    HIGH PRESSURE
-                  </div>
-                </>
-              )}
-              {lift > 5 && simulationMode === 'wing' && (
-                <div style={{ position: 'absolute', top: `${35 - lift * 0.15}%`, left: '55%', color: '#34d399', fontWeight: 700 }}>
-                  LIFT
-                </div>
-              )}
-            </div>
+            {/* Labels are now rendered inside the SVG for precise positioning */}
           </div>
         </div>
 
@@ -1645,44 +1659,126 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   const renderTest = () => {
     if (testSubmitted) {
       const passed = testScore >= 7;
+      const scorePercent = Math.round((testScore / 10) * 100);
 
       return (
         <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
-          <h2 style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1.3, color: passed ? colors.success : colors.warning, marginBottom: '16px' }}>
-            {passed ? 'Excellent Work!' : 'Keep Learning!'}
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>{passed ? '🎉' : '📚'}</div>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1.3, color: passed ? colors.success : colors.warning, marginBottom: '8px' }}>
+            {passed ? 'Excellent Work!' : 'Keep Practicing!'}
           </h2>
-          <p style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1.2, color: colors.textPrimary, margin: '16px 0' }}>
-            {testScore} / 10
+          <p style={{ fontSize: '15px', color: colors.textMuted, marginBottom: '24px' }}>
+            {passed ? "You've demonstrated strong understanding of Bernoulli's principle." : 'A few more concepts to review — you\'re almost there!'}
           </p>
-          <p style={{ fontSize: '16px', fontWeight: 400, lineHeight: 1.6, color: colors.textSecondary, marginBottom: '32px' }}>
-            {passed ? "You have mastered Bernoulli's principle!" : 'Review the concepts and try again.'}
-          </p>
-          <button
-            onClick={() => {
-              if (passed) {
-                goToPhase('mastery');
-              } else {
-                setTestSubmitted(false);
-                setTestIndex(0);
-                setTestAnswers(Array(10).fill(null));
-                setShowTestExplanation(false);
-                goToPhase('review');
-              }
-            }}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '12px',
-              border: 'none',
-              background: passed ? `linear-gradient(135deg, ${colors.success}, #0d9488)` : `linear-gradient(135deg, ${colors.primary}, #6366f1)`,
-              color: 'white',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {passed ? 'Next: Achieve Mastery' : 'Back to Review'}
-          </button>
+
+          {/* Score display */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '20px',
+            marginBottom: '20px',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px 24px',
+              border: `1px solid ${passed ? colors.success : colors.warning}40`,
+            }}>
+              <div style={{ fontSize: '40px', fontWeight: 800, color: colors.textPrimary }}>{testScore}<span style={{ fontSize: '20px', color: colors.textMuted }}>/10</span></div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>CORRECT</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px 24px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ fontSize: '40px', fontWeight: 800, color: passed ? colors.success : colors.warning }}>{scorePercent}%</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>ACCURACY</div>
+            </div>
+          </div>
+
+          {/* Answer breakdown */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '6px',
+            marginBottom: '24px',
+            flexWrap: 'wrap',
+          }}>
+            {testAnswers.map((ans, i) => {
+              const correct = ans !== null && testQuestions[i].options[ans]?.correct;
+              return (
+                <div key={i} style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  background: correct ? `${colors.success}22` : `${colors.danger}22`,
+                  color: correct ? colors.success : colors.danger,
+                  border: `1px solid ${correct ? colors.success : colors.danger}44`,
+                }}>
+                  {i + 1}
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            {!passed && (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestIndex(0);
+                  setTestAnswers(Array(10).fill(null));
+                  setShowTestExplanation(false);
+                  setTestScore(0);
+                  goToPhase('review');
+                }}
+                style={{
+                  padding: '14px 24px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textPrimary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Review Concepts
+              </button>
+            )}
+            <button
+              onClick={() => {
+                if (passed) {
+                  goToPhase('mastery');
+                } else {
+                  setTestSubmitted(false);
+                  setTestIndex(0);
+                  setTestAnswers(Array(10).fill(null));
+                  setShowTestExplanation(false);
+                  setTestScore(0);
+                }
+              }}
+              style={{
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: 'none',
+                background: passed ? `linear-gradient(135deg, ${colors.success}, #0d9488)` : `linear-gradient(135deg, ${colors.primary}, #6366f1)`,
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {passed ? 'See Results & Next Lessons' : 'Retry Test'}
+            </button>
+          </div>
         </div>
       );
     }
@@ -1852,69 +1948,192 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     );
   };
 
+  // Recommended next lessons
+  const nextLessons = [
+    { slug: 'venturi-effect', name: 'Venturi Effect', icon: '🔬', desc: 'See Bernoulli in pipes and nozzles', difficulty: 'Intermediate' },
+    { slug: 'lift-force', name: 'Lift Force', icon: '✈️', desc: 'Deep dive into aerodynamic lift', difficulty: 'Intermediate' },
+    { slug: 'magnus-effect', name: 'Magnus Effect', icon: '⚾', desc: 'Physics of spinning ball curves', difficulty: 'Intermediate' },
+    { slug: 'drag-force', name: 'Drag Force', icon: '🪂', desc: 'Resistance in moving fluids', difficulty: 'Beginner' },
+    { slug: 'laminar-flow', name: 'Laminar Flow', icon: '🌊', desc: 'Smooth vs turbulent fluid motion', difficulty: 'Intermediate' },
+    { slug: 'cavitation', name: 'Cavitation', icon: '💥', desc: 'When low pressure creates bubbles', difficulty: 'Intermediate' },
+  ];
+
   // MASTERY PHASE
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] p-6 text-center relative overflow-hidden">
-      {/* Confetti */}
-      {Array.from({ length: 50 }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            width: 10,
-            height: 10,
-            background: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][i % 5],
-            borderRadius: 2,
-            animation: `confetti-fall 3s ease-out ${Math.random() * 2}s infinite`,
-            opacity: 0.8,
-          }}
-        />
-      ))}
+  const renderMastery = () => {
+    const scorePercent = Math.round((testScore / 10) * 100);
+    const grade = scorePercent >= 90 ? 'A' : scorePercent >= 80 ? 'B' : scorePercent >= 70 ? 'C' : 'D';
+    const gradeColor = scorePercent >= 90 ? '#10b981' : scorePercent >= 80 ? '#3b82f6' : scorePercent >= 70 ? '#f59e0b' : '#ef4444';
 
-      <div className="relative z-10">
-        <div className="w-28 h-28 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-6 mx-auto"
-          style={{ boxShadow: '0 0 60px rgba(59, 130, 246, 0.5)', animation: 'float 3s ease-in-out infinite' }}>
-          <span className="text-6xl">🏆</span>
-        </div>
+    return (
+      <div style={{ padding: isMobile ? '20px 16px' : '32px 24px', maxWidth: '800px', margin: '0 auto' }}>
+        {/* Score Summary Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(16, 185, 129, 0.15))',
+          borderRadius: '20px',
+          padding: isMobile ? '24px 20px' : '32px',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏆</div>
+          <h1 style={{
+            fontSize: isMobile ? '28px' : '36px',
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, #60a5fa, #34d399)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '8px',
+          }}>
+            Lesson Complete!
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '24px' }}>
+            Bernoulli's Principle & the Magnus Effect
+          </p>
 
-        <h1 className="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
-          Fluid Dynamics Master!
-        </h1>
-
-        <p className="text-xl text-slate-300 max-w-lg mx-auto mb-8">
-          You've mastered Bernoulli's Principle and the Magnus Effect. From airplane wings to curveballs, you now understand the physics of moving fluids!
-        </p>
-
-        <div className="flex flex-wrap gap-3 justify-center mb-8">
-          {['Bernoulli Equation', 'Wing Lift', 'Magnus Effect', 'Venturi Effect'].map((item, i) => (
-            <div key={i} className="px-4 py-2 rounded-full bg-slate-800 text-slate-300 text-sm font-medium">
-              * {item}
+          {/* Score display */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: isMobile ? '16px' : '32px',
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px 24px',
+              border: `2px solid ${gradeColor}40`,
+              minWidth: '120px',
+            }}>
+              <div style={{ fontSize: '42px', fontWeight: 800, color: gradeColor }}>{grade}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>GRADE</div>
             </div>
-          ))}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px 24px',
+              border: `1px solid ${colors.border}`,
+              minWidth: '120px',
+            }}>
+              <div style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary }}>{testScore}<span style={{ fontSize: '20px', color: colors.textMuted }}>/10</span></div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>SCORE</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px 24px',
+              border: `1px solid ${colors.border}`,
+              minWidth: '120px',
+            }}>
+              <div style={{ fontSize: '42px', fontWeight: 800, color: colors.textPrimary }}>{scorePercent}%</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>ACCURACY</div>
+            </div>
+          </div>
+
+          {/* Score bar */}
+          <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+            <div style={{ background: colors.bgCardLight, borderRadius: '8px', height: '10px', overflow: 'hidden' }}>
+              <div style={{
+                width: `${scorePercent}%`,
+                height: '100%',
+                background: `linear-gradient(90deg, ${gradeColor}, ${gradeColor}cc)`,
+                borderRadius: '8px',
+                transition: 'width 1s ease-out',
+              }} />
+            </div>
+          </div>
+
+          {/* Skills mastered */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '20px' }}>
+            {['Bernoulli Equation', 'Wing Lift', 'Magnus Effect', 'Pressure-Velocity'].map((skill) => (
+              <span key={skill} style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                background: `${colors.success}22`,
+                color: colors.success,
+                fontSize: '13px',
+                fontWeight: 600,
+                border: `1px solid ${colors.success}44`,
+              }}>
+                {skill}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 max-w-md mx-auto mb-8">
-          <div className="bg-slate-800/50 rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">✈️</div>
-            <div className="text-xs text-slate-400">Flight</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">⚾</div>
-            <div className="text-xs text-slate-400">Sports</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">⛽</div>
-            <div className="text-xs text-slate-400">Engines</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">🩺</div>
-            <div className="text-xs text-slate-400">Medicine</div>
+        {/* Recommended Next Lessons */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{
+            fontSize: isMobile ? '20px' : '24px',
+            fontWeight: 700,
+            color: colors.textPrimary,
+            marginBottom: '4px',
+          }}>
+            Recommended Next Lessons
+          </h2>
+          <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '16px' }}>
+            Continue your fluid dynamics learning path
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gap: '12px',
+          }}>
+            {nextLessons.map((lesson) => (
+              <a
+                key={lesson.slug}
+                href={`/games/${lesson.slug}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  background: colors.bgCard,
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  border: `1px solid ${colors.border}`,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.primary; e.currentTarget.style.background = `${colors.primary}10`; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.background = colors.bgCard; }}
+              >
+                <div style={{
+                  fontSize: '28px',
+                  width: '48px',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: colors.bgCardLight,
+                  borderRadius: '12px',
+                  flexShrink: 0,
+                }}>
+                  {lesson.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px' }}>{lesson.name}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '13px', lineHeight: 1.4 }}>{lesson.desc}</div>
+                </div>
+                <div style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  background: lesson.difficulty === 'Beginner' ? `${colors.success}22` : `${colors.primary}22`,
+                  color: lesson.difficulty === 'Beginner' ? colors.success : colors.primary,
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}>
+                  {lesson.difficulty}
+                </div>
+              </a>
+            ))}
           </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => {
               setPhase('hook');
@@ -1926,37 +2145,63 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               setTestAnswers(Array(10).fill(null));
               setTestSubmitted(false);
               setTestIndex(0);
+              setTestScore(0);
             }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium"
+            style={{
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textPrimary,
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
-            Explore Again
+            Replay Lesson
           </button>
+          <a
+            href="/games"
+            style={{
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: 'none',
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
+              color: 'white',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Browse All Lessons
+          </a>
           {onBack && (
             <button
               onClick={() => {
-                onGameEvent?.({ type: 'mastery_achieved', data: { game: 'bernoulli_principle' } });
+                onGameEvent?.({ type: 'mastery_achieved', data: { game: 'bernoulli_principle', score: testScore, total: 10 } });
                 onBack();
               }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-medium"
+              style={{
+                padding: '14px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: colors.success,
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
             >
-              Complete Lesson
+              Done
             </button>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-      `}</style>
-    </div>
-  );
+    );
+  };
 
   // Phase router
   const renderPhase = () => {

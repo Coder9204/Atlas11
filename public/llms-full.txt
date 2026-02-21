@@ -1,10 +1,19 @@
-# Atlas Coach — Complete Game Catalog
+# Atlas Coach — Complete Reference for AI Search Engines
 # https://atlascoach-5e3af.web.app
-# 340+ interactive physics, engineering, and AI simulation games
+# 342 interactive physics, engineering, and AI simulation games
+# with AI coaching, comparison pages, glossary, how-it-works guides, and more
 
-## Classical Mechanics
+> Atlas Coach is a free interactive physics and engineering education platform.
+> Students, teachers, engineers, and curious learners use it to build deep
+> intuition through predict-observe-explain simulations with AI coaching.
 
-### Forces & Motion
+---
+
+## Game Catalog (342 Interactive Simulations)
+
+### Classical Mechanics
+
+#### Forces & Motion
 - Newton's Third Law (/games/newtons-third-law) — Explore action-reaction force pairs through interactive simulations
 - Drag Force (/games/drag-force) — Understand how air resistance affects motion at different speeds
 - Centripetal Force (/games/centripetal-force) — Discover the force that keeps objects moving in circles
@@ -14,20 +23,20 @@
 - Inclined Plane (/games/inclined-plane) — Analyze forces on objects sliding down slopes
 - Inertia (/games/inertia) — Discover Newton's First Law through hands-on experiments
 
-### Momentum & Collisions
+#### Momentum & Collisions
 - Momentum Conservation (/games/momentum-conservation) — See how momentum transfers between objects
 - Two Ball Collision (/games/two-ball-collision) — Simulate elastic and inelastic collisions
 - Inelastic Collisions (/games/inelastic-collisions) — Explore energy loss in sticky collisions
 - Ballistic Pendulum (/games/ballistic-pendulum) — Measure projectile speed using conservation laws
 - Egg Drop (/games/egg-drop) — Design protection using impulse-momentum theorem
 
-### Energy
+#### Energy
 - Energy Conservation (/games/energy-conservation) — Track energy transformations in dynamic systems
 - Work & Power (/games/work-power) — Calculate work done and power output
 - Elastic Potential Energy (/games/elastic-potential-energy) — Store and release energy in springs
 - Kinetic Theory of Gases (/games/kinetic-theory-gases) — Simulate molecular motion and gas behavior
 
-### Rotational Motion
+#### Rotational Motion
 - Angular Momentum (/games/angular-momentum) — Explore conservation of angular momentum
 - Angular Momentum Transfer (/games/angular-momentum-transfer) — See how spinning objects exchange rotation
 - Moment of Inertia (/games/moment-of-inertia) — Compare rotational resistance of different shapes
@@ -37,34 +46,34 @@
 - Rattleback (/games/rattleback) — Discover the physics of spin-reversal toys
 - Sleeping Top (/games/sleeping-top) — Explore spinning top dynamics
 
-### Projectiles & Kinematics
+#### Projectiles & Kinematics
 - Projectile Independence (/games/projectile-independence) — Horizontal and vertical motion are independent
 - Brachistochrone (/games/brachistochrone) — Find the fastest path between two points
 - Cycloid Motion (/games/cycloid-motion) — Explore the geometry of rolling curves
 - Terminal Velocity (/games/terminal-velocity) — Balance gravity and drag forces
 
-### Center of Mass
+#### Center of Mass
 - Center of Mass (/games/center-of-mass) — Find balance points of complex shapes
 - Tipping Point (/games/tipping-point) — Determine when objects topple over
 - Rolling Race (/games/rolling-race) — Compare rolling speeds of different shapes
 - Rolling vs Sliding (/games/rolling-vs-sliding) — Friction's role in rolling motion
 
-## Oscillations & Waves
+### Oscillations & Waves
 
-### Pendulums
+#### Pendulums
 - Pendulum Period (/games/pendulum-period) — Explore what affects swing timing
 - Coupled Pendulums (/games/coupled-pendulums) — Watch energy transfer between connected pendulums
 - Eddy Current Pendulum (/games/eddy-current-pendulum) — Magnetic braking without contact
 - Swing Pumping (/games/swing-pumping) — How to pump a swing using physics
 
-### Oscillations
+#### Oscillations
 - Damped Oscillations (/games/damped-oscillations) — Watch oscillations decay over time
 - Forced Oscillations (/games/forced-oscillations) — Drive oscillators at different frequencies
 - Damping (/games/damping) — Compare underdamped, critically damped, and overdamped
 - LC Resonance (/games/l-c-resonance) — Electronic oscillators with inductors and capacitors
 - Resonance (/games/resonance) — Amplify motion by matching natural frequency
 
-### Sound Waves
+#### Sound Waves
 - Beats (/games/beats) — Hear interference patterns between similar frequencies
 - Sound Interference (/games/sound-interference) — Constructive and destructive sound patterns
 - Speed of Sound (/games/speed-of-sound) — Measure sound speed in different media
@@ -72,56 +81,71 @@
 - Doppler Effect (/games/doppler-effect) — Frequency shifts from moving sources
 - Straw Instrument (/games/straw-instrument) — Build instruments from everyday materials
 
-### Wave Physics
+#### Wave Physics
 - Standing Waves (/games/standing-waves) — Create stationary wave patterns
 - Wave Interference (/games/wave-interference) — Combine waves constructively and destructively
 - Wave Speed & Tension (/games/wave-speed-tension) — How tension affects wave propagation
 - Microwave Standing Wave (/games/microwave-standing-wave) — Measure wavelength with a microwave oven
 - Chladni Patterns (/games/chladni-patterns) — Visualize vibration modes on plates
 
-### Vibration Damping
+#### Vibration Damping
 - Tuned Mass Damper (/games/tuned-mass-damper) — Protect buildings from earthquakes
 - Metronome Sync (/games/metronome-sync) — Watch coupled oscillators synchronize
 
-## Fluid Mechanics
+### Fluid Mechanics
 
-### Flow Types
+#### Flow Types
 - Laminar Flow (/games/laminar-flow) — Smooth, orderly fluid motion
 - Laminar vs Turbulent (/games/laminar-turbulent) — Reynolds number and flow transitions
 - Karman Vortex (/games/karman-vortex) — Vortex shedding behind obstacles
 - Vortex Rings (/games/vortex-rings) — Toroidal fluid structures
 - Cavitation (/games/cavitation) — Bubble formation in fast-moving fluids
 
-### Pressure
+#### Pressure
 - Bernoulli's Principle (/games/bernoulli) — Fast fluid = low pressure
 - Venturi Effect (/games/venturi-effect) — Pressure changes in constricted flow
 - Hydrostatic Pressure (/games/hydrostatic-pressure) — Pressure increases with depth
 - Pascal's Law (/games/pascal-law) — Pressure transmitted equally in fluids
 - Pressure Drop (/games/pressure-drop) — Friction losses in pipe flow
 
-### Buoyancy
+#### Buoyancy
 - Buoyancy (/games/buoyancy) — Archimedes' principle of floating
 - Cartesian Diver (/games/cartesian-diver) — Control buoyancy with pressure
 - Floating Paperclip (/games/floating-paperclip) — Surface tension supporting weight
 - Helium Balloon in Car (/games/helium-balloon-car) — Counter-intuitive balloon behavior
 
-### Surface Effects
+#### Surface Effects
 - Capillary Action (/games/capillary-action) — Liquids climbing narrow tubes
 - Soap Boat (/games/soap-boat) — Surface tension propulsion
 - Marangoni Tears (/games/marangoni-tears) — Wine tears and surface tension gradients
 - Minimal Surfaces (/games/minimal-surfaces) — Soap films and geometry
 - Superhydrophobic (/games/superhydrophobic) — Water-repelling surfaces
 
-## Thermodynamics & Heat
+#### Viscosity
+- Shear Thinning (/games/shear-thinning) — Fluids that flow easier when stirred
+- Viscosity Temperature (/games/viscosity-temperature) — How temperature affects fluid thickness
+- Non-Newtonian Armor (/games/non-newtonian-armor) — Shear-thickening fluids for protection
+- Viscoelasticity (/games/viscoelasticity) — Materials that are both viscous and elastic
+- Stick-Slip (/games/stick-slip) — Jerky motion from friction transitions
 
-### Heat Transfer
+#### Special Phenomena
+- Hydraulic Jump (/games/hydraulic-jump) — Sudden transition from fast shallow to slow deep flow
+- Water Hammer (/games/water-hammer) — Pressure surges from sudden valve closure
+- Siphon (/games/siphon) — Moving liquid over a barrier using atmospheric pressure
+- Bottle Tornado (/games/bottle-tornado) — Creating vortex flow in a bottle
+- Shower Curtain (/games/shower-curtain) — Why shower curtains blow inward
+- Droplet Breakup (/games/droplet-breakup) — Surface tension vs inertia in droplet fragmentation
+
+### Thermodynamics & Heat
+
+#### Heat Transfer
 - Convection (/games/convection) — Heat transfer through fluid motion
 - Convection Currents (/games/convection-currents) — Circular flow patterns from heating
 - Newton's Cooling (/games/newton-cooling) — Exponential temperature decay
 - Thermal Contact (/games/thermal-contact) — Heat flow between touching objects
 - Heat Transfer Capacity (/games/heat-transfer-capacity) — Specific heat and thermal mass
 
-### Phase Changes
+#### Phase Changes
 - Latent Heat (/games/latent-heat) — Energy absorbed/released during phase changes
 - Phase Change Energy (/games/phase-change-energy) — Energy budgets for melting and boiling
 - Boiling & Pressure (/games/boiling-pressure) — How pressure affects boiling point
@@ -129,31 +153,76 @@
 - Supercooling (/games/supercooling) — Liquids below freezing point
 - Leidenfrost Effect (/games/leidenfrost) — Water droplets dancing on hot surfaces
 
-## Electricity & Magnetism
+#### Thermal Properties
+- Thermal Expansion (/games/thermal-expansion) — How materials grow when heated
+- Jar Lid Expansion (/games/jar-lid-expansion) — Loosening lids with hot water
+- Bimetal Thermostat (/games/bimetal-thermostat) — Temperature control using different expansion rates
+- Adiabatic Heating (/games/adiabatic-heating) — Temperature rise from compression without heat exchange
 
-### Electric Fields
+#### Gas Laws
+- Gas Laws (/games/gas-laws) — Boyle's, Charles's, and the ideal gas law
+- Cloud in a Bottle (/games/cloud-in-bottle) — Create clouds through adiabatic cooling
+- Entropy (/games/entropy) — Disorder, microstates, and the second law
+- Carnot Cycle (/games/carnot-cycle) — The most efficient possible heat engine
+
+#### Thermal Management
+- Heat Sink Thermal (/games/heat-sink-thermal) — Cooling electronics with finned heatsinks
+- Liquid Cooling (/games/liquid-cooling) — Water and coolant-based thermal management
+- Server Airflow (/games/server-airflow) — Hot aisle / cold aisle data center design
+- Thermal Throttling (/games/thermal-throttling) — CPUs slowing down to prevent overheating
+- Thermal Interface (/games/thermal-interface) — Paste and pads between chip and heatsink
+- Chiller COP (/games/chiller-c-o-p) — Coefficient of performance for cooling systems
+- Fan Laws (/games/fan-laws) — How speed changes affect airflow, pressure, and power
+
+#### Chemical Reactions
+- Endothermic & Exothermic (/games/endothermic-exothermic) — Reactions that absorb or release heat
+- Hand Warmer (/games/hand-warmer) — Iron oxidation for portable heat
+- Arrhenius (/games/arrhenius) — Temperature dependence of reaction rates
+
+### Electricity & Magnetism
+
+#### Electric Fields
 - Electric Field (/games/electric-field) — Visualize force fields around charges
 - Electric Field Mapping (/games/electric-field-mapping) — Map field lines experimentally
 - Electric Potential (/games/electric-potential) — Voltage landscapes around charges
 - Coulomb's Law (/games/coulombs-law) — Force between point charges
 - Static Electricity (/games/static-electricity) — Charge transfer and sparks
 
-### Circuits
+#### Circuits
 - Circuits (/games/circuits) — Build and analyze electric circuits
 - Kirchhoff's Laws (/games/kirchhoffs-laws) — Current and voltage rules for circuits
 - RC Time Constant (/games/r-c-time-constant) — Charging and discharging capacitors
+- LC Resonance (/games/l-c-resonance) — Electronic oscillators with inductors and capacitors
 - Power Factor (/games/power-factor) — Real vs reactive power in AC circuits
 
-### Magnetism
+#### Magnetism
 - Magnetic Field (/games/magnetic-field) — Visualize magnetic field patterns
 - Magnetic Mapping (/games/magnetic-mapping) — Map magnetic fields experimentally
 - Electromagnet (/games/electromagnet) — Build magnets with electric current
 - Oersted Experiment (/games/oersted-experiment) — Current creates magnetic fields
 - Homopolar Motor (/games/homopolar-motor) — Simplest electric motor
 
-## Optics & Light
+#### Electromagnetic Induction
+- Electromagnetic Induction (/games/electromagnetic-induction) — Faraday's law and changing magnetic flux
+- Induction Heating (/games/induction-heating) — Heating metal with alternating magnetic fields
+- Inductive Kickback (/games/inductive-kickback) — Voltage spikes from interrupting inductor current
+- Eddy Currents (/games/eddy-currents) — Circular currents induced in conductors
+- Generator Startup (/games/generator-startup) — How generators produce electricity from rotation
 
-### Reflection & Refraction
+#### Motors & Speakers
+- Classic DC Motor (/games/classic-d-c-motor) — How a brushed DC motor works
+- Speaker Principle (/games/speaker-principle) — Converting electrical signals to sound
+- Microphone (/games/microphone) — Converting sound to electrical signals
+- Make Microphone (/games/make-microphone) — Build a microphone from simple materials
+
+#### EMI & Shielding
+- Faraday Cage (/games/faraday-cage) — Blocking electromagnetic fields with conductive enclosures
+- EMI Shielding (/games/e-m-i-shielding) — Protecting circuits from electromagnetic interference
+- Wireless Charging (/games/wireless-charging) — Inductive power transfer without wires
+
+### Optics & Light
+
+#### Reflection & Refraction
 - Reflection (/games/reflection) — Mirror physics and image formation
 - Law of Reflection (/games/law-of-reflection) — Angle of incidence equals angle of reflection
 - Refraction (/games/refraction) — Light bending at material boundaries
@@ -161,63 +230,664 @@
 - Total Internal Reflection (/games/total-internal-reflection) — Light trapped inside materials
 - Brewster Angle (/games/brewster-angle) — Perfect polarization by reflection
 
-### Lenses & Imaging
+#### Lenses & Imaging
 - Lens Focusing (/games/lens-focusing) — How lenses form images
 - Chromatic Aberration (/games/chromatic-aberration) — Color fringing in lenses
 - Depth of Field (/games/depth-of-field) — Sharp focus range in photography
 - Camera Obscura (/games/camera-obscura) — Pinhole camera physics
 
-## AI & Computing
+#### Interference & Diffraction
+- Diffraction (/games/diffraction) — Bending and spreading of waves past obstacles
+- Thin Film Interference (/games/thin-film-interference) — Rainbow colors from oil slicks and soap bubbles
+- Anti-Reflective Coating (/games/anti-reflective-coating) — Reducing glare with thin films
+- Moire Patterns (/games/moire-patterns) — Visual interference from overlapping grids
 
-### AI Inference
+#### Polarization
+- Polarization (/games/polarization) — Filtering light oscillation direction
+- Polarized Sky (/games/polarized-sky) — Why the sky is polarized by scattering
+- Tape Birefringence (/games/tape-birefringence) — Seeing stress patterns through crossed polarizers
+- Photoelasticity (/games/photoelasticity) — Stress analysis using polarized light
+
+#### Scattering & Dispersion
+- Dispersion (/games/dispersion) — Prisms splitting white light into colors
+- Rayleigh-Mie Scattering (/games/rayleigh-mie-scattering) — Why the sky is blue and sunsets are red
+- Laser Speckle (/games/laser-speckle) — Granular patterns from coherent light
+- Retroreflection (/games/retroreflection) — Light bouncing back to its source
+
+#### Special Optical Phenomena
+- Fluorescence (/games/fluorescence) — Materials that glow under UV light
+- Infrared Emissivity (/games/infrared-emissivity) — Thermal radiation from surfaces
+- Wave-Particle Duality (/games/wave-particle-duality) — Light as both wave and particle
+- Photoelectric Effect (/games/photoelectric-effect) — Photons ejecting electrons from metals
+
+### Materials Science
+
+#### Mechanical Properties
+- Poisson Ratio (/games/poisson-ratio) — Lateral contraction when stretched
+- Buckling (/games/buckling) — Structural failure under compression
+- Fracture Mechanics (/games/fracture-mechanics) — How cracks propagate in materials
+
+#### Corrosion & Degradation
+- Galvanic Corrosion (/games/galvanic-corrosion) — Electrochemical attack between dissimilar metals
+- Encapsulation UV Aging (/games/encapsulation-u-v-aging) — Polymer degradation from sunlight
+
+#### Molecular
+- Brownian Motion (/games/brownian-motion) — Random jittering of particles in fluids
+- Molecular Orbitals (/games/molecular-orbitals) — Electron probability clouds in molecules
+- Diffusion Convection (/games/diffusion-convection) — Mass transport by random motion and flow
+
+### Semiconductors & Electronics
+
+#### Semiconductor Basics
+- MOSFET Switching (/games/m-o-s-f-e-t-switching) — How transistors turn on and off
+- Leakage Current (/games/leakage-current) — Unwanted current when transistors are off
+- Leakage Power (/games/leakage-power) — Power consumed by off-state transistors
+- SRAM Cell (/games/s-r-a-m-cell) — How static memory stores bits
+- DRAM Refresh (/games/d-r-a-m-refresh) — Why dynamic memory needs constant refreshing
+
+#### Fabrication
+- Photolithography (/games/photolithography) — Printing circuit patterns with light
+- Litho Focus Dose (/games/litho-focus-dose) — Optimizing exposure parameters
+- Etch Anisotropy (/games/etch-anisotropy) — Directional vs isotropic etching
+- Ion Implantation (/games/ion-implantation) — Shooting ions into silicon to dope it
+- Doping Diffusion (/games/doping-diffusion) — Impurity atoms spreading through silicon
+- Deposition Types (/games/deposition-types) — CVD, PVD, and ALD thin film techniques
+- CMP Planarization (/games/c-m-p-planarization) — Chemical-mechanical polishing for flat surfaces
+
+#### Interconnects
+- RC Delay (/games/r-c-delay) — Resistance-capacitance signal delay
+- RC Delay Interconnect (/games/r-c-delay-interconnect) — Wire delay in chip wiring
+- Electromigration (/games/electromigration) — Metal atom transport causing wire failure
+- Crosstalk (/games/crosstalk) — Signal coupling between adjacent wires
+- IR Drop (/games/i-r-drop) — Voltage loss across power distribution wires
+- Transmission Line (/games/transmission-line) — High-speed signal propagation physics
+
+#### Packaging
+- Flip Chip Wirebond (/games/flip-chip-wirebond) — Compare die attachment technologies
+- Chiplet Architecture (/games/chiplet-architecture) — Modular chip design with smaller dies
+- Chiplets vs Monoliths (/games/chiplets-vs-monoliths) — Tradeoffs between tiled and single-die design
+- Thermal Interface (/games/thermal-interface) — Heat transfer between die and package
+
+#### Timing & Clocks
+- Clock Distribution (/games/clock-distribution) — Delivering clock signals across a chip
+- Clock Jitter (/games/clock-jitter) — Timing uncertainty in clock edges
+- Metastability (/games/metastability) — When flip-flops cannot decide 0 or 1
+
+#### Power Delivery
+- Power Delivery Network (/games/power-delivery-network) — Getting clean power to every transistor
+- Decoupling Capacitor (/games/decoupling-capacitor) — Smoothing power supply noise
+- Ground Bounce (/games/ground-bounce) — Voltage fluctuations on the ground rail
+- Noise Margin (/games/noise-margin) — How much noise a logic gate can tolerate
+
+#### ESD & Reliability
+- ESD Protection (/games/e-s-d-protection) — Guarding chips against static discharge
+- Humidity ESD (/games/humidity-e-s-d) — How humidity affects electrostatic buildup
+- Radiation Effects (/games/radiation-effects) — How radiation flips bits and damages circuits
+- Space Radiation (/games/space-radiation) — Cosmic ray effects on spacecraft electronics
+
+#### Manufacturing
+- Cleanroom Yield (/games/cleanroom-yield) — How defects reduce the number of good chips
+- Process Variation (/games/process-variation) — Manufacturing inconsistencies affecting performance
+- Overlay Error (/games/overlay-error) — Misalignment between lithography layers
+- SRAM Yield Redundancy (/games/s-r-a-m-yield-redundancy) — Spare rows and columns to fix defects
+- Design to Fab Translation (/games/design-to-fab-translation) — From schematic to silicon
+
+### AI & Computing
+
+#### AI Inference
 - AI Inference Latency (/games/a-i-inference-latency) — Understand GPU computation timing
 - Energy Per Token (/games/energy-per-token) — Power consumption of language models
 - Batching & Latency (/games/batching-latency) — Throughput vs latency tradeoffs
 - Quantization Precision (/games/quantization-precision) — Reduce model size vs accuracy
 - Sparsity (/games/sparsity) — Skip zero computations for speed
 
-### GPU Architecture
+#### GPU Architecture
 - GPU Occupancy (/games/g-p-u-occupancy) — Maximize GPU utilization
 - GPU Memory Bandwidth (/games/g-p-u-memory-bandwidth) — Memory as the bottleneck
 - GPU Power States (/games/g-p-u-power-states) — Dynamic voltage and frequency
 - Tensor Core (/games/tensor-core) — Matrix multiply accelerators
 - Systolic Array (/games/systolic-array) — TPU-style computation
 
-### Compute Comparison
+#### Memory Systems
+- Memory Hierarchy (/games/memory-hierarchy) — Registers, cache, RAM, and storage
+- KV Cache (/games/k-v-cache) — Key-value storage in transformer attention
+- ECC Memory (/games/e-c-c-memory) — Error-correcting code for reliable memory
+- Data Movement Energy (/games/data-movement-energy) — Energy cost of moving data between chips
+
+#### Compute Comparison
 - ASIC vs GPU (/games/a-s-i-cvs-g-p-u) — Fixed vs flexible silicon
 - TPU vs GPU (/games/t-p-uvs-g-p-u) — Google's TPU architecture comparison
+- Manufacturing Drives Architecture (/games/manufacturing-drives-architecture) — How fab constraints shape chip design
 
-## Solar & Energy
+#### Power Management
+- DVFS (/games/d-v-f-s) — Dynamic voltage and frequency scaling
+- Thermal Throttling (/games/thermal-throttling) — CPUs slowing down to prevent overheating
+- Hotspots (/games/hotspots) — Localized temperature peaks on chips
 
-### Solar Cell Physics
+#### Prompting & Safety
+- Prompt Injection Safety (/games/prompt-injection-safety) — Defending LLMs against adversarial inputs
+- Spec-First Prompting (/games/spec-first-prompting) — Writing specifications before code
+- Test-First Prompting (/games/test-first-prompting) — Writing tests before implementation
+- Tool-Aware Prompting (/games/tool-aware-prompting) — Prompting LLMs to use tools effectively
+- Model as Reviewer (/games/model-as-reviewer) — Using LLMs to review their own output
+- Attention Loves Bandwidth (/games/attention-loves-bandwidth) — How attention mechanism scales with memory
+- Attention Memory (/games/attention-memory) — Memory requirements of self-attention
+- Ask for Assumptions (/games/ask-for-assumptions) — Getting LLMs to state their assumptions
+- LLM to SPICE (/games/l-l-m-to-s-p-i-c-e) — Using LLMs to generate circuit simulations
+- Verification Harness (/games/verification-harness) — Automated checking of LLM outputs
+- Patch Discipline (/games/patch-discipline) — Making clean, minimal code changes
+
+#### Networking
+- Network Congestion (/games/network-congestion) — Traffic bottlenecks in data networks
+- Network Latency (/games/network-latency) — Delay in sending data across networks
+- PCIe Bandwidth (/games/p-c-ie-bandwidth) — High-speed bus connecting GPU to CPU
+- Interconnect Topology (/games/interconnect-topology) — How chips and servers are wired together
+
+### Solar & Energy
+
+#### Solar Cell Physics
 - Solar Cell (/games/solar-cell) — Photovoltaic fundamentals
 - PV IV Curve (/games/p-v-i-v-curve) — Current-voltage characteristics
 - Fill Factor (/games/fill-factor) — Solar cell efficiency metric
 - Spectral Mismatch (/games/spectral-mismatch) — Sunlight vs cell response
+- LED as Solar Cell (/games/l-e-d-as-solar-cell) — Using LEDs to generate electricity
 
-### Power Electronics
+#### Module Design
+- Cell to Module Losses (/games/cell-to-module-losses) — Efficiency lost in packaging cells
+- Bypass Diodes (/games/bypass-diodes) — Protecting shaded panels from damage
+- Series Parallel PV (/games/series-parallel-p-v) — Wiring solar panels in series vs parallel
+- Shunt Series Defects (/games/shunt-series-defects) — Parasitic resistance effects on solar cells
+
+#### Performance Factors
+- Solar Temp Coefficient (/games/solar-temp-coefficient) — How temperature reduces solar output
+- Solar Thermal Derating (/games/solar-thermal-derating) — Performance loss from heat
+- Bifacial Albedo (/games/bifacial-albedo) — Double-sided panels capturing reflected light
+- Passivation Recombination (/games/passivation-recombination) — Surface treatment to reduce carrier loss
+
+#### Manufacturing
+- Silicon Texturing (/games/silicon-texturing) — Surface roughening to trap light
+- Screen Printing Metallization (/games/screen-printing-metallization) — Printing conductive lines on solar cells
+- Texturing vs Lithography (/games/texturing-vs-lithography) — Comparing patterning methods for solar
+- Solar vs IC Purity (/games/solar-vs-i-c-purity) — Silicon quality differences for solar vs chips
+
+#### System Design
+- MPPT (/games/m-p-p-t) — Maximum power point tracking
+- String Sizing (/games/string-sizing) — How many panels per string
+- Solar Yield Prediction (/games/solar-yield-prediction) — Estimating annual energy production
+- Satellite Solar Angle (/games/satellite-solar-angle) — Optimizing panel orientation in orbit
+
+#### Power Electronics
 - DC-DC Converter (/games/d-c-d-c-converter) — Voltage conversion circuits
 - Inverter Sine Wave (/games/inverter-sine-wave) — DC to AC conversion
-- MPPT (/games/m-p-p-t) — Maximum power point tracking
+- Power Loss (/games/power-loss) — Conduction and switching losses in power electronics
+- Power Factor (/games/power-factor) — Real vs reactive power in AC circuits
 
-## Space & Orbital Mechanics
+#### Batteries & UPS
+- Battery Internal Resistance (/games/battery-internal-resistance) — Why batteries heat up under load
+- UPS Battery Sizing (/games/u-p-s-battery-sizing) — Dimensioning backup power systems
+- UPS Efficiency (/games/u-p-s-efficiency) — Losses in uninterruptible power supplies
+
+#### Grid & Data Center
+- Grid Frequency (/games/grid-frequency) — Maintaining 50/60 Hz on the power grid
+- PUE Calculator (/games/p-u-e-calculator) — Data center power usage effectiveness
+- Ground Fault (/games/ground-fault) — Detecting dangerous current leaks
+- Cable Sizing (/games/cable-sizing) — Selecting wire gauge for voltage drop and heat
+
+### Space & Orbital Mechanics
+
+#### Orbital Mechanics
 - Orbital Mechanics (/games/orbital-mechanics) — Kepler's laws and orbit dynamics
+- Orbital Mechanics Basics (/games/orbital-mechanics-basics) — Introduction to orbits and gravity
 - Tidal Forces (/games/tidal-forces) — Moon's gravitational effects
 - Tidal Locking (/games/tidal-locking) — Why the Moon shows one face
-- Satellite Doppler (/games/satellite-doppler) — Frequency shifts from orbiting satellites
-- Coriolis Effect (/games/coriolis-effect) — Rotating reference frame effects
 
-## RF & Communications
+#### Satellite Systems
+- Satellite Doppler (/games/satellite-doppler) — Frequency shifts from orbiting satellites
+- Satellite Solar Angle (/games/satellite-solar-angle) — Panel orientation in orbit
+- Satellite Thermal (/games/satellite-thermal) — Temperature management in space
+
+#### Earth Effects
+- Coriolis Effect (/games/coriolis-effect) — Rotating reference frame effects
+- Magnus Effect (/games/magnus-effect) — Spinning objects curving through air
+- Lift Force (/games/lift-force) — How wings generate upward force
+
+### RF & Communications
+
+#### Antennas
 - Antenna Gain (/games/antenna-gain) — Directional signal strength
+- Antenna Polarization (/games/antenna-polarization) — Signal orientation matching
+- Direction Finding (/games/direction-finding) — Locating signal sources
+
+#### Signal Propagation
 - Link Budget (/games/link-budget) — End-to-end signal power calculation
 - Fresnel Zones (/games/fresnel-zones) — Radio wave clearance zones
+- Fiber Signal Loss (/games/fiber-signal-loss) — Attenuation in optical fiber
+- Crosstalk (/games/crosstalk) — Signal coupling between adjacent paths
 
-## Fun Experiments
-- Cartesian Diver (/games/cartesian-diver) — Pressure-controlled buoyancy
+#### Acoustics
+- Echo Time of Flight (/games/echo-time-of-flight) — Measuring distance with sound echoes
+- Phone Seismometer (/games/phone-seismometer) — Using phone accelerometers to detect vibrations
+- P-Waves S-Waves (/games/p-waves-s-waves) — Compression vs shear seismic waves
+
+### Data Storage
+
+#### Storage Physics
+- HDD Physics (/games/h-d-d-physics) — How hard drives read and write magnetically
+- Capacitive Touch (/games/capacitive-touch) — How touchscreens detect your finger
+
+### Fun Experiments
+
+#### Kitchen Physics
+- Cartesian Diver (/games/cartesian-diver) — Pressure-controlled buoyancy toy
+- Bottle Tornado (/games/bottle-tornado) — Creating vortex flow in a bottle
+- Soap Boat (/games/soap-boat) — Surface tension propulsion
+- Floating Paperclip (/games/floating-paperclip) — Surface tension supporting metal
+- Jar Lid Expansion (/games/jar-lid-expansion) — Thermal expansion to the rescue
+- Helium Balloon in Car (/games/helium-balloon-car) — Counter-intuitive balloon behavior
+
+#### Optical Illusions
+- Wagon Wheel Aliasing (/games/wagon-wheel-aliasing) — Wheels appearing to spin backward
+- Rolling Shutter (/games/rolling-shutter) — Distortion from sequential pixel capture
+- Moire Patterns (/games/moire-patterns) — Visual interference from overlapping grids
+
+#### Strange Physics
 - Chain Fountain (/games/chain-fountain) — Self-siphoning chain phenomenon
 - Rattleback (/games/rattleback) — Spin-reversal toy physics
 - Stable Levitation (/games/stable-levitation) — Magnetic and acoustic levitation
+- Leidenfrost Effect (/games/leidenfrost) — Water droplets dancing on hot surfaces
+
+#### Human Senses
 - Reaction Time (/games/reaction-time) — Measure your neural response speed
+- Rolling Race (/games/rolling-race) — Predict which shape rolls fastest
 
 ---
-For the complete interactive experience, visit: https://atlascoach-5e3af.web.app/games
+
+## Comparison Pages
+
+Head-to-head comparisons of related physics and engineering concepts:
+
+- GPU vs ASIC: Which Hardware Wins for AI Workloads? (/compare/gpu-vs-asic)
+- TPU vs GPU: Comparing AI Accelerators for Deep Learning (/compare/tpu-vs-gpu)
+- Laminar vs Turbulent Flow: Understanding Flow Regimes (/compare/laminar-vs-turbulent-flow)
+- Chiplets vs Monolithic Dies: The Future of Chip Design (/compare/chiplets-vs-monolithic-dies)
+- Series vs Parallel Solar Panels: Wiring Configuration Explained (/compare/series-vs-parallel-solar-panels)
+- Solar-Grade vs IC-Grade Silicon: Purity Requirements Compared (/compare/solar-grade-vs-ic-grade-silicon)
+- Flip Chip vs Wire Bond: Chip Packaging Technologies Compared (/compare/flip-chip-vs-wirebond)
+- Static vs Kinetic Friction: Why Starting is Harder Than Sliding (/compare/static-vs-kinetic-friction)
+- Rolling vs Sliding: Why Wheels Changed Everything (/compare/rolling-vs-sliding-friction)
+- Reflection vs Refraction: How Light Changes Direction (/compare/reflection-vs-refraction)
+- Convection vs Conduction: Two Modes of Heat Transfer (/compare/convection-vs-conduction)
+- Endothermic vs Exothermic: Reactions That Absorb or Release Heat (/compare/endothermic-vs-exothermic-reactions)
+- Elastic vs Inelastic Collisions: Conservation Laws in Action (/compare/elastic-vs-inelastic-collisions)
+- Damped vs Forced Oscillations: Decay vs Driven Response (/compare/damped-vs-forced-oscillations)
+- Tensor Core vs Systolic Array: NVIDIA vs Google Matrix Hardware (/compare/tensor-core-vs-systolic-array)
+- GPU Occupancy vs Memory Bandwidth: Compute vs Memory Bottleneck (/compare/gpu-occupancy-vs-memory-bandwidth)
+- Inference Latency vs Batching: Single Request Speed vs Throughput (/compare/inference-latency-vs-batching)
+- IV Curve vs Fill Factor: Solar Cell Characterization Methods (/compare/iv-curve-vs-fill-factor)
+- MOSFET Switching vs SRAM Cell: Single Transistor vs Memory Cell (/compare/mosfet-vs-sram-cell)
+- Leakage Current vs Leakage Power: Individual vs Aggregate Impact (/compare/leakage-current-vs-leakage-power)
+- RC Delay vs Interconnect Delay: Simple vs Distributed Model (/compare/rc-delay-vs-interconnect-delay)
+- Clock Distribution vs Clock Jitter: Skew vs Noise (/compare/clock-distribution-vs-clock-jitter)
+- Network Congestion vs Latency: Throughput vs Response Time (/compare/network-congestion-vs-latency)
+- Bypass Diodes vs Shunt/Series Defects: Protection vs Degradation (/compare/bypass-diodes-vs-shunt-defects)
+- Solar Temperature Coefficient vs Thermal Derating: Coefficient vs System Impact (/compare/solar-temp-vs-thermal-derating)
+- Latent Heat vs Phase Change Energy: Heat Absorbed vs Total Energy (/compare/latent-heat-vs-phase-change-energy)
+- Supercooling vs Leidenfrost Effect: Below Freezing vs Above Boiling (/compare/supercooling-vs-leidenfrost)
+- Adiabatic Heating vs Newton Cooling: Compression Heating vs Convective Cooling (/compare/adiabatic-heating-vs-newton-cooling)
+- Eddy Currents vs Eddy Current Pendulum: Phenomenon vs Demonstration (/compare/eddy-currents-vs-eddy-pendulum)
+- Diffraction vs Thin Film Interference: Slit Patterns vs Layer Interference (/compare/diffraction-vs-thin-film)
+- Chromatic Aberration vs Depth of Field: Color vs Focus Imperfection (/compare/chromatic-aberration-vs-depth-of-field)
+- Memory Hierarchy vs KV Cache: General Memory vs AI-Specific Caching (/compare/memory-hierarchy-vs-kv-cache)
+- Photolithography vs Focus-Dose Optimization: Process Overview vs Parameter Tuning (/compare/photolithography-vs-litho-focus-dose)
+- Doping Diffusion vs Ion Implantation: Thermal vs Accelerated Doping (/compare/doping-diffusion-vs-ion-implantation)
+- Etch Anisotropy vs Deposition Types: Removing vs Adding Material (/compare/etch-anisotropy-vs-deposition-types)
+- Static Electricity vs Electric Field: Charge Buildup vs Field Theory (/compare/static-electricity-vs-electric-field)
+- Electromagnetic Induction vs Induction Heating: Principle vs Application (/compare/electromagnetic-induction-vs-induction-heating)
+- Bifacial Albedo vs Spectral Mismatch: Ground Reflection vs Spectrum Loss (/compare/bifacial-albedo-vs-spectral-mismatch)
+- MPPT vs String Sizing: Electrical Optimization vs Physical Configuration (/compare/mppt-vs-string-sizing)
+- Convection vs Convection Currents: Mechanism vs Flow Patterns (/compare/convection-vs-convection-currents)
+- Ballistic Pendulum vs Inelastic Collisions: Measurement Tool vs Phenomenon (/compare/ballistic-pendulum-vs-inelastic-collisions)
+- Karman Vortex Street vs Vortex Rings: 2D Wake vs 3D Rings (/compare/karman-vortex-vs-vortex-rings)
+- Beats vs Sound Interference: Temporal vs Spatial Interference (/compare/beats-vs-sound-interference)
+- Laser Speckle vs Moire Patterns: Random vs Periodic Interference (/compare/laser-speckle-vs-moire-patterns)
+- Polarization vs Polarized Sky: Principle vs Natural Occurrence (/compare/polarization-vs-polarized-sky)
+- Standing Waves vs Resonance: Wave Pattern vs Energy Amplification (/compare/standing-waves-vs-resonance)
+- Bernoulli Principle vs Venturi Effect: Principle vs Application (/compare/bernoulli-vs-venturi)
+- Wireless Charging vs Induction Heating: Power Transfer vs Heating (/compare/wireless-charging-vs-induction-heating)
+- Silicon Texturing vs Lithography for Solar: Surface Optimization vs Process Comparison (/compare/texturing-vs-lithography-solar)
+
+---
+
+## How It Works Pages
+
+Detailed explanations of how physics and engineering concepts work:
+
+- How Does Bernoulli's Principle Work? (/how/bernoullis-principle)
+- How Does Buoyancy Work? (/how/buoyancy)
+- How Does Capillary Action Work? (/how/capillary-action)
+- How Does a Hydraulic Jump Work? (/how/hydraulic-jump)
+- How Does the Venturi Effect Work? (/how/venturi-effect)
+- How Does the Coriolis Effect Work? (/how/coriolis-effect)
+- How Does the Magnus Effect Work? (/how/magnus-effect)
+- How Does Orbital Mechanics Work? (/how/orbital-mechanics)
+- How Does Electromagnetic Induction Work? (/how/electromagnetic-induction)
+- How Do Kirchhoff's Laws Work? (/how/kirchhoffs-laws)
+- How Do Eddy Currents Work? (/how/eddy-currents)
+- How Does Snell's Law Work? (/how/snells-law)
+- How Does the Doppler Effect Work? (/how/doppler-effect)
+- How Does Diffraction Work? (/how/diffraction)
+- How Does Polarization Work? (/how/polarization)
+- How Does Total Internal Reflection Work? (/how/total-internal-reflection)
+- How Does the Photoelectric Effect Work? (/how/photoelectric-effect)
+- How Does the Carnot Cycle Work? (/how/carnot-cycle)
+- How Does Thermal Expansion Work? (/how/thermal-expansion)
+- How Does the Leidenfrost Effect Work? (/how/leidenfrost-effect)
+- How Does Resonance Work? (/how/resonance)
+- How Do Standing Waves Work? (/how/standing-waves)
+- How Does Brownian Motion Work? (/how/brownian-motion)
+- How Does MOSFET Switching Work? (/how/mosfet-switching)
+- How Does Photolithography Work? (/how/photolithography)
+- How Does Capacitive Touch Work? (/how/capacitive-touch)
+- How Does Neural Network Inference Work? (/how/neural-network-inference)
+- How Does GPU Memory Bandwidth Work? (/how/gpu-memory-bandwidth)
+- How Does a Solar Cell Work? (/how/solar-cell)
+- How Does MPPT Work? (/how/mppt)
+- How Do the Gas Laws Work? (/how/gas-laws)
+- How Does Evaporative Cooling Work? (/how/evaporative-cooling)
+- How Does a Faraday Cage Work? (/how/faraday-cage)
+- How Does a Heat Sink Work? (/how/heat-sink)
+- How Does Thermal Throttling Work? (/how/thermal-throttling)
+- How Does a Solar Inverter Work? (/how/solar-inverter)
+- How Does a UPS Work? (/how/ups-system)
+- How Does ESD Protection Work? (/how/esd-protection)
+- How Does Semiconductor Doping Work? (/how/doping-semiconductors)
+- How Does Chip Etching Work? (/how/etching-process)
+- How Does CMP Work? (/how/cmp-process)
+- How Do Chiplets Work? (/how/chiplet-design)
+- How Does KV Cache Work? (/how/kv-cache)
+- How Does AI Quantization Work? (/how/quantization-ai)
+- How Does Tensor Computation Work? (/how/tensor-computation)
+- How Does Memory Bandwidth Limit AI? (/how/memory-bandwidth-ai)
+- How Does a Bypass Diode Work? (/how/bypass-diode)
+- How Does Fill Factor Affect Solar Panels? (/how/fill-factor-solar)
+- How Does Convection Work? (/how/convection-heat)
+- How Does Angular Momentum Conservation Work? (/how/angular-momentum)
+- How Does Centripetal Force Work? (/how/centripetal-force)
+- How Does a Pendulum Work? (/how/pendulum-physics)
+- How Does Hooke's Law Work? (/how/hookes-law)
+- How Does Drag Force Work? (/how/drag-force-physics)
+- How Does Terminal Velocity Work? (/how/terminal-velocity)
+- How Does a Siphon Work? (/how/siphon-physics)
+- How Does Cavitation Work? (/how/cavitation-physics)
+- How Does ECC Memory Work? (/how/ecc-memory)
+- How Does DRAM Refresh Work? (/how/dram-refresh)
+
+---
+
+## Glossary
+
+Definitions of key physics and engineering terms:
+
+- Torque (/glossary/torque) — Rotational equivalent of force, tau = r x F
+- Momentum (/glossary/momentum) — Product of mass and velocity, conserved in collisions
+- Angular Momentum (/glossary/angular-momentum) — Rotational analog of linear momentum, L = Iw
+- Centripetal Force (/glossary/centripetal-force) — Net inward force for circular motion, F = mv^2/r
+- Moment of Inertia (/glossary/moment-of-inertia) — Resistance to angular acceleration
+- Impulse (/glossary/impulse) — Force times time, equals change in momentum
+- Kinetic Energy (/glossary/kinetic-energy) — Energy of motion, KE = 1/2 mv^2
+- Potential Energy (/glossary/potential-energy) — Stored energy from position or configuration
+- Force (/glossary/force) — Interaction that changes an object's velocity, F = ma
+- Work (/glossary/work) — Energy transferred by a force over a displacement
+- Power (/glossary/power) — Rate of doing work, measured in watts
+- Frequency (/glossary/frequency) — Oscillation cycles per second, measured in hertz
+- Wavelength (/glossary/wavelength) — Spatial distance between successive wave peaks
+- Amplitude (/glossary/amplitude) — Maximum displacement from equilibrium in a wave
+- Period (/glossary/period) — Time for one complete oscillation cycle
+- Q Factor (/glossary/q-factor) — Sharpness of resonance in an oscillating system
+- Damping Ratio (/glossary/damping-ratio) — Characterizes how oscillations decay over time
+- Reynolds Number (/glossary/reynolds-number) — Ratio of inertial to viscous forces, predicts flow regime
+- Viscosity (/glossary/viscosity) — Fluid resistance to flow, internal friction
+- Surface Tension (/glossary/surface-tension) — Elastic tendency of fluid surfaces to minimize area
+- Froude Number (/glossary/froude-number) — Flow inertia vs gravitational effects in open channels
+- Contact Angle (/glossary/contact-angle) — Angle where liquid meets solid, indicates wetting
+- Specific Heat (/glossary/specific-heat) — Energy to raise 1 kg by 1 degree
+- Latent Heat (/glossary/latent-heat) — Energy for phase change without temperature change
+- Thermal Conductivity (/glossary/thermal-conductivity) — Material's ability to conduct heat
+- Thermal Resistance (/glossary/thermal-resistance) — Opposition to heat flow, analogous to electrical resistance
+- Entropy (/glossary/entropy) — Measure of disorder, always increases in isolated systems
+- Coefficient of Performance (/glossary/coefficient-of-performance) — Efficiency of heat pumps and refrigerators
+- Electric Field (/glossary/electric-field) — Force field around charged particles
+- Voltage (/glossary/voltage) — Work done per unit charge, drives current through circuits
+- Current (/glossary/current) — Flow of electric charge, measured in amperes
+- Resistance (/glossary/resistance) — Opposition to current flow, V = IR
+- Impedance (/glossary/impedance) — AC resistance including reactance from capacitors and inductors
+- Magnetic Field (/glossary/magnetic-field) — Field produced by moving charges or magnets
+- Magnetic Flux (/glossary/magnetic-flux) — Total magnetic field through a surface
+- Inductance (/glossary/inductance) — Opposition to changes in current, stores energy in magnetic fields
+- Capacitance (/glossary/capacitance) — Ability to store electric charge, C = Q/V
+- Refractive Index (/glossary/refractive-index) — Ratio of light speed in vacuum to speed in material
+- Focal Length (/glossary/focal-length) — Distance from lens to point where parallel rays converge
+- Dispersion (/glossary/dispersion) — Wavelength dependence of phase velocity
+- Bandgap (/glossary/bandgap) — Energy gap between valence and conduction bands in semiconductors
+- Threshold Voltage (/glossary/threshold-voltage) — Minimum gate voltage to turn on a MOSFET
+- Doping (/glossary/doping) — Adding impurities to semiconductors to control conductivity
+- Yield (/glossary/yield) — Percentage of functional dies on a semiconductor wafer
+- Defect Density (/glossary/defect-density) — Number of killer defects per unit area on a wafer
+- Electromigration (/glossary/electromigration) — Metal atom transport causing interconnect failure
+- Fill Factor (/glossary/fill-factor) — Solar cell IV curve squareness, measures efficiency
+- MPPT (/glossary/mppt) — Maximum Power Point Tracking for solar panels
+- Open-Circuit Voltage (/glossary/open-circuit-voltage) — Maximum voltage from a solar cell at zero current
+- Irradiance (/glossary/irradiance) — Solar power per unit area, W/m^2
+- Tensor Core (/glossary/tensor-core) — NVIDIA GPU unit for fast matrix multiplication
+- Systolic Array (/glossary/systolic-array) — TPU-style rhythmic matrix computation
+- KV Cache (/glossary/kv-cache) — Key-value storage in transformer attention layers
+- Memory Bandwidth (/glossary/memory-bandwidth) — Data transfer rate between processor and memory
+- FLOPS (/glossary/flops) — Floating-point operations per second, measures compute throughput
+- Quantization (/glossary/quantization) — Reducing numerical precision to shrink AI models
+- Arithmetic Intensity (/glossary/arithmetic-intensity) — FLOPS per byte, determines compute vs memory bound
+- Ohm's Law (/glossary/ohms-law) — V = IR, foundational relationship for circuits
+- Faraday's Law (/glossary/faradays-law) — Changing magnetic flux induces voltage
+- Lenz's Law (/glossary/lenzs-law) — Induced current opposes the change that created it
+- Snell's Law (/glossary/snells-law) — Relates angles of incidence and refraction
+- Critical Angle (/glossary/critical-angle) — Angle above which total internal reflection occurs
+- Drag Coefficient (/glossary/drag-coefficient) — Dimensionless drag resistance of an object in fluid
+- Buoyant Force (/glossary/buoyant-force) — Upward force from displaced fluid
+- Pascal's Law (/glossary/pascals-law) — Pressure transmitted equally in confined fluids
+- Newton's Laws (/glossary/newtons-laws) — Three laws of motion forming the foundation of mechanics
+- Hooke's Law (/glossary/hookes-law) — Spring force proportional to displacement, F = -kx
+- Coulomb's Law (/glossary/coulombs-law) — Force between electric charges, inverse-square law
+- Doppler Shift (/glossary/doppler-shift) — Frequency change from relative motion between source and observer
+- Diffraction Limit (/glossary/diffraction-limit) — Fundamental resolution limit of optical systems
+- Skin Depth (/glossary/skin-depth) — Depth at which AC current drops to 1/e in a conductor
+- Carnot Efficiency (/glossary/carnot-efficiency) — Maximum possible heat engine efficiency
+- Mach Number (/glossary/mach-number) — Ratio of speed to speed of sound
+- Thermal Expansion Coefficient (/glossary/thermal-expansion-coefficient) — How much a material expands per degree
+- Emissivity (/glossary/emissivity) — Ratio of thermal radiation to ideal blackbody radiation
+- Photovoltaic Effect (/glossary/photovoltaic-effect) — Generating voltage from light in semiconductors
+- PUE (/glossary/pue) — Power Usage Effectiveness for data centers
+- Delta-V (/glossary/delta-v) — Velocity change needed for orbital maneuvers
+- Reactance (/glossary/reactance) — AC opposition from capacitors and inductors
+- Angular Velocity (/glossary/angular-velocity) — Rate of rotation in radians per second
+- Centripetal Acceleration (/glossary/centripetal-acceleration) — Inward acceleration for circular motion
+- Wave Speed (/glossary/wave-speed) — Rate of wave propagation through a medium
+- Resonance (/glossary/resonance) — Dramatic amplitude increase at natural frequency
+- Back-EMF (/glossary/back-emf) — Voltage generated by spinning motor opposing applied voltage
+- Shockley-Queisser Limit (/glossary/shockley-queisser-limit) — Maximum single-junction solar cell efficiency
+- Current Density (/glossary/current-density) — Electric current per unit cross-sectional area
+- Dielectric Constant (/glossary/dielectric-constant) — Material's ability to store electrical energy in a field
+- Albedo (/glossary/albedo) — Fraction of incident light reflected by a surface
+- Stress Intensity Factor (/glossary/stress-intensity-factor) — Stress field characterization near a crack tip
+- Poisson's Ratio (/glossary/poissons-ratio) — Lateral strain to axial strain ratio when stretched
+
+---
+
+## Topic Pages
+
+Comprehensive topic hubs linking games, comparisons, glossary terms, and how-it-works guides:
+
+- Semiconductor Manufacturing (/topics/semiconductor-manufacturing) — Every step of chip fabrication from lithography to packaging
+- Solar Energy & Photovoltaics (/topics/solar-energy) — From photon absorption to grid-tied systems
+- Fluid Dynamics (/topics/fluid-dynamics) — Laminar and turbulent flow, pressure, buoyancy, and surface tension
+- GPU Architecture & AI Hardware (/topics/gpu-architecture) — GPU internals, memory bandwidth, tensor cores, and power states
+- Classical Mechanics (/topics/classical-mechanics) — Newton's laws, forces, momentum, energy, and rotational motion
+- Electromagnetic Theory (/topics/electromagnetic-theory) — Electric and magnetic fields, circuits, induction, motors, and shielding
+- Optics & Light (/topics/optics-and-light) — Reflection, refraction, diffraction, interference, and polarization
+- Thermal Engineering (/topics/thermal-engineering) — Heat transfer, phase changes, gas laws, and cooling systems
+- Power Systems & Electronics (/topics/power-systems) — Converters, inverters, grid frequency, batteries, and UPS
+- AI Inference & LLM Optimization (/topics/ai-inference) — Latency, throughput, batching, quantization, and the memory wall
+- Chip Design & Packaging (/topics/chip-design) — MOSFET to chiplets: transistors, SRAM, clocks, power delivery, and ESD
+- Oscillations & Waves (/topics/oscillations-waves) — Pendulums, resonance, sound, standing waves, and vibration damping
+- Surface Tension & Capillary Effects (/topics/surface-phenomena) — Capillary action, Marangoni effect, and superhydrophobicity
+- Materials Science (/topics/materials-science) — Mechanical properties, corrosion, and molecular behavior
+- Space & Orbital Mechanics (/topics/space-orbital) — Satellites, tidal forces, Coriolis and Magnus effects
+- RF & Communications (/topics/rf-communications) — Antennas, link budgets, fiber optics, and acoustic sensing
+- AI Prompting & Safety (/topics/ai-prompting) — Best practices for prompting LLMs and defending against injection
+- Data Center Cooling & Efficiency (/topics/data-center-cooling) — Heat sinks, liquid cooling, PUE, and chiller systems
+- Viscosity & Non-Newtonian Fluids (/topics/viscosity-rheology) — Shear thinning, viscoelasticity, and non-Newtonian armor
+- Rotational Dynamics (/topics/rotational-dynamics) — Torque, angular momentum, gyroscopes, and rolling motion
+- Phase Transitions & Changes (/topics/phase-transitions) — Melting, boiling, supercooling, and the Leidenfrost effect
+- ESD & Chip Reliability (/topics/esd-reliability) — Electrostatic discharge, radiation effects, and failure mechanisms
+- Interconnects & Signal Integrity (/topics/interconnects-signals) — RC delay, crosstalk, transmission lines, and IR drop
+- Fun Physics Experiments (/topics/fun-experiments) — Kitchen physics, optical illusions, and surprising phenomena
+- Collisions & Impacts (/topics/collisions-impacts) — Elastic and inelastic collisions, momentum, and impulse
+- Network Architecture & Data Movement (/topics/network-architecture) — Congestion, latency, PCIe, and interconnect topologies
+- Batteries & Energy Storage (/topics/batteries-energy-storage) — Battery resistance, UPS sizing, and efficiency
+- Sound & Acoustics (/topics/sound-acoustics) — Beats, interference, reverberation, and the Doppler effect
+- Chemical Reactions & Energy (/topics/chemical-reactions-energy) — Endothermic, exothermic reactions, and Arrhenius kinetics
+
+---
+
+## Use Case Pages
+
+Pages targeting specific user intents and learning scenarios:
+
+- Virtual Physics Lab Alternative (/use-cases/physics-lab-alternative)
+- AP Physics Exam Prep (/use-cases/ap-physics-prep)
+- Engineering Interview Preparation (/use-cases/engineering-interview-prep)
+- Semiconductor Career Preparation (/use-cases/semiconductor-career-prep)
+- Solar Design Training (/use-cases/solar-design-training)
+- Classroom Demonstrations (/use-cases/classroom-demonstrations)
+- Science Fair Projects (/use-cases/science-fair-projects)
+- Self-Study Physics (/use-cases/self-study-physics)
+- Physics Homework Help (/use-cases/homework-help)
+- Conceptual Physics Course Companion (/use-cases/conceptual-physics)
+- University Physics Lab Supplement (/use-cases/university-physics-supplement)
+- Physics Tutoring Tool (/use-cases/tutoring-tool)
+- Data Center Engineering (/use-cases/data-center-engineer)
+- Curiosity-Driven Exploration (/use-cases/curiosity-driven)
+- AI Engineer Hardware Training (/use-cases/ai-engineer-training)
+
+---
+
+## Alternatives Pages
+
+Side-by-side comparisons with other education platforms:
+
+- Atlas Coach vs PhET Simulations (/alternatives/phet-simulations)
+- Atlas Coach vs Khan Academy (/alternatives/khan-academy)
+- Atlas Coach vs Brilliant (/alternatives/brilliant)
+- Atlas Coach vs Labster (/alternatives/labster)
+- Atlas Coach vs Algodoo (/alternatives/algodoo)
+- Atlas Coach vs Coursera Physics Courses (/alternatives/coursera-physics)
+- Atlas Coach vs Udemy Physics Courses (/alternatives/udemy-physics)
+- Atlas Coach vs The Physics Classroom (/alternatives/physics-classroom)
+
+---
+
+## Audience Pages
+
+Tailored landing pages for specific audiences:
+
+- For Teachers (/for/teachers) — Classroom demonstrations, lesson plans, and student progress tracking
+- For Students (/for/students) — Homework help, AP prep, and interactive study tools
+- For Engineers (/for/engineers) — Interview prep, semiconductor career training, and AI hardware understanding
+- For Parents (/for/parents) — Safe, educational physics exploration for curious kids
+
+---
+
+## Site Information
+
+- Homepage: https://atlascoach-5e3af.web.app
+- All Games: https://atlascoach-5e3af.web.app/games
+- Topics Hub: https://atlascoach-5e3af.web.app/topics
+- Glossary: https://atlascoach-5e3af.web.app/glossary
+- Comparisons: https://atlascoach-5e3af.web.app/compare
+- How It Works: https://atlascoach-5e3af.web.app/how
+
+---
+
+## App Comparison Blog Posts (56 Articles)
+
+### Category Roundups (6 Posts)
+- Best STEM Learning Apps in 2026: Top 8 Ranked (/blog/best-stem-learning-apps-2026)
+- Best Math & Homework Apps in 2026: Top 14 Ranked (/blog/best-math-homework-apps-2026)
+- Best Coding & CS Learning Apps in 2026: Top 8 Ranked (/blog/best-coding-cs-apps-2026)
+- Best Astronomy & Space Apps in 2026: Top 8 Ranked (/blog/best-astronomy-space-apps-2026)
+- Best Biology & Nature Apps in 2026: Top 10 Ranked (/blog/best-biology-nature-apps-2026)
+- Best Kids STEM & Math Games in 2026: Top 8 Ranked (/blog/best-kids-stem-math-games-2026)
+
+### General STEM Comparisons (7 Posts)
+- Atlas Coach vs Khan Academy (/blog/atlas-coach-vs-khan-academy)
+- Atlas Coach vs Khan Academy Kids (/blog/atlas-coach-vs-khan-academy-kids)
+- Atlas Coach vs Coursera (/blog/atlas-coach-vs-coursera)
+- Atlas Coach vs Udemy (/blog/atlas-coach-vs-udemy)
+- Atlas Coach vs Brilliant (/blog/atlas-coach-vs-brilliant)
+- Atlas Coach vs Quizlet (/blog/atlas-coach-vs-quizlet)
+- Atlas Coach vs AnkiDroid (/blog/atlas-coach-vs-ankidroid)
+
+### Math & Homework Comparisons (13 Posts)
+- Atlas Coach vs Photomath (/blog/atlas-coach-vs-photomath)
+- Atlas Coach vs Gauth (/blog/atlas-coach-vs-gauth)
+- Atlas Coach vs Brainly (/blog/atlas-coach-vs-brainly)
+- Atlas Coach vs Solvely (/blog/atlas-coach-vs-solvely)
+- Atlas Coach vs Quiz AI (/blog/atlas-coach-vs-quiz-ai)
+- Atlas Coach vs Question.AI (/blog/atlas-coach-vs-question-ai)
+- Atlas Coach vs Nerd AI (/blog/atlas-coach-vs-nerd-ai)
+- Atlas Coach vs IXL (/blog/atlas-coach-vs-ixl)
+- Atlas Coach vs AdaptedMind Math (/blog/atlas-coach-vs-adaptedmind-math)
+- Atlas Coach vs Desmos (/blog/atlas-coach-vs-desmos)
+- Atlas Coach vs Scientific Calculator Plus 991 (/blog/atlas-coach-vs-scientific-calculator-plus-991)
+- Atlas Coach vs Graphing Calculator Plus 84 83 (/blog/atlas-coach-vs-graphing-calculator-plus-84-83)
+- Atlas Coach vs Homework Helper & Math Solver (/blog/atlas-coach-vs-homework-helper-math-solver)
+
+### Coding & CS Comparisons (7 Posts)
+- Atlas Coach vs Mimo (/blog/atlas-coach-vs-mimo)
+- Atlas Coach vs Pydroid 3 (/blog/atlas-coach-vs-pydroid-3)
+- Atlas Coach vs Build Your First Game (/blog/atlas-coach-vs-build-your-first-game)
+- Atlas Coach vs Learn Ethical Hacking (/blog/atlas-coach-vs-learn-ethical-hacking)
+- Atlas Coach vs HackerX (/blog/atlas-coach-vs-hackerx)
+- Atlas Coach vs Minecraft Education (/blog/atlas-coach-vs-minecraft-education)
+- Atlas Coach vs Minecraft Education Preview (/blog/atlas-coach-vs-minecraft-education-preview)
+
+### Astronomy & Space Comparisons (7 Posts)
+- Atlas Coach vs Stellarium (/blog/atlas-coach-vs-stellarium)
+- Atlas Coach vs SkyView Lite (/blog/atlas-coach-vs-skyview-lite)
+- Atlas Coach vs Star Walk 2 Plus (/blog/atlas-coach-vs-star-walk-2)
+- Atlas Coach vs Star Tracker (/blog/atlas-coach-vs-star-tracker)
+- Atlas Coach vs Solar System Scope (/blog/atlas-coach-vs-solar-system-scope)
+- Atlas Coach vs Star Roam (/blog/atlas-coach-vs-star-roam)
+- Atlas Coach vs NASA App (/blog/atlas-coach-vs-nasa-app)
+
+### Biology & Nature Comparisons (9 Posts)
+- Atlas Coach vs iNaturalist (/blog/atlas-coach-vs-inaturalist)
+- Atlas Coach vs PictureThis (/blog/atlas-coach-vs-picturethis)
+- Atlas Coach vs Plant App (/blog/atlas-coach-vs-plant-app)
+- Atlas Coach vs PlantIn (/blog/atlas-coach-vs-plantin)
+- Atlas Coach vs Plant Identifier & Plant Care (/blog/atlas-coach-vs-plant-identifier-plant-care)
+- Atlas Coach vs Plantify (/blog/atlas-coach-vs-plantify)
+- Atlas Coach vs Plantum (/blog/atlas-coach-vs-plantum)
+- Atlas Coach vs LeafCheck (/blog/atlas-coach-vs-leafcheck)
+- Atlas Coach vs Bird Sound Identifier (/blog/atlas-coach-vs-bird-sound-identifier)
+
+### Kids STEM & Math Comparisons (7 Posts)
+- Atlas Coach vs Prodigy Math (/blog/atlas-coach-vs-prodigy-math)
+- Atlas Coach vs Math Kids (/blog/atlas-coach-vs-math-kids)
+- Atlas Coach vs Math Games (/blog/atlas-coach-vs-math-games)
+- Atlas Coach vs Kids Multiplication (/blog/atlas-coach-vs-kids-multiplication)
+- Atlas Coach vs Times Table (/blog/atlas-coach-vs-times-table)
+- Atlas Coach vs Numberblocks World (/blog/atlas-coach-vs-numberblocks-world)
+- Atlas Coach vs Meet the Numberblocks (/blog/atlas-coach-vs-meet-the-numberblocks)
+
+---
+
+Atlas Coach is free to use. No account required. Works on any device with a modern web browser.

@@ -9,7 +9,7 @@ export const SEO_CONFIG = {
   baseUrl: 'https://atlascoach-5e3af.web.app',
   siteName: 'Atlas Coach',
   defaultOgImage: '/og-image.png',
-  defaultDescription: 'Master physics, engineering, and AI concepts through 340+ interactive games and simulations with AI-powered coaching.',
+  defaultDescription: 'Master physics, engineering, and AI concepts through 342 interactive games and simulations with AI-powered coaching.',
 };
 
 export interface MetaData {
@@ -85,6 +85,9 @@ export function updateMeta(data: MetaData): void {
     ? (ogImage.startsWith('http') ? ogImage : `${SEO_CONFIG.baseUrl}${ogImage}`)
     : `${SEO_CONFIG.baseUrl}${SEO_CONFIG.defaultOgImage}`;
   setMetaTag('og:image', image);
+  setMetaTag('og:image:width', '1200');
+  setMetaTag('og:image:height', '630');
+  setMetaTag('og:locale', 'en_US');
 
   // Twitter
   setMetaTag('twitter:card', 'summary_large_image', true);

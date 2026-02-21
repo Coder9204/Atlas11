@@ -1,5 +1,9 @@
 import React from 'react';
 import { gameCategories, getCategoryForGame } from '../src/data/gameCategories';
+import { glossaryEntries } from '../src/data/glossary';
+import { comparisons } from '../src/data/comparisons';
+import { howItWorksEntries } from '../src/data/howItWorks';
+import { topicEntries } from '../src/data/topics';
 import Breadcrumbs from './Breadcrumbs';
 
 interface GameSEOFooterProps {
@@ -143,6 +147,114 @@ export default function GameSEOFooter({ slug }: GameSEOFooterProps) {
           </div>
         </div>
       )}
+
+      {/* Related glossary terms */}
+      {(() => {
+        const related = glossaryEntries.filter(g => g.relatedGameSlugs.includes(slug)).slice(0, 6);
+        if (related.length === 0) return null;
+        return (
+          <div style={{ margin: '32px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#94a3b8', marginBottom: '12px' }}>
+              Key Terms
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {related.map(g => (
+                <a key={g.slug} href={`/glossary/${g.slug}`} style={{
+                  padding: '6px 14px', background: '#12121a', border: '1px solid #2a2a3a',
+                  borderRadius: '6px', color: '#e2e8f0', textDecoration: 'none', fontSize: '13px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#10b981'; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#2a2a3a'; }}
+                >
+                  {g.term}
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Related comparisons */}
+      {(() => {
+        const related = comparisons.filter(c => c.relatedGames.includes(slug)).slice(0, 4);
+        if (related.length === 0) return null;
+        return (
+          <div style={{ margin: '32px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#94a3b8', marginBottom: '12px' }}>
+              Compare Concepts
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {related.map(c => (
+                <a key={c.comparisonSlug} href={`/compare/${c.comparisonSlug}`} style={{
+                  padding: '8px 16px', background: '#12121a', border: '1px solid #2a2a3a',
+                  borderRadius: '8px', color: '#e2e8f0', textDecoration: 'none', fontSize: '13px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#8b5cf6'; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#2a2a3a'; }}
+                >
+                  {c.title.split(':')[0]}
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Related how-it-works */}
+      {(() => {
+        const related = howItWorksEntries.filter(h => h.relatedGameSlugs.includes(slug)).slice(0, 4);
+        if (related.length === 0) return null;
+        return (
+          <div style={{ margin: '32px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#94a3b8', marginBottom: '12px' }}>
+              Learn How It Works
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {related.map(h => (
+                <a key={h.slug} href={`/how/${h.slug}`} style={{
+                  padding: '8px 16px', background: '#12121a', border: '1px solid #2a2a3a',
+                  borderRadius: '8px', color: '#e2e8f0', textDecoration: 'none', fontSize: '13px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#10b981'; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#2a2a3a'; }}
+                >
+                  {h.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Related topics */}
+      {(() => {
+        const related = topicEntries.filter(t => t.gameSlugs.includes(slug)).slice(0, 3);
+        if (related.length === 0) return null;
+        return (
+          <div style={{ margin: '32px 0' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#94a3b8', marginBottom: '12px' }}>
+              Explore Topics
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {related.map(t => (
+                <a key={t.slug} href={`/topics/${t.slug}`} style={{
+                  padding: '8px 16px', background: '#12121a', border: '1px solid #2a2a3a',
+                  borderRadius: '8px', color: '#e2e8f0', textDecoration: 'none', fontSize: '13px',
+                  transition: 'border-color 0.2s ease',
+                }}
+                  onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#3B82F6'; }}
+                  onMouseOut={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = '#2a2a3a'; }}
+                >
+                  {t.title}
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Category navigation */}
       <div style={{ margin: '32px 0 0' }}>

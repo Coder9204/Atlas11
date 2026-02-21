@@ -2,10 +2,10 @@
 # https://atlascoach-5e3af.web.app
 
 ## What is Atlas Coach?
-Atlas Coach is an interactive education platform for learning physics, engineering, and AI concepts through 340+ browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook → Predict → Play → Review → Test.
+Atlas Coach is an interactive education platform for learning physics, engineering, and AI concepts through 342 browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook > Predict > Play > Review > Test.
 
 ## Key Features
-- 340+ interactive simulation games
+- 342 interactive simulation games
 - 14 major categories spanning physics, engineering, semiconductors, AI/computing, and more
 - AI coaching via Gemini Live (voice + text)
 - Spaced repetition scoring (SM-2 algorithm)
@@ -29,13 +29,67 @@ Atlas Coach is an interactive education platform for learning physics, engineeri
 13. Fun Experiments — Kitchen physics, optical illusions, strange physics
 14. Data Storage — HDD physics, capacitive touch
 
+## Frequently Asked Questions
+
+Q: What is Atlas Coach?
+A: Atlas Coach is a free interactive physics and engineering learning platform with 342 browser-based simulations and AI coaching.
+
+Q: Is Atlas Coach free?
+A: Yes. The free tier includes 5 games per month. Premium plans start at $9.99/month for unlimited access.
+
+Q: What topics does Atlas Coach cover?
+A: Physics (mechanics, waves, thermodynamics, E&M, optics), engineering (semiconductors, power systems, RF), AI hardware (GPU architecture, inference optimization), and solar energy.
+
+Q: How is Atlas Coach different from PhET?
+A: Atlas Coach has 342 simulations (vs ~160 for PhET), covers engineering and AI topics PhET doesn't, and includes AI coaching and progress tracking.
+
+Q: Can I use Atlas Coach for AP Physics?
+A: Yes. Simulations cover all AP Physics 1 and 2 topics with interactive predict-observe-explain methodology.
+
+Q: Does Atlas Coach work on phones?
+A: Yes. All simulations run in any modern web browser on phones, tablets, and computers.
+
+Q: Can teachers use Atlas Coach in classrooms?
+A: Yes. Teachers can project simulations for demonstrations, assign specific games as homework, and track student progress.
+
+Q: What age group is Atlas Coach for?
+A: Atlas Coach serves high school students through professionals, with difficulty levels from beginner to advanced.
+
+Q: How does the AI coaching work?
+A: The AI coach observes your simulation interactions and provides real-time hints, explanations, and feedback specific to the physics concepts being explored.
+
+Q: Is there a semiconductor/chip design section?
+A: Yes. Atlas Coach has 40+ semiconductor simulations covering MOSFET physics, photolithography, etching, doping, interconnects, packaging, and yield analysis.
+
+Q: Does Atlas Coach cover AI hardware?
+A: Yes. Topics include GPU memory bandwidth, tensor cores, KV cache, quantization, batching latency, and inference optimization.
+
+Q: How many solar energy simulations are there?
+A: About 30 simulations covering solar cell physics, IV curves, MPPT, string sizing, temperature derating, and system design.
+
+Q: Can Atlas Coach help with engineering interviews?
+A: Yes. Simulations cover the specific semiconductor, power, and hardware topics asked at companies like NVIDIA, Intel, TSMC, and Tesla.
+
+Q: What learning methodology does Atlas Coach use?
+A: Predict-Observe-Explain. Students predict outcomes, run simulations, observe results, and test understanding through quizzes.
+
+Q: Are there comparison pages for learning?
+A: Yes. 50+ comparison pages help students understand differences between similar concepts (e.g., damped vs forced oscillations, GPU vs TPU).
+
 ## Key URLs
 - Homepage: https://atlascoach-5e3af.web.app/
 - All Games: https://atlascoach-5e3af.web.app/games
 - Pricing: https://atlascoach-5e3af.web.app/pricing
 - Learning Paths: https://atlascoach-5e3af.web.app/paths
+- Glossary: https://atlascoach-5e3af.web.app/glossary
 - Category Pages: https://atlascoach-5e3af.web.app/learn/{category-id}
 - Individual Games: https://atlascoach-5e3af.web.app/games/{game-slug}
+- Comparisons: https://atlascoach-5e3af.web.app/compare/{comparison-slug}
+- How It Works: https://atlascoach-5e3af.web.app/how/{concept-slug}
+- Topics: https://atlascoach-5e3af.web.app/topics/{topic-slug}
+- Use Cases: https://atlascoach-5e3af.web.app/use-cases/{slug}
+- Alternatives: https://atlascoach-5e3af.web.app/alternatives/{slug}
+- Audience Pages: https://atlascoach-5e3af.web.app/for/{audience}
 
 ## Target Audience
 - Physics students (high school and university)
@@ -43,6 +97,8 @@ Atlas Coach is an interactive education platform for learning physics, engineeri
 - AP Physics / IB Physics exam prep
 - STEM educators looking for interactive lab alternatives
 - Self-learners interested in how things work
+- Semiconductor and AI hardware engineers
+- Solar energy professionals
 
 ## Contact
 Website: https://atlascoach-5e3af.web.app

@@ -111,29 +111,76 @@ for (const audience of ['teachers', 'students', 'engineers', 'parents']) {
   urls.push({ loc: `/for/${audience}`, priority: '0.8', changefreq: 'monthly' });
 }
 
-// Comparison pages
-const comparisonSlugs = [
-  'gpu-vs-asic', 'tpu-vs-gpu', 'laminar-vs-turbulent', 'chiplets-vs-monoliths',
-  'series-vs-parallel-pv', 'solar-vs-ic-purity', 'flip-chip-vs-wirebond',
-  'static-vs-kinetic-friction', 'rolling-vs-sliding', 'reflection-vs-refraction',
-  'convection-vs-conduction', 'endothermic-vs-exothermic', 'elastic-vs-inelastic',
-];
-for (const slug of comparisonSlugs) {
-  urls.push({ loc: `/compare/${slug}`, priority: '0.6', changefreq: 'monthly' });
+// Comparison pages — parse from comparisons.ts
+const comparisonsFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'comparisons.ts'), 'utf-8'
+);
+const compRegex = /comparisonSlug:\s*'([^']+)'/g;
+while ((match = compRegex.exec(comparisonsFile)) !== null) {
+  urls.push({ loc: `/compare/${match[1]}`, priority: '0.6', changefreq: 'monthly' });
 }
 
-// How-it-works pages
-const howSlugs = [
-  'bernoullis-principle', 'buoyancy', 'electromagnetic-induction', 'photoelectric-effect',
-  'carnot-cycle', 'orbital-mechanics', 'snells-law', 'doppler-effect', 'resonance',
-  'capacitive-touch', 'mosfet-switching', 'photolithography', 'neural-network-inference',
-  'gpu-memory-bandwidth', 'solar-cell', 'mppt', 'thermal-expansion', 'brownian-motion',
-  'diffraction', 'polarization', 'total-internal-reflection', 'eddy-currents',
-  'kirchhoffs-laws', 'capillary-action', 'hydraulic-jump', 'venturi-effect',
-  'coriolis-effect', 'magnus-effect', 'standing-waves', 'leidenfrost-effect',
-];
-for (const slug of howSlugs) {
-  urls.push({ loc: `/how/${slug}`, priority: '0.6', changefreq: 'monthly' });
+// How-it-works pages — parse from howItWorks.ts
+const howFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'howItWorks.ts'), 'utf-8'
+);
+const howRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((match = howRegex.exec(howFile)) !== null) {
+  urls.push({ loc: `/how/${match[1]}`, priority: '0.6', changefreq: 'monthly' });
+}
+
+// Glossary pages — parse from glossary.ts
+const glossaryFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'glossary.ts'), 'utf-8'
+);
+urls.push({ loc: '/glossary', priority: '0.7', changefreq: 'weekly' });
+const glossRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((match = glossRegex.exec(glossaryFile)) !== null) {
+  urls.push({ loc: `/glossary/${match[1]}`, priority: '0.5', changefreq: 'monthly' });
+}
+
+// Topic pages — parse from topics.ts
+const topicsFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'topics.ts'), 'utf-8'
+);
+const topicRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((match = topicRegex.exec(topicsFile)) !== null) {
+  urls.push({ loc: `/topics/${match[1]}`, priority: '0.7', changefreq: 'monthly' });
+}
+
+// Use case pages — parse from useCases.ts
+const useCasesFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'useCases.ts'), 'utf-8'
+);
+const ucRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((match = ucRegex.exec(useCasesFile)) !== null) {
+  urls.push({ loc: `/use-cases/${match[1]}`, priority: '0.7', changefreq: 'monthly' });
+}
+
+// Alternatives pages — parse from alternatives.ts
+const alternativesFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'alternatives.ts'), 'utf-8'
+);
+const altRegex = /^\s+slug:\s*'([^']+)'/gm;
+while ((match = altRegex.exec(alternativesFile)) !== null) {
+  urls.push({ loc: `/alternatives/${match[1]}`, priority: '0.7', changefreq: 'monthly' });
+}
+
+// Blog posts — parse from blogComparisonPosts.ts and blogRoundupPosts.ts
+const blogCompFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'blogComparisonPosts.ts'), 'utf-8'
+);
+const blogCompRegex = /slug:\s*'([^']+)'/g;
+while ((match = blogCompRegex.exec(blogCompFile)) !== null) {
+  urls.push({ loc: `/blog/${match[1]}`, priority: '0.7', changefreq: 'monthly' });
+}
+
+const blogRoundupFile = fs.readFileSync(
+  path.resolve(__dirname, '..', 'src', 'data', 'blogRoundupPosts.ts'), 'utf-8'
+);
+const blogRoundupRegex = /slug:\s*'([^']+)'/g;
+while ((match = blogRoundupRegex.exec(blogRoundupFile)) !== null) {
+  urls.push({ loc: `/blog/${match[1]}`, priority: '0.75', changefreq: 'monthly' });
 }
 
 // ============================================================

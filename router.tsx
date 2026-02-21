@@ -22,6 +22,11 @@ const DifficultyPage = lazy(() => import('./components/DifficultyPage'));
 const BlogIndex = lazy(() => import('./components/BlogIndex'));
 const BlogPost = lazy(() => import('./components/BlogPost'));
 const AudiencePage = lazy(() => import('./components/AudiencePage'));
+const GlossaryIndex = lazy(() => import('./components/GlossaryIndex'));
+const GlossaryTerm = lazy(() => import('./components/GlossaryTerm'));
+const TopicPage = lazy(() => import('./components/TopicPage'));
+const UseCasePage = lazy(() => import('./components/UseCasePage'));
+const AlternativesPage = lazy(() => import('./components/AlternativesPage'));
 
 // Lazy load GameShell and all game renderers for code splitting
 const GameShellModule = () => import('./components/GameShell');
@@ -213,6 +218,46 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <AudiencePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/glossary',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <GlossaryIndex />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/glossary/:term',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <GlossaryTerm />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/topics/:slug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <TopicPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/use-cases/:slug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <UseCasePage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/alternatives/:slug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AlternativesPage />
       </Suspense>
     ),
   },
