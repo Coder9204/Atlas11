@@ -9,6 +9,7 @@ import {
   trackOnboardingCompleted,
   trackPathEnrolled,
 } from '../services/AnalyticsService';
+import { useAuth } from '../contexts/AuthContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ONBOARDING FLOW - 4-step onboarding for Atlas Coach learning platform
@@ -313,11 +314,19 @@ const difficultyColors: Record<string, string> = {
 const OnboardingFlow: React.FC = () => {
   const [step, setStep] = useState(1);
   const [goals, setGoals] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [userName, setUserName] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [level, setLevel] = useState('intermediate');
   const [transitioning, setTransitioning] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [trackedStart, setTrackedStart] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  let auth: ReturnType<typeof useAuth> | null = null;
+  try { auth = useAuth(); } catch { /* fallback */ }
 
   // Track onboarding start once
   if (!trackedStart) {
@@ -327,7 +336,7 @@ const OnboardingFlow: React.FC = () => {
 
   // Animate step transitions + track step completion
   const goToStep = useCallback((nextStep: number) => {
-    const stepNames = ['', 'goals', 'interests', 'level', 'recommendations'];
+    const stepNames = ['', 'goals', 'email', 'interests', 'level', 'recommendations'];
     trackOnboardingStepCompleted(step, stepNames[step] || `step_${step}`);
     setTransitioning(true);
     setTimeout(() => {
@@ -371,14 +380,16 @@ const OnboardingFlow: React.FC = () => {
   // Save profile, auto-create paths, and navigate
   const completeOnboarding = useCallback((targetUrl: string) => {
     const profileInterests = interests.length > 0 ? interests : Object.keys(categories);
-    const profile = {
+    const profile: Record<string, unknown> = {
       goals,
       interests: profileInterests,
       level,
       completedOnboarding: true,
       createdAt: Date.now(),
     };
-    saveLearnerProfileLocal(profile);
+    if (email) profile.email = email;
+    if (userName) profile.name = userName;
+    saveLearnerProfileLocal(profile as { goals: string[]; interests: string[]; level: string; completedOnboarding: boolean; createdAt: number });
 
     // Track completion
     trackOnboardingCompleted({ goals, interests: profileInterests, level });
@@ -446,7 +457,7 @@ const OnboardingFlow: React.FC = () => {
   const ProgressDots = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '40px' }}>
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4, 5].map(i => (
           <div
             key={i}
             style={{
@@ -462,7 +473,7 @@ const OnboardingFlow: React.FC = () => {
         ))}
       </div>
       <span style={{ fontSize: '12px', color: theme.textMuted, fontFamily: theme.fontStack }}>
-        Step {step} of 4
+        Step {step} of 5
       </span>
     </div>
   );
@@ -648,9 +659,120 @@ const OnboardingFlow: React.FC = () => {
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // STEP 2: Interests / Topics
+  // STEP 2: Account Creation (with Firebase Auth)
   // ─────────────────────────────────────────────────────────────────────────
-  const Step2 = () => (
+  const handleStep2Submit = async () => {
+    if (!email || !email.includes('@')) return;
+    if (auth && password.length >= 6) {
+      setAuthError('');
+      setAuthLoading(true);
+      try {
+        await auth.signUpWithEmail(email, password, userName || undefined);
+        goToStep(3);
+      } catch (err: any) {
+        const code = err?.code || '';
+        if (code === 'auth/email-already-in-use') setAuthError('This email already has an account.');
+        else if (code === 'auth/weak-password') setAuthError('Password must be at least 6 characters.');
+        else setAuthError(err?.message || 'Account creation failed.');
+      } finally {
+        setAuthLoading(false);
+      }
+    } else {
+      goToStep(3);
+    }
+  };
+
+  const handleStep2Google = async () => {
+    if (!auth) return;
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      await auth.signInWithGoogle();
+      goToStep(3);
+    } catch (err: any) {
+      setAuthError(err?.message || 'Google sign-in failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const Step2 = () => {
+    // If already authenticated, show confirmation and skip
+    if (auth?.isAuthenticated) {
+      return (
+        <div style={{ textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: 700, color: theme.textPrimary, margin: '0 0 10px 0', fontFamily: theme.fontStack }}>
+            You're signed in!
+          </h1>
+          <p style={{ fontSize: '16px', color: theme.textSecondary, margin: '0 0 32px 0', fontFamily: theme.fontStack }}>
+            Welcome, {auth.user?.displayName || auth.user?.email}
+          </p>
+          <PrimaryButton label="Continue →" onClick={() => goToStep(3)} />
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 700, color: theme.textPrimary, margin: '0 0 10px 0', fontFamily: theme.fontStack, lineHeight: 1.2 }}>
+          Create Your Account
+        </h1>
+        <p style={{ fontSize: '16px', color: theme.textSecondary, margin: '0 0 28px 0', fontFamily: theme.fontStack, lineHeight: 1.5 }}>
+          Save your progress and get personalized learning tips
+        </p>
+
+        <button
+          onClick={handleStep2Google}
+          disabled={authLoading}
+          style={{
+            width: '100%', maxWidth: '400px', padding: '13px 16px', background: '#fff', color: '#333',
+            border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, fontFamily: theme.fontStack,
+            cursor: authLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', gap: '10px', margin: '0 auto 20px', opacity: authLoading ? 0.7 : 1,
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '400px', margin: '0 auto 20px' }}>
+          <div style={{ flex: 1, height: '1px', background: theme.border }} />
+          <span style={{ fontSize: '12px', color: theme.textMuted, fontFamily: theme.fontStack }}>or with email</span>
+          <div style={{ flex: 1, height: '1px', background: theme.border }} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '400px', margin: '0 auto 24px', textAlign: 'left' }}>
+          <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Your name (optional)"
+            style={{ width: '100%', padding: '14px 16px', background: theme.bgCard, border: `2px solid ${theme.border}`, borderRadius: '12px', color: theme.textPrimary, fontSize: '15px', fontFamily: theme.fontStack, outline: 'none', boxSizing: 'border-box' }} />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+            style={{ width: '100%', padding: '14px 16px', background: theme.bgCard, border: `2px solid ${theme.border}`, borderRadius: '12px', color: theme.textPrimary, fontSize: '15px', fontFamily: theme.fontStack, outline: 'none', boxSizing: 'border-box' }} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password (6+ characters)"
+            style={{ width: '100%', padding: '14px 16px', background: theme.bgCard, border: `2px solid ${theme.border}`, borderRadius: '12px', color: theme.textPrimary, fontSize: '15px', fontFamily: theme.fontStack, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+
+        {authError && (
+          <p style={{ fontSize: '13px', color: '#ef4444', fontFamily: theme.fontStack, margin: '0 0 14px', textAlign: 'center' }}>{authError}</p>
+        )}
+
+        <PrimaryButton
+          label={authLoading ? 'Creating account...' : 'Create Account →'}
+          onClick={handleStep2Submit}
+          disabled={!email || !email.includes('@') || password.length < 6 || authLoading}
+        />
+        <button
+          onClick={() => goToStep(3)}
+          style={{ display: 'block', margin: '14px auto 0', padding: '10px 24px', background: 'transparent', color: theme.textMuted, border: 'none', fontSize: '13px', fontFamily: theme.fontStack, cursor: 'pointer', textDecoration: 'underline' }}
+        >
+          Skip for now
+        </button>
+      </div>
+    );
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // STEP 3: Interests / Topics
+  // ─────────────────────────────────────────────────────────────────────────
+  const Step3 = () => (
     <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto' }}>
       <h1 style={{
         fontSize: '32px',
@@ -754,7 +876,7 @@ const OnboardingFlow: React.FC = () => {
         <button
           onClick={() => {
             setInterests(Object.keys(categories));
-            goToStep(3);
+            goToStep(4);
           }}
           style={{
             padding: '12px 28px',
@@ -772,7 +894,7 @@ const OnboardingFlow: React.FC = () => {
         </button>
         <PrimaryButton
           label="Continue →"
-          onClick={() => goToStep(3)}
+          onClick={() => goToStep(4)}
           disabled={interests.length === 0}
         />
       </div>
@@ -780,9 +902,9 @@ const OnboardingFlow: React.FC = () => {
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // STEP 3: Level
+  // STEP 4: Level
   // ─────────────────────────────────────────────────────────────────────────
-  const Step3 = () => (
+  const Step4 = () => (
     <div style={{ textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
       <h1 style={{
         fontSize: '32px',
@@ -874,15 +996,15 @@ const OnboardingFlow: React.FC = () => {
 
       <PrimaryButton
         label="See My Path →"
-        onClick={() => goToStep(4)}
+        onClick={() => goToStep(5)}
       />
     </div>
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // STEP 4: Recommendations
+  // STEP 5: Recommendations
   // ─────────────────────────────────────────────────────────────────────────
-  const Step4 = () => (
+  const Step5 = () => (
     <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto' }}>
       <h1 style={{
         fontSize: '32px',
@@ -1079,6 +1201,7 @@ const OnboardingFlow: React.FC = () => {
           {step === 2 && <Step2 />}
           {step === 3 && <Step3 />}
           {step === 4 && <Step4 />}
+          {step === 5 && <Step5 />}
         </div>
       </div>
 

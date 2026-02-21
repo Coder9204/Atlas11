@@ -14,6 +14,13 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  linkWithCredential,
+  linkWithPopup,
+  EmailAuthProvider,
+  updateProfile,
   User,
   Auth
 } from 'firebase/auth';
@@ -28,6 +35,7 @@ import {
   orderBy,
   limit,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   Firestore
 } from 'firebase/firestore';
@@ -178,6 +186,96 @@ export async function signOut(): Promise<void> {
   }
 }
 
+/**
+ * Sign up with email and password
+ */
+export async function signUpWithEmail(email: string, password: string, name?: string): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance) return null;
+
+  try {
+    const result = await createUserWithEmailAndPassword(authInstance, email, password);
+    if (name) {
+      await updateProfile(result.user, { displayName: name });
+    }
+    await createUserProfile(result.user, name);
+    return result.user;
+  } catch (error) {
+    console.error('Email sign-up failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sign in with email and password
+ */
+export async function signInWithEmail(email: string, password: string): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance) return null;
+
+  try {
+    const result = await signInWithEmailAndPassword(authInstance, email, password);
+    return result.user;
+  } catch (error) {
+    console.error('Email sign-in failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send password reset email
+ */
+export async function resetPassword(email: string): Promise<void> {
+  const authInstance = getAuthInstance();
+  if (!authInstance) return;
+
+  try {
+    await sendPasswordResetEmail(authInstance, email);
+  } catch (error) {
+    console.error('Password reset failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Upgrade anonymous user to email/password account (preserves UID)
+ */
+export async function linkAnonymousToEmail(email: string, password: string, name?: string): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance?.currentUser) return null;
+
+  try {
+    const credential = EmailAuthProvider.credential(email, password);
+    const result = await linkWithCredential(authInstance.currentUser, credential);
+    if (name) {
+      await updateProfile(result.user, { displayName: name });
+    }
+    await createUserProfile(result.user, name);
+    return result.user;
+  } catch (error) {
+    console.error('Anonymous to email link failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Upgrade anonymous user to Google account (preserves UID)
+ */
+export async function linkAnonymousToGoogle(): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance?.currentUser) return null;
+
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await linkWithPopup(authInstance.currentUser, provider);
+    await createUserProfile(result.user);
+    return result.user;
+  } catch (error) {
+    console.error('Anonymous to Google link failed:', error);
+    throw error;
+  }
+}
+
 // ============================================
 // USER DATA SERVICES
 // ============================================
@@ -185,7 +283,7 @@ export async function signOut(): Promise<void> {
 /**
  * Create or update user profile
  */
-async function createUserProfile(user: User): Promise<void> {
+async function createUserProfile(user: User, name?: string): Promise<void> {
   const dbInstance = getFirestoreInstance();
   if (!dbInstance) return;
 
@@ -194,11 +292,13 @@ async function createUserProfile(user: User): Promise<void> {
 
   if (!userDoc.exists()) {
     await setDoc(userRef, {
-      displayName: user.displayName || 'Anonymous Learner',
+      displayName: name || user.displayName || 'Learner',
       email: user.email || null,
       photoURL: user.photoURL || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      lastActiveDate: serverTimestamp(),
+      emailPreferences: { marketing: true, streakReminders: true, productUpdates: true },
       settings: {
         theme: 'auto',
         voiceEnabled: true,
@@ -207,7 +307,11 @@ async function createUserProfile(user: User): Promise<void> {
     });
   } else {
     await updateDoc(userRef, {
-      updatedAt: serverTimestamp()
+      displayName: name || user.displayName || undefined,
+      email: user.email || undefined,
+      photoURL: user.photoURL || undefined,
+      updatedAt: serverTimestamp(),
+      lastActiveDate: serverTimestamp(),
     });
   }
 }

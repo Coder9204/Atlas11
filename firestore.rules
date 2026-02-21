@@ -11,15 +11,26 @@ service cloud.firestore {
     }
 
     function isValidUserData() {
-      return request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'createdAt', 'updatedAt', 'settings'])
+      // Allow standard user-writable fields. subscription and stripeCustomerId are admin-only.
+      let allowed = ['displayName', 'email', 'photoURL', 'createdAt', 'updatedAt',
+                      'settings', 'lastActiveDate', 'emailPreferences'];
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed)
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100;
+    }
+
+    function isValidUserCreate() {
+      return request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'createdAt',
+                'updatedAt', 'settings', 'lastActiveDate', 'emailPreferences'])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 100;
     }
 
     // User profiles - users can only read/write their own data
+    // subscription and stripeCustomerId are protected — only writable by Admin SDK (Cloud Functions)
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUserData();
+      allow create: if isOwner(userId) && isValidUserCreate();
       allow update: if isOwner(userId) && isValidUserData();
       allow delete: if isOwner(userId);
 

@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { getPriceId } from '../lib/stripeConfig';
+import { createCheckout, openCustomerPortal } from '../services/subscriptionService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PRICING PAGE - Conversion-Optimized Design
@@ -9,6 +12,60 @@ import React, { useState } from 'react';
 const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  let auth: ReturnType<typeof useAuth> | null = null;
+  try { auth = useAuth(); } catch { /* AuthProvider may not be mounted in tests */ }
+
+  const handleTierCTA = async (tierId: string) => {
+    if (tierId === 'free') {
+      window.location.href = '/games';
+      return;
+    }
+
+    // Must be authenticated to checkout
+    if (!auth?.isAuthenticated) {
+      auth?.showAuthModal('pricing_cta');
+      return;
+    }
+
+    const priceId = getPriceId(tierId, billingCycle);
+    if (!priceId) return;
+
+    setCheckoutLoading(tierId);
+    try {
+      await createCheckout(priceId);
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleLifetimeCTA = async () => {
+    if (!auth?.isAuthenticated) {
+      auth?.showAuthModal('pricing_cta');
+      return;
+    }
+
+    const priceId = getPriceId('lifetime', 'monthly');
+    if (!priceId) return;
+
+    setCheckoutLoading('lifetime');
+    try {
+      await createCheckout(priceId);
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      await openCustomerPortal();
+    } catch (err) {
+      console.error('Portal failed:', err);
+    }
+  };
 
   // Premium design colors
   const colors = {
@@ -36,7 +93,7 @@ const PricingPage: React.FC = () => {
       annualPrice: 0,
       color: colors.textSecondary,
       features: [
-        { text: '15 games per month', included: true },
+        { text: '5 games per month', included: true },
         { text: 'Basic AI hints', included: true },
         { text: 'Progress tracking', included: true },
         { text: 'Ads between games', included: true, note: 'ad-supported' },
@@ -205,18 +262,45 @@ const PricingPage: React.FC = () => {
           <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>
             Games
           </a>
-          <button style={{
-            background: colors.accent,
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}>
-            Sign In
-          </button>
+          {auth?.isAuthenticated ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {auth.subscription && auth.subscription.tier !== 'free' && (
+                <button
+                  onClick={handleManageSubscription}
+                  style={{
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    border: `1px solid ${colors.border}`,
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Manage Subscription
+                </button>
+              )}
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                {auth.user?.displayName || auth.user?.email || 'Account'}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => auth?.showAuthModal('manual')}
+              style={{
+                background: colors.accent,
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Sign In
+            </button>
+          )}
         </nav>
       </header>
 
@@ -460,24 +544,45 @@ const PricingPage: React.FC = () => {
                 )}
               </div>
 
+              {/* Current plan indicator */}
+              {auth?.subscription?.tier === tier.id && (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: `1px solid ${colors.success}`,
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  marginBottom: '12px',
+                  textAlign: 'center',
+                }}>
+                  <span style={{ color: colors.success, fontSize: '12px', fontWeight: 600 }}>
+                    Current Plan
+                  </span>
+                </div>
+              )}
+
               {/* CTA Button */}
-              <button style={{
-                width: '100%',
-                padding: '14px 24px',
-                borderRadius: '10px',
-                border: tier.popular ? 'none' : `1px solid ${colors.border}`,
-                background: tier.popular
-                  ? `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`
-                  : 'transparent',
-                color: tier.popular ? 'white' : colors.textPrimary,
-                fontWeight: 600,
-                fontSize: '15px',
-                cursor: 'pointer',
-                marginBottom: '24px',
-                transition: 'all 0.2s',
-              }}>
-                {tier.cta}
-                {tier.trial && <span style={{ opacity: 0.8, marginLeft: '4px' }}>→</span>}
+              <button
+                onClick={() => handleTierCTA(tier.id)}
+                disabled={checkoutLoading === tier.id}
+                style={{
+                  width: '100%',
+                  padding: '14px 24px',
+                  borderRadius: '10px',
+                  border: tier.popular ? 'none' : `1px solid ${colors.border}`,
+                  background: tier.popular
+                    ? `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`
+                    : 'transparent',
+                  color: tier.popular ? 'white' : colors.textPrimary,
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  cursor: checkoutLoading === tier.id ? 'wait' : 'pointer',
+                  marginBottom: '24px',
+                  transition: 'all 0.2s',
+                  opacity: checkoutLoading === tier.id ? 0.7 : 1,
+                }}
+              >
+                {checkoutLoading === tier.id ? 'Redirecting...' : tier.cta}
+                {tier.trial && checkoutLoading !== tier.id && <span style={{ opacity: 0.8, marginLeft: '4px' }}>→</span>}
               </button>
 
               {/* Features */}
@@ -631,18 +736,23 @@ const PricingPage: React.FC = () => {
             ))}
           </div>
 
-          <button style={{
-            background: `linear-gradient(135deg, ${colors.gold}, #FFA500)`,
-            color: '#000',
-            border: 'none',
-            padding: '16px 48px',
-            borderRadius: '12px',
-            fontSize: '18px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: `0 4px 20px ${colors.gold}44`,
-          }}>
-            Get Lifetime Access →
+          <button
+            onClick={handleLifetimeCTA}
+            disabled={checkoutLoading === 'lifetime'}
+            style={{
+              background: `linear-gradient(135deg, ${colors.gold}, #FFA500)`,
+              color: '#000',
+              border: 'none',
+              padding: '16px 48px',
+              borderRadius: '12px',
+              fontSize: '18px',
+              fontWeight: 700,
+              cursor: checkoutLoading === 'lifetime' ? 'wait' : 'pointer',
+              boxShadow: `0 4px 20px ${colors.gold}44`,
+              opacity: checkoutLoading === 'lifetime' ? 0.7 : 1,
+            }}
+          >
+            {checkoutLoading === 'lifetime' ? 'Redirecting...' : 'Get Lifetime Access →'}
           </button>
 
           <p style={{
@@ -766,17 +876,20 @@ const PricingPage: React.FC = () => {
         <p style={{ color: colors.textSecondary, marginBottom: '32px', fontSize: '18px' }}>
           Join 50,000+ learners. Start with 15 free games today.
         </p>
-        <button style={{
-          background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
-          color: 'white',
-          border: 'none',
-          padding: '18px 48px',
-          borderRadius: '12px',
-          fontSize: '18px',
-          fontWeight: 700,
-          cursor: 'pointer',
-          boxShadow: `0 4px 20px ${colors.accentGlow}`,
-        }}>
+        <button
+          onClick={() => { window.location.href = '/games'; }}
+          style={{
+            background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
+            color: 'white',
+            border: 'none',
+            padding: '18px 48px',
+            borderRadius: '12px',
+            fontSize: '18px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: `0 4px 20px ${colors.accentGlow}`,
+          }}
+        >
           Start Learning Free →
         </button>
       </section>

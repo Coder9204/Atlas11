@@ -280,6 +280,48 @@ export const healthCheck = functions.https.onRequest((req, res) => {
 });
 
 // =============================================================
+// STRIPE & PAYMENT FUNCTIONS
+// =============================================================
+
+export { createCheckoutSession, handleStripeWebhook, createCustomerPortal } from './stripe';
+
+// =============================================================
+// EMAIL FUNCTIONS
+// =============================================================
+
+import { triggerEmail } from './email';
+export { sendStreakReminders } from './email';
+
+/**
+ * Auth trigger: when a new user is created, send welcome email + ensure profile exists.
+ */
+export const onUserCreated = functions.auth.user().onCreate(async (user) => {
+  // Create user profile if it doesn't exist
+  const userRef = admin.firestore().collection('users').doc(user.uid);
+  const userDoc = await userRef.get();
+
+  if (!userDoc.exists) {
+    await userRef.set({
+      displayName: user.displayName || 'Learner',
+      email: user.email || null,
+      photoURL: user.photoURL || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastActiveDate: admin.firestore.FieldValue.serverTimestamp(),
+      emailPreferences: { marketing: true, streakReminders: true, productUpdates: true },
+      settings: { theme: 'auto', voiceEnabled: true, difficulty: 'adaptive' },
+    });
+  }
+
+  // Send welcome email
+  if (user.email) {
+    await triggerEmail(user.uid, 'welcome').catch((err) =>
+      console.error('Failed to send welcome email:', err)
+    );
+  }
+});
+
+// =============================================================
 // SECURE TEST ANSWER VALIDATION
 // =============================================================
 

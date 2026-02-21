@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
+import { AuthProvider } from './contexts/AuthContext';
+import AuthModal from './components/AuthModal';
 import { trackSessionStarted, trackSessionEnded, trackPageView } from './services/AnalyticsService';
 
 // Track session start
@@ -45,6 +47,9 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <AuthModal />
+    </AuthProvider>
   </React.StrictMode>
 );

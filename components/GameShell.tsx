@@ -2,9 +2,12 @@
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useGameProgress } from '../hooks/useGameProgress';
-import { getLearnerProfile } from '../services/GameProgressService';
+import { getLearnerProfile, getAllGameProgress } from '../services/GameProgressService';
 import { getActivePaths, advancePath, markGameInProgress, syncPathWithProgress } from '../services/LearningPathService';
 import { trackGameStarted, trackGameCompleted } from '../services/AnalyticsService';
+import GameTutorialOverlay, { shouldShowTutorial } from './GameTutorialOverlay';
+import FreeUsageBanner, { isFreeUsageExhausted } from './FreeUsageBanner';
+import { useAuth } from '../contexts/AuthContext';
 
 // ============================================================================
 // GAME SHELL — Wraps game renderers to provide:
@@ -66,8 +69,13 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
   const learnerLevel = useRef<string>('intermediate');
   const { record, updatePhase, submitTestScore, startTimer, stopTimer } = useGameProgress(slug, category, difficulty);
   const [pathId, setPathId] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(() => shouldShowTutorial() && getAllGameProgress().length === 0);
   const sessionStartRef = useRef<number>(Date.now());
   const hasSubmittedRef = useRef(false);
+
+  // Auth-aware gating
+  let auth: ReturnType<typeof useAuth> | null = null;
+  try { auth = useAuth(); } catch { /* AuthProvider may not be mounted */ }
 
   // Load learner profile and find active path containing this game
   useEffect(() => {
@@ -167,6 +175,20 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
     onPhaseComplete: handlePhaseComplete,
   });
 
+  // Determine access: subscriber = unlimited, anonymous+expired = auth modal, free tier+exhausted = paywall
+  const isSubscribed = auth?.subscription && auth.subscription.tier !== 'free' && auth.subscription.status !== 'canceled';
+  const isAnonymousExpired = auth?.user?.isAnonymous && auth?.freeTrialExpired;
+  const freeExhausted = !isSubscribed && isFreeUsageExhausted();
+
+  // If anonymous and timer expired, trigger auth modal
+  useEffect(() => {
+    if (isAnonymousExpired) {
+      auth?.showAuthModal('timer_expired');
+    }
+  }, [isAnonymousExpired]);
+
+  const blocked = !isSubscribed && (isAnonymousExpired || freeExhausted);
+
   return (
     <div
       ref={shellRef}
@@ -175,7 +197,73 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
       data-difficulty={learnerLevel.current}
       style={{ width: '100%', minHeight: '100vh' }}
     >
-      {enhancedChildren}
+      {showTutorial && <GameTutorialOverlay onDismiss={() => setShowTutorial(false)} />}
+      <FreeUsageBanner />
+      {blocked ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          padding: 40,
+          textAlign: 'center',
+          fontFamily: "'Inter', sans-serif",
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>{'\uD83D\uDD12'}</div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc', marginBottom: 8 }}>
+            {isAnonymousExpired ? 'Free Preview Ended' : 'Free Games Used Up'}
+          </h2>
+          <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 400, lineHeight: 1.6, marginBottom: 24 }}>
+            {isAnonymousExpired
+              ? 'Create a free account to keep learning, or upgrade for unlimited access.'
+              : "You've played all 5 free games this month. Upgrade to continue learning with unlimited access."}
+          </p>
+          {isAnonymousExpired ? (
+            <button
+              onClick={() => auth?.showAuthModal('timer_expired')}
+              style={{
+                padding: '14px 32px',
+                background: '#3B82F6',
+                color: '#fff',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 700,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Create Free Account
+            </button>
+          ) : (
+            <a
+              href="/pricing"
+              style={{
+                padding: '14px 32px',
+                background: '#3B82F6',
+                color: '#fff',
+                borderRadius: 12,
+                fontSize: 16,
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              View Plans
+            </a>
+          )}
+          <a
+            href="/games"
+            style={{
+              marginTop: 14,
+              color: '#94a3b8',
+              fontSize: 13,
+              textDecoration: 'underline',
+            }}
+          >
+            Back to games
+          </a>
+        </div>
+      ) : enhancedChildren}
     </div>
   );
 }
