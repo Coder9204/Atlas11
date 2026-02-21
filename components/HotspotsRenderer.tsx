@@ -245,6 +245,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   const testQuestions = [
     {
       question: 'What causes a solar cell to become a "hotspot" when shaded?',
+      explanation: 'In a series string, the string current is forced through the shaded cell, which cannot generate enough photocurrent. The cell becomes reverse-biased, dissipating the string\'s power as heat.',
       options: [
         { text: 'The cell absorbs extra sunlight from other cells', correct: false },
         { text: 'Series current forces the shaded cell into reverse bias, dissipating power as heat', correct: true },
@@ -254,6 +255,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'In a series string of cells, when one cell is shaded:',
+      explanation: 'In a series circuit, the same current flows through all cells. If string current exceeds the shaded cell\'s photocurrent, the shaded cell is forced into reverse bias to allow current to pass.',
       options: [
         { text: 'Current increases through the shaded cell', correct: false },
         { text: 'Current decreases through the entire string', correct: false },
@@ -263,6 +265,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'The power dissipated as heat in a hotspot is calculated as:',
+      explanation: 'The shaded cell has a reverse voltage across it and the string current flowing through it. Power dissipation is P = I * V_reverse, which can be substantial.',
       options: [
         { text: 'String voltage divided by cell current', correct: false },
         { text: 'String current multiplied by reverse voltage across the shaded cell', correct: true },
@@ -272,6 +275,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'How do bypass diodes protect against hotspots?',
+      explanation: 'When a cell is reverse-biased beyond the diode threshold (~0.7V), the bypass diode conducts, providing an alternate path for string current and limiting the reverse voltage across the shaded cell.',
       options: [
         { text: 'They increase current through shaded cells', correct: false },
         { text: 'They provide an alternate current path, limiting reverse voltage', correct: true },
@@ -281,6 +285,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'A typical bypass diode limits the reverse voltage across a shaded cell group to approximately:',
+      explanation: 'Silicon bypass diodes have a forward voltage drop of about 0.6-0.7V. Once the reverse voltage across the cell group exceeds this, the diode conducts and clamps the voltage.',
       options: [
         { text: '0.1 volts', correct: false },
         { text: '0.6-0.7 volts', correct: true },
@@ -290,6 +295,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'Why are hotspots more dangerous than just reduced power output?',
+      explanation: 'Extreme local heating (>150C) can crack silicon cells, delaminate encapsulant, melt solder, and in severe cases ignite the backsheet material, causing panel fires.',
       options: [
         { text: 'They can cause cell cracking, encapsulant damage, and even fires', correct: true },
         { text: 'They only affect the shaded cell\'s efficiency', correct: false },
@@ -299,6 +305,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'What is the typical temperature threshold for a "critical" hotspot?',
+      explanation: 'Solar panels normally operate at 40-60C. Hotspots exceeding 100-150C absolute temperature risk irreversible damage to cell metallization, encapsulant, and backsheet materials.',
       options: [
         { text: '50-60C above ambient', correct: false },
         { text: '10-20C above neighboring cells', correct: false },
@@ -308,6 +315,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'Half-cut cell panels reduce hotspot severity because:',
+      explanation: 'Half-cut cells operate at half the current of full cells. Since hotspot power P = I * V_reverse, halving the current directly halves the power dissipation in the shaded cell.',
       options: [
         { text: 'Half-cut cells have higher voltage', correct: false },
         { text: 'Half-cut cells carry half the current, reducing P = I x V', correct: true },
@@ -317,6 +325,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'Which shading scenario creates the worst hotspot?',
+      explanation: 'When one cell is fully shaded and all others are in full sun, the maximum string current is forced through the shaded cell at maximum reverse voltage, creating the highest power dissipation.',
       options: [
         { text: 'Uniform light reduction across all cells', correct: false },
         { text: 'One cell completely shaded while others receive full sun', correct: true },
@@ -326,6 +335,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     },
     {
       question: 'In a string with no bypass diode, a shaded cell can experience reverse voltage up to:',
+      explanation: 'Without a bypass diode, the remaining (N-1) cells in the string each contribute their Voc, and this total voltage appears in reverse across the shaded cell.',
       options: [
         { text: 'The shaded cell\'s own open-circuit voltage', correct: false },
         { text: 'The sum of all other cells\' voltages (N-1) x Voc', correct: true },
@@ -1905,23 +1915,25 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                 {testScore >= 8 ? 'You understand hotspot physics!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '20px' }}>{isCorrect ? '✓' : '✗'}</span>
-                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', flex: 1 }}>{qIndex + 1}. {q.question}</p>
-                  </div>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? '✓ ' : userAnswer === oIndex ? '✗ ' : ''}{opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setCurrentTestQuestion(0); })}
         </div>
@@ -2071,7 +2083,12 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

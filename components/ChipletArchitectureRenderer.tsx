@@ -345,6 +345,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Chiplets use less power', correct: false },
         { text: 'Chiplets are easier to design', correct: false },
       ],
+      explanation: 'Yield follows a Poisson distribution: Y = e^(-D*A). Smaller die area A means exponentially fewer defects per die, so yield improves dramatically with smaller chiplets.',
     },
     {
       question: 'Manufacturing yield follows approximately:',
@@ -354,6 +355,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'No relationship with die area', correct: false },
         { text: 'Square root of die area', correct: false },
       ],
+      explanation: 'The Poisson yield model Y = e^(-D*A) shows that doubling die area more than doubles the chance of a fatal defect, making large monolithic dies increasingly wasteful.',
     },
     {
       question: 'The main challenge of chiplet architectures is:',
@@ -363,6 +365,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Software compatibility', correct: false },
         { text: 'Thermal management', correct: false },
       ],
+      explanation: 'Die-to-die interconnects must replace what were on-die wires, requiring extremely high bandwidth (TB/s) and low latency to avoid performance penalties at chiplet boundaries.',
     },
     {
       question: 'Why might an I/O chiplet use an older process node than compute chiplets?',
@@ -372,6 +375,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'I/O chiplets are always made first', correct: false },
         { text: 'Regulations require different processes', correct: false },
       ],
+      explanation: 'Analog circuits (SerDes, PHYs) need higher voltages and don\'t shrink well. Using a cheaper mature process for I/O saves cost while compute chiplets use the latest node for density.',
     },
     {
       question: 'The "reticle limit" in chip manufacturing refers to:',
@@ -381,6 +385,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'The minimum transistor size', correct: false },
         { text: 'The number of chips per wafer', correct: false },
       ],
+      explanation: 'The lithography reticle is about 26mm x 33mm (~858mm2). Dies larger than this require stitching multiple exposures, which is very expensive. Chiplets bypass this limit entirely.',
     },
     {
       question: 'AMD\'s EPYC processors benefit from chiplets because:',
@@ -390,6 +395,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Memory bandwidth doubles', correct: false },
         { text: 'Power consumption is eliminated', correct: false },
       ],
+      explanation: 'AMD uses up to 9 chiplets (8 compute + 1 I/O) to scale to 64+ cores. Each compute chiplet (CCD) is small with high yield, making the economics viable.',
     },
     {
       question: '3D chip stacking (like AMD V-Cache) provides:',
@@ -399,6 +405,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Better thermal dissipation', correct: false },
         { text: 'Simpler manufacturing', correct: false },
       ],
+      explanation: 'Vertical stacking places chiplets directly above each other with through-silicon vias (TSVs), providing much shorter interconnects than side-by-side placement on an interposer.',
     },
     {
       question: 'A defect on a monolithic 400mm2 die versus a 100mm2 chiplet:',
@@ -408,6 +415,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Has no impact on either', correct: false },
         { text: 'Can be repaired on the monolithic die', correct: false },
       ],
+      explanation: 'A single defect scraps the entire die. The monolithic die wastes 4x more silicon area per defect, and with chiplets, the three good chiplets from the same silicon can still be used.',
     },
     {
       question: 'High-bandwidth die-to-die interconnects typically use:',
@@ -417,6 +425,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Wireless communication', correct: false },
         { text: 'Fiber optics', correct: false },
       ],
+      explanation: 'Silicon interposers (like TSMC CoWoS) and embedded bridges (like Intel EMIB) provide thousands of fine-pitch connections between chiplets, enabling TB/s bandwidth.',
     },
     {
       question: 'The economic advantage of chiplets increases when:',
@@ -426,6 +435,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
         { text: 'Packaging costs decrease to zero', correct: false },
         { text: 'All chiplets are identical', correct: false },
       ],
+      explanation: 'Higher defect density at advanced nodes makes large dies increasingly uneconomical. The yield advantage of small chiplets grows as defect density rises at each new process node.',
     },
   ];
 
@@ -1341,32 +1351,43 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               </p>
             </div>
 
-            {/* Answer review */}
+            {/* Rich Answer Key */}
             <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {testQuestions.map((q, i) => {
-                  const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: isCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                      }}
-                    >
-                      <span style={{ color: colors.textSecondary, fontWeight: 'bold' }}>Q{i + 1}</span>
-                      <span style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontSize: '16px' }}>
-                        {isCorrect ? '\u2713' : '\u2717'}
-                      </span>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Key</h3>
+              {testQuestions.map((q, i) => {
+                const userAnswer = testAnswers[i];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      padding: '12px',
+                      marginBottom: '8px',
+                      borderRadius: '8px',
+                      borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
+                      background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    }}
+                  >
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                      {i + 1}. {q.question}
+                    </p>
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '13px' }}>
+                        Your answer: {q.options[userAnswer].text}
+                      </div>
+                    )}
+                    <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', fontSize: '13px' }}>
+                      Correct: {q.options[correctIndex].text}
                     </div>
-                  );
-                })}
-              </div>
+                    {q.explanation && (
+                      <div style={{ padding: '6px 10px', marginTop: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', lineHeight: 1.5 }}>
+                        {q.explanation}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>,
@@ -1583,7 +1604,37 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
           </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Complete')
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 20px',
+        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+        borderTop: '1px solid rgba(99, 102, 241, 0.3)',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={() => {
+            onGameEvent?.({ type: 'mastery_achieved', details: {} });
+            window.location.href = '/games';
+          }}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: '12px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            minHeight: '44px',
+          }}
+        >
+          Complete Game
+        </button>
+      </div>
     );
   }
 

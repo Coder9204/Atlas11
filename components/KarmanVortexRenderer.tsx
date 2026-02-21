@@ -1127,6 +1127,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 1,
       question: 'What determines whether vortex shedding occurs?',
+      explanation: 'The Reynolds number combines flow speed, obstacle size, and fluid viscosity into a single dimensionless parameter that predicts the flow regime and onset of vortex shedding.',
       options: [
         { id: 'a', text: 'Only the flow speed' },
         { id: 'b', text: 'Only the obstacle size' },
@@ -1137,6 +1138,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 2,
       question: 'In a Kármán vortex street, how do adjacent vortices relate?',
+      explanation: 'Vortices shed alternately from each side of the obstacle, so successive vortices in the wake rotate in opposite directions, forming the characteristic staggered pattern.',
       options: [
         { id: 'a', text: 'They all spin the same direction' },
         { id: 'b', text: 'They alternate in rotation direction', correct: true },
@@ -1147,6 +1149,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 3,
       question: 'What is the Strouhal number used for?',
+      explanation: 'The Strouhal number (St = f*D/V) relates shedding frequency to flow speed and obstacle diameter, allowing engineers to predict oscillation frequencies for any given configuration.',
       options: [
         { id: 'a', text: 'Measuring temperature' },
         { id: 'b', text: 'Predicting vortex shedding frequency', correct: true },
@@ -1157,6 +1160,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 4,
       question: 'Why did the Tacoma Narrows Bridge collapse?',
+      explanation: 'Wind-induced vortex shedding created oscillating forces at a frequency that matched the bridge\'s natural resonant frequency, causing amplifying vibrations that tore the structure apart.',
       options: [
         { id: 'a', text: 'The wind was too strong' },
         { id: 'b', text: 'The cables snapped from weight' },
@@ -1167,6 +1171,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 5,
       question: 'What happens to vortex shedding at very low Reynolds numbers (Re < 5)?',
+      explanation: 'At very low Reynolds numbers, viscous forces dominate and flow remains laminar and attached to the obstacle surface, with no separation or vortex formation.',
       options: [
         { id: 'a', text: 'Vortices form very quickly' },
         { id: 'b', text: 'No vortex shedding occurs - flow is too slow', correct: true },
@@ -1177,6 +1182,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 6,
       question: 'How do modern tall buildings avoid vortex-induced vibration problems?',
+      explanation: 'Aerodynamic shaping (tapered, stepped, or rounded profiles) disrupts coherent vortex shedding, while tuned mass dampers absorb and dissipate vibration energy.',
       options: [
         { id: 'a', text: 'Building them shorter' },
         { id: 'b', text: 'Using heavier materials' },
@@ -1187,6 +1193,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 7,
       question: 'Why do power lines "sing" or hum in the wind?',
+      explanation: 'Wind flowing past cylindrical power lines creates vortex shedding that produces alternating lateral forces, causing the lines to vibrate and emit audible tones.',
       options: [
         { id: 'a', text: 'Electricity makes noise' },
         { id: 'b', text: 'Vortex shedding creates oscillating forces', correct: true },
@@ -1197,6 +1204,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 8,
       question: 'If you double the flow speed while keeping obstacle size constant, what happens to shedding frequency?',
+      explanation: 'From the Strouhal relationship f = St*V/D, frequency is directly proportional to flow speed when obstacle size is constant. Doubling V approximately doubles f.',
       options: [
         { id: 'a', text: 'Halves' },
         { id: 'b', text: 'Stays the same' },
@@ -1207,6 +1215,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 9,
       question: 'Why do vortices form alternately on each side of the obstacle?',
+      explanation: 'When a vortex detaches from one side, it creates a low-pressure region that deflects the wake flow. This triggers vortex formation on the opposite side, creating a self-sustaining alternating pattern.',
       options: [
         { id: 'a', text: 'Magnetic forces' },
         { id: 'b', text: 'One side creates low pressure, pulling flow across and creating the next vortex on the opposite side', correct: true },
@@ -1217,6 +1226,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
     {
       id: 10,
       question: 'The Strouhal number for a cylinder is approximately:',
+      explanation: 'For a circular cylinder in the vortex shedding regime (Re 300-300,000), the Strouhal number is remarkably constant at approximately 0.21, a fundamental result in fluid dynamics.',
       options: [
         { id: 'a', text: 'St ≈ 0.01' },
         { id: 'b', text: 'St ≈ 0.21', correct: true },
@@ -2176,53 +2186,39 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
               </p>
             </div>
 
-            {/* Answer Review Section */}
-            <div style={{ margin: '0 16px 16px 16px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '12px' }}>
-                Answer Review:
-              </h3>
-            </div>
-
-            {testQuestions.map((q, idx) => {
-              const correctOption = q.options.find(o => o.correct);
-              const userAnswer = testAnswers[q.id];
-              const isCorrect = userAnswer === correctOption?.id;
-
-              return (
-                <div
-                  key={q.id}
-                  style={{
-                    background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    margin: '12px 16px',
-                    padding: '14px',
-                    borderRadius: '10px',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
-                    <span style={{
-                      color: isCorrect ? colors.success : colors.error,
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                    }}>
-                      {isCorrect ? '\u2713' : '\u2717'}
-                    </span>
-                    <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Question {idx + 1} of {testQuestions.length}
-                    </span>
+            {/* Rich Answer Key */}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[q.id];
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctAnswer;
+                return (
+                  <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text || 'No answer'}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
                   </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
-                    {q.question}
-                  </p>
-                  {!isCorrect && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct answer: {correctOption?.text}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(true, true, 'Next')}
         </div>
@@ -2268,7 +2264,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
                   Review Answers
                 </button>
                 <button
-                  onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+                  onClick={() => { setTestSubmitted(true); const s = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; onGameEvent?.({ type: 'game_completed', details: { score: s, total: testQuestions.length } }); }}
                   style={{
                     flex: 1,
                     padding: '12px',
@@ -2388,7 +2384,7 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
           </span>
           {isLastQuestion && currentAnswered ? (
             <button
-              onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+              onClick={() => { setTestSubmitted(true); const s = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; onGameEvent?.({ type: 'game_completed', details: { score: s, total: testQuestions.length } }); }}
               style={{
                 padding: '10px 24px',
                 borderRadius: '10px',
@@ -2483,7 +2479,12 @@ const [currentQuestion, setCurrentQuestion] = useState(0);
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

@@ -272,6 +272,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'Half speed of light (150,000 km/s)', correct: false },
         { text: '10% speed of light (30,000 km/s)', correct: false },
       ],
+      explanation: 'Glass fiber has a refractive index of ~1.5, which slows light to c/n = 300,000/1.5 = ~200,000 km/s. This fundamental physics constraint means fiber can never achieve vacuum light speed.',
     },
     {
       question: 'Propagation delay across 10,000 km of fiber is approximately:',
@@ -281,6 +282,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: '50 ms', correct: true },
         { text: '500 ms', correct: false },
       ],
+      explanation: 'Propagation delay = distance / speed = 10,000 km / 200,000 km/s = 0.05 seconds = 50 ms. This is one-way delay; round-trip would be 100 ms.',
     },
     {
       question: 'What component of latency can be improved with faster hardware?',
@@ -290,6 +292,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'Speed of light limit', correct: false },
         { text: 'Geographic distance', correct: false },
       ],
+      explanation: 'Propagation delay is fixed by physics (speed of light and distance). But serialization delay (bits/bandwidth) improves with faster links, and processing delay decreases with faster routers. These are the only components we can engineer around.',
     },
     {
       question: 'Why do high-frequency traders prefer microwave links over fiber?',
@@ -299,6 +302,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'Microwave equipment is cheaper', correct: false },
         { text: 'Microwave has better security', correct: false },
       ],
+      explanation: 'Microwave travels through air at nearly vacuum speed (0.99c), while fiber slows light to 0.67c. Over 1000 km, this saves ~4 ms - worth billions in arbitrage profits for high-frequency trading firms.',
     },
     {
       question: 'Round-trip time (RTT) from New York to London (5600km) has a minimum of:',
@@ -308,6 +312,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: '~56 ms (at fiber speed)', correct: true },
         { text: '~112 ms (at fiber speed)', correct: false },
       ],
+      explanation: 'One-way delay = 5600 km / 200,000 km/s = 28 ms. Round-trip (there and back) = 28 ms x 2 = 56 ms. This is the absolute physics minimum; real-world RTT is higher due to routing and processing.',
     },
     {
       question: 'Serialization delay for a 1500-byte packet on a 100 Mbps link is:',
@@ -317,6 +322,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: '1.2 ms', correct: false },
         { text: '12 ms', correct: false },
       ],
+      explanation: 'Serialization delay = packet size / bandwidth = (1500 bytes x 8 bits) / 100,000,000 bps = 12,000 / 100,000,000 = 0.00012 seconds = 0.12 ms. Faster links reduce this proportionally.',
     },
     {
       question: 'Why cant satellites in geostationary orbit provide low-latency internet?',
@@ -326,6 +332,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'Radio waves are slower than light', correct: false },
         { text: 'Atmospheric interference', correct: false },
       ],
+      explanation: 'Geostationary orbit is 35,786 km up. Signal must travel up and back: 2 x 35,786 = 71,572 km each way, ~143,000 km round trip. At light speed: 143,000/300,000 = ~477 ms minimum, making real-time interaction impossible.',
     },
     {
       question: 'Low Earth Orbit (LEO) satellite constellations like Starlink improve latency because:',
@@ -335,6 +342,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'They bypass the speed of light limit', correct: false },
         { text: 'They dont need routing', correct: false },
       ],
+      explanation: 'LEO satellites at ~550 km altitude are 65x closer than geostationary satellites. Round-trip distance is ~2,200 km vs ~143,000 km, reducing propagation delay from ~477 ms to ~7 ms - comparable to terrestrial fiber.',
     },
     {
       question: 'What is the theoretical minimum RTT to Mars at closest approach (55 million km)?',
@@ -344,6 +352,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'About 6 minutes', correct: true },
         { text: 'About 30 minutes', correct: false },
       ],
+      explanation: 'RTT = 2 x distance / speed of light = 2 x 55,000,000 km / 300,000 km/s = 366 seconds = ~6.1 minutes. This is why Mars rovers must operate autonomously - real-time control is physically impossible.',
     },
     {
       question: 'CDNs reduce latency primarily by:',
@@ -353,6 +362,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
         { text: 'Caching content closer to users geographically', correct: true },
         { text: 'Bypassing internet routing', correct: false },
       ],
+      explanation: 'CDNs place cached copies of content at edge locations worldwide. By reducing the physical distance between user and content, they minimize propagation delay - the one latency component that cannot be improved by faster hardware.',
     },
   ];
 
@@ -1832,20 +1842,48 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
                 {testScore >= 7 ? 'You understand network latency physics!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                return (
+                  <div key={qIndex} style={{
+                    background: 'rgba(30, 41, 59, 0.9)',
+                    margin: '12px 0',
+                    padding: '16px',
+                    borderRadius: '10px',
+                    borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>
+                        {isCorrect ? '\u2713' : '\u2717'}
+                      </span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>
+                        Q{qIndex + 1}. {q.question}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry', true)}
         </div>
@@ -2003,7 +2041,12 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete', true)}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

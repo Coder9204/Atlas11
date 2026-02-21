@@ -342,6 +342,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'They tie - mass cancels out in the equations', correct: false },
         { text: 'The heavier one wins regardless of shape', correct: false },
       ],
+      explanation: 'The solid cylinder has I = 1/2 MR^2 vs the hoop\'s I = MR^2. Less rotational inertia means more energy goes into translation (forward speed), so the solid wins.',
     },
     {
       question: 'A solid cylinder rolls down a ramp without slipping. At the bottom, it has both translational (forward motion) and rotational (spinning) kinetic energy. What fraction of its total kinetic energy is rotational?',
@@ -351,6 +352,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'One-third (33%)', correct: true },
         { text: 'None - all energy is translational', correct: false },
       ],
+      explanation: 'For a solid cylinder (I = 1/2 MR^2), the rotational KE is 1/2 I w^2 = 1/4 Mv^2, while total KE is 3/4 Mv^2. So the rotational fraction is (1/4)/(3/4) = 1/3.',
     },
     {
       question: 'For a hollow hoop rolling without slipping, what fraction of its kinetic energy is rotational?',
@@ -360,6 +362,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'One-half (50%)', correct: true },
         { text: 'Two-thirds (67%)', correct: false },
       ],
+      explanation: 'For a hoop (I = MR^2), rotational KE equals translational KE (both 1/2 Mv^2), so exactly half of total energy is "wasted" on spinning rather than moving forward.',
     },
     {
       question: 'What is the moment of inertia of a solid cylinder about its central axis?',
@@ -369,6 +372,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'I = (2/5)MR^2', correct: false },
         { text: 'I = 2MR^2', correct: false },
       ],
+      explanation: 'Integration of r^2 dm over a uniform disk gives I = 1/2 MR^2. Mass distributed uniformly means some is near the axis (low r) and some at the edge (high r), averaging to half.',
     },
     {
       question: 'Adding mass to the center of a hollow cylinder will:',
@@ -378,6 +382,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'Have no effect on rolling speed', correct: false },
         { text: 'Make it slide instead of roll', correct: false },
       ],
+      explanation: 'Central mass contributes zero rotational inertia (r = 0) but increases total mass M. This reduces the effective I/MR^2 ratio, shifting the object toward solid-cylinder behavior.',
     },
     {
       question: 'Why does a hollow sphere roll slower than a solid sphere of the same mass?',
@@ -387,6 +392,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'Air resistance is greater for hollow objects', correct: false },
         { text: 'The hollow sphere has less contact with the ramp', correct: false },
       ],
+      explanation: 'A hollow sphere concentrates mass at the outer radius where r is largest, giving I = 2/3 MR^2 vs. 2/5 MR^2 for a solid sphere. Higher I means more energy lost to rotation.',
     },
     {
       question: 'The ratio of speeds v_solid/v_hollow at the bottom of a ramp is approximately:',
@@ -396,6 +402,7 @@ const animationRef = useRef<number | null>(null);
         { text: '2.0 (solid is twice as fast)', correct: false },
         { text: '0.87 (hollow is faster)', correct: false },
       ],
+      explanation: 'v_solid = sqrt(4gh/3) and v_hoop = sqrt(gh), giving a ratio of sqrt(4/3) = 1.155 -- the solid cylinder is about 15% faster, independent of mass or radius.',
     },
     {
       question: 'If you increase the ramp angle, how does the race outcome change?',
@@ -405,6 +412,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'The winner stays the same, but both complete the race faster', correct: true },
         { text: 'The race becomes a tie at steep angles', correct: false },
       ],
+      explanation: 'The speed ratio depends only on the I/MR^2 ratio, not the ramp angle. A steeper ramp increases both speeds equally, so the solid always wins by the same margin.',
     },
     {
       question: 'A flywheel designed for maximum energy storage should have:',
@@ -414,6 +422,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'Uniform mass distribution', correct: false },
         { text: 'The lightest possible mass', correct: false },
       ],
+      explanation: 'Rotational KE = 1/2 I w^2. Putting mass at the rim maximizes I (since I = MR^2 for a hoop), storing the most energy per unit angular velocity -- the opposite goal of a fast roller.',
     },
     {
       question: 'When a figure skater pulls their arms in during a spin:',
@@ -423,6 +432,7 @@ const animationRef = useRef<number | null>(null);
         { text: 'Rotational kinetic energy stays constant', correct: false },
         { text: 'They slow down due to reduced air resistance', correct: false },
       ],
+      explanation: 'Angular momentum L = I * w is conserved. Pulling arms in reduces I, so w must increase proportionally -- the same physics of mass distribution that governs rolling races.',
     },
   ];
 
@@ -1771,20 +1781,37 @@ const animationRef = useRef<number | null>(null);
                 {testScore >= 8 ? 'You\'ve mastered rolling motion and rotational inertia!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery ->' : 'Review & Retry')}
         </div>
@@ -1858,7 +1885,12 @@ const animationRef = useRef<number | null>(null);
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game ->')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

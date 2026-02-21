@@ -232,6 +232,7 @@ useEffect(() => {
   const testQuestions = [
     {
       question: 'Scenario: A driver shines headlights at a road sign at a 30-degree angle. The sign uses retroreflective material instead of flat mirror coating. What happens to the light?',
+      explanation: 'Retroreflective materials use corner-cube geometry or glass beads to return light back toward its source regardless of the incident angle, unlike flat mirrors that reflect at the complementary angle.',
       options: [
         { text: 'Light reflects away at 30 degrees to the other side', correct: false },
         { text: 'Light returns toward the driver regardless of sign angle', correct: true },
@@ -241,6 +242,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: You are designing a corner-cube retroreflector for a surveying prism. The core mechanism relies on which geometric principle to return light to its source?',
+      explanation: 'A corner cube has three mutually perpendicular mirror surfaces. Each reflection reverses one component of the ray direction (x, y, or z), so after all three bounces the ray is reversed in all three axes.',
       options: [
         { text: 'Bending light like a converging lens', correct: false },
         { text: 'Three perpendicular mirror surfaces that each reverse one direction component', correct: true },
@@ -250,6 +252,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: In a physics lab, you shine a laser pointer at a corner-cube retroreflector at 45 degrees to its surface. Where does the reflected beam go?',
+      explanation: 'After three reflections inside the corner cube, the outgoing ray is always antiparallel to the incoming ray, regardless of the angle of incidence.',
       options: [
         { text: 'At 45 degrees to the opposite side (standard mirror law)', correct: false },
         { text: 'Parallel back to the incoming beam, toward the source', correct: true },
@@ -259,6 +262,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: A flat mirror is placed on a road sign. Under what condition would it reflect headlight beams back to the driver?',
+      explanation: 'A flat mirror obeys the law of reflection (angle in = angle out). Only perpendicular light returns to its source; any other angle reflects the light away from the driver.',
       options: [
         { text: 'When light hits at any angle', correct: false },
         { text: 'Only when the light hits perpendicular to the mirror surface', correct: true },
@@ -268,6 +272,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: Highway engineers replaced flat paint on road signs with retroreflective sheeting. What is the key reason signs are now 50-100x brighter for drivers at night?',
+      explanation: 'Retroreflective sheeting returns headlight light directly back to the driver\'s eyes, concentrating the reflected energy in a narrow cone rather than scattering it in all directions.',
       options: [
         { text: 'The sheeting contains luminescent paint that glows in the dark', correct: false },
         { text: 'Retroreflective materials return headlight light directly back to the driver', correct: true },
@@ -277,6 +282,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: Apollo 11 left retroreflector arrays on the Moon. Scientists fire laser pulses from Earth and detect the returned signal. What property makes this possible?',
+      explanation: 'Retroreflectors return light parallel to the incoming beam without needing any alignment or power source. This passive, angle-independent return is what makes 384,000 km laser ranging possible.',
       options: [
         { text: 'The arrays are precisely aimed at Earth and tracked constantly', correct: false },
         { text: 'Retroreflectors return light parallel to incoming rays regardless of orientation angle', correct: true },
@@ -286,6 +292,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: You observe cat\'s eye road markers glowing brightly as your headlights hit them at various angles. What explains the consistent brightness at different viewing angles?',
+      explanation: 'Cat\'s eye markers contain retroreflective glass beads or prisms that return light toward its source (the driver) across a wide range of angles, maintaining consistent brightness.',
       options: [
         { text: 'Each marker contains a small battery-powered LED', correct: false },
         { text: 'Retroreflective glass beads or prisms inside return light toward the driver', correct: true },
@@ -295,6 +302,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: A bicycle rider attaches a standard plastic reflector to their bike. The reflector is most effective because it uses:',
+      explanation: 'Bicycle reflectors contain hundreds of tiny corner-cube prisms molded into the plastic. Each prism returns car headlight beams back toward the driver.',
       options: [
         { text: 'A flat polished mirror surface angled at 45 degrees', correct: false },
         { text: 'An array of corner-cube microprisms that return light to drivers', correct: true },
@@ -304,6 +312,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: Explain the core geometry that makes corner-cube retroreflection work. Each bounce off the three perpendicular surfaces does what?',
+      explanation: 'Each of the three mutually perpendicular mirror surfaces reverses one spatial component of the light ray\'s direction vector, so three bounces reverse all three components.',
       options: [
         { text: 'Focuses light to a single point like a concave mirror', correct: false },
         { text: 'Reverses one axis component of the light ray direction', correct: true },
@@ -313,6 +322,7 @@ useEffect(() => {
     },
     {
       question: 'Scenario: A surveyor uses a total station to measure distance to a prism retroreflector 500 meters away. Why is a retroreflective prism used instead of a flat mirror target?',
+      explanation: 'A retroreflective prism returns the laser beam to the instrument regardless of alignment angle, whereas a flat mirror would require precise angular positioning to reflect the beam back.',
       options: [
         { text: 'Retroreflective prisms are cheaper to manufacture than precision mirrors', correct: false },
         { text: 'Prisms return laser light to the instrument without requiring precise angular alignment', correct: true },
@@ -1433,18 +1443,25 @@ useEffect(() => {
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, fontWeight: '700', lineHeight: 1.5 }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: '800' }}>{testScore} / 10</p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))', margin: '16px 0', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '700', lineHeight: 1.6 }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '10px 12px', marginBottom: '6px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, lineHeight: 1.6, fontWeight: opt.correct || userAnswer === oIndex ? '600' : '400' }}>{opt.correct ? '✓ Correct:' : userAnswer === oIndex ? '✗ Your answer:' : ''} {opt.text}</div>
-                  ))}
-                </div>
-              );
-            })}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review and Retry')}
         </div>
@@ -1571,7 +1588,12 @@ useEffect(() => {
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

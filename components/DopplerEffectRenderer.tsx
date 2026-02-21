@@ -2441,46 +2441,48 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                   const userAnswer = testAnswers[i];
                   const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
                   const correctIndex = q.options.findIndex(opt => opt.correct);
+                  const correctOpt = q.options[correctIndex];
+                  const userOpt = userAnswer !== null ? q.options[userAnswer] : null;
                   return (
                     <div
                       key={i}
                       style={{
                         padding: design.spacing.md,
                         borderRadius: design.radius.md,
-                        background: isCorrect ? `${design.colors.success}15` : `${design.colors.accentPrimary}15`,
-                        border: `1px solid ${isCorrect ? design.colors.success : design.colors.accentPrimary}50`,
+                        background: 'rgba(30,41,59,0.5)',
+                        borderLeft: `4px solid ${isCorrect ? design.colors.success : design.colors.accentPrimary}`,
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.sm, marginBottom: design.spacing.xs }}>
-                        <span style={{
-                          fontSize: 18,
-                          color: isCorrect ? design.colors.success : design.colors.accentPrimary,
-                        }}>
-                          {isCorrect ? '✓' : '✗'}
-                        </span>
+                        <span style={{ fontSize: 18 }}>{isCorrect ? '\u2705' : '\u274c'}</span>
                         <span style={{
                           fontSize: design.typography.caption.size,
                           fontWeight: 700,
                           color: design.colors.textPrimary,
                         }}>
-                          Question {i + 1}
-                        </span>
-                        <span style={{
-                          fontSize: design.typography.micro.size,
-                          color: isCorrect ? design.colors.success : design.colors.accentPrimary,
-                          fontWeight: 600,
-                        }}>
-                          {isCorrect ? 'Correct' : 'Incorrect'}
+                          Q{i + 1}: {q.question || q.text}
                         </span>
                       </div>
-                      {!isCorrect && (
+                      {!isCorrect && userOpt && (
                         <p style={{
                           fontSize: design.typography.micro.size,
-                          color: design.colors.textMuted,
-                          marginTop: design.spacing.xs,
+                          color: design.colors.accentPrimary,
+                          margin: `${design.spacing.xs}px 0`,
                         }}>
-                          Correct answer: {q.options[correctIndex]?.text}
+                          Your answer: {userOpt.text}
                         </p>
+                      )}
+                      <p style={{
+                        fontSize: design.typography.micro.size,
+                        color: design.colors.success,
+                        margin: `${design.spacing.xs}px 0`,
+                      }}>
+                        Correct: {correctOpt?.text}
+                      </p>
+                      {q.explanation && (
+                        <div style={{ marginTop: design.spacing.xs, padding: `${design.spacing.sm}px ${design.spacing.md}px`, borderRadius: design.radius.sm, background: 'rgba(245,158,11,0.1)', borderLeft: '3px solid #f59e0b' }}>
+                          <p style={{ fontSize: design.typography.micro.size, color: '#fbbf24' }}><strong>Why?</strong> {q.explanation}</p>
+                        </div>
                       )}
                     </div>
                   );
@@ -2608,10 +2610,11 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
           ) : (
             renderButton('Submit Test', () => {
               if (testAnswers.every(a => a !== null)) {
+                const computedScore = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
                 setTestSubmitted(true);
-                emitEvent('game_completed', { score: testScore, total: testQuestions.length });
+                emitEvent('game_completed', { score: computedScore, total: testQuestions.length });
                 emitEvent('test_answered', {
-                  score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
+                  score: computedScore,
                   total: testQuestions.length
                 });
               }
@@ -2722,7 +2725,18 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             ))}
           </div>
 
-          {renderButton('Complete Lesson 🎉', () => emitEvent('mastery_achieved', { game: 'doppler_effect' }), 'primary', { size: 'lg' })}
+          {/* Fixed Complete Game button */}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: '1px solid rgba(71,85,105,0.3)', zIndex: 50 }}>
+            <button
+              onClick={() => {
+                emitEvent('mastery_achieved', { game: 'doppler_effect' });
+                window.location.href = '/games';
+              }}
+              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}
+            >
+              Complete Game
+            </button>
+          </div>
         </div>
 
         <style>{`

@@ -301,6 +301,7 @@ const typo = {
   const testQuestions = [
     {
       question: 'Why doesn\'t a fast-spinning top fall over immediately?',
+      explanation: 'A spinning top has angular momentum along its spin axis. Changing that axis direction requires torque applied over time, so the top resists tipping due to gyroscopic rigidity.',
       options: [
         { text: 'The spin creates centrifugal force that holds it up', correct: false },
         { text: 'Angular momentum resists changes to the spin axis direction', correct: true },
@@ -311,6 +312,7 @@ const typo = {
     },
     {
       question: 'What is precession in the context of a spinning top?',
+      explanation: 'Gravity\'s torque on a tilted top changes the direction of angular momentum, causing the spin axis to sweep out a cone shape rather than simply falling over.',
       options: [
         { text: 'The spin around the top\'s own axis', correct: false },
         { text: 'The slow circular motion of the tilted spin axis', correct: true },
@@ -321,6 +323,7 @@ const typo = {
     },
     {
       question: 'As a top slows down, its precession rate:',
+      explanation: 'Precession rate is inversely proportional to spin rate (Omega_prec = mgh/I*omega). As spin decreases, precession speeds up until the top becomes unstable.',
       options: [
         { text: 'Stays constant', correct: false },
         { text: 'Decreases', correct: false },
@@ -331,6 +334,7 @@ const typo = {
     },
     {
       question: 'What is a "sleeping" top?',
+      explanation: 'At very high spin rates, precession becomes negligibly slow and the top appears perfectly stationary and upright, as if "sleeping" on its tip.',
       options: [
         { text: 'A top that has fallen over', correct: false },
         { text: 'A top spinning so fast it appears motionless and perfectly upright', correct: true },
@@ -341,6 +345,7 @@ const typo = {
     },
     {
       question: 'What determines the minimum spin rate for a stable top?',
+      explanation: 'The critical spin rate depends on the balance between gravitational torque (trying to tip it) and gyroscopic stability (resisting tip changes). Below this threshold, gravity wins.',
       options: [
         { text: 'The color of the top', correct: false },
         { text: 'The balance between gravity torque and gyroscopic stability', correct: true },
@@ -351,6 +356,7 @@ const typo = {
     },
     {
       question: 'What causes nutation (the fast wobble superimposed on precession)?',
+      explanation: 'Nutation is a rapid oscillation of the tilt angle that occurs when the top is released with initial conditions that don\'t match steady precession, causing it to "wobble" as it adjusts.',
       options: [
         { text: 'Wind in the room', correct: false },
         { text: 'Oscillation of the tilt angle as the top adjusts to torques', correct: true },
@@ -361,6 +367,7 @@ const typo = {
     },
     {
       question: 'Why does gravity cause precession instead of simply tipping the top over?',
+      explanation: 'Gravity\'s torque is perpendicular to the angular momentum vector L, so it changes L\'s direction (precession) rather than its magnitude, just as a centripetal force curves a path without changing speed.',
       options: [
         { text: 'The angular momentum vector changes direction, not magnitude', correct: true },
         { text: 'Gravity is too weak to tip a spinning object', correct: false },
@@ -371,6 +378,7 @@ const typo = {
     },
     {
       question: 'What happens when a spinning top\'s angular momentum drops below a critical value?',
+      explanation: 'Below the critical angular momentum, gyroscopic stability is insufficient to resist gravity\'s torque, and the top\'s tilt increases rapidly until it falls over.',
       options: [
         { text: 'It speeds up', correct: false },
         { text: 'It becomes unstable and falls over', correct: true },
@@ -381,6 +389,7 @@ const typo = {
     },
     {
       question: 'The direction of precession depends on:',
+      explanation: 'The precession direction is determined by the cross product of torque and angular momentum vectors, which reverses when the spin direction is reversed.',
       options: [
         { text: 'The direction of gravity', correct: false },
         { text: 'The direction of spin (clockwise vs counterclockwise)', correct: true },
@@ -391,6 +400,7 @@ const typo = {
     },
     {
       question: 'Which principle explains why tops don\'t immediately fall?',
+      explanation: 'Conservation of angular momentum means the spin axis direction cannot change instantaneously. External torque is required over time, which manifests as precession rather than immediate collapse.',
       options: [
         { text: 'Conservation of energy', correct: false },
         { text: 'Conservation of angular momentum', correct: true },
@@ -1978,46 +1988,25 @@ const typo = {
               </p>
             </div>
 
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '700' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                        fontWeight: opt.correct ? '600' : 'normal',
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry', true)}
         </div>
@@ -2281,7 +2270,12 @@ const typo = {
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game →', true)}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

@@ -1762,22 +1762,24 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
                 : 'Review the concepts and try again.'}
             </p>
 
-            {/* Answer review indicators */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '24px' }}>
-              {testAnswers.map((ans, i) => {
-                const correct = testQuestions[i].options.find(o => o.correct)?.id;
+            {/* Answer review */}
+            <div style={{ padding: '16px', textAlign: 'left' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctAnswer;
                 return (
-                  <div key={i} style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: ans === correct ? colors.success : colors.error,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '24px',
-                    fontWeight: 600,
-                  }}>
-                    {i + 1}
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.label}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.label}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                   </div>
                 );
               })}

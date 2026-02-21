@@ -2261,7 +2261,12 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
             {renderTensorCoreVisualization()}
           </div>
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testAnswers.filter((a, i) => { const q = TEST_QUESTIONS[i]; const correctId = q.options.find(o => o.correct)?.id; return a === correctId; }).length, total: TEST_QUESTIONS.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

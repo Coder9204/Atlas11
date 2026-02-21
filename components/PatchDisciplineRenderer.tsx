@@ -244,6 +244,7 @@ const typo = {
         { text: 'C) The PR looks unprofessional — it should be one file only', correct: false },
         { text: 'D) Large PRs bypass code review requirements automatically', correct: false },
       ],
+      explanation: 'Mixing authentication changes, model refactoring, and API updates in one PR creates too many interacting concerns, making review nearly impossible and regression risk very high.',
     },
     {
       question: 'You doubled the size of a patch from 50 lines to 100 lines. Using the risk formula Risk = (lines/100)^1.5, how does regression risk actually scale?',
@@ -253,6 +254,7 @@ const typo = {
         { text: 'C) Sub-linearly — larger patches are proportionally safer', correct: false },
         { text: 'D) Risk is constant regardless of patch size', correct: false },
       ],
+      explanation: 'The 1.5-power scaling means doubling the lines causes more than double the risk because the number of potential interactions between changed lines grows combinatorially.',
     },
     {
       question: 'An LLM adds your requested feature but also renames 15 variables "for clarity" and extracts a helper function. The refactors are behavior-preserving. Should you keep them?',
@@ -262,6 +264,7 @@ const typo = {
         { text: 'C) Keep them, but do not mention it to reviewers', correct: false },
         { text: 'D) It makes no difference — combine them for efficiency', correct: false },
       ],
+      explanation: 'Unrequested refactors introduce untested code paths and expand the change surface area beyond what was reviewed, creating hidden risk that should be isolated in a separate PR.',
     },
     {
       question: 'Research shows a 10-line PR gets better review than a 500-line PR. What is the primary reason?',
@@ -271,6 +274,7 @@ const typo = {
         { text: 'C) Large PRs are automatically rejected by CI systems', correct: false },
         { text: 'D) Line count does not affect review quality in practice', correct: false },
       ],
+      explanation: 'Cognitive load limits mean reviewers can deeply analyze small changes and catch subtle bugs, but large diffs cause attention fatigue and rubber-stamp approvals.',
     },
     {
       question: 'What makes a patch "atomic" in the context of software engineering?',
@@ -280,6 +284,7 @@ const typo = {
         { text: 'C) It was never touched by tests before merge', correct: false },
         { text: 'D) It was written by exactly one developer', correct: false },
       ],
+      explanation: 'An atomic patch makes exactly one logical change that can be independently deployed, tested, and reverted without affecting unrelated functionality.',
     },
     {
       question: 'A production bug appears. You have two recent commits: (A) a 10-line focused fix, or (B) a 400-line "cleanup + feature + fix" commit. How does small-patch discipline help here?',
@@ -289,6 +294,7 @@ const typo = {
         { text: 'C) Rollbacks are never needed if you test thoroughly', correct: false },
         { text: 'D) Patch size does not affect rollback difficulty', correct: false },
       ],
+      explanation: 'Reverting a small focused fix has predictable, limited blast radius because you know exactly what changed, while reverting a mixed commit risks undoing unrelated work.',
     },
     {
       question: 'The prompt "Make the smallest possible diff that achieves the goal" is effective because:',
@@ -298,6 +304,7 @@ const typo = {
         { text: 'C) Smaller LLM responses are always more accurate', correct: false },
         { text: 'D) It is just a style preference with no measurable impact', correct: false },
       ],
+      explanation: 'Constraining the diff size forces the LLM to focus on the specific goal, preventing scope creep and reducing the surface area for unintended modifications.',
     },
     {
       question: 'When is it acceptable to mix refactoring with feature work in a single commit?',
@@ -307,6 +314,7 @@ const typo = {
         { text: 'C) Only when explicitly requested by the ticket and the refactor is essential for the feature', correct: true },
         { text: 'D) Whenever the surrounding code looks messy to you', correct: false },
       ],
+      explanation: 'Mixing refactoring with feature work is only acceptable when the refactor is a prerequisite for the feature and both are part of the same ticket scope.',
     },
     {
       question: 'The "show the patch" technique (asking an LLM to show a before/after diff) improves code quality by:',
@@ -316,6 +324,7 @@ const typo = {
         { text: 'C) Git requires diff format for all submissions', correct: false },
         { text: 'D) Smaller patch format reduces API costs per request', correct: false },
       ],
+      explanation: 'Seeing the exact diff makes every change explicit, enabling line-by-line verification that catches unintended modifications that would be invisible in full-file output.',
     },
     {
       question: 'The "surface area" of a code change refers to:',
@@ -325,6 +334,7 @@ const typo = {
         { text: 'C) The number of developers who contributed to the change', correct: false },
         { text: 'D) The file size in bytes after the change', correct: false },
       ],
+      explanation: 'Surface area represents the total code touched by a change, where each modified line creates potential interaction points with surrounding code that could introduce bugs.',
     },
   ];
 
@@ -1465,20 +1475,38 @@ const typo = {
                   {testScore >= 8 ? 'You understand patch discipline!' : 'Review the material and try again.'}
                 </p>
               </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16,185,129,0.2)' : userAnswer === oIndex ? 'rgba(239,68,68,0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? '✅ ' : userAnswer === oIndex ? '❌ ' : ''}{opt.text}
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
+                      {!isCorrect && (
+                        <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                          <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                          <span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                        <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                      </div>
+                      {q.explanation && (
+                        <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                          <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                          <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry', testScore < 8 ? () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); goToPhase('hook'); } : undefined)}
           </div>
@@ -1567,14 +1595,12 @@ const typo = {
             </div>
             {renderVisualization(true)}
           </div>
-          {renderBottomBar(true, true, 'Complete Game ✓', () => {
-            emitGameEvent('game_completed', {
-              phase: 'mastery',
-              score: testScore,
-              maxScore: 10,
-              message: 'Patch Discipline game completed!'
-            });
-          })}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+  <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+    style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+    Complete Game \u2192
+  </button>
+</div>
         </div>
       );
     }

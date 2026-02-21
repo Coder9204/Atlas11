@@ -238,6 +238,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   const testQuestions = [
     {
       question: 'What causes rolling shutter distortion?',
+      explanation: 'Rolling shutter sensors read pixels row by row from top to bottom. If the subject moves during this scan, different rows capture different positions, creating distortion.',
       options: [
         { text: 'The lens bending light incorrectly', correct: false },
         { text: 'Sequential row-by-row sensor scanning', correct: true },
@@ -247,6 +248,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'A spinning propeller appears bent because:',
+      explanation: 'As the sensor scans from top to bottom, the propeller blade moves to a new angular position for each row, so each row captures the blade at a different location.',
       options: [
         { text: 'The propeller is actually flexible', correct: false },
         { text: 'Different rows capture different blade positions', correct: true },
@@ -256,6 +258,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'When you pan a camera quickly to the right, vertical objects appear:',
+      explanation: 'During a rightward pan, the top rows are captured first. By the time lower rows are scanned, the scene has shifted, causing vertical objects to appear tilted/leaning.',
       options: [
         { text: 'Perfectly vertical', correct: false },
         { text: 'Tilted (leaning)', correct: true },
@@ -265,6 +268,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'Global shutter differs from rolling shutter because:',
+      explanation: 'A global shutter exposes all sensor pixels at the exact same instant, so every part of the frame captures the same moment in time, eliminating temporal distortion.',
       options: [
         { text: 'It\'s slower', correct: false },
         { text: 'All pixels are exposed simultaneously', correct: true },
@@ -274,6 +278,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'The direction of rolling shutter distortion depends on:',
+      explanation: 'Objects moving in the same direction as the scan appear stretched, while objects moving against it appear compressed. The distortion pattern directly depends on relative motion vs scan direction.',
       options: [
         { text: 'The camera brand', correct: false },
         { text: 'The direction of motion relative to scan direction', correct: true },
@@ -283,6 +288,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'Faster rolling shutter scan speeds result in:',
+      explanation: 'A faster scan means less time between the first and last row, so the subject moves less during the total scan period, producing less spatial distortion.',
       options: [
         { text: 'More distortion', correct: false },
         { text: 'Less distortion', correct: true },
@@ -292,6 +298,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'Which device typically has more rolling shutter issues?',
+      explanation: 'Smartphones use CMOS sensors with slower readout speeds compared to professional cinema cameras, resulting in a longer scan time and more pronounced rolling shutter artifacts.',
       options: [
         { text: 'Professional cinema camera', correct: false },
         { text: 'Smartphone camera', correct: true },
@@ -301,6 +308,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'Rolling shutter can cause problems with:',
+      explanation: 'Rolling shutter artifacts only appear when there is relative motion between the subject and camera during the sensor scan. Static scenes with a stationary camera show no distortion.',
       options: [
         { text: 'Still subjects only', correct: false },
         { text: 'Fast-moving subjects and camera motion', correct: true },
@@ -310,6 +318,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'The "jello effect" in video is caused by:',
+      explanation: 'Camera vibration causes the scene to shift between rows during each frame scan, making the image appear to wobble like gelatin. This is rolling shutter combined with high-frequency camera shake.',
       options: [
         { text: 'Camera shake combined with rolling shutter', correct: true },
         { text: 'Poor video compression', correct: false },
@@ -319,6 +328,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     },
     {
       question: 'To minimize rolling shutter in video, you should:',
+      explanation: 'Faster sensor readout reduces the time difference between rows, and global shutter eliminates it entirely. Both approaches minimize the temporal offset that causes distortion.',
       options: [
         { text: 'Use maximum zoom', correct: false },
         { text: 'Move the camera more quickly', correct: false },
@@ -2187,50 +2197,25 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
               </p>
             </div>
 
-            {/* Questions review */}
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
-                    margin: '12px 16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.danger}`
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '600', fontSize: '14px' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '10px 14px',
-                        marginBottom: '6px',
-                        borderRadius: '8px',
-                        background: opt.correct
-                          ? 'rgba(16,185,129,0.15)'
-                          : userAnswer === oIndex
-                            ? 'rgba(239,68,68,0.15)'
-                            : 'transparent',
-                        color: opt.correct
-                          ? colors.success
-                          : userAnswer === oIndex
-                            ? colors.danger
-                            : colors.textMuted,
-                        fontSize: '13px'
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -2494,7 +2479,12 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

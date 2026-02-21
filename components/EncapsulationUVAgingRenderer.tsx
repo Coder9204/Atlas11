@@ -216,61 +216,61 @@ const typo = {
       { text: 'UV radiation breaking polymer chains (photodegradation)', correct: true },
       { text: 'Chemical reaction with rainwater', correct: false },
       { text: 'Natural color change in silicon cells', correct: false },
-    ]},
+    ], explanation: 'UV photons carry enough energy (3-4 eV) to break C-C and C-O bonds in polymer chains, creating chromophores that absorb blue light and cause visible yellowing over time.' },
     { question: 'Which encapsulant material typically shows the most UV resistance?', options: [
       { text: 'Standard EVA (ethylene-vinyl acetate)', correct: false },
       { text: 'POE (polyolefin elastomer)', correct: false },
       { text: 'Silicone', correct: true },
       { text: 'PVB (polyvinyl butyral)', correct: false },
-    ]},
+    ], explanation: 'Silicone has a Si-O backbone that is inherently more resistant to UV degradation than carbon-based polymers, giving it the lowest degradation rate (k=0.003) compared to POE and EVA.' },
     { question: 'How does encapsulant yellowing affect solar panel output?', options: [
       { text: 'It increases electrical resistance in the cells', correct: false },
       { text: 'It reduces light transmission to the cells, lowering current', correct: true },
       { text: 'It causes short circuits between cells', correct: false },
       { text: 'It has no effect on electrical output', correct: false },
-    ]},
+    ], explanation: 'Yellowed encapsulant absorbs more light before it reaches the solar cells, reducing the photocurrent generated. Each percentage of transmittance loss directly reduces power output.' },
     { question: 'Why do glass/glass modules typically show less encapsulant degradation?', options: [
       { text: 'The glass absorbs heat that would damage the encapsulant', correct: false },
       { text: 'Glass provides a better moisture barrier, reducing hydrolysis', correct: true },
       { text: 'Glass reflects UV away from the encapsulant', correct: false },
       { text: 'Glass/glass modules are always made with better encapsulants', correct: false },
-    ]},
+    ], explanation: 'Glass is essentially impermeable to water vapor, while polymer backsheets allow 1-5 g/m2/day of moisture ingress. This moisture accelerates hydrolysis of EVA acetate groups, compounding UV damage.' },
     { question: 'What is chain scission in polymer degradation?', options: [
       { text: 'The linking of polymer chains to form a network', correct: false },
       { text: 'The breaking of polymer chains into shorter fragments', correct: true },
       { text: 'The crystallization of polymer molecules', correct: false },
       { text: 'The absorption of water by polymer chains', correct: false },
-    ]},
+    ], explanation: 'Chain scission is the UV-induced breaking of long polymer chains into shorter fragments, which disrupts the material\'s optical clarity and mechanical properties.' },
     { question: 'Typical EVA encapsulant starts with about 91% transmittance. After 25 years of UV exposure, a well-designed module might drop to:', options: [
       { text: '50-60% transmittance (major loss)', correct: false },
       { text: '70-75% transmittance (significant loss)', correct: false },
       { text: '85-88% transmittance (moderate loss)', correct: true },
       { text: '90-91% transmittance (negligible loss)', correct: false },
-    ]},
+    ], explanation: 'Well-formulated EVA with UV stabilizers typically loses 3-6% transmittance over 25 years, resulting in 85-88% transmittance. This corresponds to roughly 3-5% power loss from encapsulant yellowing alone.' },
     { question: 'The yellowing index of an encapsulant typically follows which pattern over time?', options: [
       { text: 'Linear increase throughout the lifetime', correct: false },
       { text: 'Rapid initial yellowing that slows down (saturating exponential)', correct: true },
       { text: 'No change for 20 years, then sudden yellowing', correct: false },
       { text: 'Yellowing decreases after initial increase', correct: false },
-    ]},
+    ], explanation: 'Yellowing follows a saturating exponential because the most vulnerable polymer bonds break first, and as these are consumed, fewer susceptible bonds remain, so the degradation rate decreases over time.' },
     { question: 'What role do UV stabilizers play in encapsulant formulations?', options: [
       { text: 'They absorb UV and convert it to heat, protecting the polymer', correct: true },
       { text: 'They make the encapsulant harder and more rigid', correct: false },
       { text: 'They increase the initial transparency of the encapsulant', correct: false },
       { text: 'They prevent the encapsulant from melting in hot weather', correct: false },
-    ]},
+    ], explanation: 'UV stabilizers (like HALS and UV absorbers) intercept UV photons and dissipate their energy as harmless heat, preventing the photons from breaking polymer bonds.' },
     { question: 'In accelerated aging tests, how is 25 years of outdoor UV exposure typically simulated?', options: [
       { text: 'Exposure to high temperature for 25 days', correct: false },
       { text: 'Intense UV lamps for 1000+ hours at elevated temperature', correct: true },
       { text: 'Soaking in salt water for several months', correct: false },
       { text: 'Repeated freeze-thaw cycles over 6 months', correct: false },
-    ]},
+    ], explanation: 'Accelerated aging per IEC 61215 uses xenon or UV fluorescent lamps at intensities many times stronger than sunlight, combined with elevated temperature and humidity, to compress decades of degradation into months.' },
     { question: 'Why is the combination of UV exposure and moisture particularly damaging to EVA?', options: [
       { text: 'Water conducts electricity through the damaged encapsulant', correct: false },
       { text: 'UV creates radicals, and moisture enables hydrolysis of acetate groups, forming acetic acid', correct: true },
       { text: 'Moisture blocks UV from being absorbed evenly', correct: false },
       { text: 'Water makes the EVA expand and crack', correct: false },
-    ]},
+    ], explanation: 'UV generates free radicals that initiate chain scission, while moisture attacks acetate side groups through hydrolysis, producing acetic acid that further catalyzes degradation in a destructive feedback loop.' },
   ];
 
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
@@ -1174,22 +1174,23 @@ const typo = {
                 {testScore >= 8 ? 'You understand UV aging in solar panels!' : 'Review the material and try again.'}
               </p>
             </div>
-            <div style={{ maxHeight: '400px', overflowY: 'auto', margin: '0 16px' }}>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
                 const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
                 return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '8px 0', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold' }}>Question {qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{
-                        padding: '6px 12px', marginBottom: '4px', borderRadius: '6px',
-                        background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}>
-                        {opt.correct ? '✓ Correct: ' : userAnswer === oIndex ? '✗ Your answer: ' : ''}{opt.text}
-                      </div>
-                    ))}
+                  <div key={idx} style={{ background: colors.bgCard, margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: colors.warning, fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                   </div>
                 );
               })}
@@ -1360,7 +1361,12 @@ const typo = {
             </p>
           </div>
         </div>
-        {renderBottomBar(true, 'Complete Lesson →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

@@ -271,6 +271,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) An optical illusion in the human eye', correct: false },
         { text: 'D) Motion blur averaging the spokes', correct: false },
       ],
+      explanation: 'The camera samples the wheel position at discrete intervals (24 times per second). Between frames, the spokes move to new positions that may not represent their true continuous motion. This discrete sampling creates temporal aliasing artifacts.',
     },
     {
       question: 'B) A wheel with 8 spokes spinning at 8 rotations/second filmed at 8 fps will appear:',
@@ -281,6 +282,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Stationary or frozen', correct: true },
         { text: 'D) Blurred beyond recognition', correct: false },
       ],
+      explanation: 'When the frame rate exactly matches the rotation rate, each frame captures the wheel in the same position (one full rotation between frames). With 8 identical spokes, even sub-rotation matches create the frozen appearance.',
     },
     {
       question: 'C) If a wheel appears to spin backward on video, the true rotation is:',
@@ -291,6 +293,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Forward, but slightly more than a spoke spacing per frame', correct: true },
         { text: 'D) Zero — the wheel is stopped', correct: false },
       ],
+      explanation: 'When the wheel advances slightly more than one spoke spacing between frames, the nearest spoke in each frame appears to have moved backward by a small amount. The brain interprets this as backward rotation, even though the wheel is spinning forward.',
     },
     {
       question: 'D) The Nyquist theorem states that to avoid aliasing, sampling rate must be:',
@@ -301,6 +304,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Half the signal frequency', correct: false },
         { text: 'D) Any frequency works equally well', correct: false },
       ],
+      explanation: 'The Nyquist-Shannon theorem proves that to faithfully reconstruct a signal, you must sample at least twice its highest frequency. Below this threshold, aliasing occurs and the reconstructed signal contains false low-frequency components.',
     },
     {
       question: 'E) Increasing frame rate while wheel speed stays constant will:',
@@ -311,6 +315,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Have no effect on apparent motion', correct: false },
         { text: 'D) Always reverse the apparent direction', correct: false },
       ],
+      explanation: 'Higher frame rates sample the wheel more frequently, reducing the angular displacement between frames. This changes the aliasing pattern and generally reduces artifacts, though the specific apparent motion depends on the exact ratio of rotation speed to frame rate.',
     },
     {
       question: 'F) The wagon wheel effect can also occur in real life under:',
@@ -321,6 +326,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Only in complete darkness', correct: false },
         { text: 'D) Only in bright direct sunlight', correct: false },
       ],
+      explanation: 'Flickering light sources (strobes, fluorescent lights at 50/60 Hz, PWM-dimmed LEDs) act as temporal samplers just like camera frames. They illuminate the scene at discrete intervals, creating the same aliasing conditions as a camera.',
     },
     {
       question: 'G) When filming a car wheel at highway speed, why might it appear nearly stationary?',
@@ -331,6 +337,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Frame rate nearly matches spoke passage rate', correct: true },
         { text: 'D) The camera is broken', correct: false },
       ],
+      explanation: 'When the spoke passage rate (rotations/sec x number of spokes) is very close to the frame rate, each frame captures the spokes in nearly the same position. The small mismatch produces very slow apparent motion or near-frozen appearance.',
     },
     {
       question: 'H) Aliasing in the wagon wheel effect is most similar to:',
@@ -341,6 +348,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Lens distortion effects', correct: false },
         { text: 'D) Depth of field blur', correct: false },
       ],
+      explanation: 'Beat frequencies occur when two close frequencies interfere, producing a low-frequency oscillation. Similarly, wagon wheel aliasing produces apparent low-frequency motion from the "beat" between the rotation frequency and the sampling frequency.',
     },
     {
       question: 'I) To show true wheel motion without aliasing at 30fps, the wheel should spin at most:',
@@ -351,6 +359,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) 60 rotations per second', correct: false },
         { text: 'D) Speed doesn\'t matter for detection', correct: false },
       ],
+      explanation: 'By the Nyquist theorem, 30fps can faithfully capture motion up to 15 Hz (half the sampling rate). Above 15 rotations/second, the wheel\'s motion will alias, potentially appearing stationary or reversed - a serious safety hazard.',
     },
     {
       question: 'J) In old Western movies, stagecoach wheels often appeared to spin backward because:',
@@ -361,6 +370,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         { text: 'C) Low frame rates caused aliasing with wheel rotation', correct: true },
         { text: 'D) It was an intentional special effect', correct: false },
       ],
+      explanation: 'Early cinema used 24fps, which frequently aliased with stagecoach wheel rotation rates. When the spoke advancement per frame slightly exceeded one spoke spacing, backward apparent motion resulted. This classic artifact gave the effect its name.',
     },
   ];
 
@@ -1715,60 +1725,48 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 </p>
               </div>
 
-              <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: '16px', fontWeight: '700', lineHeight: '1.4' }}>📊 Answer Review</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-                  {testQuestions.map((q, qIndex) => {
-                    const userAnswer = testAnswers[qIndex];
-                    const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                    return (
-                      <div key={qIndex} style={{
-                        width: '40px', height: '40px', borderRadius: '8px',
-                        background: isCorrect ? colors.success : colors.error,
-                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '16px', fontWeight: 'bold',
-                      }}>
-                        {isCorrect ? '✓' : '✗'}
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, qIndex) => {
+                  const userAnswer = testAnswers[qIndex];
+                  const correctOption = q.options.find(o => o.correct);
+                  const correctIdx = q.options.indexOf(correctOption!);
+                  const isCorrect = userAnswer === correctIdx;
+                  const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                  return (
+                    <div key={qIndex} style={{
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      margin: '12px 0',
+                      padding: '16px',
+                      borderRadius: '10px',
+                      borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </span>
+                        <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                          Q{qIndex + 1}. {q.question}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{
-                    background: colors.bgCard, marginBottom: '12px', padding: '16px', borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                    border: `1px solid rgba(255,255,255,0.1)`,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
-                      <div style={{
-                        width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
-                        background: isCorrect ? colors.success : colors.error,
-                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '12px', fontWeight: 'bold',
-                      }}>
-                        {isCorrect ? '✓' : '✗'}
+                      {!isCorrect && (
+                        <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                          <span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span>
+                          <span style={{ color: colors.textMuted, fontSize: '13px' }}>{userOption?.text}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                        <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                        <span style={{ color: colors.textMuted, fontSize: '13px' }}>{correctOption?.text}</span>
                       </div>
-                      <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0, fontSize: '14px', lineHeight: '1.5' }}>
-                        Question {qIndex + 1}: {q.question}
-                      </p>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                        <span style={{ color: colors.warning, fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                        <span style={{ color: colors.textMuted, fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                      </div>
                     </div>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{
-                        padding: '6px 10px', marginBottom: '3px', borderRadius: '5px', fontSize: '13px', lineHeight: '1.5',
-                        background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}>
-                        {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
           <div style={{
@@ -2009,7 +2007,12 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             {renderVisualization(true)}
           </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

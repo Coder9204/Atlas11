@@ -243,6 +243,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'The tape reflects colored light from the room', correct: false },
         { text: 'Chemical reactions occur in the tape', correct: false },
       ],
+      explanation: 'Manufacturing stretches polymer chains into alignment, creating two different refractive indices. Different wavelengths have their polarization rotated by different amounts, producing vivid colors.',
     },
     {
       question: 'Adding more layers of tape changes the color because:',
@@ -252,6 +253,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'The tape layers chemically react', correct: false },
         { text: 'Light diffracts between layers', correct: false },
       ],
+      explanation: 'Polarization rotation is proportional to path length through birefringent material. More layers mean more total thickness and more rotation, shifting which wavelengths pass the analyzer.',
     },
     {
       question: 'Rotating the analyzer polarizer causes colors to:',
@@ -261,6 +263,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'Become brighter only', correct: false },
         { text: 'Disappear completely', correct: false },
       ],
+      explanation: 'Rotating the analyzer changes which polarization components pass through. Wavelengths that were blocked become transmitted and vice versa, cycling through complementary color pairs.',
     },
     {
       question: 'The birefringence in tape comes from:',
@@ -270,6 +273,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'Air bubbles in the tape', correct: false },
         { text: 'Reflections from the tape surface', correct: false },
       ],
+      explanation: 'During manufacturing, the tape backing is stretched, aligning polymer chains in one direction. This creates anisotropy: light polarized along vs. across the chains travels at different speeds.',
     },
     {
       question: 'Heating tape causes color shifts because:',
@@ -279,6 +283,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'Hot colors mix with tape colors', correct: false },
         { text: 'Heat creates new chemical bonds', correct: false },
       ],
+      explanation: 'Heat allows polymer chains to relax from their stretched alignment, reducing the difference between the two refractive indices. Less birefringence means less polarization rotation and different colors.',
     },
     {
       question: 'Different wavelengths of light through birefringent tape:',
@@ -288,6 +293,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'Are all absorbed equally', correct: false },
         { text: 'Travel at the same speed', correct: false },
       ],
+      explanation: 'Birefringence is wavelength-dependent (dispersion). Red, green, and blue light each experience different phase retardation, so some colors pass the analyzer while others are blocked, producing vivid hues.',
     },
     {
       question: 'LCD screens use a similar principle because:',
@@ -297,6 +303,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'LCDs emit polarized light naturally', correct: false },
         { text: 'LCD pixels contain colored tape', correct: false },
       ],
+      explanation: 'LCDs use polarizers with liquid crystals between them. Applying voltage changes the crystal alignment, controlling birefringence and thus how much light passes through each pixel.',
     },
     {
       question: 'Looking at a laptop screen through polarized sunglasses sometimes shows:',
@@ -306,6 +313,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'Magnification of the image', correct: false },
         { text: 'Sharper image quality', correct: false },
       ],
+      explanation: 'LCD screens emit polarized light through their front polarizer. Your sunglasses act as a second polarizer. Tilting your head changes the angle between them, causing color shifts or blackout.',
     },
     {
       question: 'Why do different tape brands show different colors?',
@@ -315,6 +323,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'They reflect light differently', correct: false },
         { text: 'They are made at different temperatures', correct: false },
       ],
+      explanation: 'Different manufacturing processes (stretch ratio, temperature, polymer type) produce different levels of molecular alignment, resulting in different birefringence values and therefore different colors.',
     },
     {
       question: 'To see tape birefringence colors, you need:',
@@ -324,6 +333,7 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
         { text: 'A laser light source', correct: false },
         { text: 'A magnifying glass', correct: false },
       ],
+      explanation: 'You need a polarizer to create polarized light, the birefringent tape to rotate different wavelengths by different amounts, and an analyzer polarizer to convert the rotation into visible color.',
     },
   ];
 
@@ -1358,18 +1368,26 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
               <h2 style={{ color: testScore >= 8 ? colors.success : colors.error }}>{testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}</h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>{opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}</div>
-                  ))}
-                </div>
-              );
-            })}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review and Retry')}
         </div>
@@ -1421,7 +1439,12 @@ const [currentAppIndex, setCurrentAppIndex] = useState(0);
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

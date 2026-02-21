@@ -254,7 +254,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Gravity pulling the water chain", correct: false },
         { text: "Atmospheric pressure difference", correct: true },
         { text: "Capillary action", correct: false }
-      ]
+      ],
+      explanation: "Atmospheric pressure at the source surface pushes water up into the tube, while gravity pulls the water column down on the outlet side. The pressure difference between the two ends drives continuous flow."
     },
     {
       question: "To start a siphon, you must first:",
@@ -263,7 +264,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Fill the tube with liquid (prime it)", correct: true },
         { text: "Heat the water", correct: false },
         { text: "Seal both ends", correct: false }
-      ]
+      ],
+      explanation: "Priming fills the tube with an unbroken liquid column, which is essential for atmospheric pressure to transmit force through the liquid chain from the source to the outlet."
     },
     {
       question: "Where does the water exit need to be relative to the source?",
@@ -272,7 +274,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "At the same level", correct: false },
         { text: "Below the source surface", correct: true },
         { text: "Position doesn't matter", correct: false }
-      ]
+      ],
+      explanation: "The outlet must be lower than the source surface so that the weight of the descending water column creates a net pressure difference that sustains flow. If the outlet is at or above the source level, there is no driving force."
     },
     {
       question: "What is the maximum height water can be siphoned over at sea level?",
@@ -281,7 +284,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "About 10 meters", correct: true },
         { text: "About 1 meter", correct: false },
         { text: "About 100 meters", correct: false }
-      ]
+      ],
+      explanation: "Atmospheric pressure (101 kPa) can support a water column of about 10.3 meters (P = rho*g*h). Beyond this height, the pressure at the top of the siphon drops to zero and the water column breaks."
     },
     {
       question: "Why does a siphon FAIL in a perfect vacuum?",
@@ -290,7 +294,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "No atmospheric pressure to push water up", correct: true },
         { text: "Gravity doesn't work", correct: false },
         { text: "Water evaporates", correct: false }
-      ]
+      ],
+      explanation: "Without atmospheric pressure acting on the source surface, there is no force to push water up into and through the tube. The siphon relies on atmospheric pressure to maintain the liquid column against gravity."
     },
     {
       question: "If an air bubble enters a working siphon, what happens?",
@@ -299,7 +304,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Nothing changes", correct: false },
         { text: "Flow stops (siphon breaks)", correct: true },
         { text: "Bubble dissolves", correct: false }
-      ]
+      ],
+      explanation: "An air bubble breaks the continuous liquid column that transmits pressure from one end to the other. Without this unbroken chain, atmospheric pressure can no longer push water through the tube."
     },
     {
       question: "Why does siphon flow rate increase with greater height difference?",
@@ -308,7 +314,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Greater pressure differential", correct: true },
         { text: "Wider tube", correct: false },
         { text: "Hotter water", correct: false }
-      ]
+      ],
+      explanation: "A larger height difference between source and outlet creates a greater pressure differential (P = rho*g*h). This larger driving force accelerates the water, increasing the flow rate through the tube."
     },
     {
       question: "Ancient Romans used siphons for:",
@@ -317,7 +324,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Aqueducts crossing valleys", correct: true },
         { text: "Heating baths", correct: false },
         { text: "Weapons", correct: false }
-      ]
+      ],
+      explanation: "Romans built inverted siphons to carry aqueduct water across valleys. The water flowed downhill into a sealed pipe, across the valley floor, and back up the other side, driven by the pressure from the higher inlet."
     },
     {
       question: "A gasoline siphon stops working when:",
@@ -326,7 +334,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Temperature drops", correct: false },
         { text: "It gets too fast", correct: false },
         { text: "The tube is too long horizontally", correct: false }
-      ]
+      ],
+      explanation: "A siphon requires liquid in the source and an outlet below the source level. If fuel runs out, the liquid column breaks. If the outlet rises above the inlet, the pressure differential reverses and flow stops."
     },
     {
       question: "The scientific principle behind siphons is best explained by:",
@@ -335,7 +344,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
         { text: "Atmospheric pressure pushing, gravity pulling", correct: true },
         { text: "Surface tension", correct: false },
         { text: "Cohesion only", correct: false }
-      ]
+      ],
+      explanation: "Siphons work through the combined action of atmospheric pressure (which pushes liquid up into the tube at the source) and gravity (which pulls the liquid column down on the outlet side), creating continuous flow without any pump."
     },
   ];
 
@@ -2724,30 +2734,26 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {testQuestions.map((q, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      padding: '14px',
-                      background: colors.background,
-                      borderRadius: '10px',
-                      borderLeft: `4px solid ${q.options[testAnswers[i]].correct ? colors.success : colors.accent}`
-                    }}
-                  >
-                    <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
-                      {i + 1}. {q.question}
-                    </p>
-                    <p style={{
-                      color: q.options[testAnswers[i]].correct ? colors.success : colors.accent,
-                      margin: '0 0 4px 0',
-                      fontSize: '12px'
-                    }}>
-                      {q.options[testAnswers[i]].correct ? '✓ ' : '✗ '}Your answer: {q.options[testAnswers[i]].text}
-                      {q.options[testAnswers[i]].correct ? '' : ` — Correct: ${q.options.find(o => o.correct)?.text}`}
-                    </p>
-                  </div>
-                ))}
+              {/* Answer Key */}
+              <div style={{ padding: '0' }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const userOption = userAnswer !== undefined ? q.options[userAnswer] : null;
+                  const isCorrect = userOption?.correct === true;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? colors.success : '#ef4444'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? colors.success : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                      </div>
+                      {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.text}</span></div>)}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Quiz navigation buttons */}
@@ -2875,8 +2881,15 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
 
         <div style={{ marginTop: '24px', textAlign: 'center' }}>
           <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-            💧 You now understand the ancient physics that still moves water around the world today!
+            You now understand the ancient physics that still moves water around the world today!
           </p>
+        </div>
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onPhaseComplete?.(); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
         </div>
       </div>
     );

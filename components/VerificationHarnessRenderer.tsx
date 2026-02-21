@@ -246,6 +246,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'They were not trained on fast code', correct: false },
         { text: 'Performance is subjective', correct: false },
       ],
+      explanation: 'Performance depends on hardware architecture, cache behavior, branch prediction, memory access patterns, and compiler optimizations, none of which an LLM can simulate.',
     },
     {
       question: 'What does "performance is physics" mean?',
@@ -255,6 +256,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'Computers use physics to run', correct: false },
         { text: 'Fast code follows physical laws', correct: false },
       ],
+      explanation: 'Code execution consumes real CPU cycles and energy that can only be quantified through measurement, making performance an empirical physical phenomenon.',
     },
     {
       question: 'A benchmark shows 2x speedup. What is missing?',
@@ -264,6 +266,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'More optimization to get 4x speedup', correct: false },
         { text: 'A faster computer', correct: false },
       ],
+      explanation: 'A faster function that produces wrong results is worthless, so correctness verification must accompany any performance claim.',
     },
     {
       question: 'Why require "before/after" benchmark results from LLMs?',
@@ -273,6 +276,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'To check the LLM did any work', correct: false },
         { text: 'Benchmarks are required by coding standards', correct: false },
       ],
+      explanation: 'Before/after benchmarks provide empirical evidence that the optimization actually improved performance rather than just rearranging code.',
     },
     {
       question: 'What is a flamegraph?',
@@ -282,6 +286,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'A graph of fire risk in data centers', correct: false },
         { text: 'A colorful code coverage report', correct: false },
       ],
+      explanation: 'A flamegraph visualizes the call stack over time, showing which functions consume the most CPU time and where optimization efforts should focus.',
     },
     {
       question: 'Why add flamegraph summaries as required artifacts?',
@@ -291,6 +296,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'They are required by most frameworks', correct: false },
         { text: 'They replace unit tests', correct: false },
       ],
+      explanation: 'Flamegraphs reveal whether the optimization targeted the actual performance bottleneck or just modified code that was already fast.',
     },
     {
       question: 'An LLM claims it "optimized" a function. Without benchmarks, you have:',
@@ -300,6 +306,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'A better algorithm', correct: false },
         { text: 'Trustworthy code', correct: false },
       ],
+      explanation: 'Without measurement, you only have a code transformation with no evidence of improvement, and the change may have actually degraded performance.',
     },
     {
       question: 'Why keep correctness tests alongside performance tests?',
@@ -309,6 +316,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'Correctness tests are easier to write', correct: false },
         { text: 'They run automatically anyway', correct: false },
       ],
+      explanation: 'Correctness tests ensure that performance improvements do not sacrifice the accuracy of results, since fast wrong answers are worse than slow correct ones.',
     },
     {
       question: 'What is a "performance regression guardrail"?',
@@ -318,6 +326,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'A manual code review step', correct: false },
         { text: 'A type of firewall', correct: false },
       ],
+      explanation: 'A performance regression guardrail is an automated CI check that compares benchmarks against baselines and fails the build if performance degrades beyond a threshold.',
     },
     {
       question: 'The prompt "Add a benchmark; show before/after; keep correctness tests" ensures:',
@@ -327,6 +336,7 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
         { text: 'The code follows best practices', correct: false },
         { text: 'The optimization will definitely work', correct: false },
       ],
+      explanation: 'This prompt creates a complete verification loop: benchmark proves the speedup, before/after shows the delta, and correctness tests ensure safety.',
     },
   ];
 
@@ -1551,20 +1561,22 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
                   {testScore >= 8 ? 'You understand verification harnesses!' : 'Review the material and try again.'}
                 </p>
               </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
+              <div style={{ padding: '16px' }}>
+  <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+  {testQuestions.map((q, idx) => {
+    const userAnswer = testAnswers[idx]; const correctOption = q.options.find(o => o.correct); const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+    return (
+      <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+          <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+        </div>
+        {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+        <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+        {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
+      </div>);
+  })}
+</div>
             </div>
             {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore < 8 ? () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); goToPhase('hook'); } : undefined)}
           </>
@@ -1642,14 +1654,12 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
             </div>
             {renderVisualization(true, true)}
           </div>
-          {renderBottomBar(true, true, 'Complete Game', () => {
-            emitGameEvent('game_completed', {
-              phase: 'mastery',
-              score: testScore,
-              maxScore: 10,
-              message: 'Verification Harness game completed!'
-            });
-          })}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+  <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+    style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+    Complete Game \u2192
+  </button>
+</div>
         </>
       );
     }

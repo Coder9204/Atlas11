@@ -607,6 +607,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 1,
       question: 'What is the Froude number in the supercritical region (before the jump)?',
+      explanation: 'Before the jump, flow velocity exceeds the shallow-water wave speed, giving a Froude number greater than 1 -- the definition of supercritical flow.',
       options: [
         { id: 'a', text: 'Froude number is less than 1 (subcritical)' },
         { id: 'b', text: 'Froude number is exactly equal to 1' },
@@ -617,6 +618,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 2,
       question: 'What happens to water depth at the hydraulic jump?',
+      explanation: 'At the jump, kinetic energy converts to potential energy and turbulence, causing the thin fast layer to abruptly thicken into a deeper, slower flow.',
       options: [
         { id: 'a', text: 'Depth decreases suddenly and dramatically' },
         { id: 'b', text: 'Depth increases suddenly and dramatically', correct: true },
@@ -627,6 +629,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 3,
       question: 'Why does a hydraulic jump occur?',
+      explanation: 'When fast shallow (supercritical) flow must transition to slow deep (subcritical) flow, it cannot do so gradually -- momentum conservation forces an abrupt step change.',
       options: [
         { id: 'a', text: 'Water freezes at that specific point' },
         { id: 'b', text: 'Surface tension pulls the water upward' },
@@ -637,6 +640,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 4,
       question: 'How does increasing flow rate affect the jump radius?',
+      explanation: 'Higher flow rate means more momentum in the supercritical region, pushing the transition point farther from center before friction and gravity slow it enough to trigger the jump.',
       options: [
         { id: 'a', text: 'Jump moves closer to the center point' },
         { id: 'b', text: 'Jump moves farther from the center point', correct: true },
@@ -647,6 +651,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 5,
       question: 'What happens to energy at the hydraulic jump?',
+      explanation: 'The jump is an irreversible process: mechanical energy is converted into turbulent kinetic energy and ultimately heat, so total mechanical energy decreases across the jump.',
       options: [
         { id: 'a', text: 'Energy is created from nothing' },
         { id: 'b', text: 'Energy is perfectly conserved without loss' },
@@ -657,6 +662,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 6,
       question: 'Why are hydraulic jumps used in dam spillways?',
+      explanation: 'Stilling basins are designed to trigger hydraulic jumps that convert destructive high-velocity flow into slower turbulent flow, protecting the downstream riverbed from erosion.',
       options: [
         { id: 'a', text: 'To make the water appear more attractive' },
         { id: 'b', text: 'To dissipate energy and prevent downstream erosion', correct: true },
@@ -667,6 +673,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 7,
       question: 'What characterizes supercritical flow?',
+      explanation: 'Supercritical flow has high velocity and shallow depth, meaning the flow speed exceeds the wave propagation speed in the shallow layer (Fr > 1).',
       options: [
         { id: 'a', text: 'Slow velocity and deep water layer' },
         { id: 'b', text: 'Fast velocity and shallow water layer', correct: true },
@@ -677,6 +684,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 8,
       question: 'A rough surface compared to a smooth surface will cause the jump to occur:',
+      explanation: 'Surface roughness increases friction, which decelerates the supercritical flow faster, causing it to reach the critical Froude number sooner and closer to the center.',
       options: [
         { id: 'a', text: 'Closer to the center due to increased friction', correct: true },
         { id: 'b', text: 'Farther from the center with less friction' },
@@ -687,6 +695,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 9,
       question: 'The hydraulic jump is analogous to which phenomenon in aerodynamics?',
+      explanation: 'Both involve a sudden transition from supercritical to subcritical flow -- in water it is a hydraulic jump, in compressible gas it is a shock wave with the same governing mathematics.',
       options: [
         { id: 'a', text: 'Smooth laminar flow in wind tunnels' },
         { id: 'b', text: 'Shock wave from supersonic aircraft', correct: true },
@@ -697,6 +706,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     {
       id: 10,
       question: 'If you reduced gravity (like on the Moon), the hydraulic jump would:',
+      explanation: 'Lower gravity reduces the restoring force that creates the jump, so the supercritical flow persists farther before transitioning, pushing the jump radius outward.',
       options: [
         { id: 'a', text: 'Not occur at all in reduced gravity' },
         { id: 'b', text: 'Occur much closer to the center point' },
@@ -1562,80 +1572,38 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               </p>
             </div>
 
-            {testQuestions.map((q, idx) => {
-              const correctOption = q.options.find(o => o.correct);
-              const userAnswer = testAnswers[q.id];
-              const qIsCorrect = userAnswer === correctOption?.id;
-
-              return (
-                <div
-                  key={q.id}
-                  style={{
-                    background: qIsCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${qIsCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    margin: '12px 16px',
-                    padding: '14px',
-                    borderRadius: '10px',
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: qIsCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {qIsCorrect ? '\u2713' : '\u2717'}
-                    </span>
-                    <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Question {idx + 1} of {testQuestions.length}
-                    </span>
+            {/* Rich Answer Key */}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[q.id];
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctAnswer;
+                return (
+                  <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text || 'No answer'}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
                   </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
-                    {q.question}
-                  </p>
-                  {!qIsCorrect && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct: {correctOption?.text}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-
-            <div style={{ padding: '16px', display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers({});
-                  setCurrentQuestion(0);
-                }}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: 'rgba(71, 85, 105, 0.5)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: colors.textSecondary,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Replay Quiz
-              </button>
-              <button
-                onClick={goToNextPhase}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: colors.textPrimary,
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Continue
-              </button>
+                );
+              })}
             </div>
           </div>
           {renderBottomBar(true, true, score >= 70 ? 'Complete!' : 'Review & Continue \u2192')}
@@ -1723,7 +1691,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                     </button>
                   ) : (
                     <button
-                      onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+                      onClick={() => { setTestSubmitted(true); const s = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; onGameEvent?.({ type: 'game_completed', details: { score: s, total: testQuestions.length } }); }}
                       style={{
                         width: '100%',
                         padding: '12px',
@@ -1809,7 +1777,12 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game \u2192')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

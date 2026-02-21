@@ -282,6 +282,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Both surfaces - all smooth surfaces are hydrophobic', correct: false },
         { text: 'Neither - superhydrophobic requires water to bounce off', correct: false },
       ],
+      explanation: 'A contact angle above 150 degrees causes the droplet to form a near-perfect sphere with minimal surface contact -- the defining hallmark of superhydrophobicity.',
     },
     {
       question: 'Scenario: A lotus leaf in a muddy pond stays perfectly clean while a regular leaf gets coated in mud. What two features combine to create this self-cleaning effect?',
@@ -291,6 +292,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Electrical charge and magnetic repulsion', correct: false },
         { text: 'Smooth surface coating and high surface tension', correct: false },
       ],
+      explanation: 'The lotus effect requires both hierarchical roughness (micro-bumps plus nano-pillars) and waxy low-energy chemistry working together to trap air and repel water.',
     },
     {
       question: 'Scenario: In the Cassie-Baxter state, a water droplet on a textured surface appears to "float." What is physically happening underneath the droplet?',
@@ -300,33 +302,37 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'The droplet absorbs into the material at the nano level', correct: false },
         { text: 'Chemical bonds form between water and surface atoms', correct: false },
       ],
+      explanation: 'In the Cassie-Baxter state, air is trapped in the micro/nano texture beneath the droplet. The droplet contacts only the tips of surface features, resting mostly on air.',
     },
     {
-      question: 'Scenario: A perfectly superhydrophobic surface is tested, then a tiny drop of dish soap is added to the water. The contact angle drops from 160° to 35°. What caused this?',
+      question: 'Scenario: A perfectly superhydrophobic surface is tested, then a tiny drop of dish soap is added to the water. The contact angle drops from 160 to 35 degrees. What caused this?',
       options: [
         { text: 'The soap heated the water, changing its density', correct: false },
         { text: 'The soap changed the water color making it absorb more', correct: false },
         { text: 'The soap (surfactant) lowered water surface tension, allowing it to wet the texture', correct: true },
         { text: 'The soap made the water molecules heavier', correct: false },
       ],
+      explanation: 'Surfactants drastically reduce water\'s surface tension, allowing the liquid to penetrate the texture and collapse the air pockets -- transitioning from Cassie-Baxter to Wenzel state.',
     },
     {
-      question: 'Young\'s equation (cos θ = (γSV - γSL) / γLV) relates contact angle to surface tensions. What does γLV represent?',
+      question: 'Young\'s equation (cos theta = (gamma_SV - gamma_SL) / gamma_LV) relates contact angle to surface tensions. What does gamma_LV represent?',
       options: [
         { text: 'Temperature and pressure at the contact line', correct: false },
         { text: 'The liquid-vapor interface surface tension', correct: true },
         { text: 'Water volume divided by droplet size', correct: false },
         { text: 'Gravitational constant times air resistance', correct: false },
       ],
+      explanation: 'Gamma_LV is the surface tension at the liquid-vapor interface -- the energy cost of creating new liquid surface area, which fundamentally governs droplet shape.',
     },
     {
-      question: 'Scenario: A hydrophobic surface (contact angle 100°) has nano-texture added. The new contact angle is 155°. What physics explains this amplification?',
+      question: 'Scenario: A hydrophobic surface (contact angle 100 degrees) has nano-texture added. The new contact angle is 155 degrees. What physics explains this amplification?',
       options: [
         { text: 'Roughness makes the surface more hydrophilic', correct: false },
         { text: 'Roughness has no effect on wettability - other factors changed', correct: false },
         { text: 'The Cassie-Baxter effect: roughness amplifies the hydrophobic chemistry', correct: true },
         { text: 'Only the color of the surface changed due to texture', correct: false },
       ],
+      explanation: 'The Cassie-Baxter equation shows that adding roughness to an already hydrophobic surface amplifies the contact angle by reducing the solid-liquid contact fraction via trapped air.',
     },
     {
       question: 'Scenario: You observe that water droplets on a lotus leaf roll off with only a 2-degree tilt, while droplets on a waxy surface need a 30-degree tilt. What explains the lotus leaf\'s advantage?',
@@ -336,6 +342,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Lotus leaf water is lighter than tap water', correct: false },
         { text: 'Magnetic forces in the lotus leaf repel water', correct: false },
       ],
+      explanation: 'Air pockets reduce the actual solid-liquid contact to under 5% of the droplet footprint, making adhesion so low that gravity at just 2 degrees is enough to roll the droplet off.',
     },
     {
       question: 'A company wants superhydrophobic solar panels that stay clean. Rolling droplets carry away dust particles because:',
@@ -345,6 +352,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Chemical reactions on the surface destroy the dirt', correct: false },
         { text: 'UV light from the sun sterilizes the surface', correct: false },
       ],
+      explanation: 'Dirt particles adhere more strongly to the rolling water droplet than to the low-energy textured surface, so the droplet sweeps them away as it rolls -- the self-cleaning effect.',
     },
     {
       question: 'Hierarchical surface structure (like the lotus leaf) means:',
@@ -354,6 +362,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Only microscale roughness with no nano features', correct: false },
         { text: 'A surface that changes structure over time', correct: false },
       ],
+      explanation: 'Hierarchical roughness combines micron-scale bumps (10-50 um) with nanoscale pillars (100 nm), creating multi-level air trapping that maximizes the Cassie-Baxter effect.',
     },
     {
       question: 'Scenario: An engineer coats aircraft wings superhydrophobically, but after months of use the ice-repellency fails. The Cassie-Baxter state transitioned to Wenzel state. What happened?',
@@ -363,6 +372,7 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
         { text: 'Solid to liquid phase change in the coating', correct: false },
         { text: 'Color change of the surface destroyed the effect', correct: false },
       ],
+      explanation: 'Mechanical wear, UV degradation, or pressure from icing conditions can collapse the nano-texture\'s air pockets, forcing a Cassie-to-Wenzel transition that kills the superhydrophobic effect.',
     },
   ];
 
@@ -1986,20 +1996,37 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
                 {testScore >= 8 ? 'You\'ve mastered superhydrophobic surfaces!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? '✓ Correct: ' : userAnswer === oIndex ? '✗ Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'View Mastery' : 'Return & Retry')}
         </div>
@@ -2169,7 +2196,12 @@ const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook')
             </button>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

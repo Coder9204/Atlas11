@@ -1763,87 +1763,27 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
               </div>
 
               {/* Show all questions with answers */}
-              {testQuestions.map((q, i) => {
-                const userAnswer = testAnswers[i];
-                const correctAnswer = q.options.find(o => o.correct)?.id;
-                const isCorrect = userAnswer === correctAnswer;
-
-                return (
-                  <div key={i} style={{
-                    background: colors.bgCard,
-                    borderRadius: '12px',
-                    padding: '20px',
-                    marginBottom: '16px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        background: isCorrect ? colors.success : colors.error,
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                      }}>
-                        {i + 1}
-                      </span>
-                      <span style={{ ...typo.small, color: isCorrect ? colors.success : colors.error }}>
-                        {isCorrect ? 'Correct' : 'Incorrect'}
-                      </span>
-                    </div>
-
-                    <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontStyle: 'italic' }}>
-                      {q.scenario}
-                    </p>
-
-                    <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '12px' }}>
-                      {q.question}
-                    </p>
-
-                    {q.options.map((opt) => (
-                      <div key={opt.id} style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        marginBottom: '8px',
-                        background: opt.correct
-                          ? `${colors.success}22`
-                          : userAnswer === opt.id
-                            ? `${colors.error}22`
-                            : 'transparent',
-                        border: `1px solid ${
-                          opt.correct
-                            ? colors.success
-                            : userAnswer === opt.id
-                              ? colors.error
-                              : colors.border
-                        }`,
-                      }}>
-                        <span style={{
-                          ...typo.small,
-                          color: opt.correct ? colors.success : userAnswer === opt.id ? colors.error : colors.textSecondary
-                        }}>
-                          {opt.correct && 'Correct: '}{userAnswer === opt.id && !opt.correct && 'Your answer: '}{opt.label}
-                        </span>
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const correctAnswer = correctOption?.id;
+                  const userOption = q.options.find(o => o.id === userAnswer);
+                  const isCorrect = userAnswer === correctAnswer;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                       </div>
-                    ))}
-
-                    <div style={{
-                      background: `${colors.accent}15`,
-                      padding: '12px',
-                      borderRadius: '8px',
-                      marginTop: '12px',
-                    }}>
-                      <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                        <strong style={{ color: colors.accent }}>Explanation:</strong> {q.explanation}
-                      </p>
+                      {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.label}</span></div>)}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.label}</span></div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           );
         }

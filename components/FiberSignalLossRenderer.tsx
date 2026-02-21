@@ -1822,15 +1822,24 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+              const correctIndex = q.options.findIndex(o => o.correct);
+              const isCorrect = userAnswer === correctIndex;
               return (
                 <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
                   <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
+                  {!isCorrect && userAnswer !== null && (
+                    <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error }}>
+                      Your answer: {q.options[userAnswer].text}
                     </div>
-                  ))}
+                  )}
+                  <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success }}>
+                    Correct: {q.options[correctIndex].text}
+                  </div>
+                  {q.explanation && (
+                    <div style={{ padding: '8px 12px', marginTop: '8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '13px', lineHeight: 1.5 }}>
+                      {q.explanation}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -2070,7 +2079,37 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, 'Complete')}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(6, 182, 212, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

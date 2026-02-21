@@ -995,22 +995,45 @@ const startSimulation = () => {
                 {Math.round(correctCount / 10 * 100)}% — {correctCount >= 8 ? 'Kuramoto Master!' : correctCount >= 6 ? 'Good understanding!' : 'Keep learning!'}
               </p>
             </div>
-            {/* Answer review */}
+            {/* Answer Key */}
             <div style={{ padding: '0 16px 16px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '16px', fontWeight: '700', marginBottom: '12px' }}>Answer Review:</h3>
-              {testQuestions.map((q) => {
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
                 const userAnswer = testAnswers[q.id];
-                const correctAnswer = q.options.find(o => o.correct)?.id;
-                const isRight = userAnswer === correctAnswer;
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctAnswer;
                 return (
-                  <div key={q.id} style={{ background: isRight ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${isRight ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '8px', padding: '12px', marginBottom: '8px' }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', margin: '0 0 4px' }}>
-                      {isRight ? '✓' : '✗'} Q{q.id}: {q.question.slice(0, 80)}...
-                    </p>
-                    <p style={{ color: colors.textMuted, fontSize: '12px', margin: 0 }}>
-                      Your answer: {q.options.find(o => o.id === userAnswer)?.text?.slice(3) || 'None'} |{' '}
-                      Correct: {q.options.find(o => o.correct)?.text?.slice(3)}
-                    </p>
+                  <div key={q.id} style={{
+                    background: 'rgba(30, 41, 59, 0.9)',
+                    margin: '12px 0',
+                    padding: '16px',
+                    borderRadius: '10px',
+                    borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>
+                        {isCorrect ? '\u2713' : '\u2717'}
+                      </span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                        Q{idx + 1}. {q.question}
+                      </span>
+                    </div>
+                    {!isCorrect && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
                   </div>
                 );
               })}
@@ -1121,7 +1144,7 @@ const startSimulation = () => {
               Back
             </button>
             {allAnswered && (
-              <button onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+              <button onClick={() => { const score = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } }); }}
                 style={{ flex: 1, padding: '12px', minHeight: '44px', background: 'linear-gradient(135deg,#a855f7,#7c3aed)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontWeight: '700', cursor: 'pointer', fontSize: '15px', transition: 'opacity 0.15s' }}>
                 Submit Test ✓
               </button>
@@ -1153,7 +1176,12 @@ const startSimulation = () => {
             </ul>
           </div>
         </div>
-        {renderNavBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

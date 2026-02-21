@@ -179,6 +179,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'At the center of the plate', correct: false },
         { text: 'Randomly across the surface', correct: false },
       ],
+      explanation: 'Sand bounces off vibrating regions (antinodes) and settles at nodal lines where the plate has zero displacement -- the only stable resting spots.',
     },
     {
       question: 'What do nodal lines represent on a Chladni plate?',
@@ -188,6 +189,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'Lines where frequency is highest', correct: false },
         { text: 'Lines connecting the sound source to edges', correct: false },
       ],
+      explanation: 'Nodal lines are positions of destructive interference where the standing wave amplitude is always zero, regardless of the phase of oscillation.',
     },
     {
       question: 'What happens to Chladni patterns as frequency increases?',
@@ -197,6 +199,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'Patterns remain the same', correct: false },
         { text: 'Patterns disappear entirely', correct: false },
       ],
+      explanation: 'Higher frequencies correspond to higher vibration modes, which have more nodal lines dividing the plate into smaller vibrating regions, creating more intricate patterns.',
     },
     {
       question: 'What is the physical cause of Chladni patterns?',
@@ -206,6 +209,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'Air pressure pushing sand around', correct: false },
         { text: 'Static electricity on the plate', correct: false },
       ],
+      explanation: 'When the plate vibrates at a resonant frequency, standing waves form with fixed nodal positions. Sand migrates to these stationary nodes, revealing the wave pattern.',
     },
     {
       question: 'Why do only certain frequencies produce clear patterns?',
@@ -215,6 +219,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'The speaker can only produce certain frequencies', correct: false },
         { text: 'Sand particles only respond to certain frequencies', correct: false },
       ],
+      explanation: 'Stable standing waves require constructive interference, which only occurs at the plate\'s natural (resonant) frequencies determined by its geometry and material properties.',
     },
     {
       question: 'What determines the shape of a Chladni pattern?',
@@ -224,6 +229,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'The loudness of the sound', correct: false },
         { text: 'The temperature of the plate', correct: false },
       ],
+      explanation: 'Pattern shape is determined by the vibration mode, which depends on plate geometry (shape, size, thickness) and the driving frequency. Amplitude (loudness) only affects how fast sand moves.',
     },
     {
       question: 'On a square plate, why are patterns often symmetric?',
@@ -233,6 +239,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'Square plates are more rigid', correct: false },
         { text: 'It\'s just a coincidence', correct: false },
       ],
+      explanation: 'A square plate has four-fold rotational symmetry, and its boundary conditions constrain the standing wave solutions to share this symmetry in most vibration modes.',
     },
     {
       question: 'What is the relationship between mode number and pattern complexity?',
@@ -242,6 +249,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'Mode number doesn\'t affect pattern', correct: false },
         { text: 'Mode number only affects pattern size', correct: false },
       ],
+      explanation: 'Mode numbers (m, n) count the number of nodal lines in each direction. Higher mode numbers mean more nodal lines and thus more complex patterns.',
     },
     {
       question: 'If you touched the plate at a nodal line during vibration, what would you feel?',
@@ -251,6 +259,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'The plate would stop vibrating', correct: false },
         { text: 'Electric shock from static', correct: false },
       ],
+      explanation: 'Nodal lines are positions of zero displacement in the standing wave. Touching here feels still because the plate is not moving at these points.',
     },
     {
       question: 'Why are Chladni patterns useful in acoustics?',
@@ -260,6 +269,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
         { text: 'They amplify sound', correct: false },
         { text: 'They reduce noise', correct: false },
       ],
+      explanation: 'Chladni patterns make invisible vibration modes visible, helping engineers and luthiers optimize the acoustic properties of instruments, speakers, and structural components.',
     },
   ];
 
@@ -1604,12 +1614,13 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
               </p>
             </div>
 
-            {/* Answer review section with checkmark/X indicators */}
+            {/* Rich Answer Key */}
             <div style={{ margin: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '16px', fontWeight: 700 }}>Answer Review</h3>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '16px', fontWeight: 700 }}>Answer Key</h3>
               {testQuestions.map((q, qIndex) => {
                 const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
 
                 return (
                   <div
@@ -1624,34 +1635,22 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                       borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span
-                        className={isCorrect ? 'correct-indicator' : 'incorrect-indicator'}
-                        style={{
-                          color: isCorrect ? colors.success : colors.error,
-                          fontWeight: 700,
-                          fontSize: '20px',
-                          lineHeight: 1,
-                        }}
-                        aria-label={isCorrect ? 'Correct answer' : 'Incorrect answer'}
-                      >
-                        {isCorrect ? '\u2713' : '\u2717'}
-                      </span>
-                      <span style={{ color: colors.textSecondary, fontSize: '14px', fontWeight: 600 }}>
-                        Question {qIndex + 1}
-                      </span>
-                    </div>
-                    <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0, fontWeight: 400 }}>
-                      {q.question}
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', margin: '0 0 8px 0', fontWeight: 600 }}>
+                      {qIndex + 1}. {q.question}
                     </p>
                     {!isCorrect && userAnswer !== null && (
-                      <p style={{ color: colors.error, fontSize: '12px', marginTop: '4px', fontWeight: 400 }}>
+                      <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error, fontSize: '12px' }}>
                         Your answer: {q.options[userAnswer].text}
-                      </p>
+                      </div>
                     )}
-                    <p style={{ color: colors.success, fontSize: '12px', marginTop: '4px', fontWeight: 400 }}>
-                      Correct answer: {q.options.find(o => o.correct)?.text}
-                    </p>
+                    <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success, fontSize: '12px' }}>
+                      Correct: {q.options[correctIndex].text}
+                    </div>
+                    {q.explanation && (
+                      <div style={{ padding: '6px 10px', marginTop: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', lineHeight: 1.5 }}>
+                        {q.explanation}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1876,6 +1875,37 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           </div>
 
           {renderVisualization(true)}
+        </div>
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(20, 184, 166, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
         </div>
       </div>
     );

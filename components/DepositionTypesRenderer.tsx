@@ -259,6 +259,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'The number of steps in the process', correct: false },
         { text: 'The temperature during deposition', correct: false },
       ],
+      explanation: 'Step coverage measures how uniformly a film coats 3D features. A ratio near 100% means the sidewall/bottom thickness equals the top surface thickness.',
     },
     {
       question: 'PVD (Physical Vapor Deposition) has poor step coverage because:',
@@ -268,6 +269,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'It is too slow', correct: false },
         { text: 'It only works on flat surfaces', correct: false },
       ],
+      explanation: 'In PVD, sputtered atoms travel in straight lines from the target. Trench sidewalls and bottoms are shadowed from the source, receiving much less material than the top surface.',
     },
     {
       question: 'ALD (Atomic Layer Deposition) achieves excellent conformality by:',
@@ -277,6 +279,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'Heating the substrate to very high temperatures', correct: false },
         { text: 'Using thicker films', correct: false },
       ],
+      explanation: 'ALD uses alternating self-limiting precursor pulses. Each pulse saturates all exposed surfaces equally, building one atomic layer at a time for near-perfect conformality.',
     },
     {
       question: 'The "aspect ratio" of a trench is:',
@@ -286,6 +289,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'The angle of the sidewalls', correct: false },
         { text: 'The total surface area', correct: false },
       ],
+      explanation: 'Aspect ratio = depth/width. Higher aspect ratios (deep, narrow features) are harder to fill uniformly because precursors or atoms struggle to reach the bottom.',
     },
     {
       question: 'What is a "void" in the context of trench filling?',
@@ -295,6 +299,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'A type of deposition equipment', correct: false },
         { text: 'The substrate material', correct: false },
       ],
+      explanation: 'Voids form when material accumulates faster at the trench opening than inside, sealing off an empty pocket. This is especially common with PVD due to overhang formation.',
     },
     {
       question: 'CVD (Chemical Vapor Deposition) achieves better conformality than PVD because:',
@@ -304,6 +309,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'It is faster', correct: false },
         { text: 'It uses higher voltages', correct: false },
       ],
+      explanation: 'CVD precursors are gases that can diffuse into narrow features before decomposing and depositing. This diffusion-based transport gives better sidewall coverage than PVD line-of-sight.',
     },
     {
       question: 'For coating the inside of a 10:1 aspect ratio via, you should use:',
@@ -313,6 +319,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'Any method works equally well', correct: false },
         { text: 'No method can coat such high aspect ratios', correct: false },
       ],
+      explanation: 'At extreme aspect ratios (10:1+), only ALD provides near-100% step coverage. Its self-limiting chemistry ensures every surface gets coated regardless of geometry.',
     },
     {
       question: 'PVD creates "overhang" at trench openings because:',
@@ -322,6 +329,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'The substrate is too cold', correct: false },
         { text: 'Overhang is intentional', correct: false },
       ],
+      explanation: 'Top edges have the widest angle of exposure to the sputtering source, so they accumulate material fastest. This overhang narrows the opening and eventually seals it, trapping a void.',
     },
     {
       question: 'The main disadvantage of ALD compared to PVD/CVD is:',
@@ -331,6 +339,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'Cannot deposit metals', correct: false },
         { text: 'Requires higher temperatures', correct: false },
       ],
+      explanation: 'ALD deposits about 0.1nm per cycle, making it extremely slow for thick films. It is ideal for thin conformal layers like gate dielectrics but impractical for bulk metallization.',
     },
     {
       question: 'In semiconductor manufacturing, conformal deposition is critical for:',
@@ -340,6 +349,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         { text: 'Reducing film thickness', correct: false },
         { text: 'Increasing deposition speed', correct: false },
       ],
+      explanation: 'Modern chips have complex 3D structures (FinFETs, GAA transistors, deep vias). Conformal deposition ensures uniform insulation, barrier layers, and contacts on all surfaces.',
     },
   ];
 
@@ -2181,15 +2191,24 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           </div>
           {testQuestions.map((q, qIndex) => {
             const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            const correctIndex = q.options.findIndex(o => o.correct);
+            const isCorrect = userAnswer === correctIndex;
             return (
               <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
                 <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                {!isCorrect && userAnswer !== null && (
+                  <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error }}>
+                    Your answer: {q.options[userAnswer].text}
                   </div>
-                ))}
+                )}
+                <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success }}>
+                  Correct: {q.options[correctIndex].text}
+                </div>
+                {q.explanation && (
+                  <div style={{ padding: '8px 12px', marginTop: '8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '13px', lineHeight: 1.5 }}>
+                    {q.explanation}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2404,9 +2423,41 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           </p>
         </div>
         {renderVisualization(true, true)}
+
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(34, 197, 94, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
       </>,
-      true,
-      'Complete Game'
+      false,
+      ''
     );
   }
 

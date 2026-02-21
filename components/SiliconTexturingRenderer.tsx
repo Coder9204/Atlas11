@@ -314,6 +314,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   const testQuestions = [
     {
       question: 'What is the primary benefit of texturing a silicon solar cell surface?',
+      explanation: 'Texturing creates angled surfaces that redirect reflected light back toward the silicon, giving photons multiple chances to enter and be absorbed rather than bouncing away.',
       options: [
         { text: 'It makes the cell look more attractive', correct: false },
         { text: 'It increases light absorption by reducing reflection losses', correct: true },
@@ -323,6 +324,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'How does a textured surface "trap" light?',
+      explanation: 'Each time light bounces off a textured facet, it hits another facet rather than escaping, giving it multiple absorption opportunities and dramatically increasing total absorption.',
       options: [
         { text: 'It chemically bonds with photons', correct: false },
         { text: 'It creates electric fields that attract light', correct: false },
@@ -332,6 +334,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'What happens to light hitting a smooth silicon surface at a shallow angle?',
+      explanation: 'At shallow angles, the Fresnel reflection coefficient increases dramatically for smooth surfaces, causing most light to reflect specularly rather than enter the material.',
       options: [
         { text: 'It is completely absorbed', correct: false },
         { text: 'Most of it reflects away (specular reflection)', correct: true },
@@ -341,6 +344,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'Why are pyramid-shaped textures particularly effective?',
+      explanation: 'Pyramid facets are angled so that reflected light is directed onto adjacent pyramid faces rather than away from the surface, enabling double-bounce absorption.',
       options: [
         { text: 'Pyramids are the cheapest shape to manufacture', correct: false },
         { text: 'The angled facets direct reflected light back into the material', correct: true },
@@ -350,6 +354,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'The "effective path length" of light in a textured cell refers to:',
+      explanation: 'Texturing causes light to enter at oblique angles and undergo internal reflections, increasing the total distance traveled through silicon and thus the probability of absorption.',
       options: [
         { text: 'The thickness of the silicon wafer', correct: false },
         { text: 'The average distance light travels before escaping or being absorbed', correct: true },
@@ -359,6 +364,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'How much can texturing improve a silicon cell\'s absorption?',
+      explanation: 'A polished silicon surface absorbs about 65% of light, but with proper texturing and anti-reflection coating, absorption exceeds 95%, a gain of 30+ percentage points.',
       options: [
         { text: 'Only about 1-2%', correct: false },
         { text: 'From ~65% to over 95% (30+ percentage points)', correct: true },
@@ -368,6 +374,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'What is "black silicon"?',
+      explanation: 'Black silicon has nano-scale needle structures created by plasma etching that create a gradient refractive index, absorbing over 99% of incident light across all wavelengths.',
       options: [
         { text: 'Silicon painted with black dye', correct: false },
         { text: 'Silicon with nano-scale texturing that absorbs nearly all light', correct: true },
@@ -377,6 +384,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'Random texturing vs. periodic pyramid texturing:',
+      explanation: 'Periodic inverted pyramids provide more controlled and optimal facet angles for light redirection, achieving better light trapping than the variable geometry of random textures.',
       options: [
         { text: 'Random is always better', correct: false },
         { text: 'Both are equally effective', correct: false },
@@ -386,6 +394,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'At what light angles does texturing provide the MOST benefit?',
+      explanation: 'Smooth surfaces reflect most light at shallow/glancing angles. Texturing redirects these would-be reflections into the material, so the improvement is greatest at oblique incidence.',
       options: [
         { text: 'Only at perpendicular (90-degree) incidence', correct: false },
         { text: 'At shallow/glancing angles where smooth surfaces reflect most light', correct: true },
@@ -395,6 +404,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     },
     {
       question: 'KOH etching is used in solar cell manufacturing to:',
+      explanation: 'KOH (potassium hydroxide) etches silicon anisotropically, preferentially revealing crystal planes that naturally form pyramid-shaped textures on the wafer surface.',
       options: [
         { text: 'Clean the silicon surface only', correct: false },
         { text: 'Create pyramid-shaped surface textures through anisotropic etching', correct: true },
@@ -1411,20 +1421,25 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered silicon texturing!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1578,7 +1593,12 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

@@ -1938,7 +1938,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               </button>
             ) : (
               <button
-                onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+                onClick={() => { setTestSubmitted(true); const score = TEST_QUESTIONS.filter((q, i) => testAnswers[i] === q.options.find(o => o.correct)?.id).length; onGameEvent?.({ type: 'game_completed', details: { score, total: TEST_QUESTIONS.length } }); }}
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
@@ -2009,6 +2009,12 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
             "Precision is expensive. Use only what you need."
           </p>
         </div>
+      </div>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+        <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: TEST_QUESTIONS.filter((q, i) => testAnswers[i] === q.options.find(o => o.correct)?.id).length, total: TEST_QUESTIONS.length } }); window.location.href = '/games'; }}
+          style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          Complete Game {'\u2192'}
+        </button>
       </div>
     </div>
   );

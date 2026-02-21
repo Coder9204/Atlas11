@@ -229,6 +229,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) Parabola - similar to a projectile path', correct: false },
         { text: 'D) Sine wave - a smooth oscillating pattern', correct: false },
       ],
+      explanation: 'A point on the rim combines rotational and translational motion, tracing a cycloid -- a series of arches with sharp cusps where the point touches the ground.',
     },
     {
       question: 'An automotive engineer at Tesla is designing regenerative braking. They need to understand "rolling without slipping." Which definition correctly describes this fundamental concept?',
@@ -238,6 +239,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) The wheel doesn\'t rotate at all during motion', correct: false },
         { text: 'D) There is no friction between wheel and ground', correct: false },
       ],
+      explanation: 'Rolling without slipping means static friction prevents sliding, so the instantaneous contact point is momentarily at rest relative to the ground (v_contact = 0).',
     },
     {
       question: 'A bicycle racer is analyzing their wheel dynamics at 40 km/h. At what point on the rolling wheel is velocity momentarily zero relative to the ground?',
@@ -247,6 +249,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) At the contact point with ground', correct: true },
         { text: 'D) Nowhere - all points are always moving forward', correct: false },
       ],
+      explanation: 'At the contact point, the rotational velocity (backward, -v) exactly cancels the translational velocity (forward, +v), giving zero net velocity relative to the ground.',
     },
     {
       question: 'A high-speed camera at Shimano research lab films a wheel whose center moves at speed v. How fast is the top of the wheel moving relative to the ground?',
@@ -256,6 +259,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) v/2 (half the center speed)', correct: false },
         { text: 'D) 0 (it\'s stationary like the bottom)', correct: false },
       ],
+      explanation: 'At the top, the rotational velocity (+v forward) adds to the translational velocity (+v forward), giving a total speed of 2v relative to the ground.',
     },
     {
       question: 'A Rolex watchmaker is designing precision escapement mechanisms. They study a "curtate cycloid." What is this curve?',
@@ -265,6 +269,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) A cycloid traced very slowly at low angular velocity', correct: false },
         { text: 'D) A cycloid traced on a curved rather than flat surface', correct: false },
       ],
+      explanation: 'A curtate cycloid is produced when the tracing point is closer to the center than the rim (r < R), creating smooth waves without cusps. A prolate cycloid has r > R and creates loops.',
     },
     {
       question: 'An MIT physics student observes that a cycloid has a "cusp" (pointed corner) at the bottom. Why does this sharp point form?',
@@ -274,6 +279,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) Friction creates a sharp corner in the path', correct: false },
         { text: 'D) It\'s an optical illusion from the camera angle', correct: false },
       ],
+      explanation: 'At the cusp, the tracing point is at the contact point with the ground, where both velocity components cancel to zero. A zero-velocity point creates a sharp directional change.',
     },
     {
       question: 'A robotics engineer at FANUC is calculating motor requirements. For a wheel of radius R = 0.5m moving with angular velocity ω = 4 rad/s, what is the center velocity v_center?',
@@ -283,6 +289,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) 2ωR = 4 m/s', correct: false },
         { text: 'D) ω + R = 4.5 units (mixed)', correct: false },
       ],
+      explanation: 'The rolling constraint relates center velocity to angular velocity: v = ωR. With ω = 4 rad/s and R = 0.5m, v = 4 × 0.5 = 2 m/s.',
     },
     {
       question: 'In 1696, Johann Bernoulli posed the brachistochrone problem. A ball must roll from point A to lower point B. The fastest path is related to the cycloid because:',
@@ -292,6 +299,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) Wheels naturally roll in cycloid paths', correct: false },
         { text: 'D) Cycloids conserve more energy than other paths', correct: false },
       ],
+      explanation: 'The brachistochrone (shortest time) curve is an inverted cycloid. The steeper initial descent accelerates the ball early, making the total travel time shorter than any other path.',
     },
     {
       question: 'A sports photographer at the Tour de France uses a 1/500s shutter. When photographing a bicycle wheel rolling at 50 km/h, which part would appear sharpest in the image?',
@@ -301,6 +309,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) The bottom (contact point) - momentarily stationary', correct: true },
         { text: 'D) All parts appear equally blurred', correct: false },
       ],
+      explanation: 'The contact point has zero velocity relative to the ground, so it experiences no motion blur. The top moves at 2v and appears most blurred.',
     },
     {
       question: 'A surveyor\'s wheel has radius R = 0.159m (circumference = 1m). After exactly one complete rotation, what distance has the wheel traveled along the ground?',
@@ -310,6 +319,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         { text: 'C) R = 0.159m (one radius)', correct: false },
         { text: 'D) No consistent relationship exists', correct: false },
       ],
+      explanation: 'For rolling without slipping, one full rotation moves the wheel forward by exactly one circumference (2πR). This is the fundamental principle behind odometers and surveyor wheels.',
     },
   ];
 
@@ -1792,13 +1802,14 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
             </p>
           </div>
 
-          {/* Answer review */}
+          {/* Rich Answer Key */}
           <div style={{ padding: '0 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Answer Review:</h3>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Answer Key:</h3>
           </div>
           {testQuestions.map((q, qIndex) => {
             const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            const correctIndex = q.options.findIndex(o => o.correct);
+            const isCorrect = userAnswer === correctIndex;
 
             return (
               <div
@@ -1811,38 +1822,22 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{
-                    color: isCorrect ? colors.success : colors.error,
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                  }}>
-                    {isCorrect ? '✓' : '✗'}
-                  </span>
-                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Q{qIndex + 1}</span>
-                </div>
-                <p style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '14px' }}>
-                  {q.question}
+                <p style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
+                  {qIndex + 1}. {q.question}
                 </p>
-                {q.options.map((opt, oIndex) => (
-                  <div
-                    key={oIndex}
-                    style={{
-                      padding: '6px 10px',
-                      marginBottom: '4px',
-                      borderRadius: '6px',
-                      background: opt.correct
-                        ? 'rgba(16, 185, 129, 0.2)'
-                        : userAnswer === oIndex
-                        ? 'rgba(239, 68, 68, 0.2)'
-                        : 'transparent',
-                      color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textMuted,
-                      fontSize: '13px',
-                    }}
-                  >
-                    {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                {!isCorrect && userAnswer !== null && (
+                  <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error, fontSize: '13px' }}>
+                    Your answer: {q.options[userAnswer].text}
                   </div>
-                ))}
+                )}
+                <div style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success, fontSize: '13px' }}>
+                  Correct: {q.options[correctIndex].text}
+                </div>
+                {q.explanation && (
+                  <div style={{ padding: '8px 12px', marginTop: '8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '13px', lineHeight: 1.5 }}>
+                    {q.explanation}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2109,6 +2104,38 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
         </div>
 
         {renderVisualization(true)}
+
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(6, 182, 212, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
       </>)
     );
   }

@@ -287,6 +287,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Produce smooth, reflective surfaces that redirect unwanted wavelengths', correct: false },
         { text: 'Minimize photon interaction with the surface to reduce heat', correct: false },
       ],
+      explanation: 'Solar texturing creates micro-pyramids that bounce light multiple times across the surface, giving each photon multiple chances to be absorbed rather than reflected away.',
     },
     {
       question: 'A chip fabrication engineer is designing the lithography process for a new 3nm chip generation. They need to transfer circuit patterns from a mask onto a silicon wafer with nanometer precision. In lithography, the primary engineering goal is to:',
@@ -296,6 +297,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Maximize light absorption in the photoresist for sensitivity', correct: false },
         { text: 'Increase surface roughness to improve adhesion of the photoresist', correct: false },
       ],
+      explanation: 'Lithography must minimize scattering and diffraction to produce sharp pattern edges. Any blur would cause adjacent transistors to overlap, rendering the chip non-functional.',
     },
     {
       question: 'ASML, the only company that makes EUV lithography machines, chose an unusual light source for their systems. This choice was driven by the fundamental physics of wave optics and the Rayleigh criterion for resolution. EUV lithography uses a wavelength of:',
@@ -305,6 +307,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: '13.5nm (extreme UV, enabling sub-10nm features)', correct: true },
         { text: '1000nm (near infrared, for deep penetration)', correct: false },
       ],
+      explanation: 'EUV uses 13.5nm wavelength, over 14x shorter than deep UV. The Rayleigh criterion (resolution ~ wavelength/2) means this enables features smaller than 10nm, critical for modern chips.',
     },
     {
       question: 'The semiconductor industry has progressively moved from visible light to deep UV to extreme UV over the past decades. Each transition enabled a new generation of smaller transistors. The physical reason why shorter wavelength enables smaller features in lithography is that:',
@@ -314,6 +317,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Shorter wavelengths are absorbed more quickly in the resist material', correct: false },
         { text: 'Photoresist chemistry only responds efficiently to UV wavelengths', correct: false },
       ],
+      explanation: 'Diffraction fundamentally limits the smallest feature to approximately half the wavelength (Rayleigh criterion). Shorter wavelengths diffract less, enabling sharper, smaller patterns.',
     },
     {
       question: 'A manufacturing engineer is designing the texturing process for monocrystalline silicon solar cells. The chemical etching process creates pyramid-shaped features on the surface. Solar cell pyramid texturing typically creates features on the scale of:',
@@ -323,6 +327,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Millimeters (1-10mm), visible to the naked eye as a rough texture', correct: false },
         { text: 'Centimeters (1-10cm), creating large geometric patterns on the panel', correct: false },
       ],
+      explanation: 'Micron-scale pyramids are optimal because they are comparable to visible light wavelengths (400-700nm), maximizing diffraction and scattering effects that trap photons.',
     },
     {
       question: 'A physicist studying optical systems notices that wave optics — specifically diffraction and interference — governs both solar texturing and semiconductor lithography. Yet these two technologies have completely different engineering requirements. The same wave optics principle applied to both solar texturing and lithography produces:',
@@ -332,6 +337,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'No useful effects in either case, wave optics being negligible', correct: false },
         { text: 'Effects only visible under an electron microscope due to small scale', correct: false },
       ],
+      explanation: 'Solar cells want maximum scattering to trap light for absorption. Lithography wants minimum scattering for sharp patterns. Same physics, opposite engineering goals.',
     },
     {
       question: 'Researchers at MIT developed "black silicon" - a material that appears completely black because it absorbs virtually all incident light. Unlike conventional silicon that reflects 30-35% of light, black silicon has near-perfect absorption. Black silicon achieves this high absorption by:',
@@ -341,6 +347,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Making the silicon layer thicker so more photons interact with it', correct: false },
         { text: 'Heating the silicon to make it glow and reabsorb its own emission', correct: false },
       ],
+      explanation: 'Black silicon uses nanoscale needles that create a gradient refractive index, virtually eliminating reflection. Light enters the needle forest and bounces until fully absorbed.',
     },
     {
       question: 'An EUV lithography system requires mirrors to redirect the 13.5nm light beam. Unlike conventional optics, EUV cannot use glass lenses. A quality engineer is inspecting the mirror surfaces before installation. In lithography systems, surface roughness causes:',
@@ -350,6 +357,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Faster processing speed by diffusing the beam more efficiently', correct: false },
         { text: 'Reduced mask cost by decreasing the precision requirements', correct: false },
       ],
+      explanation: 'Any surface roughness scatters EUV photons in unintended directions, blurring the projected pattern. EUV mirrors must be atomically smooth (roughness < 0.1nm) to maintain resolution.',
     },
     {
       question: 'Lord Rayleigh derived a fundamental criterion for optical resolution in the 19th century that still governs modern semiconductor manufacturing. This criterion is used to calculate the minimum feature size achievable with a given light source. The Rayleigh criterion specifically relates:',
@@ -359,6 +367,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Voltage to current flow in photovoltaic junctions', correct: false },
         { text: 'Mass to energy in photoelectric interactions', correct: false },
       ],
+      explanation: 'The Rayleigh criterion states resolution ~ 0.61 * wavelength / NA. This fundamental relationship between wavelength and minimum feature size drives the entire semiconductor roadmap.',
     },
     {
       question: 'A materials science professor is teaching about wave optics applications in industry. She shows her students that the same fundamental physics appears in billion-dollar industries with very different objectives. Both solar texturing and lithography use wave physics, but:',
@@ -368,6 +377,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
         { text: 'Both try to minimize scattering to preserve photon coherence', correct: false },
         { text: 'Neither actually uses wave physics - they rely on geometric optics only', correct: false },
       ],
+      explanation: 'This is the core insight: solar texturing wants light trapped (maximum scattering), while lithography wants light focused (minimum scattering). Same wave physics, completely opposite optimization.',
     },
   ];
 
@@ -1386,20 +1396,26 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 700 }}>{testScore} / 10</p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 600 }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: opt.correct || userAnswer === oIndex ? 500 : 400 }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore >= 8 ? goNext : () => {
             setTestSubmitted(false);
@@ -1537,7 +1553,12 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

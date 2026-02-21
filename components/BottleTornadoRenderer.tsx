@@ -486,6 +486,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'The vortex creates suction' },
         { id: 'd', text: 'Centrifugal force increases gravity' },
       ],
+      explanation: 'The vortex creates a hollow air core in the center, allowing air to flow in simultaneously while water spirals out around it. Without the vortex, air and water take turns, causing glugging.',
     },
     {
       id: 2,
@@ -496,6 +497,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Magnetic fields' },
         { id: 'd', text: 'Air pressure' },
       ],
+      explanation: 'Once angular momentum is imparted to the water, it is conserved (L = Iw = constant). The vortex persists because there is no external torque to stop it, only viscous friction slowly decelerates it.',
     },
     {
       id: 3,
@@ -506,6 +508,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Air and water compete at the opening, causing glugging', correct: true },
         { id: 'd', text: 'Nothing - water won\'t drain' },
       ],
+      explanation: 'Without a vortex, the narrow opening alternates between water flowing out and air bubbling in, creating the characteristic glug-glug pattern and slower drainage.',
     },
     {
       id: 4,
@@ -516,6 +519,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Speed stays constant' },
         { id: 'd', text: 'Speed becomes zero' },
       ],
+      explanation: 'By conservation of angular momentum (L = mvr), as radius r decreases toward the center, velocity v must increase proportionally to keep L constant.',
     },
     {
       id: 5,
@@ -526,6 +530,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'No - at small scales, initial conditions dominate', correct: true },
         { id: 'd', text: 'Only near the equator' },
       ],
+      explanation: 'The Coriolis force is about 100,000x too weak to influence bathtub-scale vortices. The direction is determined by initial water motion, drain geometry, and residual currents.',
     },
     {
       id: 6,
@@ -536,6 +541,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'No effect' },
         { id: 'd', text: 'Prevents vortex formation' },
       ],
+      explanation: 'A narrower neck forces water to smaller radii, and by angular momentum conservation (v = L/mr), the spin velocity increases. This creates a more defined, faster vortex.',
     },
     {
       id: 7,
@@ -546,6 +552,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Water is heavier at the edges' },
         { id: 'd', text: 'Magnetic forces' },
       ],
+      explanation: 'Fast-spinning water at the center creates low pressure (Bernoulli effect). The pressure drop allows air to penetrate from below, forming the characteristic hollow funnel shape.',
     },
     {
       id: 8,
@@ -556,6 +563,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Conservation of angular momentum - smaller radius = faster spin', correct: true },
         { id: 'd', text: 'They become lighter' },
       ],
+      explanation: 'With angular momentum L = Iw conserved, reducing moment of inertia I (by pulling arms in) requires angular velocity w to increase proportionally.',
     },
     {
       id: 9,
@@ -566,6 +574,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'At the top of the bottle' },
         { id: 'd', text: 'Speed is the same everywhere' },
       ],
+      explanation: 'Angular momentum conservation (v = L/mr) means velocity is inversely proportional to radius. The smallest radius near the center has the highest tangential velocity.',
     },
     {
       id: 10,
@@ -576,6 +585,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
         { id: 'c', text: 'Both rotate the same direction' },
         { id: 'd', text: 'Both require water' },
       ],
+      explanation: 'Both are vortices with low-pressure cores where fluid spirals inward and accelerates. The core pressure drop is created by the same Bernoulli principle in both cases.',
     },
   ];
 
@@ -1647,11 +1657,12 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
               </button>
             </div>
 
-            {/* Answer review with icons */}
+            {/* Rich Answer Key */}
             {testQuestions.map((q, idx) => {
               const correctOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
               const isCorrect = userAnswer === correctOption?.id;
+              const userOption = q.options.find(o => o.id === userAnswer);
 
               return (
                 <div
@@ -1664,24 +1675,21 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
                     borderRadius: '10px',
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '18px' }}>
-                      {isCorrect ? '✓' : '✗'}
-                    </span>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px', fontWeight: 'bold' }}>
-                      {isCorrect ? 'Correct' : 'Incorrect'}
-                    </span>
-                    <span style={{ color: colors.textMuted, fontSize: '13px', fontWeight: 'normal' }}>
-                      Q{idx + 1}/{testQuestions.length}
-                    </span>
-                  </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0', fontWeight: 'normal' }}>
-                    {q.question}
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                    {idx + 1}. {q.question}
                   </p>
-                  {!isCorrect && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      ✓ Correct: {correctOption?.text}
-                    </p>
+                  {!isCorrect && userOption && (
+                    <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error, fontSize: '13px' }}>
+                      Your answer: {userOption.text}
+                    </div>
+                  )}
+                  <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success, fontSize: '13px' }}>
+                    Correct: {correctOption?.text}
+                  </div>
+                  {q.explanation && (
+                    <div style={{ padding: '6px 10px', marginTop: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', lineHeight: 1.5 }}>
+                      {q.explanation}
+                    </div>
                   )}
                 </div>
               );
@@ -1758,7 +1766,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           zIndex: 1000,
         }}>
           <button
-            onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
+            onClick={() => { setTestSubmitted(true); const computedScore = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; onGameEvent?.({ type: 'game_completed', details: { score: computedScore, total: testQuestions.length } }); }}
             style={{
               width: '100%',
               minHeight: '44px',
@@ -1830,7 +1838,37 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(34, 211, 238, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #22d3ee, #06b6d4)',
+              color: '#0f172a',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

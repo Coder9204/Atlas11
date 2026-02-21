@@ -151,6 +151,7 @@ const testQuestions = [
       { text: 'De = 0: the material has no relaxation time', correct: false },
       { text: 'De is irrelevant; putty always bounces', correct: false },
     ],
+    explanation: 'A 5ms impact is much shorter than putty\'s relaxation time (~seconds), so De >> 1 and the material responds elastically -- it bounces like a solid.',
   },
   {
     scenario: 'The same ball of silly putty is left on a flat table at room temperature. After 10 minutes, it has spread into a flat disk.',
@@ -161,6 +162,7 @@ const testQuestions = [
       { text: 'De = 1 — transitional behavior exactly balanced', correct: false },
       { text: 'High temperature melted the putty completely', correct: false },
     ],
+    explanation: 'Over 10 minutes the observation time far exceeds the relaxation time, giving De << 1. The material has time to rearrange its polymer chains and flow like a viscous liquid.',
   },
   {
     scenario: 'An engineer is designing running shoe foam. She needs the foam to absorb impact during heel strike (~10ms) but return energy during push-off (~100ms).',
@@ -171,6 +173,7 @@ const testQuestions = [
       { text: 'About 0.001ms, so De >> 1 always → pure elastic', correct: false },
       { text: 'Relaxation time does not affect shoe performance', correct: false },
     ],
+    explanation: 'A relaxation time between impact and push-off timescales ensures the foam is stiff enough to cushion the heel strike but compliant enough to return energy during toe-off.',
   },
   {
     scenario: 'A polymer is processed by injection molding. The engineer slows the injection speed down too much. The polymer starts to hesitate at the mold entrance.',
@@ -181,6 +184,7 @@ const testQuestions = [
       { text: 'The polymer\'s Deborah number is not affected by injection speed', correct: false },
       { text: 'Higher viscosity at slow rates makes the fluid too thin to fill the mold', correct: false },
     ],
+    explanation: 'At slow injection speeds the polymer spends too long in contact with the cooler mold walls, losing heat and solidifying before the cavity fills -- a practical processing concern.',
   },
   {
     scenario: 'You cool a piece of silly putty in a freezer to -10°C. Now you try to stretch it quickly.',
@@ -191,6 +195,7 @@ const testQuestions = [
       { text: 'It flows faster — cold increases thermal energy', correct: false },
       { text: 'It behaves identically — temperature has no effect on viscoelasticity', correct: false },
     ],
+    explanation: 'Cooling dramatically increases the relaxation time. Combined with a fast stretch, De becomes very large and the material responds as a brittle elastic solid -- it shatters.',
   },
   {
     scenario: 'The Maxwell model represents a viscoelastic material. Under a sudden constant strain, you observe that the stress decreases over time.',
@@ -201,6 +206,7 @@ const testQuestions = [
       { text: 'The material gains mass from the environment over time', correct: false },
       { text: 'The spring constant increases as deformation continues', correct: false },
     ],
+    explanation: 'In the Maxwell model the spring and dashpot are in series. Under constant strain, the dashpot gradually accommodates the deformation, relieving the stress stored in the spring.',
   },
   {
     scenario: 'A biomedical engineer is designing a hydrogel cartilage replacement. Normal knee cartilage has a relaxation time of about 10 seconds and handles loads up to 8× body weight.',
@@ -211,6 +217,7 @@ const testQuestions = [
       { text: 'Relaxation time ~10s to match cartilage for both elastic energy storage and viscous dissipation', correct: true },
       { text: 'Relaxation time matched to temperature, not to loading rate', correct: false },
     ],
+    explanation: 'Matching the natural cartilage relaxation time ensures the replacement cushions impact loads elastically yet dissipates energy viscously over the same timescales as biological tissue.',
   },
   {
     scenario: 'A car suspension engineer notices that passengers feel both sharp jolts over potholes AND a bouncy, oscillating ride on highway expansion joints.',
@@ -221,6 +228,7 @@ const testQuestions = [
       { text: 'Viscoelastic damper with tuned relaxation time — high De (stiff) for fast jolts, low De (compliant) for slow oscillations', correct: true },
       { text: 'Increasing the car mass — more inertia reduces felt acceleration', correct: false },
     ],
+    explanation: 'A viscoelastic damper with the right relaxation time absorbs fast pothole shocks (high De = stiff response) while remaining compliant to slow oscillations (low De), addressing both problems.',
   },
   {
     scenario: 'The Deborah number is named after a biblical prophetess who said "the mountains flowed before the Lord."',
@@ -231,6 +239,7 @@ const testQuestions = [
       { text: 'Biblical materials behave differently from modern materials', correct: false },
       { text: 'The Deborah number only applies to geological materials', correct: false },
     ],
+    explanation: 'The quote highlights that solid vs. liquid is not an absolute property but depends on timescale. Over geological time, even mountains deform and flow -- De is small.',
   },
   {
     scenario: 'A quality control test measures how long it takes for a polymer component to recover its original shape after being compressed by 50% and then released.',
@@ -241,6 +250,7 @@ const testQuestions = [
       { text: 'Both the elastic energy storage and viscous energy dissipation — the full viscoelastic character', correct: true },
       { text: 'The glass transition temperature of the polymer', correct: false },
     ],
+    explanation: 'Creep recovery reveals both elastic (recoverable) and viscous (permanent) deformation, giving a complete picture of the material\'s viscoelastic behavior at the test timescale.',
   },
 ];
 
@@ -1201,32 +1211,37 @@ const phaseIndex = validPhases.indexOf(phase);
                 color: colors.textSecondary, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
               }}>🏠 Back to Start</button>
             </div>
-            {testQuestions.map((q, qi) => {
-              const ua = testAnswers[qi];
-              const isCorrect = ua !== null && q.options[ua].correct;
-              return (
-                <div key={qi} style={{
-                  background: colors.bgCard, margin: '0 0 12px 0', padding: '16px', borderRadius: '12px',
-                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                }}>
-                  <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '4px' }}>
-                    🧪 {q.scenario}
-                  </p>
-                  <p style={{ color: colors.textPrimary, fontWeight: 700, marginBottom: '10px', fontSize: '14px' }}>
-                    {qi + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oi) => (
-                    <div key={oi} style={{
-                      padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', fontSize: '13px',
-                      background: opt.correct ? 'rgba(16,185,129,0.2)' : ua === oi ? 'rgba(239,68,68,0.2)' : 'transparent',
-                      color: opt.correct ? colors.success : ua === oi ? colors.error : colors.textMuted,
-                    }}>
-                      {opt.correct ? '✅ Correct: ' : ua === oi ? '❌ Your answer: ' : ''}{opt.text}
+            <div style={{ padding: '0' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
@@ -1316,7 +1331,12 @@ const phaseIndex = validPhases.indexOf(phase);
     return (
       <div style={{ minHeight: '100dvh', background: colors.bgPrimary, paddingTop: '60px', paddingBottom: '16px', overflowY: 'auto' }}>
         {renderProgressBar()}
-        {renderBottomBar(false, true, 'Complete Game 🎉')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
         <div style={{ maxWidth: '720px', margin: '0 auto', padding: '24px' }}>
           {renderNavDots()}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>

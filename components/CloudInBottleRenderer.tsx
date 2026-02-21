@@ -2253,17 +2253,22 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           </div>
 
           {/* Show explanations */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '600px', overflow: 'auto' }}>
-            {testQuestions.map((q, i) => {
+          <div style={{ padding: '16px' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
               const correctIdx = q.options.findIndex(opt => opt.correct);
-              const wasCorrect = testAnswers[i] === correctIdx;
+              const correctOption = q.options[correctIdx];
+              const isCorrect = testAnswers[idx] === correctIdx;
+              const userOption = testAnswers[idx] >= 0 ? q.options[testAnswers[idx]] : null;
               return (
-                <div key={q.id} style={{ padding: '16px', borderRadius: '12px', background: wasCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: wasCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
-                  <p style={{ color: '#cbd5e1', fontSize: '13px', marginBottom: '8px', lineHeight: 1.5 }}>Question {i + 1}: {q.question}</p>
-                  <p style={{ color: wasCorrect ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '14px', lineHeight: 1.5 }}>
-                    {wasCorrect ? '✓ Correct!' : `✗ Incorrect. Correct: ${q.options[correctIdx].text}`}
-                  </p>
-                  <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>{q.explanation}</p>
+                <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                  </div>
+                  {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                 </div>
               );
             })}

@@ -1931,15 +1931,25 @@ export default function FloatingPaperclipRenderer({
               const userAnswer = testAnswers[qIndex];
               const isCorrect = q.options[userAnswer]?.correct;
               return (
-                <div key={qIndex} className={`bg-slate-800/50 rounded-xl p-4 border ${isCorrect ? 'border-emerald-500/50' : 'border-red-500/50'}`}>
-                  <p style={{ fontSize: typo.small }} className="text-slate-400 mb-2">{q.scenario}</p>
-                  <p style={{ fontSize: typo.body }} className="font-semibold text-white mb-2">{qIndex + 1}. {q.question}</p>
-                  <p style={{ fontSize: typo.small }} className={`mb-2 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {q.options[userAnswer]?.text || 'None'} {isCorrect ? '(Correct!)' : '(Incorrect)'}
-                  </p>
-                  <div className="bg-slate-900/50 rounded-lg p-3">
-                    <p style={{ fontSize: typo.small }} className="text-slate-300">{q.explanation}</p>
+                <div key={qIndex} style={{ borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}` }} className={`bg-slate-800/50 rounded-xl p-4`}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2705' : '\u274c'}</span>
+                    <p style={{ fontSize: typo.body, margin: 0 }} className="font-semibold text-white">Q{qIndex + 1}: {q.question}</p>
                   </div>
+                  {q.scenario && <p style={{ fontSize: typo.small }} className="text-slate-500 mb-2 italic">{q.scenario}</p>}
+                  {!isCorrect && (
+                    <p style={{ fontSize: typo.small, color: '#ef4444', margin: '4px 0' }}>
+                      Your answer: {q.options[userAnswer]?.text || 'None'}
+                    </p>
+                  )}
+                  <p style={{ fontSize: typo.small, color: '#22c55e', margin: '4px 0' }}>
+                    Correct: {q.options.find((o: any) => o.correct)?.text}
+                  </p>
+                  {q.explanation && (
+                    <div style={{ marginTop: '6px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', borderLeft: '3px solid #f59e0b' }}>
+                      <p style={{ fontSize: typo.small, color: '#fbbf24', margin: 0 }}><strong>Why?</strong> {q.explanation}</p>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -2043,6 +2053,12 @@ export default function FloatingPaperclipRenderer({
           onClick={() => {
             setShowTestResults(true);
             playSound('complete');
+            const sc = testAnswers.reduce((score, answer, index) => {
+              const question = testQuestions[index];
+              const selectedOption = question.options[answer];
+              return score + (selectedOption?.correct ? 1 : 0);
+            }, 0);
+            onGameEvent?.({ eventType: 'game_completed', gameType: 'floating_paperclip', gameTitle: 'Floating Paperclip', details: { score: sc, total: testQuestions.length }, timestamp: Date.now() });
           }}
           disabled={testAnswers.includes(-1)}
           style={{ zIndex: 10 }}
@@ -2101,16 +2117,18 @@ export default function FloatingPaperclipRenderer({
             ))}
           </div>
 
-          <button
-            onClick={() => {
-              onPhaseComplete?.();
-              playSound('complete');
-            }}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-lg rounded-xl"
-          >
-            Complete Lesson
-          </button>
+          {/* Fixed Complete Game button */}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: '1px solid rgba(71,85,105,0.3)', zIndex: 50 }}>
+            <button
+              onClick={() => {
+                onGameEvent?.({ eventType: 'game_completed', gameType: 'floating_paperclip', gameTitle: 'Floating Paperclip', details: { finalEvent: 'mastery_achieved' }, timestamp: Date.now() });
+                window.location.href = '/games';
+              }}
+              style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}
+            >
+              Complete Game
+            </button>
+          </div>
         </div>
       </div>
     );

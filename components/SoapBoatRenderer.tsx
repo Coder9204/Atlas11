@@ -405,13 +405,13 @@ const navigationLockRef = useRef(false);
 
   const submitTest = () => {
     setTestSubmitted(true);
-    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
     const score = testQuestions.reduce((acc, q, i) => {
       if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
         return acc + 1;
       }
       return acc;
     }, 0);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     onGameEvent?.({
       type: 'test_completed',
       data: { score, total: testQuestions.length }
@@ -432,6 +432,7 @@ const navigationLockRef = useRef(false);
         { text: "Temperature of the surface layer", correct: false },
         { text: "Density variation at the surface", correct: false }
       ],
+      explanation: "Surface tension arises from cohesive forces (hydrogen bonds) between water molecules at the surface, which are pulled inward because there are no water molecules above them to balance the attraction.",
     },
     {
       question: "Why does a soap boat move forward when soap is added behind it?",
@@ -441,6 +442,7 @@ const navigationLockRef = useRef(false);
         { text: "Surface tension imbalance creates net force", correct: true },
         { text: "Soap is lighter than water", correct: false }
       ],
+      explanation: "Soap reduces surface tension behind the boat but not in front. The higher surface tension in front pulls the boat forward, creating a net force from the imbalance (Marangoni effect).",
     },
     {
       question: "What happens if you try the soap boat experiment a second time in the same water?",
@@ -450,6 +452,7 @@ const navigationLockRef = useRef(false);
         { text: "The boat sinks", correct: false },
         { text: "It works the same", correct: false }
       ],
+      explanation: "Once soap has spread across the water surface, the surface tension is uniformly reduced everywhere. Without a gradient in surface tension, there is no net force to propel the boat.",
     },
     {
       question: "What is the Marangoni effect?",
@@ -459,6 +462,7 @@ const navigationLockRef = useRef(false);
         { text: "Evaporation from liquid surfaces", correct: false },
         { text: "Density-driven convection", correct: false }
       ],
+      explanation: "The Marangoni effect is fluid flow driven by a gradient in surface tension. Liquid flows from regions of low surface tension toward regions of high surface tension, carrying objects along with it.",
     },
     {
       question: "What is the approximate surface tension of water at room temperature?",
@@ -468,6 +472,7 @@ const navigationLockRef = useRef(false);
         { text: "0.72 N/m", correct: false },
         { text: "7.2 N/m", correct: false }
       ],
+      explanation: "Water has a surface tension of approximately 0.072 N/m (72 mN/m) at 25 degrees C, which is unusually high for a common liquid due to water's strong hydrogen bonding network.",
     },
     {
       question: "How do surfactants (soaps) reduce surface tension?",
@@ -477,6 +482,7 @@ const navigationLockRef = useRef(false);
         { text: "By making water denser", correct: false },
         { text: "By adding pressure to the surface", correct: false }
       ],
+      explanation: "Surfactant molecules insert themselves between water molecules at the surface, disrupting the hydrogen bonding network that creates surface tension, reducing it by up to 65%.",
     },
     {
       question: "Why does the soap boat work better with dish soap than with oil?",
@@ -486,6 +492,7 @@ const navigationLockRef = useRef(false);
         { text: "Oil floats on water", correct: false },
         { text: "Dish soap creates bubbles", correct: false }
       ],
+      explanation: "Dish soap is a surfactant specifically designed to reduce surface tension. Oil does not effectively reduce water's surface tension because it is immiscible and does not interact with water's hydrogen bond network.",
     },
     {
       question: "What would happen if you tried the soap boat on mercury instead of water?",
@@ -495,6 +502,7 @@ const navigationLockRef = useRef(false);
         { text: "Not work well - soap doesn't reduce mercury's surface tension", correct: true },
         { text: "The boat would sink", correct: false }
       ],
+      explanation: "Mercury's surface tension comes from metallic bonding, not hydrogen bonds. Soap is designed to disrupt hydrogen bonds in water, so it cannot effectively reduce mercury's surface tension.",
     },
     {
       question: "In the 'tears of wine' phenomenon, what causes the wine to climb the glass?",
@@ -504,6 +512,7 @@ const navigationLockRef = useRef(false);
         { text: "Glass absorbs wine", correct: false },
         { text: "Wine is attracted to glass by static electricity", correct: false }
       ],
+      explanation: "Alcohol evaporates faster from the thin film on the glass, leaving water with higher surface tension. This surface tension gradient pulls liquid upward along the glass via the Marangoni effect.",
     },
     {
       question: "What shape does a soap film naturally form and why?",
@@ -513,6 +522,7 @@ const navigationLockRef = useRef(false);
         { text: "Cubic, due to molecular structure", correct: false },
         { text: "Random shapes", correct: false }
       ],
+      explanation: "Surface tension acts to minimize surface area. A sphere encloses the maximum volume for a given surface area, so free soap films and bubbles naturally form spherical shapes.",
     }
   ];
 
@@ -2420,38 +2430,25 @@ const navigationLockRef = useRef(false);
                   Score: {score}/{testQuestions.length} ({Math.round(score / testQuestions.length * 100)}%)
                 </p>
 
-                <div style={{
-                  background: 'rgba(30, 41, 59, 0.5)',
-                  borderRadius: 12,
-                  padding: '16px',
-                  border: '1px solid rgba(71, 85, 105, 0.5)',
-                  maxHeight: '300px',
-                  overflowY: 'auto'
-                }}>
-                  <h3 style={{ color: '#e2e8f0', marginBottom: '12px', fontSize: '1rem', fontWeight: 600 }}>Answer Review</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-                    {testQuestions.map((tq, qi) => {
-                      const isCorrect = tq.options[testAnswers[qi]]?.correct;
-                      return (
-                        <div key={qi} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px',
-                          background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                          borderRadius: 8,
-                          border: `1px solid ${isCorrect ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-                        }}>
-                          <span style={{ fontSize: '1.2rem' }}>{isCorrect ? '✓' : '✗'}</span>
-                          <span style={{ color: '#cbd5e1', fontSize: '0.9rem' }}>
-                            Question {qi + 1}: <span style={{ color: isCorrect ? '#86efac' : '#fca5a5' }}>
-                              {isCorrect ? 'Correct' : 'Incorrect'}
-                            </span>
-                          </span>
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                  {testQuestions.map((tq, qi) => {
+                    const userAnswer = testAnswers[qi];
+                    const correctOption = tq.options.find(o => o.correct);
+                    const userOption = userAnswer !== undefined ? tq.options[userAnswer] : undefined;
+                    const isCorrect = userAnswer !== undefined && tq.options[userAnswer]?.correct;
+                    return (
+                      <div key={qi} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                          <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                          <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{qi + 1}. {tq.question}</span>
                         </div>
-                      );
-                    })}
-                  </div>
+                        {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                        <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                        <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{tq.explanation}</span></div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <button
@@ -2563,6 +2560,23 @@ const navigationLockRef = useRef(false);
             </svg>
 
             <button
+              onPointerDown={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.reduce((acc, tq, i) => { if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) return acc + 1; return acc; }, 0), total: testQuestions.length } }); window.location.href = '/games'; }}
+              style={{
+                marginTop: '1rem',
+                padding: '1rem 2.5rem',
+                fontSize: '1.1rem',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 12,
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Complete Game &rarr;
+            </button>
+
+            <button
               onPointerDown={() => {
                 goToPhase('hook');
                 setTestAnswers({});
@@ -2572,12 +2586,12 @@ const navigationLockRef = useRef(false);
                 resetTwistSimulation();
               }}
               style={{
-                marginTop: '1rem',
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
+                marginTop: '0.5rem',
+                padding: '0.75rem 2rem',
+                fontSize: '0.9rem',
+                background: 'transparent',
+                color: '#94a3b8',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
                 borderRadius: 12,
                 cursor: 'pointer',
                 fontWeight: 600

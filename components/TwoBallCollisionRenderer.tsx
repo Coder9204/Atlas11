@@ -2447,14 +2447,19 @@ const navigationLockRef = useRef(false);
         <button
           onPointerDown={(e) => {
             e.preventDefault();
-            playSound('complete');
-            if (onComplete) onComplete(testScore * 10);
-            emitEvent('completion', { score: testScore * 10 });
+            goToPhase('hook');
           }}
-          className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+          className="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-lg transition-all"
         >
-          Complete Lesson 🚀
+          Explore Again
         </button>
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { emitEvent('mastery_achieved', { score: calculateTestScore(), total: testQuestions.length }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   };

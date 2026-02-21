@@ -208,6 +208,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Cleaning the silicon surface', correct: false },
         { text: 'Making the wafer thicker', correct: false },
       ],
+      explanation: 'Doping deliberately introduces impurity atoms (like phosphorus or boron) into pure silicon to control whether it conducts via electrons (n-type) or holes (p-type).',
     },
     {
       question: 'How does temperature affect diffusion rate?',
@@ -217,6 +218,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Higher temperature dramatically increases diffusion rate (exponential)', correct: true },
         { text: 'Only pressure affects diffusion rate', correct: false },
       ],
+      explanation: 'Diffusion follows the Arrhenius equation, so even a small temperature increase causes an exponential jump in atomic mobility and diffusion rate.',
     },
     {
       question: 'The diffusion coefficient D follows which relationship with temperature?',
@@ -226,6 +228,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'D decreases with T', correct: false },
         { text: 'D is constant regardless of T', correct: false },
       ],
+      explanation: 'The Arrhenius equation D = D0 * exp(-Ea/kT) describes how atomic diffusivity depends exponentially on temperature, with Ea being the activation energy barrier.',
     },
     {
       question: 'What determines the junction depth in a solar cell?',
@@ -235,6 +238,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'The color of the light used', correct: false },
         { text: 'The size of the cell', correct: false },
       ],
+      explanation: 'Junction depth scales as roughly sqrt(D*t), so both the diffusion temperature (which sets D) and the process time directly control how deep dopants penetrate.',
     },
     {
       question: 'Why can\'t you simply use room temperature for longer times to achieve the same diffusion?',
@@ -244,6 +248,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Silicon melts at room temperature', correct: false },
         { text: 'You actually can - it just takes longer', correct: false },
       ],
+      explanation: 'At room temperature the diffusion coefficient is so astronomically small (due to the exponential dependence) that meaningful diffusion would take geological timescales.',
     },
     {
       question: 'The dopant concentration profile typically follows what shape?',
@@ -253,6 +258,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Increasing with depth', correct: false },
         { text: 'Random variation', correct: false },
       ],
+      explanation: 'Fick\'s laws of diffusion produce a complementary error function (erfc) or Gaussian profile, both of which decrease monotonically from the high-concentration surface.',
     },
     {
       question: 'What is "sheet resistance" in a doped layer?',
@@ -262,6 +268,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'The optical reflectivity', correct: false },
         { text: 'The resistance to chemical etching', correct: false },
       ],
+      explanation: 'Sheet resistance (ohms/square) characterizes a thin conducting layer independent of its lateral dimensions, making it the standard metric for doped semiconductor films.',
     },
     {
       question: 'For phosphorus in silicon, what happens if you diffuse at 900C instead of 800C?',
@@ -271,6 +278,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Diffusion rate stays the same', correct: false },
         { text: 'Diffusion stops completely', correct: false },
       ],
+      explanation: 'Because of the exponential Arrhenius dependence, a 100C increase can boost the diffusion coefficient by 10x or more, dramatically increasing junction depth.',
     },
     {
       question: 'Why do shallow junctions improve blue light response?',
@@ -280,6 +288,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Blue photons have more energy', correct: false },
         { text: 'Shallow junctions filter out red light', correct: false },
       ],
+      explanation: 'Blue photons are absorbed within the first ~0.5 um of silicon. A shallow junction places the collecting field close to that absorption zone, capturing more blue-generated carriers.',
     },
     {
       question: 'What is a key tradeoff when choosing junction depth?',
@@ -289,6 +298,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
         { text: 'Junction depth only affects appearance', correct: false },
         { text: 'Shallow junctions are cheaper to manufacture', correct: false },
       ],
+      explanation: 'Shallow junctions improve short-wavelength collection but have fewer dopant atoms, increasing sheet resistance and contact resistance -- a classic solar cell design tradeoff.',
     },
   ];
 
@@ -1747,20 +1757,37 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered doping and diffusion!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1923,7 +1950,12 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

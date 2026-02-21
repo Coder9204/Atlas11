@@ -149,7 +149,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) More energy is absorbed breaking bonds than released by hydration", correct: true },
         { text: "C) The solute disappears faster in warm water", correct: false },
         { text: "D) Bubbles form during the mixing process", correct: false }
-      ]
+      ],
+      explanation: "In endothermic dissolution, the energy required to break apart the crystal lattice exceeds the energy released when water molecules surround the ions (hydration). The deficit is drawn from the surroundings as heat, cooling the solution."
     },
     {
       scenario: "A first-aid kit manufacturer needs to select the right compound for their instant cold packs used in emergency rooms across 500 hospitals.",
@@ -159,7 +160,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Sodium chloride (NaCl) - common table salt", correct: false },
         { text: "C) Ammonium nitrate (NH4NO3) - an endothermic salt", correct: true },
         { text: "D) Sodium hydroxide (NaOH) - a caustic base", correct: false }
-      ]
+      ],
+      explanation: "Ammonium nitrate dissolves endothermically, absorbing substantial heat from water and dropping the temperature by 20-25 degrees C. This makes it ideal for instant cold packs used in first aid."
     },
     {
       scenario: "A highway maintenance crew is preparing for a winter storm. They need to choose between $2.5M worth of de-icing compounds.",
@@ -169,7 +171,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Hydration energy released exceeds energy to break crystal lattice", correct: true },
         { text: "C) It is radioactive and emits thermal radiation", correct: false },
         { text: "D) Friction from dissolving generates mechanical heat", correct: false }
-      ]
+      ],
+      explanation: "Calcium chloride's ions form very strong bonds with water molecules (high hydration energy). This energy release exceeds the lattice energy needed to separate the ions, so the excess is released as heat."
     },
     {
       scenario: "A materials science professor at MIT is explaining crystallography to 200 graduate students in a thermodynamics lecture.",
@@ -179,7 +182,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Energy needed to break apart the crystal structure of a solid", correct: true },
         { text: "C) The total heat capacity of the resulting solution", correct: false },
         { text: "D) Energy released during ion hydration in solution", correct: false }
-      ]
+      ],
+      explanation: "Lattice energy is the energy required to completely separate all ions in a crystal from each other. Stronger ionic bonds mean higher lattice energy and more energy needed to dissolve the solid."
     },
     {
       scenario: "A pharmaceutical company is developing a new drug delivery system that relies on dissolution in biological fluids at 37\u00b0C body temperature.",
@@ -189,7 +193,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Energy released when water molecules surround dissolved ions", correct: true },
         { text: "C) Simply the temperature of the water before dissolution", correct: false },
         { text: "D) Only relevant in exothermic reactions, not endothermic", correct: false }
-      ]
+      ],
+      explanation: "Hydration energy is always released (exothermic) when water molecules form ion-dipole bonds with dissolved ions. It plays a role in both endothermic and exothermic dissolutions."
     },
     {
       scenario: "A chemical engineer at BASF is calculating the cooling requirements for a new industrial dissolution reactor processing 150M tons annually.",
@@ -199,7 +204,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Endothermic \u2014 absorbs 25 kJ of heat per mole dissolved", correct: true },
         { text: "C) Neither endothermic nor exothermic at this value", correct: false },
         { text: "D) Both at once, depending on concentration", correct: false }
-      ]
+      ],
+      explanation: "A positive net energy means the system absorbs energy from its surroundings (endothermic). The lattice energy exceeded the hydration energy by 25 kJ/mol, so the solution cools down."
     },
     {
       scenario: "A consumer products company (ThermaCare) is deciding between sodium acetate and calcium chloride for their next-generation reusable hand warmers.",
@@ -209,7 +215,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Sodium acetate can be 'recharged' by heating to re-dissolve crystals", correct: true },
         { text: "C) Sodium acetate produces colder temperatures for pain relief", correct: false },
         { text: "D) Calcium chloride is too toxic for consumer skin contact", correct: false }
-      ]
+      ],
+      explanation: "Sodium acetate forms a supersaturated solution that crystallizes exothermically when triggered. Boiling the pack re-dissolves the crystals, resetting the cycle for reuse indefinitely."
     },
     {
       scenario: "A chemistry teacher at a high school with a $5,000 lab budget needs to demonstrate temperature changes during dissolution to 120 students.",
@@ -219,7 +226,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) CaCl2 (calcium chloride) \u2014 strongly exothermic", correct: false },
         { text: "C) NH4NO3 (ammonium nitrate) \u2014 strongly endothermic", correct: true },
         { text: "D) NaOH (sodium hydroxide) \u2014 moderately exothermic", correct: false }
-      ]
+      ],
+      explanation: "Ammonium nitrate has the most endothermic dissolution of the options listed, absorbing approximately 25.7 kJ/mol from the water. CaCl2 and NaOH are both exothermic (they warm water)."
     },
     {
       scenario: "A NASA engineer is designing thermal management systems for the International Space Station where energy conservation is critical at 400 km altitude.",
@@ -229,7 +237,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Energy is destroyed when bonds break apart", correct: false },
         { text: "C) Energy is conserved \u2014 it transfers between system and surroundings", correct: true },
         { text: "D) Temperature must remain constant throughout the process", correct: false }
-      ]
+      ],
+      explanation: "The first law states energy cannot be created or destroyed. In dissolution, energy transfers between the solute-solvent system and the surroundings as heat, but the total energy is always conserved."
     },
     {
       scenario: "A Dow Chemical quality control lab is testing a batch of 500 kg of dissolution compounds for their industrial heating applications.",
@@ -239,7 +248,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         { text: "B) Gets warmer as excess hydration energy is released as heat", correct: true },
         { text: "C) Stays the same temperature due to energy conservation", correct: false },
         { text: "D) Freezes immediately from the rapid energy change", correct: false }
-      ]
+      ],
+      explanation: "When hydration energy exceeds lattice energy, the surplus is released as heat into the solution. This raises the temperature of the water, which is why CaCl2 and NaOH warm water when dissolved."
     }
   ], []);
 
@@ -1172,21 +1182,22 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               {passed ? 'You\'ve mastered dissolution thermodynamics!' : 'Review the concepts and try again.'}
             </p>
 
-            <div style={{ maxWidth: '600px', width: '100%' }}>
+            <div style={{ maxWidth: '600px', width: '100%', padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
               {testQuestions.map((q, i) => {
                 const ans = testAnswers[i];
-                const correct = ans !== null && q.options[ans]?.correct;
+                const correctOption = q.options.find(o => o.correct);
+                const userOption = ans !== null ? q.options[ans] : undefined;
+                const isCorrect = ans !== null && q.options[ans]?.correct;
                 return (
-                  <div key={i} style={{
-                    ...cardStyle, marginBottom: '8px', padding: '12px 16px',
-                    borderLeft: `4px solid ${correct ? '#10b981' : '#ef4444'}`,
-                  }}>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-                      {i + 1}. {q.question}
-                    </p>
-                    <p style={{ fontSize: '12px', color: correct ? '#10b981' : '#ef4444' }}>
-                      {correct ? '\u2713 Correct' : '\u2717 Incorrect'}
-                    </p>
+                  <div key={i} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{i + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
                   </div>
                 );
               })}
@@ -1350,7 +1361,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                     const sc = testAnswers.reduce((acc, ans, i) => acc + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
                     setMasteryScore(sc);
                     setTestSubmitted(true);
-                    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
+                    onGameEvent?.({ type: 'game_completed', details: { score: sc, total: testQuestions.length } });
                   }}
                   style={{
                     flex: 1, padding: '14px', borderRadius: '12px', border: 'none',
@@ -1374,7 +1385,16 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   // ============================================================================
   if (phase === 'mastery') {
     return (
-      renderPhaseWrapper(true, "Complete Game \u2192", <>
+      <div
+        style={{
+          display: 'flex', flexDirection: 'column', minHeight: '100dvh',
+          background: design.bg, overflow: 'hidden',
+          fontFamily: theme.fontFamily,
+          color: design.textPrimary,
+        }}
+      >
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '100px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '24px' }}>{'\ud83c\udfc6'}</div>
           <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '16px',
@@ -1406,7 +1426,20 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ))}
           </div>
         </div>
-      </>)
+        </div>
+        {/* Fixed Complete Game button */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: '1px solid rgba(71,85,105,0.3)', zIndex: 50 }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'game_completed', gameType: 'endothermic_exothermic', gameTitle: 'Endothermic & Exothermic', details: { finalEvent: 'mastery_achieved' }, timestamp: Date.now() } as any);
+              window.location.href = '/games';
+            }}
+            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}
+          >
+            Complete Game
+          </button>
+        </div>
+      </div>
     );
   }
 

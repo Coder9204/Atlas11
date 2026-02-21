@@ -2053,20 +2053,48 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               {testScore >= 8 ? 'You have mastered Brewster angle!' : 'Review the material and try again.'}
             </p>
           </div>
-          {testQuestions.map((q, qIndex) => {
-            const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-            return (
-              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Q{qIndex + 1}. {q.question}</p>
-                {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                    {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
+          <div style={{ padding: '16px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, qIndex) => {
+              const userAnswer = testAnswers[qIndex];
+              const correctOption = q.options.find(o => o.correct);
+              const correctIdx = q.options.indexOf(correctOption!);
+              const isCorrect = userAnswer === correctIdx;
+              const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+              return (
+                <div key={qIndex} style={{
+                  background: 'rgba(30, 41, 59, 0.9)',
+                  margin: '12px 0',
+                  padding: '16px',
+                  borderRadius: '10px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>
+                      {isCorrect ? '\u2713' : '\u2717'}
+                    </span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                      Q{qIndex + 1}. {q.question}
+                    </span>
                   </div>
-                ))}
-              </div>
-            );
-          })}
+                  {!isCorrect && (
+                    <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                      <span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>{userOption?.text}</span>
+                    </div>
+                  )}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                    <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                    <span style={{ color: colors.textMuted, fontSize: '13px' }}>{correctOption?.text}</span>
+                  </div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                    <span style={{ color: colors.warning, fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                    <span style={{ color: colors.textMuted, fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <div style={{ padding: '16px' }}>
             <button
               onClick={testScore >= 8 ? goToNextPhase : () => { setTestSubmitted(false); setCurrentTestQuestion(0); setTestAnswers(new Array(10).fill(null)); setCheckedAnswers(new Set()); }}
@@ -2280,21 +2308,21 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
         {renderVisualization(true)}
         <div style={{ padding: '16px' }}>
           <button
-            onClick={onPhaseComplete}
+            onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
             style={{
               width: '100%',
               padding: '16px',
-              minHeight: '44px',
-              borderRadius: '8px',
+              minHeight: '52px',
+              borderRadius: '12px',
               border: 'none',
-              background: colors.success,
-              color: 'white',
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: '#f8fafc',
               fontWeight: 'bold',
               cursor: 'pointer',
               fontSize: '16px',
             }}
           >
-            Complete Game
+            Complete Game →
           </button>
         </div>
       </>

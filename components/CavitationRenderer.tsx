@@ -109,25 +109,35 @@ const [hookStep, setHookStep] = useState(0);
   // Test questions
   const testQuestions = [
     { question: "Cavitation occurs when local pressure drops below the liquid's vapor pressure. A ship propeller spins at high RPM, creating low-pressure zones on the suction side of each blade. What happens when pressure drops below vapor pressure?",
-      options: [{ text: "The water freezes instantly due to pressure change", correct: false }, { text: "Vapor bubbles form in the low-pressure zone", correct: true }, { text: "The propeller speeds up automatically", correct: false }, { text: "Nothing happens at normal temperatures", correct: false }] },
+      options: [{ text: "The water freezes instantly due to pressure change", correct: false }, { text: "Vapor bubbles form in the low-pressure zone", correct: true }, { text: "The propeller speeds up automatically", correct: false }, { text: "Nothing happens at normal temperatures", correct: false }],
+      explanation: "When local pressure drops below vapor pressure, liquid water transitions to vapor, forming bubbles. This phase change is the defining event of cavitation." },
     { question: "During cavitation, vapor bubbles collapse violently when they move into higher-pressure regions. The collapse creates extreme local conditions. Why is cavitation damage so severe on metal surfaces?",
-      options: [{ text: "The bubbles contain corrosive chemicals", correct: false }, { text: "Collapse creates extreme local temperatures (5,000\u00b0C) and pressures (1,000 atm) that erode metal", correct: true }, { text: "Air dissolved in water oxidizes the metal", correct: false }, { text: "Bubbles expand until the metal breaks", correct: false }] },
+      options: [{ text: "The bubbles contain corrosive chemicals", correct: false }, { text: "Collapse creates extreme local temperatures (5,000\u00b0C) and pressures (1,000 atm) that erode metal", correct: true }, { text: "Air dissolved in water oxidizes the metal", correct: false }, { text: "Bubbles expand until the metal breaks", correct: false }],
+      explanation: "Bubble collapse concentrates energy into a tiny volume, generating extreme local temperatures (~5,000C) and pressures (~1,000 atm) that progressively pit and erode even hardened steel." },
     { question: "Where do cavitation bubbles typically form on a propeller blade? Consider where the pressure is lowest during operation.",
-      options: [{ text: "At the center hub where rotation is slowest", correct: false }, { text: "On the low-pressure (suction) side of blades where flow velocity is highest", correct: true }, { text: "Only at the very tips of the blades", correct: false }, { text: "On the shaft bearing surfaces", correct: false }] },
+      options: [{ text: "At the center hub where rotation is slowest", correct: false }, { text: "On the low-pressure (suction) side of blades where flow velocity is highest", correct: true }, { text: "Only at the very tips of the blades", correct: false }, { text: "On the shaft bearing surfaces", correct: false }],
+      explanation: "By Bernoulli's principle, the fastest-moving fluid on the suction side of the blade has the lowest pressure, making it the first region to drop below vapor pressure." },
     { question: "The mantis shrimp strikes at 23 m/s with 10,000 g acceleration. This creates a cavitation bubble between its claw and the prey. How does this biological cavitation help the shrimp?",
-      options: [{ text: "It heats the water to cook the prey", correct: false }, { text: "The collapsing bubble delivers a second strike, stunning prey even if the punch misses", correct: true }, { text: "It creates a chemical reaction that dissolves shells", correct: false }, { text: "It generates an electrical discharge", correct: false }] },
+      options: [{ text: "It heats the water to cook the prey", correct: false }, { text: "The collapsing bubble delivers a second strike, stunning prey even if the punch misses", correct: true }, { text: "It creates a chemical reaction that dissolves shells", correct: false }, { text: "It generates an electrical discharge", correct: false }],
+      explanation: "The cavitation bubble collapse delivers a second shockwave impact after the initial punch, effectively giving the shrimp a double strike that can stun or kill prey even on a near-miss." },
     { question: "Scientists have measured the temperature at the center of a collapsing cavitation bubble. What approximate temperature is reached during collapse?",
-      options: [{ text: "100\u00b0C (boiling point of water)", correct: false }, { text: "500\u00b0C (typical oven temperature)", correct: false }, { text: "5,000\u00b0C or higher (comparable to the sun's surface)", correct: true }, { text: "Only ambient room temperature", correct: false }] },
+      options: [{ text: "100\u00b0C (boiling point of water)", correct: false }, { text: "500\u00b0C (typical oven temperature)", correct: false }, { text: "5,000\u00b0C or higher (comparable to the sun's surface)", correct: true }, { text: "Only ambient room temperature", correct: false }],
+      explanation: "The rapid adiabatic compression of gas inside the collapsing bubble can reach temperatures of 5,000C or more, comparable to the surface of the sun." },
     { question: "Sonoluminescence is a phenomenon observed during cavitation bubble collapse. Light is emitted from the collapsing bubble due to extreme conditions. What is sonoluminescence?",
-      options: [{ text: "Sound waves reflecting off bubble surfaces", correct: false }, { text: "Light emitted from collapsing cavitation bubbles due to extreme compression heating", correct: true }, { text: "Ultrasound imaging of internal organs", correct: false }, { text: "Laser light focused through water", correct: false }] },
+      options: [{ text: "Sound waves reflecting off bubble surfaces", correct: false }, { text: "Light emitted from collapsing cavitation bubbles due to extreme compression heating", correct: true }, { text: "Ultrasound imaging of internal organs", correct: false }, { text: "Laser light focused through water", correct: false }],
+      explanation: "The extreme temperatures and pressures during collapse ionize gas inside the bubble, producing a brief flash of light. This sound-to-light conversion is called sonoluminescence." },
     { question: "A pump engineer notices cavitation damage on impeller blades. Consider the relationship between pressure, speed, and cavitation threshold. What should they do to prevent cavitation?",
-      options: [{ text: "Run the pump faster to push bubbles through", correct: false }, { text: "Increase suction pressure (NPSH) or reduce pump speed to keep pressure above vapor pressure", correct: true }, { text: "Heat the liquid to increase vapor pressure", correct: false }, { text: "Add air bubbles to cushion the collapse", correct: false }] },
+      options: [{ text: "Run the pump faster to push bubbles through", correct: false }, { text: "Increase suction pressure (NPSH) or reduce pump speed to keep pressure above vapor pressure", correct: true }, { text: "Heat the liquid to increase vapor pressure", correct: false }, { text: "Add air bubbles to cushion the collapse", correct: false }],
+      explanation: "Increasing Net Positive Suction Head (NPSH) or reducing speed keeps local pressures above the vapor pressure threshold, preventing bubble formation in the first place." },
     { question: "Ship propellers sometimes produce audible noise that sailors describe as 'singing' or 'crackling'. What causes this characteristic sound?",
-      options: [{ text: "Vibration of the motor bearings only", correct: false }, { text: "Cavitation bubble collapse creates acoustic shock waves", correct: true }, { text: "Wind passing over the hull surface", correct: false }, { text: "Resonance of the hull plates", correct: false }] },
+      options: [{ text: "Vibration of the motor bearings only", correct: false }, { text: "Cavitation bubble collapse creates acoustic shock waves", correct: true }, { text: "Wind passing over the hull surface", correct: false }, { text: "Resonance of the hull plates", correct: false }],
+      explanation: "Each bubble collapse produces a micro-shockwave. Millions of collapses per second create the characteristic crackling or singing noise associated with cavitating propellers." },
     { question: "Ultrasonic cleaning devices are used in jewelry stores and hospitals. They use high-frequency sound waves (20-400 kHz) to create cavitation in cleaning fluid. How does this clean surfaces?",
-      options: [{ text: "The sound waves heat the water to sterilization temperature", correct: false }, { text: "Cavitation bubbles implode against surfaces, scrubbing away contaminants at the microscopic level", correct: true }, { text: "The ultrasound dissolves dirt through chemical reactions", correct: false }, { text: "Magnetic particles in the fluid attract contaminants", correct: false }] },
+      options: [{ text: "The sound waves heat the water to sterilization temperature", correct: false }, { text: "Cavitation bubbles implode against surfaces, scrubbing away contaminants at the microscopic level", correct: true }, { text: "The ultrasound dissolves dirt through chemical reactions", correct: false }, { text: "Magnetic particles in the fluid attract contaminants", correct: false }],
+      explanation: "Ultrasonic waves create alternating pressure zones. Bubbles form in low-pressure zones and collapse against surfaces in high-pressure zones, producing microscopic jets that blast away contaminants." },
     { question: "After years of operation, a pump impeller is removed for inspection. The damage pattern from cavitation is distinctive. What does cavitation damage typically look like on a metal surface?",
-      options: [{ text: "Smooth, uniform rust coating", correct: false }, { text: "Pitted, cratered surface with material removal (resembling tiny explosions)", correct: true }, { text: "Clean, polished wear marks", correct: false }, { text: "Color change without material loss", correct: false }] }
+      options: [{ text: "Smooth, uniform rust coating", correct: false }, { text: "Pitted, cratered surface with material removal (resembling tiny explosions)", correct: true }, { text: "Clean, polished wear marks", correct: false }, { text: "Color change without material loss", correct: false }],
+      explanation: "Each bubble collapse removes a tiny amount of material through micro-jet impact, leaving a characteristic pitted, cratered surface that looks like a landscape of tiny explosions." }
   ];
 
   // Transfer applications
@@ -1208,21 +1218,30 @@ const [hookStep, setHookStep] = useState(0);
                 </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {testQuestions.map((q, i) => (
-                  <div key={i} style={{ padding: '14px', background: '#020617', borderRadius: '10px', borderLeft: `4px solid ${q.options[testAnswers[i]]?.correct ? '#10b981' : '#ef4444'}` }}>
-                    <p style={{ color: '#f8fafc', margin: '0 0 8px 0', fontSize: '13px', fontWeight: 500 }}>{i + 1}. {q.question}</p>
-                    <p style={{ color: q.options[testAnswers[i]]?.correct ? '#10b981' : '#ef4444', margin: 0, fontSize: '12px' }}>
-                      Your answer: {q.options[testAnswers[i]]?.text} {q.options[testAnswers[i]]?.correct ? '\u2713 Correct' : `\u2717 Incorrect (Correct: ${q.options.find(o => o.correct)?.text})`}
-                    </p>
-                  </div>
-                ))}
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const isCorrect = q.options[userAnswer]?.correct;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                      </div>
+                      {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span></div>)}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
 
-        {isComplete && renderBottomBar(() => goToNextPhase(), false, "Complete Journey")}
+        {isComplete && renderBottomBar(() => { onGameEvent?.({ type: 'game_completed', data: { score: calculateScore(), total: testQuestions.length } }); goToNextPhase(); }, false, "Complete Journey")}
       </div>
     );
   };

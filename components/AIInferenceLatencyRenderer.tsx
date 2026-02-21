@@ -386,6 +386,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'The model automatically corrects its mistakes', correct: false },
         { text: 'Multiple models work together on generation', correct: false },
       ],
+      explanation: 'Autoregressive means each token is generated sequentially, conditioned on all previously generated tokens. This sequential dependency is why LLM inference cannot simply generate all words at once.',
     },
     {
       question: 'The KV cache stores:',
@@ -395,6 +396,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'User conversation history on disk', correct: false },
         { text: 'Compressed versions of generated text', correct: false },
       ],
+      explanation: 'The KV cache stores previously computed key and value vectors from the attention mechanism so they do not need to be recomputed for every new token, dramatically reducing redundant computation.',
     },
     {
       question: 'Why is memory bandwidth often the bottleneck for LLM inference?',
@@ -404,6 +406,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Memory is more expensive than compute', correct: false },
         { text: 'The model forgets previous context', correct: false },
       ],
+      explanation: 'During the decode phase, the GPU must load the entire model weights from memory for each token generated. The arithmetic intensity is very low, making memory bandwidth the limiting factor rather than compute.',
     },
     {
       question: 'Batching multiple requests together improves efficiency because:',
@@ -413,6 +416,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Batched requests are simpler to process', correct: false },
         { text: 'Users prefer receiving responses together', correct: false },
       ],
+      explanation: 'When multiple requests are batched, the model weights are loaded from memory once but applied to all requests in the batch simultaneously, amortizing the memory bandwidth cost across all requests.',
     },
     {
       question: 'The "prefill" phase of LLM inference:',
@@ -422,6 +426,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Pre-loads the model into memory', correct: false },
         { text: 'Fills empty space in memory', correct: false },
       ],
+      explanation: 'The prefill phase processes the entire input prompt in parallel using matrix-matrix operations, which is compute-bound and efficient on GPUs. It builds the initial KV cache that subsequent decode steps use.',
     },
     {
       question: 'Streaming tokens to users is valuable because:',
@@ -431,6 +436,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'It uses less server resources', correct: false },
         { text: 'It produces higher quality output', correct: false },
       ],
+      explanation: 'Streaming does not reduce total generation time, but it dramatically reduces perceived latency because users begin reading the response immediately rather than waiting for the entire output to be generated.',
     },
     {
       question: 'Without KV cache, generating each new token would require:',
@@ -440,6 +446,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Starting the generation from scratch', correct: false },
         { text: 'Clearing GPU memory', correct: false },
       ],
+      explanation: 'Without the KV cache, the attention mechanism would need to recompute the key and value projections for all previous tokens at every step, turning O(n) work into O(n^2) and making long sequences prohibitively slow.',
     },
     {
       question: 'Larger language models are slower primarily because:',
@@ -449,6 +456,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Users type slower for longer responses', correct: false },
         { text: 'The internet connection is slower', correct: false },
       ],
+      explanation: 'More layers and parameters mean more weights must be loaded from memory for each token. Since inference is memory-bandwidth-bound, more parameters directly translate to slower per-token generation.',
     },
     {
       question: 'Speculative decoding accelerates inference by:',
@@ -458,6 +466,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Skipping unimportant tokens', correct: false },
         { text: 'Compressing the model weights', correct: false },
       ],
+      explanation: 'Speculative decoding uses a fast draft model to propose multiple tokens, then verifies them in parallel with the large model. Since verification is parallel (like prefill), multiple tokens can be accepted in one large-model forward pass.',
     },
     {
       question: 'The trade-off between batch size and latency is:',
@@ -467,6 +476,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         { text: 'Batch size doesn\'t affect latency', correct: false },
         { text: 'Smaller batches are always better', correct: false },
       ],
+      explanation: 'Larger batches amortize weight-loading costs, improving throughput. However, each individual request must wait for the entire batch to be processed, increasing per-request latency. This is the fundamental throughput-latency trade-off.',
     },
   ];
 
@@ -1587,32 +1597,26 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
               </p>
             </div>
 
-            {/* Answer review section with check/cross indicators */}
-            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {testQuestions.map((q, i) => {
-                  const isCorrect = testAnswers[i] !== null && q.options[testAnswers[i]!].correct;
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      }}
-                    >
-                      <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2713' : '\u2717'}</span>
-                      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                        Q{i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
-                      </span>
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswerIdx = q.options.indexOf(correctOption!);
+                const userOption = userAnswer !== null ? q.options[userAnswer] : undefined;
+                const isCorrect = userAnswer !== null && q.options[userAnswer!]?.correct;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  );
-                })}
-              </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>,
@@ -1765,7 +1769,12 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Complete')
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+        <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[testQuestions.indexOf(q)] !== null && q.options[testAnswers[testQuestions.indexOf(q)]!]?.correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+          style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          Complete Game &rarr;
+        </button>
+      </div>
     );
   }
 

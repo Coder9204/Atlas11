@@ -302,6 +302,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'The time window for exposing the resist', correct: false },
         { text: 'The wavelength range of the light source', correct: false },
       ],
+      explanation: 'The process window defines the range of focus and dose combinations that produce features within specification, and operating within it is essential for high yield.',
     },
     {
       question: 'What happens when the exposure dose is too high?',
@@ -311,6 +312,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'The resist becomes stronger', correct: false },
         { text: 'Focus automatically compensates', correct: false },
       ],
+      explanation: 'Excessive dose causes more photoresist to be exposed than intended, making printed features wider than the mask pattern specified.',
     },
     {
       question: 'Defocus in lithography causes:',
@@ -320,6 +322,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'Faster exposure times', correct: false },
         { text: 'Better resist adhesion', correct: false },
       ],
+      explanation: 'When the lens is not focused on the resist plane, the aerial image blurs, causing features to print with poorly defined edges and variable widths.',
     },
     {
       question: 'Line Edge Roughness (LER) is problematic because:',
@@ -329,6 +332,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'It increases the weight of the chip', correct: false },
         { text: 'It only affects optical properties', correct: false },
       ],
+      explanation: 'LER introduces random width variations along transistor gates, causing threshold voltage differences that make circuit timing unpredictable.',
     },
     {
       question: 'The focus-dose matrix in lithography is:',
@@ -338,6 +342,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'The alignment grid for the wafer', correct: false },
         { text: 'A quality control document', correct: false },
       ],
+      explanation: 'The focus-dose matrix is an experimental technique that systematically varies focus and dose across a test wafer to map the boundaries of acceptable process conditions.',
     },
     {
       question: 'Why do smaller features require tighter process windows?',
@@ -347,6 +352,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'Larger features are harder to make', correct: false },
         { text: 'Process windows expand with smaller features', correct: false },
       ],
+      explanation: 'As features shrink, the same absolute error in focus or dose represents a larger fraction of the feature size, demanding proportionally tighter control.',
     },
     {
       question: 'Photoresist exposure follows which relationship?',
@@ -356,6 +362,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'Exponential - dose has minimal effect', correct: false },
         { text: 'Random - dose effects are unpredictable', correct: false },
       ],
+      explanation: 'Photoresist has a nonlinear response with a critical threshold dose, below which it remains unexposed and above which it fully develops away.',
     },
     {
       question: 'The depth of focus (DOF) in lithography is:',
@@ -365,6 +372,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'The distance from lens to wafer', correct: false },
         { text: 'The wavelength of the exposure light', correct: false },
       ],
+      explanation: 'Depth of focus is the range of vertical positions over which the projected image remains sharp enough to print acceptable features.',
     },
     {
       question: 'What is the relationship between numerical aperture (NA) and DOF?',
@@ -374,6 +382,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'NA and DOF are unrelated', correct: false },
         { text: 'DOF is always constant regardless of NA', correct: false },
       ],
+      explanation: 'Higher numerical aperture improves resolution but reduces depth of focus because the larger cone of light converges more tightly, making the focal plane thinner.',
     },
     {
       question: 'In a focus-dose ellipse diagram, the center represents:',
@@ -383,6 +392,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         { text: 'Zero exposure', correct: false },
         { text: 'The edge of the wafer', correct: false },
       ],
+      explanation: 'The center of the focus-dose ellipse represents best focus and optimal dose, where the process has maximum margin for error in both parameters.',
     },
   ];
 
@@ -1630,20 +1640,22 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
             <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
             <p style={{ color: colors.textSecondary, marginTop: '8px' }}>{testScore >= 8 ? 'You understand lithography process windows!' : 'Review the material and try again.'}</p>
           </div>
-          {testQuestions.map((q, qIndex) => {
-            const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-            return (
-              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+          <div style={{ padding: '16px' }}>
+  <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+  {testQuestions.map((q, idx) => {
+    const userAnswer = testAnswers[idx]; const correctOption = q.options.find(o => o.correct); const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+    return (
+      <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+          <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+        </div>
+        {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+        <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+        {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
+      </div>);
+  })}
+</div>
         </>,
         renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); goToPhase('hook'); })
       );
@@ -1725,7 +1737,12 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
         </div>
         {renderVisualization(true, true)}
       </>,
-      renderBottomBar(true, true, 'Complete Game')
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+  <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+    style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+    Complete Game \u2192
+  </button>
+</div>
     );
   }
 

@@ -2827,9 +2827,41 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
                 {passed ? 'You\'ve mastered work and power!' : 'Review the concepts and try again to continue to mastery.'}
               </p>
-              <div style={{ display: 'flex', gap: spacing.md, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: spacing.md, justifyContent: 'center', marginBottom: spacing.xl }}>
                 {renderButton('Replay Quiz', () => { setTestIndex(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }, 'secondary')}
                 {renderButton(passed ? 'Continue to Mastery →' : 'Continue to Mastery →', () => goNext(), 'success', { size: 'lg' })}
+              </div>
+              <div style={{ padding: '16px', textAlign: 'left', maxWidth: 560, margin: '0 auto' }}>
+                <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const isCorrect = userAnswer !== null && q.options[userAnswer as number]?.correct;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                      </div>
+                      {!isCorrect && (
+                        <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                          <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                          <span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer as number]?.text : 'No answer'}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                        <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                      </div>
+                      {q.explanation && (
+                        <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                          <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                          <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2940,7 +2972,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               {testAnswers[testIndex] !== null && (
                 testIndex < testQuestions.length - 1
                   ? renderButton('Next Question →', () => setTestIndex(testIndex + 1), 'primary')
-                  : renderButton('See Results →', () => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }, 'success')
+                  : renderButton('See Results →', () => { const score = testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i] as number]?.correct).length; setTestSubmitted(true); emitEvent('game_completed', { score, total: testQuestions.length }); }, 'success')
               )}
             </div>
           </div>

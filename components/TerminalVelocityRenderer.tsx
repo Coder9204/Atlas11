@@ -362,6 +362,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'The speed at which air becomes too thick to penetrate', correct: false },
         { text: 'The velocity at which objects disintegrate from friction', correct: false },
       ],
+      explanation: 'Terminal velocity is the constant speed reached when the upward drag force exactly equals the downward gravitational force, resulting in zero net acceleration.',
     },
     {
       question: 'If you stack 4 coffee filters instead of 1, the terminal velocity:',
@@ -371,6 +372,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Stays the same', correct: false },
         { text: 'Increases by 4x but area increases too, so net effect is small', correct: false },
       ],
+      explanation: 'Stacking 4 filters quadruples the mass but keeps the area the same. Since terminal velocity scales as sqrt(mass), it doubles.',
     },
     {
       question: 'At terminal velocity, the acceleration of a falling object is:',
@@ -380,6 +382,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Zero', correct: true },
         { text: 'Negative (slowing down)', correct: false },
       ],
+      explanation: 'When drag equals gravity the net force is zero, so by Newton\'s second law the acceleration is zero and the object falls at constant speed.',
     },
     {
       question: 'How does drag force change with velocity?',
@@ -389,6 +392,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Drag increases with the square of velocity', correct: true },
         { text: 'Drag decreases as velocity increases', correct: false },
       ],
+      explanation: 'Drag force is proportional to velocity squared (F_d = 0.5 * rho * v^2 * Cd * A), which is why it increases so rapidly as speed increases.',
     },
     {
       question: 'A crumpled coffee filter falls faster than a flat one because:',
@@ -398,6 +402,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Crumpled shapes are more aerodynamic', correct: false },
         { text: 'The air cannot reach the crumpled center', correct: false },
       ],
+      explanation: 'Crumpling dramatically reduces the cross-sectional area exposed to airflow while barely changing the mass, resulting in much higher terminal velocity.',
     },
     {
       question: 'On the Moon (no atmosphere), a hammer and feather dropped together:',
@@ -407,6 +412,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Both fall at exactly the same rate', correct: true },
         { text: 'Neither falls - they float', correct: false },
       ],
+      explanation: 'Without air, there is no drag force, so only gravity acts on both objects equally. Galileo demonstrated this principle, later confirmed on the Moon by Apollo 15.',
     },
     {
       question: 'What happens to terminal velocity if air density doubles?',
@@ -416,6 +422,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Terminal velocity decreases by about 29% (factor of 1/sqrt(2))', correct: true },
         { text: 'Terminal velocity is unaffected by air density', correct: false },
       ],
+      explanation: 'Terminal velocity depends on 1/sqrt(rho), so doubling air density reduces terminal velocity by a factor of sqrt(2), which is approximately 29%.',
     },
     {
       question: 'The drag coefficient (Cd) depends mainly on:',
@@ -425,6 +432,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'The color of the object', correct: false },
         { text: 'The temperature of the object', correct: false },
       ],
+      explanation: 'The drag coefficient depends primarily on the object\'s shape and surface texture, not its mass, color, or temperature.',
     },
     {
       question: 'Why does a velocity-time graph for a falling object curve and then flatten?',
@@ -434,6 +442,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: 'Increasing drag reduces acceleration until it reaches zero', correct: true },
         { text: 'The object runs out of gravitational potential energy', correct: false },
       ],
+      explanation: 'As an object accelerates, drag increases with v-squared until it matches gravity. The decreasing net force produces decreasing acceleration, creating the characteristic curve that asymptotically approaches terminal velocity.',
     },
     {
       question: 'A skydiver in spread-eagle position has terminal velocity of 55 m/s. In head-down position (1/4 the area), terminal velocity is approximately:',
@@ -443,6 +452,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
         { text: '220 m/s (quadruple)', correct: false },
         { text: '27.5 m/s (half)', correct: false },
       ],
+      explanation: 'With 1/4 the area, terminal velocity scales as 1/sqrt(1/4) = 2x, so the skydiver falls at approximately 110 m/s in head-down position.',
     },
   ];
 
@@ -2090,20 +2100,22 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
                 {testScore >= 8 ? 'You\'ve mastered terminal velocity!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            <div style={{ padding: '16px' }}>
+  <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+  {testQuestions.map((q, idx) => {
+    const userAnswer = testAnswers[idx]; const correctOption = q.options.find(o => o.correct); const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+    return (
+      <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+          <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+        </div>
+        {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+        <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+        {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
+      </div>);
+  })}
+</div>
           </div>
           {testScore >= 8
             ? renderBottomBar(false, true, 'Complete Mastery')
@@ -2205,7 +2217,12 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+  <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+    style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+    Complete Game \u2192
+  </button>
+</div>
       </div>
     );
   }

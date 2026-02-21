@@ -322,6 +322,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   const testQuestions = [
     {
       question: 'What is surface recombination velocity (SRV)?',
+      explanation: 'SRV quantifies the rate at which charge carriers (electrons and holes) are lost through recombination at the silicon surface, measured in cm/s.',
       options: [
         { text: 'How fast electrons move along the surface', correct: false },
         { text: 'A measure of how quickly carriers are lost at the surface', correct: true },
@@ -331,6 +332,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'Why do unpassivated silicon surfaces have high recombination?',
+      explanation: 'At the silicon surface, the crystal lattice terminates abruptly, leaving unsatisfied "dangling" bonds that create mid-gap energy states acting as efficient recombination centers.',
       options: [
         { text: 'The surface is too hot', correct: false },
         { text: 'Dangling bonds create energy states that trap carriers', correct: true },
@@ -340,6 +342,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'How does passivation reduce surface recombination?',
+      explanation: 'Chemical passivation saturates dangling bonds with hydrogen or oxygen, removing trap states. Field-effect passivation creates a charge barrier that repels one carrier type from the surface.',
       options: [
         { text: 'By heating the surface to remove defects', correct: false },
         { text: 'By saturating dangling bonds and/or creating a field to repel carriers', correct: true },
@@ -349,6 +352,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'What is the relationship between carrier lifetime and cell voltage?',
+      explanation: 'Open-circuit voltage depends logarithmically on carrier concentration, which increases with lifetime. Longer lifetime means more carriers accumulate, increasing Voc.',
       options: [
         { text: 'No relationship exists', correct: false },
         { text: 'Longer lifetime leads to higher open-circuit voltage', correct: true },
@@ -358,6 +362,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'Which passivation technology typically achieves the lowest SRV?',
+      explanation: 'HJT uses intrinsic amorphous silicon (a-Si:H) that provides excellent chemical passivation of dangling bonds, achieving SRV below 5 cm/s - the lowest of mainstream technologies.',
       options: [
         { text: 'No passivation', correct: false },
         { text: 'PERC (Al2O3)', correct: false },
@@ -367,6 +372,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'Why can\'t you simply make silicon thicker to compensate for surface recombination?',
+      explanation: 'Light is absorbed near the surface, so photogenerated carriers must travel through the high-recombination surface zone regardless of wafer thickness. Surface recombination catches them before collection.',
       options: [
         { text: 'Silicon is too expensive', correct: false },
         { text: 'Carriers generated near surfaces still recombine before collection', correct: true },
@@ -376,6 +382,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'What is "field-effect passivation"?',
+      explanation: 'Fixed charges in a passivation layer (e.g., negative charges in Al2O3) create an electric field that repels one carrier type from the surface, reducing the recombination rate.',
       options: [
         { text: 'Using magnetic fields to align carriers', correct: false },
         { text: 'Creating fixed charges that repel one carrier type from the surface', correct: true },
@@ -385,6 +392,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'How does passivation affect solar cell efficiency?',
+      explanation: 'Better passivation increases Voc (more carriers survive to be collected) and improves current collection near surfaces, both directly boosting cell conversion efficiency.',
       options: [
         { text: 'It only affects the cell\'s color', correct: false },
         { text: 'It increases Voc and collection efficiency, boosting overall efficiency', correct: true },
@@ -394,6 +402,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'Reducing SRV from 10,000 to 10 cm/s (1000x improvement) typically increases Voc by:',
+      explanation: 'Voc scales logarithmically with carrier lifetime. A 1000x improvement in SRV can increase effective lifetime dramatically, yielding 50-100 mV of additional Voc.',
       options: [
         { text: 'About 1 mV', correct: false },
         { text: 'About 50-100 mV', correct: true },
@@ -403,6 +412,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     },
     {
       question: 'What makes HJT cells achieve high efficiency despite using amorphous silicon?',
+      explanation: 'The thin a-Si:H layers provide outstanding passivation with SRV below 5 cm/s. Although amorphous silicon absorbs some light parasitically, the voltage gain from excellent passivation more than compensates.',
       options: [
         { text: 'Amorphous silicon generates more current', correct: false },
         { text: 'The a-Si:H provides excellent surface passivation with very low SRV', correct: true },
@@ -1626,20 +1636,25 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
                 {testScore >= 8 ? 'You\'ve mastered passivation and recombination!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1775,7 +1790,12 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

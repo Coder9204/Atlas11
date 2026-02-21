@@ -252,6 +252,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'The angle of the sun above the horizon', correct: false },
         { text: 'The temperature coefficient of a panel', correct: false },
       ],
+      explanation: 'Albedo measures the reflectivity of a surface (0 = absorbs all light, 1 = reflects all light). It determines how much ground-reflected irradiance reaches the rear of bifacial panels.',
     },
     {
       question: 'Typical fresh snow has an albedo of approximately:',
@@ -261,6 +262,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: '50-60%', correct: false },
         { text: '70-90%', correct: true },
       ],
+      explanation: 'Fresh snow reflects 70-90% of incoming sunlight, making it the highest natural albedo surface and ideal for bifacial panel rear-side gain.',
     },
     {
       question: 'Bifacial solar panels can capture reflected light because:',
@@ -270,6 +272,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'They are mounted on tracking systems', correct: false },
         { text: 'They have higher efficiency cells', correct: false },
       ],
+      explanation: 'Bifacial modules have active solar cells on both sides, allowing the rear face to convert ground-reflected and diffuse light into additional electricity.',
     },
     {
       question: 'The "bifaciality factor" of a panel refers to:',
@@ -279,6 +282,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'The angle at which bifacial gain is maximized', correct: false },
         { text: 'The percentage of ground coverage', correct: false },
       ],
+      explanation: 'Bifaciality factor (typically 0.7-0.9) is the rear/front efficiency ratio. A factor of 0.85 means the rear side converts light at 85% of the front side\'s efficiency.',
     },
     {
       question: 'What is a typical bifacial gain for a system with 25% ground albedo?',
@@ -288,6 +292,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: '25-30%', correct: false },
         { text: '50% or more', correct: false },
       ],
+      explanation: 'At 25% albedo (e.g., light soil or gravel), bifacial systems typically gain 5-12% additional energy from rear-side irradiance, depending on mounting height and tilt.',
     },
     {
       question: 'How does panel mounting height affect bifacial gain?',
@@ -297,6 +302,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'Height has no effect on bifacial performance', correct: false },
         { text: 'Higher mounting decreases albedo effectiveness', correct: false },
       ],
+      explanation: 'Higher mounting lets the rear of the panel "see" a larger area of ground, increasing the view factor and creating a more uniform irradiance distribution across the rear surface.',
     },
     {
       question: 'Which ground surface typically has the LOWEST albedo?',
@@ -306,6 +312,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'Dark asphalt', correct: true },
         { text: 'Dry sand', correct: false },
       ],
+      explanation: 'Dark asphalt has an albedo of only 5-10%, absorbing most sunlight as heat rather than reflecting it -- the worst surface for bifacial rear-side gain.',
     },
     {
       question: 'Bifacial panels perform best when:',
@@ -315,6 +322,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'Covered with anti-reflective coatings on the rear', correct: false },
         { text: 'Facing away from the equator', correct: false },
       ],
+      explanation: 'The combination of elevation (large view factor) and high-albedo ground (more reflected light) maximizes the irradiance reaching the rear cells.',
     },
     {
       question: 'For vertical (90 tilt) bifacial panels, the optimal albedo surface is:',
@@ -324,6 +332,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: 'High-albedo surfaces like white concrete on both sides', correct: true },
         { text: 'Water for cooling effects', correct: false },
       ],
+      explanation: 'Vertical bifacial panels receive reflected light from surfaces on both sides, so high-albedo surroundings on both east and west faces maximize total energy capture.',
     },
     {
       question: 'Installing white reflective material under bifacial panels can increase annual yield by:',
@@ -333,6 +342,7 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
         { text: '25-50% additional energy', correct: false },
         { text: 'It actually decreases yield due to overheating', correct: false },
       ],
+      explanation: 'White ground covers raise local albedo from ~20% to ~60-80%, boosting rear irradiance enough to add 3-8% annual energy -- often cost-effective for utility-scale projects.',
     },
   ];
 
@@ -1532,25 +1542,36 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
               </p>
             </div>
             <div style={{ padding: '16px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>Answer Review</h3>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2713' : '\u2717'}</span>
-                    <p style={{ color: colors.textPrimary, fontWeight: 'bold' }}>Q{qIndex + 1}. {q.question}</p>
-                  </div>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? '\u2713 Correct: ' : userAnswer === oIndex ? '\u2717 Your answer: ' : ''}{opt.text}
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setCurrentTestQuestion(0); })}
         </div>

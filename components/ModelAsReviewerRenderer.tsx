@@ -1591,27 +1591,24 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
             </p>
           </div>
 
-          {/* Answer review */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>Answer Review:</h3>
-            {testQuestions.map((q, i) => {
-              const correctId = q.options.find(o => o.correct)?.id;
-              const userAnswer = testAnswers[i];
-              const isCorrect = userAnswer === correctId;
+          {/* Answer Key */}
+          <div style={{ padding: '16px' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
+              const userAnswer = testAnswers[idx];
+              const correctOption = q.options.find(o => o.correct);
+              const correctAnswer = correctOption?.id;
+              const userOption = q.options.find(o => o.id === userAnswer);
+              const isCorrect = userAnswer === correctAnswer;
               return (
-                <div key={i} style={{
-                  background: colors.bgCard,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  marginBottom: '8px',
-                  borderLeft: `3px solid ${isCorrect ? colors.success : colors.error}`
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '16px' }}>{isCorrect ? '\u2705' : '\u274C'}</span>
-                    <span style={{ ...typo.small, color: colors.textPrimary }}>
-                      Q{i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
-                    </span>
+                <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                   </div>
+                  {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.label}</span></div>)}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.label}</span></div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                 </div>
               );
             })}
@@ -1950,16 +1947,13 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
           >
             Play Again
           </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block'
-            }}
-          >
-            Return to Dashboard
-          </a>
+        </div>
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ eventType: 'game_completed', gameType: 'model_as_reviewer', gameTitle: 'Model as Reviewer', details: { phase: 'mastery', score: testScore, maxScore: 10 }, timestamp: Date.now() }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
         </div>
       </>
     );

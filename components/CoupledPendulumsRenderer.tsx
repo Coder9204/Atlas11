@@ -253,6 +253,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'Immediately splits equally between both', correct: false },
         { text: 'Dissipates into the coupling spring', correct: false },
       ],
+      explanation: 'The coupling spring mediates gradual energy transfer between pendulums through a beat phenomenon. The superposition of the two normal modes creates a slow oscillation of energy back and forth.',
     },
     {
       question: 'What is the "beat frequency" in coupled pendulums?',
@@ -262,6 +263,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The frequency of the coupling spring', correct: false },
         { text: 'The natural frequency of a single pendulum', correct: false },
       ],
+      explanation: 'The beat frequency equals the difference between the symmetric and antisymmetric normal mode frequencies. This determines how rapidly energy transfers between the two pendulums.',
     },
     {
       question: 'What are "normal modes" in coupled oscillators?',
@@ -271,6 +273,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The modes that require the least energy', correct: false },
         { text: 'Patterns that only occur when damping is zero', correct: false },
       ],
+      explanation: 'Normal modes are special motion patterns where every part of the system oscillates at a single frequency. Any general motion can be decomposed as a superposition of these fundamental modes.',
     },
     {
       question: 'In the symmetric (in-phase) normal mode of coupled pendulums, how does the spring behave?',
@@ -280,6 +283,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'Oscillates at double the pendulum frequency', correct: false },
         { text: 'Stores all the system\'s energy', correct: false },
       ],
+      explanation: 'When both pendulums swing in phase, they move identically, so the spring length never changes. The spring effectively plays no role, and each pendulum behaves as if uncoupled.',
     },
     {
       question: 'Why does increasing coupling strength affect energy transfer rate?',
@@ -289,6 +293,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'More coupling reduces the total system energy', correct: false },
         { text: 'Coupling strength doesn\'t affect transfer rate', correct: false },
       ],
+      explanation: 'Stronger coupling increases the antisymmetric mode frequency while leaving the symmetric mode unchanged, widening the frequency gap. The beat frequency equals this gap, so energy transfers faster.',
     },
     {
       question: 'If you start both pendulums displaced equally in the same direction, what happens?',
@@ -298,6 +303,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The coupling causes them to slow down quickly', correct: false },
         { text: 'They swing out of phase due to spring coupling', correct: false },
       ],
+      explanation: 'This initial condition excites only the symmetric normal mode, so the system remains in that single mode indefinitely. With no mode mixing, there is no energy exchange between pendulums.',
     },
     {
       question: 'What causes the energy to transfer back from the second pendulum to the first?',
@@ -307,6 +313,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The spring recoils after maximum stretch', correct: false },
         { text: 'Energy doesn\'t actually transfer back', correct: false },
       ],
+      explanation: 'The two normal modes continuously drift in and out of phase. When their relative phase reverses, the constructive interference shifts from the second pendulum back to the first, returning the energy.',
     },
     {
       question: 'The antisymmetric (out-of-phase) mode has a higher frequency than symmetric mode because:',
@@ -316,6 +323,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The effective mass decreases in antisymmetric motion', correct: false },
         { text: 'Air resistance is lower for opposite motion', correct: false },
       ],
+      explanation: 'When pendulums move in opposite directions, the spring stretches and compresses, adding an extra restoring force on top of gravity. This additional stiffness increases the oscillation frequency.',
     },
     {
       question: 'Two pendulum clocks on the same shelf can synchronize over time. This is due to:',
@@ -325,6 +333,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'Temperature equilibration of the room', correct: false },
         { text: 'Electromagnetic interactions between clock mechanisms', correct: false },
       ],
+      explanation: 'Huygens discovered this in 1665. Small vibrations transmitted through the shelf couple the two clocks, allowing energy exchange that drives them to synchronize in the antisymmetric mode.',
     },
     {
       question: 'What determines how long it takes for complete energy transfer between coupled pendulums?',
@@ -334,6 +343,7 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
         { text: 'The inverse of the coupling strength (weaker = longer)', correct: true },
         { text: 'The mass of the pendulum bobs', correct: false },
       ],
+      explanation: 'The transfer time is inversely proportional to the beat frequency, which itself is proportional to coupling strength. Weaker coupling means a smaller frequency split and slower energy transfer.',
     },
   ];
 
@@ -1857,60 +1867,26 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
               </button>
             </div>
 
-            {/* Answer review with checkmarks/X marks */}
-            <h3 style={{ color: colors.textPrimary, padding: '0 16px', marginTop: '16px' }}>Answer Review:</h3>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              const optionLabels = ['A', 'B', 'C', 'D'];
-
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{
-                      color: isCorrect ? colors.success : colors.error,
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                    }}>
-                      {isCorrect ? '\u2713' : '\u2717'}
-                    </span>
-                    <p style={{ color: colors.textPrimary, fontWeight: 'bold', margin: 0 }}>
-                      Q{qIndex + 1}: {q.question}
-                    </p>
-                  </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '8px' }}>
-                    Your answer: {userAnswer !== null ? `${optionLabels[userAnswer]}) ${q.options[userAnswer].text}` : 'Not answered'}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}
-                    >
-                      {opt.correct ? '\u2713' : userAnswer === oIndex ? '\u2717' : '\u25CB'} {optionLabels[oIndex]}) {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
@@ -2190,6 +2166,37 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
           </div>
 
           {renderVisualization(true)}
+        </div>
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(139, 92, 246, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
         </div>
       </div>
     );

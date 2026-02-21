@@ -443,61 +443,61 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
       { text: "The Leidenfrost effect - water droplets hovering on a vapor layer over a very hot surface", correct: true },
       { text: "Water boiling violently", correct: false },
       { text: "Water turning directly to steam", correct: false }
-    ]},
+    ], explanation: "Above the Leidenfrost point (~200C), the bottom of the droplet vaporizes so rapidly that it creates a sustained vapor cushion. This vapor layer lifts the droplet off the surface, allowing it to glide with almost no friction." },
     { question: "In metallurgy, understanding the Leidenfrost effect is critical for heat treatment processes. Steel parts heated to 800°C are quenched in water to achieve desired hardness. At what approximate water-surface temperature threshold does the Leidenfrost effect begin, where a stable vapor film forms between the water and hot metal?", options: [
       { text: "100C (boiling point)", correct: false },
       { text: "150C", correct: false },
       { text: "200C (Leidenfrost point)", correct: true },
       { text: "500C", correct: false }
-    ]},
+    ], explanation: "The Leidenfrost point for water on most metal surfaces is approximately 200C. Below this, water makes direct contact and boils violently. Above it, a stable vapor film forms that actually insulates the surface and slows heat transfer." },
     { question: "When a water droplet is placed on a surface heated above the Leidenfrost point, it appears to levitate and can glide around with almost no friction. Scientists have measured this gap to be less than 0.1mm thick. What physical mechanism allows the droplet to hover without touching the surface?", options: [
       { text: "Magnetic repulsion", correct: false },
       { text: "A thin vapor layer continuously forms underneath the droplet, supporting it like a hovercraft", correct: true },
       { text: "Air pressure from below", correct: false },
       { text: "The surface repels water", correct: false }
-    ]},
+    ], explanation: "The droplet's bottom surface continuously vaporizes, creating a thin (~0.1mm) layer of steam that supports the droplet's weight. This is exactly like a hovercraft riding on a cushion of air, providing both lift and near-zero friction." },
     { question: "Surprisingly, a droplet on a 300C surface evaporates:", options: [
       { text: "Instantly", correct: false },
       { text: "Faster than at 150C", correct: false },
       { text: "SLOWER than at 150C due to vapor insulation", correct: true },
       { text: "At the same rate as 150C", correct: false }
-    ]},
+    ], explanation: "This is the Leidenfrost paradox: the vapor layer that forms above 200C is a poor heat conductor, so it actually insulates the droplet from the hot surface. At 150C (below the Leidenfrost point), direct liquid-surface contact transfers heat much faster." },
     { question: "The vapor layer in the Leidenfrost effect:", options: [
       { text: "Conducts heat very well", correct: false },
       { text: "Acts as an insulator AND allows near-frictionless movement", correct: true },
       { text: "Is only a few molecules thick", correct: false },
       { text: "Is visible to the naked eye", correct: false }
-    ]},
+    ], explanation: "The vapor layer serves a dual role: steam is a poor thermal conductor (insulating the droplet from the hot surface), and as a gas layer it eliminates solid-liquid contact friction, allowing the droplet to glide freely." },
     { question: "If you drop water on a pan at 180C (below Leidenfrost point):", options: [
       { text: "It will hover gracefully", correct: false },
       { text: "It will sizzle and evaporate quickly", correct: true },
       { text: "Nothing happens", correct: false },
       { text: "It will freeze", correct: false }
-    ]},
+    ], explanation: "Below the Leidenfrost point (~200C), no stable vapor film can form. The water makes direct contact with the hot surface, causing rapid nucleate boiling with vigorous sizzling. The droplet evaporates quickly because heat transfer is very efficient through direct contact." },
     { question: "The Leidenfrost effect is used in:", options: [
       { text: "Refrigerators", correct: false },
       { text: "Steel quenching (cooling red-hot metal)", correct: true },
       { text: "Water heaters", correct: false },
       { text: "Ice machines", correct: false }
-    ]},
+    ], explanation: "In steel quenching, understanding the Leidenfrost effect is critical. The vapor blanket that forms on red-hot metal initially slows cooling (film boiling). As the metal cools below the Leidenfrost point, the vapor collapses and cooling rate dramatically increases, affecting the steel's final hardness." },
     { question: "Liquid nitrogen demonstrations use the Leidenfrost effect because:", options: [
       { text: "Nitrogen is magnetic", correct: false },
       { text: "Room temperature is FAR above nitrogen's boiling point (-196C)", correct: true },
       { text: "Nitrogen is heavier than air", correct: false },
       { text: "It's just for show", correct: false }
-    ]},
+    ], explanation: "Your skin at ~33C is over 200 degrees above nitrogen's boiling point (-196C). This enormous temperature difference instantly vaporizes nitrogen on contact, creating a protective Leidenfrost vapor layer. Brief contact is safe, but prolonged exposure causes severe cryogenic burns." },
     { question: "The 'Mythbusters' wet hand in molten lead works because:", options: [
       { text: "Lead is not actually hot", correct: false },
       { text: "The Leidenfrost vapor layer protects the hand briefly", correct: true },
       { text: "The hand moves too fast", correct: false },
       { text: "Lead doesn't conduct heat", correct: false }
-    ]},
+    ], explanation: "The wet hand creates a Leidenfrost vapor barrier when it contacts the molten lead (~327C). The water on the skin instantly vaporizes, forming a thin insulating steam layer between the skin and the molten metal. This protection lasts only a fraction of a second." },
     { question: "Below the Leidenfrost point, adding heat:", options: [
       { text: "Slows evaporation", correct: false },
       { text: "Speeds up evaporation (more direct contact)", correct: true },
       { text: "Has no effect", correct: false },
       { text: "Makes water colder", correct: false }
-    ]}
+    ], explanation: "Below the Leidenfrost point, the water is in direct contact with the surface (nucleate boiling regime). More heat means more vigorous boiling and faster evaporation. This is the intuitive behavior most people expect - hotter surface = faster evaporation." }
   ];
 
   const calculateScore = () => testAnswers.reduce((score, answer, index) => {
@@ -2118,38 +2118,27 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               </p>
             </div>
 
-            <h4 style={{ color: '#e2e8f0', fontSize: '18px', marginBottom: '16px' }}>Answer Review</h4>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{
-                  background: 'rgba(30, 41, 59, 0.5)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  marginBottom: '12px',
-                  maxWidth: '640px',
-                  width: '100%',
-                  borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}`
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '18px' }}>{isCorrect ? '✓' : '✗'}</span>
-                    <p style={{ color: 'white', fontWeight: '500' }}>{qIndex + 1}. {q.question}</p>
-                  </div>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{
-                      padding: '8px 12px',
-                      marginBottom: '4px',
-                      borderRadius: '6px',
-                      background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#10b981' : userAnswer === oIndex ? '#ef4444' : '#e2e8f0'
-                    }}>
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+            <div style={{ padding: '16px', textAlign: 'left', maxWidth: '640px', width: '100%' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswerIdx = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.findIndex(o => o.correct);
+                const userOption = userAnswerIdx !== null ? q.options[userAnswerIdx] : null;
+                const isCorrect = userAnswerIdx === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderFooter(score >= 8, score >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
         </div>
@@ -2253,11 +2242,12 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
               maxWidth: '640px',
               width: '100%'
             }}>
-              <p style={{ color: '#e2e8f0', fontSize: '14px' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '8px' }}>
                 {testAnswers[currentTestQuestion] !== null && currentQ.options[testAnswers[currentTestQuestion]!].correct
                   ? '✓ Correct! The correct answer is: ' + currentQ.options.find(o => o.correct)?.text
                   : '✗ Incorrect. The correct answer is: ' + currentQ.options.find(o => o.correct)?.text}
               </p>
+              {currentQ.explanation && <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: '1.5' }}>{currentQ.explanation}</p>}
             </div>
           )}
 
@@ -2354,7 +2344,12 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderFooter(true, 'Complete Game →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game &rarr;
+          </button>
+        </div>
       </div>
     );
   }

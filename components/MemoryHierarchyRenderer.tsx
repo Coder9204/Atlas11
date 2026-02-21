@@ -1780,45 +1780,50 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                   : 'Review the concepts and try again.'}
               </p>
 
-              {/* Answer Review */}
+              {/* Answer Key */}
               <div style={{
-                background: colors.bgCard,
                 borderRadius: '12px',
                 padding: '16px',
                 marginBottom: '24px',
                 textAlign: 'left',
               }}>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>Answer Review</h3>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
                 {testQuestions.map((q, i) => {
-                  const correctId = q.options.find(o => o.correct)?.id;
+                  const correctOption = q.options.find(o => o.correct);
+                  const correctId = correctOption?.id;
                   const userAnswer = testAnswers[i];
                   const isCorrect = userAnswer === correctId;
+                  const userOption = q.options.find(o => o.id === userAnswer);
                   return (
                     <div key={i} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 0',
-                      borderBottom: i < 9 ? `1px solid ${colors.border}` : 'none',
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      margin: '12px 0',
+                      padding: '16px',
+                      borderRadius: '10px',
+                      borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
                     }}>
-                      <span style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        background: isCorrect ? colors.success : colors.error,
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}>
-                        {isCorrect ? 'Y' : 'X'}
-                      </span>
-                      <span style={{ ...typo.small, color: colors.textSecondary }}>
-                        Q{i + 1}: {isCorrect ? 'Correct' : `Wrong (${userAnswer?.toUpperCase()}) - Answer: ${correctId?.toUpperCase()}`}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </span>
+                        <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                          Q{i + 1}. {q.question}
+                        </span>
+                      </div>
+                      {!isCorrect && (
+                        <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                          <span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span>
+                          <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.label}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                        <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.label}</span>
+                      </div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                        <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                        <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                      </div>
                     </div>
                   );
                 })}
@@ -2215,16 +2220,16 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
             >
               Play Again
             </button>
-            <a
-              href="/"
+            <button
+              onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctId = q.options.find(o => o.correct)?.id; return testAnswers[i] === correctId; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
               style={{
                 ...primaryButtonStyle,
-                textDecoration: 'none',
-                display: 'inline-block',
+                minHeight: '52px',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
               }}
             >
-              Return to Dashboard
-            </a>
+              Complete Game →
+            </button>
           </div>
 
           {renderNavDots()}

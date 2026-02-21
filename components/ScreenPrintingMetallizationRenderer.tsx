@@ -331,6 +331,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   const testQuestions = [
     {
       question: 'Why can\'t you cover the entire solar cell with metal to maximize current collection?',
+      explanation: 'Metal is opaque, so covering the entire surface blocks sunlight from reaching the silicon where it generates electron-hole pairs and electricity.',
       options: [
         { text: 'Metal is too expensive', correct: false },
         { text: 'Metal blocks light that would otherwise generate electricity', correct: true },
@@ -340,6 +341,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'What is the main purpose of finger electrodes on a solar cell?',
+      explanation: 'Fingers are narrow metal lines that collect photogenerated current from the emitter layer while shading as little of the cell surface as possible.',
       options: [
         { text: 'To make the cell look nice', correct: false },
         { text: 'To collect current from the emitter with minimum shading', correct: true },
@@ -349,6 +351,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'If you double the finger spacing (pitch), what happens?',
+      explanation: 'Wider spacing means fewer fingers and less shading, but current must travel farther through the high-resistance emitter layer, significantly increasing series resistance losses.',
       options: [
         { text: 'Shading decreases, but series resistance increases significantly', correct: true },
         { text: 'Both shading and resistance decrease', correct: false },
@@ -358,6 +361,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'The optimal finger width balances which two factors?',
+      explanation: 'Wider fingers have lower metal resistance but shade more cell area. The optimum minimizes the combined shading and resistance losses.',
       options: [
         { text: 'Color and temperature', correct: false },
         { text: 'Shading loss and finger resistance', correct: true },
@@ -367,6 +371,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'What is "sheet resistance" in the context of solar cells?',
+      explanation: 'Sheet resistance measures the resistance of a thin conductive layer per unit square, expressed in ohm/square. It determines how far current can travel laterally before reaching a finger.',
       options: [
         { text: 'Resistance to bending the cell', correct: false },
         { text: 'Resistance of a square of the emitter layer (ohm/square)', correct: true },
@@ -376,6 +381,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'How do multi-busbar (MBB) designs improve efficiency?',
+      explanation: 'More busbars means each can be thinner (less shading) and current travels shorter distances along fingers to reach a busbar (less resistance).',
       options: [
         { text: 'By using more silver', correct: false },
         { text: 'Thinner busbars reduce shading; shorter paths reduce resistance', correct: true },
@@ -385,6 +391,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'Why does resistive power loss scale as I^2*R?',
+      explanation: 'From Ohm\'s law V=IR, power P=V*I=(IR)*I=I^2*R. This quadratic dependence means doubling current quadruples resistive loss.',
       options: [
         { text: 'Because Ohm said so', correct: false },
         { text: 'P = V*I = (I*R)*I = I^2*R from Ohm\'s law', correct: true },
@@ -394,6 +401,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'What is the typical shading loss from front metallization on a modern cell?',
+      explanation: 'Modern cells with fine-line printing and multi-busbar designs achieve total front metallization coverage of about 3-5% of cell area.',
       options: [
         { text: 'Less than 1%', correct: false },
         { text: 'About 3-5%', correct: true },
@@ -403,6 +411,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'Why might "busbarless" designs still need metal lines?',
+      explanation: 'Busbarless designs eliminate on-cell busbars but still require finger electrodes to collect current. External wires or conductive adhesive replace the busbar function during module assembly.',
       options: [
         { text: 'For decoration', correct: false },
         { text: 'Fingers still needed to collect current; external wires replace busbars', correct: true },
@@ -412,6 +421,7 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     },
     {
       question: 'How does half-cutting cells reduce resistive losses?',
+      explanation: 'Half-cut cells carry half the current of full cells. Since P=I^2*R, halving current reduces resistive loss to one quarter. Shorter finger paths also reduce R.',
       options: [
         { text: 'By using thicker metal', correct: false },
         { text: 'Half the current means 1/4 the I^2*R loss; shorter paths reduce R too', correct: true },
@@ -1673,20 +1683,25 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
                 {testScore >= 8 ? 'You\'ve mastered metallization design!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1822,7 +1837,12 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

@@ -266,6 +266,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'Only the height of the object', correct: false },
         { text: 'The color and material of the object', correct: false },
       ],
+      explanation: 'The critical tipping angle depends on the geometry: theta = arctan(base_width / (2 * COM_height)). A wider base or lower center of mass means a larger angle is needed to tip it.',
     },
     {
       question: 'An SUV is driving through a sharp turn. Under what condition will the vehicle tip over and roll?',
@@ -275,6 +276,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'When its center of mass projection moves outside the support polygon (track width)', correct: true },
         { text: 'When it starts to slide sideways', correct: false },
       ],
+      explanation: 'An object tips when the vertical line through its center of mass falls outside its support base. In a turn, centrifugal force shifts the effective COM outward until it crosses the track width boundary.',
     },
     {
       question: 'Comparing a tall bottle and a short bottle with the same base width:',
@@ -284,6 +286,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'The tall bottle tips more easily (smaller critical angle)', correct: true },
         { text: 'Both have the same critical tipping angle', correct: false },
       ],
+      explanation: 'A higher center of mass reduces the critical angle (arctan(base/(2*height))). The taller bottle has a higher COM, so less tilt is needed to shift gravity outside the base.',
     },
     {
       question: 'The formula for critical angle is theta = arctan(base_width / (2 x COM_height)). If you double the base width:',
@@ -293,6 +296,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'The critical angle decreases (less stable)', correct: false },
         { text: 'The critical angle stays the same', correct: false },
       ],
+      explanation: 'Doubling base width doubles the arctan argument, increasing the critical angle (though not exactly doubling it due to the arctan function). A wider base always means greater stability.',
     },
     {
       question: 'Adding weight to the bottom of an object:',
@@ -302,6 +306,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'Raises the center of mass, decreasing stability', correct: false },
         { text: 'Has no effect on tipping behavior', correct: false },
       ],
+      explanation: 'Bottom weighting pulls the center of mass downward. A lower COM increases the critical tipping angle, making the object harder to tip. This is why ships carry ballast low in the hull.',
     },
     {
       question: 'Torque about the tipping edge depends on:',
@@ -311,6 +316,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'Only the magnitude of the force', correct: false },
         { text: 'Only the height of the object', correct: false },
       ],
+      explanation: 'Torque = Force x perpendicular distance (lever arm). A force applied far from the pivot produces more rotational effect, which is why a longer lever arm makes tipping easier.',
     },
     {
       question: 'Pushing an object higher up (near the top) compared to lower down:',
@@ -320,6 +326,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'Has no effect on tipping', correct: false },
         { text: 'Only affects sliding, not tipping', correct: false },
       ],
+      explanation: 'Pushing higher creates a larger moment arm about the base edge, generating more torque per unit force. This is why tall objects are easier to tip by pushing near the top.',
     },
     {
       question: 'A support polygon is:',
@@ -329,6 +336,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'The weight distribution of the object', correct: false },
         { text: 'The shadow cast by the object', correct: false },
       ],
+      explanation: 'The support polygon is the convex hull of all ground contact points. An object remains stable only while its center of mass projection stays within this polygon.',
     },
     {
       question: 'Why do SUVs have higher rollover risk than sedans?',
@@ -338,6 +346,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'They have wider tires', correct: false },
         { text: 'They accelerate faster', correct: false },
       ],
+      explanation: 'SUVs have a high COM relative to their track width, giving a smaller critical tipping angle. During turns, less lateral force is needed to shift gravity outside the support polygon.',
     },
     {
       question: 'An athlete crouching in a wide stance is more stable because:',
@@ -347,6 +356,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
         { text: 'Lower COM and wider base increase the critical tipping angle', correct: true },
         { text: 'Air resistance is reduced', correct: false },
       ],
+      explanation: 'Crouching lowers the center of mass while a wide stance increases the support base. Both changes increase the critical tipping angle, making the athlete much harder to push over.',
     },
   ];
 
@@ -1975,20 +1985,26 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered tipping physics!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Question {qIndex + 1} of {testQuestions.length}: {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Next' : 'Review & Retry')}
         </div>
@@ -2072,7 +2088,12 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

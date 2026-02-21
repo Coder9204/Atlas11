@@ -350,6 +350,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Variation in chip packaging', correct: false },
         { text: 'Differences between fab locations', correct: false },
       ],
+      explanation: 'Process variation refers to the random, uncontrollable differences in transistor parameters that arise during manufacturing, not intentional design choices.',
     },
     {
       question: 'Threshold voltage (Vth) variation primarily affects:',
@@ -359,6 +360,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Metal interconnect resistance', correct: false },
         { text: 'Package thermal resistance', correct: false },
       ],
+      explanation: 'Threshold voltage variation directly controls how fast transistors switch and how much current leaks, making it the most impactful parameter for circuit performance.',
     },
     {
       question: 'In a chip with millions of paths, timing failures are typically caused by:',
@@ -368,6 +370,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'The average path delay', correct: false },
         { text: 'Paths that are too fast', correct: false },
       ],
+      explanation: 'Due to statistical distribution, only the tail-end slow paths exceed timing limits, so a small minority of paths cause the majority of timing failures.',
     },
     {
       question: 'Line width variation affects delay because:',
@@ -377,6 +380,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Line width affects chip color', correct: false },
         { text: 'Lines always have the same resistance', correct: false },
       ],
+      explanation: 'Narrower interconnect lines have higher resistance because resistance is inversely proportional to cross-sectional area, directly increasing signal delay.',
     },
     {
       question: 'Design "corners" (FF, TT, SS) represent:',
@@ -386,6 +390,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Temperature measurement points', correct: false },
         { text: 'Test probe locations', correct: false },
       ],
+      explanation: 'Design corners represent the extremes of process variation (Fast-Fast, Typical-Typical, Slow-Slow), used to verify circuits work across all expected manufacturing outcomes.',
     },
     {
       question: 'Increasing supply voltage to compensate for variation:',
@@ -395,6 +400,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Slows down transistors', correct: false },
         { text: 'Reduces chip yield', correct: false },
       ],
+      explanation: 'Higher supply voltage increases the gate overdrive, speeding up transistors, but the resulting higher switching current increases dynamic and static power dissipation.',
     },
     {
       question: 'Statistical timing analysis differs from traditional timing analysis by:',
@@ -404,6 +410,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Only analyzing critical paths', correct: false },
         { text: 'Using faster computers', correct: false },
       ],
+      explanation: 'Statistical timing analysis models each delay as a probability distribution rather than a single worst-case value, enabling more realistic yield predictions.',
     },
     {
       question: 'Die-to-die variation is caused by:',
@@ -413,6 +420,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Packaging differences', correct: false },
         { text: 'Testing errors', correct: false },
       ],
+      explanation: 'Die-to-die variation arises from systematic gradients across the wafer, such as temperature and chemical concentration differences during processing.',
     },
     {
       question: 'Yield loss due to process variation can be improved by:',
@@ -422,6 +430,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Reducing the number of transistors', correct: false },
         { text: 'Using older technology nodes', correct: false },
       ],
+      explanation: 'Adding timing margin ensures circuits work even with slow transistors, and redundancy allows failed components to be replaced, both improving overall chip yield.',
     },
     {
       question: 'The "3-sigma" rule in design means:',
@@ -431,6 +440,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Running three simulation iterations', correct: false },
         { text: 'Having three backup designs', correct: false },
       ],
+      explanation: 'The 3-sigma rule means designing so that 99.7% of manufactured chips fall within acceptable performance limits, covering three standard deviations of the variation distribution.',
     },
   ];
 
@@ -1760,20 +1770,22 @@ const navigationRef = useRef<boolean>(false);
                 {testScore >= 8 ? 'You\'ve mastered process variation!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            <div style={{ padding: '16px' }}>
+  <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+  {testQuestions.map((q, idx) => {
+    const userAnswer = testAnswers[idx]; const correctOption = q.options.find(o => o.correct); const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+    return (
+      <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+          <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+        </div>
+        {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+        <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+        {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
+      </div>);
+  })}
+</div>
           </div>
           {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1920,7 +1932,12 @@ const navigationRef = useRef<boolean>(false);
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+  <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+    style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+    Complete Game \u2192
+  </button>
+</div>
       </div>
     );
   }

@@ -263,6 +263,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Wires become more flexible at high frequency', correct: false },
         { text: 'Wire resistance increases with frequency', correct: false },
       ],
+      explanation: 'Inductive reactance (X_L = 2*pi*f*L) is directly proportional to frequency. As frequency increases, even small inductances create large impedances that block signal flow and cause voltage drops.',
     },
     {
       question: 'Ground bounce occurs when:',
@@ -272,6 +273,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'The die temperature is too high', correct: false },
         { text: 'The power supply voltage is unstable', correct: false },
       ],
+      explanation: 'Ground bounce is caused by V = L * di/dt. When many outputs switch simultaneously, the rapid current change through the package ground inductance creates transient voltage spikes on the ground rail.',
     },
     {
       question: 'Flip-chip packaging reduces electrical parasitics because:',
@@ -281,6 +283,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Flip-chip uses more connections', correct: false },
         { text: 'The substrate is made of better material', correct: false },
       ],
+      explanation: 'Wire bonds arc up 1-3mm creating long inductive loops, while flip-chip solder bumps are only ~100 micrometers tall. Since inductance scales with conductor length, flip-chip has roughly 30x lower parasitic inductance.',
     },
     {
       question: 'The thermal path in wire-bond packages goes:',
@@ -290,6 +293,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Directly from die to ambient air', correct: false },
         { text: 'Through the substrate only', correct: false },
       ],
+      explanation: 'Heat generated in the die travels downward through the die attach adhesive into the package body and then to the PCB or heatsink. Bond wires are too thin to conduct significant heat.',
     },
     {
       question: 'Flip-chip has better thermal performance because:',
@@ -299,6 +303,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'The package is smaller', correct: false },
         { text: 'There are no bond wires blocking airflow', correct: false },
       ],
+      explanation: 'In flip-chip, the die backside faces upward directly against the package lid and heat spreader, providing a short and efficient thermal path from the heat source to the cooling solution.',
     },
     {
       question: 'Decoupling capacitors in packages are placed close to the die to:',
@@ -308,6 +313,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Reduce thermal resistance', correct: false },
         { text: 'Increase signal speed', correct: false },
       ],
+      explanation: 'Decoupling capacitors store charge locally to supply current during fast transients, preventing voltage droops. Placing them close to the die minimizes the inductance in the supply path, enabling faster charge delivery.',
     },
     {
       question: 'The formula for voltage droop due to inductance is:',
@@ -317,6 +323,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'V = CV (capacitor equation)', correct: false },
         { text: 'V = P/I (power equation)', correct: false },
       ],
+      explanation: 'Faraday\'s law of electromagnetic induction states that voltage across an inductor equals L * di/dt. Faster current changes and larger inductances create proportionally larger voltage disturbances.',
     },
     {
       question: 'Multiple parallel bond wires or bumps are used to:',
@@ -326,6 +333,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Increase thermal resistance', correct: false },
         { text: 'Simplify manufacturing', correct: false },
       ],
+      explanation: 'Parallel conductors share current, reducing both total resistance (R/n) and total inductance (approximately L/n for well-separated wires). This is why power and ground use multiple parallel connections.',
     },
     {
       question: 'Thermal interface material (TIM) between die and heatsink:',
@@ -335,6 +343,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Is only needed for wire-bond packages', correct: false },
         { text: 'Increases thermal resistance intentionally', correct: false },
       ],
+      explanation: 'Even apparently flat surfaces have microscopic roughness creating air gaps. Air is a poor thermal conductor, so TIM fills these gaps with a material that has much higher thermal conductivity than air.',
     },
     {
       question: 'The trend toward flip-chip is driven by:',
@@ -344,6 +353,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         { text: 'Wire bond wire shortage', correct: false },
         { text: 'Customer preference for inverted dies', correct: false },
       ],
+      explanation: 'As chip speeds and power densities increase, the electrical and thermal limitations of wire bonding become unacceptable. Flip-chip provides area-array I/O, lower parasitics, and better heat dissipation.',
     },
   ];
 
@@ -1784,20 +1794,22 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered packaging physics! Test complete!' : 'Review the material and try again.'}
               </p>
             </div>
-            <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '0 16px' }}>
+            <div style={{ padding: '0 16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
               {testQuestions.map((q, qIndex) => {
                 const userAnswer = testAnswers[qIndex];
+                const correctOption = q.options.find(o => o.correct);
+                const userOption = userAnswer !== null ? q.options[userAnswer] : undefined;
                 const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
                 return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '0 0 16px 0', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
-                      {isCorrect ? '✓' : '✗'} {qIndex + 1}. {q.question}
-                    </p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontWeight: 400 }}>
-                        {opt.correct ? '✓ Correct: ' : userAnswer === oIndex ? '✗ Your answer: ' : ''}{opt.text}
-                      </div>
-                    ))}
+                  <div key={qIndex} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{qIndex + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                   </div>
                 );
               })}
@@ -2014,7 +2026,12 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!]?.correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game &rarr;
+          </button>
+        </div>
       </div>
     );
   }

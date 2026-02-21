@@ -1524,27 +1524,29 @@ const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null
                 {testScore >= 7 ? 'Excellent! You have mastered drag force!' : 'Good effort! Review the material and try again.'}
               </p>
 
-              {/* Answer review */}
-              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
+              {/* Rich Answer Key */}
+              <div style={{ textAlign: 'left', marginBottom: '24px', maxHeight: '400px', overflowY: 'auto' }}>
                 {testQuestions.map((q, i) => {
                   const ans = testAnswers[i];
-                  const correct = q.options.find(o => o.correct)?.id;
-                  const isCorrect = ans === correct;
+                  const correctOpt = q.options.find(o => o.correct);
+                  const correctId = correctOpt?.id;
+                  const isCorrect = ans === correctId;
+                  const userOpt = q.options.find(o => o.id === ans);
                   return (
-                    <div key={i} style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: isCorrect ? colors.success : colors.error,
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      fontFamily,
-                    }}>
-                      {isCorrect ? '✓' : '✗'}
+                    <div key={i} style={{ marginBottom: '12px', padding: '12px 16px', borderRadius: '12px', background: 'rgba(30,41,59,0.5)', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2705' : '\u274c'}</span>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, fontFamily }}>Q{i + 1}: {q.text || q.question}</span>
+                      </div>
+                      {!isCorrect && userOpt && (
+                        <p style={{ fontSize: '13px', color: colors.error, margin: '4px 0', fontFamily }}>Your answer: {userOpt.label || userOpt.text}</p>
+                      )}
+                      <p style={{ fontSize: '13px', color: colors.success, margin: '4px 0', fontFamily }}>Correct: {correctOpt?.label || correctOpt?.text}</p>
+                      {q.explanation && (
+                        <div style={{ marginTop: '6px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', borderLeft: '3px solid #f59e0b' }}>
+                          <p style={{ fontSize: '12px', color: '#fbbf24', fontFamily }}><strong>Why?</strong> {q.explanation}</p>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1822,7 +1824,18 @@ const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null
             Play Again
           </button>
         </div>
-        {renderBottomBar()}
+        {/* Fixed Complete Game button */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: `1px solid ${colors.border}`, zIndex: 50 }}>
+          <button
+            onClick={() => {
+              emit('mastery_achieved', { game: 'drag_force' });
+              window.location.href = '/games';
+            }}
+            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', fontFamily, letterSpacing: '0.5px' }}
+          >
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

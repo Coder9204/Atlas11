@@ -322,6 +322,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'To make the building more rigid', correct: false },
         { text: 'To provide emergency power', correct: false },
       ],
+      explanation: 'A TMD absorbs vibrational energy at a target frequency by oscillating out of phase with the structure, transferring energy from the building into the damper where it is dissipated as heat.',
     },
     {
       question: 'Why must a tuned mass damper\'s frequency match the building\'s natural frequency?',
@@ -331,6 +332,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'Building codes require it', correct: false },
         { text: 'It\'s just easier to manufacture that way', correct: false },
       ],
+      explanation: 'At resonance, energy transfers most efficiently between coupled oscillators. A frequency-matched TMD maximizes energy absorption from the building into the damper mass.',
     },
     {
       question: 'When the building sways left, which way does a well-tuned damper move?',
@@ -340,6 +342,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'Up', correct: false },
         { text: 'It doesn\'t move', correct: false },
       ],
+      explanation: 'A properly tuned TMD oscillates 180 degrees out of phase with the building. When the building sways left, the damper swings right, creating an opposing inertial force that reduces building motion.',
     },
     {
       question: 'What happens if the damper is mis-tuned (wrong frequency)?',
@@ -349,6 +352,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'Nothing changes', correct: false },
         { text: 'It falls off the building', correct: false },
       ],
+      explanation: 'A mis-tuned damper fails to absorb energy efficiently. In some cases it can even add energy at certain frequencies, amplifying rather than reducing the building\'s oscillation.',
     },
     {
       question: 'An engineer designs a TMD for a 10,000-ton building. The damper needs to be effective but not prohibitively expensive. Typical tuned mass dampers are what percentage of building mass?',
@@ -358,6 +362,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: '10-20%', correct: false },
         { text: '50%', correct: false },
       ],
+      explanation: 'TMDs typically range from 1-5% of building mass. This provides effective damping while remaining structurally and economically feasible. Taipei 101\'s 730-ton damper is about 1.5% of the tower mass.',
     },
     {
       question: 'How does the damper\'s internal damping (friction) help?',
@@ -367,6 +372,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'It makes the damper heavier', correct: false },
         { text: 'It holds the damper in place', correct: false },
       ],
+      explanation: 'Internal damping (viscous fluid dampers or friction elements) dissipates the kinetic energy absorbed from the building by converting it into heat, permanently removing energy from the system.',
     },
     {
       question: 'Why are tuned mass dampers typically placed near the top of buildings?',
@@ -376,6 +382,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'They need fresh air', correct: false },
         { text: 'To be visible to the public', correct: false },
       ],
+      explanation: 'The top of a building experiences the largest displacement during swaying. Placing the TMD there maximizes the relative motion between building and damper, making energy absorption most effective.',
     },
     {
       question: 'What would happen with zero damping in the TMD system?',
@@ -385,6 +392,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'The building would stop moving', correct: false },
         { text: 'Nothing different would happen', correct: false },
       ],
+      explanation: 'Without damping, energy would continuously transfer back and forth between building and TMD with no dissipation. The damper would oscillate indefinitely, never removing energy from the system.',
     },
     {
       question: 'Active tuned mass dampers use sensors and motors to:',
@@ -394,6 +402,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'Generate electricity from building motion', correct: false },
         { text: 'Change the building\'s shape', correct: false },
       ],
+      explanation: 'Active TMDs use accelerometers and actuators to optimize the damper\'s response in real-time, adapting to varying wind and seismic conditions for performance superior to passive systems.',
     },
     {
       question: 'Why might a building need multiple tuned mass dampers?',
@@ -403,6 +412,7 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
         { text: 'For aesthetic reasons', correct: false },
         { text: 'Regulations require redundancy', correct: false },
       ],
+      explanation: 'Buildings have multiple vibration modes (first mode sway, second mode bending, torsion, etc.), each at a different frequency. Multiple TMDs, each tuned to a different mode, provide broadband vibration control.',
     },
   ];
 
@@ -2073,45 +2083,26 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
               <p style={{ color: colors.textMuted, fontSize: '13px', marginTop: '8px', fontWeight: 400 }}>Test Complete!</p>
             </div>
 
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
         </div>
@@ -2294,7 +2285,12 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

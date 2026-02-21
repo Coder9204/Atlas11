@@ -535,16 +535,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         <rect x={markerX - 35} y={markerY - 28} width="70" height="18" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
         <text x={markerX} y={markerY - 15} textAnchor="middle" fill="#fde047" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">{altitude} km</text>
 
-        {/* Status readout - right side */}
-        <rect x={plotRight - 135} y={plotBottom - 95} width="130" height="90" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="0.5" opacity={0.95} />
-        <text x={plotRight - 70} y={plotBottom - 78} textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif" filter="url(#radGlow)">STATUS</text>
-        <text x={plotRight - 130} y={plotBottom - 62} fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">SEU:</text>
-        <text x={plotRight - 10} y={plotBottom - 62} textAnchor="end" fill="#a855f7" fontSize="11" fontWeight="600" fontFamily="system-ui, sans-serif">{rad.seuRate}/day</text>
-        <text x={plotRight - 130} y={plotBottom - 46} fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">TID:</text>
-        <text x={plotRight - 10} y={plotBottom - 46} textAnchor="end" fill="#f59e0b" fontSize="11" fontWeight="600" fontFamily="system-ui, sans-serif">{rad.tidRate} rad/d</text>
-        <text x={plotRight - 130} y={plotBottom - 30} fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Latchup:</text>
-        <text x={plotRight - 10} y={plotBottom - 30} textAnchor="end" fill={rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e'} fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">{rad.latchupRisk}</text>
-        <text x={plotRight - 70} y={plotBottom - 14} textAnchor="middle" fill={rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'} fontSize="11" fontWeight="600" fontFamily="system-ui, sans-serif">{rad.beltRegion}</text>
+        {/* Belt region label near marker */}
+        <text x={markerX} y={markerY + 20} textAnchor="middle" fill={rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'} fontSize="10" fontWeight="600" fontFamily="system-ui, sans-serif">{rad.beltRegion}</text>
       </svg>
     );
   };
@@ -850,17 +842,10 @@ const audioContextRef = useRef<AudioContext | null>(null);
               {renderVisualization()}
             </div>
 
-            {/* Educational: cause-effect, key terms, real-world */}
-            <div style={{ ...cardStyle(), width: '100%' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444', marginBottom: '8px' }}>What You Are Seeing</h3>
-          <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '12px' }}>
-            Because higher altitude means entering the Van Allen radiation belts, the flux factor (radiation intensity) increases dramatically. Moving the altitude slider from 400 km to 3000 km shows how SEU rate spikes when entering the inner belt. This is why satellites in medium Earth orbit need extensive radiation hardening.
-          </p>
-          <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '12px' }}>
-            <strong style={{ color: '#a855f7' }}>Key Terms:</strong> SEU (Single Event Upset) = a bit flip from a particle strike. TID (Total Ionizing Dose) = cumulative radiation damage over time. Latchup = destructive high-current state triggered by a particle.
-          </p>
-          <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.6' }}>
-            <strong style={{ color: '#f59e0b' }}>Real-World Impact:</strong> The International Space Station at 400 km altitude experiences about 0.5 SEU per day. GPS satellites at 20200 km in the outer belt experience 50x more radiation, which is why each GPS satellite costs over $500M with extensive shielding.
+            {/* Educational: concise key terms */}
+            <div style={{ ...cardStyle(), width: '100%', padding: '12px 16px' }}>
+          <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
+            <strong style={{ color: '#a855f7' }}>SEU</strong> = bit flip from particle strike &nbsp;|&nbsp; <strong style={{ color: '#f59e0b' }}>TID</strong> = cumulative radiation dose &nbsp;|&nbsp; <strong style={{ color: '#ef4444' }}>Latchup</strong> = destructive high-current state. Higher altitude enters Van Allen belts where radiation spikes dramatically.
           </p>
         </div>
           </div>
@@ -869,70 +854,50 @@ const audioContextRef = useRef<AudioContext | null>(null);
               {renderSlider('Altitude', altitude, 200, 40000, 200, setAltitude, ' km')}
               {renderSlider('Shielding', shielding, 0, 20, 1, setShielding, ' mm Al')}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                {(['commercial', 'rad-tolerant', 'rad-hard'] as const).map(type => (
-                  <button
-                    key={type}
-                    onClick={() => setChipType(type)}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '10px',
-                      border: chipType === type ? '2px solid #a855f7' : '1px solid #334155',
-                      background: chipType === type ? 'rgba(168,85,247,0.2)' : '#0f172a',
-                      color: chipType === type ? '#c4b5fd' : '#94a3b8',
-                      fontWeight: chipType === type ? 700 : 500,
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontFamily: 'system-ui, -apple-system, sans-serif',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {type === 'commercial' ? 'Commercial' : type === 'rad-tolerant' ? 'Rad-Tolerant' : 'Rad-Hard'}
-                  </button>
-                ))}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>Chip Hardening</div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['commercial', 'rad-tolerant', 'rad-hard'] as const).map(type => (
+                    <button key={type} onClick={() => setChipType(type)}
+                      style={{ flex: 1, padding: '8px 4px', borderRadius: '8px', border: chipType === type ? '2px solid #a855f7' : '1px solid #334155', background: chipType === type ? 'rgba(168,85,247,0.2)' : '#0f172a', color: chipType === type ? '#c4b5fd' : '#94a3b8', fontWeight: chipType === type ? 700 : 500, fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'system-ui, sans-serif' }}>
+                      {type === 'commercial' ? 'Comm.' : type === 'rad-tolerant' ? 'Tolerant' : 'Hardened'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                {(['quiet', 'moderate', 'storm'] as const).map(activity => (
-                  <button
-                    key={activity}
-                    onClick={() => setSolarActivity(activity)}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '10px',
-                      border: solarActivity === activity ? '2px solid #f59e0b' : '1px solid #334155',
-                      background: solarActivity === activity ? 'rgba(245,158,11,0.2)' : '#0f172a',
-                      color: solarActivity === activity ? '#fde047' : '#94a3b8',
-                      fontWeight: solarActivity === activity ? 700 : 500,
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      fontFamily: 'system-ui, -apple-system, sans-serif',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {activity.charAt(0).toUpperCase() + activity.slice(1)}
-                  </button>
-                ))}
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>Solar Activity</div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {(['quiet', 'moderate', 'storm'] as const).map(activity => (
+                    <button key={activity} onClick={() => setSolarActivity(activity)}
+                      style={{ flex: 1, padding: '8px 4px', borderRadius: '8px', border: solarActivity === activity ? '2px solid #f59e0b' : '1px solid #334155', background: solarActivity === activity ? 'rgba(245,158,11,0.2)' : '#0f172a', color: solarActivity === activity ? '#fde047' : '#94a3b8', fontWeight: solarActivity === activity ? 700 : 500, fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: 'system-ui, sans-serif' }}>
+                      {activity.charAt(0).toUpperCase() + activity.slice(1)}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Data readout */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', maxWidth: '600px', width: '100%', marginTop: '16px' }}>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#a855f7' }}>{rad.seuRate}</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>SEU/day</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', maxWidth: '700px', width: '100%', marginTop: '12px' }}>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#a855f7' }}>{rad.seuRate}</div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>SEU/day</div>
           </div>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#f59e0b' }}>{rad.tidRate}</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>rad/day TID</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: '#f59e0b' }}>{rad.tidRate}</div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>rad/day TID</div>
           </div>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e' }}>{rad.latchupRisk}</div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Latchup Risk</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e' }}>{rad.latchupRisk}</div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Latchup Risk</div>
+          </div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e' }}>{rad.beltRegion}</div>
+            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Region</div>
           </div>
         </div>
 

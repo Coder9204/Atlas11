@@ -1001,6 +1001,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'Reaction force from the container when each link is lifted', correct: true },
         { id: 'd', text: 'Static electricity' },
       ],
+      explanation: 'When a rigid link is pulled upward, it pivots and pushes down on the surface. By Newton\'s 3rd law, the surface pushes the link upward, launching it above the rim.',
     },
     {
       id: 2,
@@ -1011,6 +1012,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'Stiff chains with rigid links work better', correct: true },
         { id: 'd', text: 'Color of the chain' },
       ],
+      explanation: 'Rigid links must rotate to change direction at the pickup point, creating a lever action that pushes against the surface. Flexible ropes bend smoothly and produce no upward kick.',
     },
     {
       id: 3,
@@ -1021,6 +1023,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'Higher drop = lower fountain' },
         { id: 'd', text: 'The chain stops working' },
       ],
+      explanation: 'Greater drop height increases the chain velocity at the pickup point. More momentum means a stronger reaction kick from the surface, propelling the chain higher above the rim.',
     },
     {
       id: 4,
@@ -1031,6 +1034,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'Rope is always tangled' },
         { id: 'd', text: 'Rope creates an even bigger fountain' },
       ],
+      explanation: 'A perfectly flexible rope can change direction through a tight curve without any part needing to rotate or push against the surface. No reaction force means no fountain.',
     },
     {
       id: 5,
@@ -1041,6 +1045,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'The shape of the chain fountain' },
         { id: 'd', text: 'A famous physicist' },
       ],
+      explanation: 'Steve Mould\'s viral YouTube video brought global attention to this phenomenon, which was then studied rigorously by physicists Biggins and Warner at Cambridge.',
     },
     {
       id: 6,
@@ -1051,6 +1056,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'The link becomes lighter' },
         { id: 'd', text: 'The link heats up' },
       ],
+      explanation: 'Each link acts as a rigid lever that must rotate to change from stationary to moving upward. This rotation creates a downward force on the surface, which reacts with an upward kick.',
     },
     {
       id: 7,
@@ -1061,6 +1067,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'Momentum', correct: true },
         { id: 'd', text: 'Electric charge' },
       ],
+      explanation: 'Momentum conservation explains the reaction forces at the pickup point. The upward momentum gained by each link requires an equal downward impulse, provided by the surface reaction.',
     },
     {
       id: 8,
@@ -1071,6 +1078,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'The fountain would be twice as high' },
         { id: 'd', text: 'The chain would float' },
       ],
+      explanation: 'The fountain is driven by mechanical reaction forces between rigid links and the surface, not by air. Removing air would eliminate only minor drag effects.',
     },
     {
       id: 9,
@@ -1081,6 +1089,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'They\'re heavier than regular chains' },
         { id: 'd', text: 'They have air pockets inside' },
       ],
+      explanation: 'Ball chain links are rigid connectors between spheres. When pulled upward, the connected balls must rotate, creating a strong lever action against the surface.',
     },
     {
       id: 10,
@@ -1091,6 +1100,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
         { id: 'c', text: 'A fraction that depends on chain properties', correct: true },
         { id: 'd', text: 'Always greater than drop height' },
       ],
+      explanation: 'The fountain-to-drop height ratio depends on link stiffness, mass distribution, and geometry. Stiffer, more rigid links produce a higher ratio, but it is always less than 1.',
     },
   ];
 
@@ -2016,7 +2026,8 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const handleNextQuestion = () => {
       if (isLastQuestion) {
         setTestSubmitted(true);
-        onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
+        const computedScore = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length;
+        onGameEvent?.({ type: 'game_completed', details: { score: computedScore, total: testQuestions.length } });
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
@@ -2047,9 +2058,10 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             </div>
 
             {testQuestions.map((q, idx) => {
-              const qCorrectOption = q.options.find(o => o.correct);
+              const correctOption = q.options.find(o => o.correct);
               const userAnswer = testAnswers[q.id];
-              const isCorrect = userAnswer === qCorrectOption?.id;
+              const isCorrect = userAnswer === correctOption?.id;
+              const userOption = q.options.find(o => o.id === userAnswer);
 
               return (
                 <div
@@ -2062,21 +2074,21 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                     borderRadius: '10px',
                   }}
                 >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrect ? 'Correct' : 'Incorrect'}
-                    </span>
-                    <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Q{idx + 1}
-                    </span>
-                  </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0' }}>
-                    {q.question}
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+                    {idx + 1}. {q.question}
                   </p>
-                  {!isCorrect && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0 }}>
-                      Correct: {qCorrectOption?.text}
-                    </p>
+                  {!isCorrect && userOption && (
+                    <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: colors.error, fontSize: '13px' }}>
+                      Your answer: {userOption.text}
+                    </div>
+                  )}
+                  <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.2)', color: colors.success, fontSize: '13px' }}>
+                    Correct: {correctOption?.text}
+                  </div>
+                  {q.explanation && (
+                    <div style={{ padding: '6px 10px', marginTop: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', lineHeight: 1.5 }}>
+                      {q.explanation}
+                    </div>
                   )}
                 </div>
               );
@@ -2307,7 +2319,37 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
           {renderNavDots()}
         </div>
-        {renderBottomBar(true, true, 'Complete Game', onPhaseComplete)}
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '16px 20px',
+          background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+          borderTop: '1px solid rgba(251, 191, 36, 0.3)',
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: {} });
+              window.location.href = '/games';
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+              color: '#0f172a',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              minHeight: '44px',
+            }}
+          >
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

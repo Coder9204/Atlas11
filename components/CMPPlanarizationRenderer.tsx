@@ -282,6 +282,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Crystalline Material Preparation', correct: false },
         { text: 'Circuit Manufacturing Process', correct: false },
       ],
+      explanation: 'CMP stands for Chemical Mechanical Planarization -- it uses both chemical (slurry) and mechanical (pressure + rotation) action to flatten wafer surfaces between fabrication steps.',
     },
     {
       question: 'Engineers at Applied Materials developed the fundamental physics model for CMP material removal rates. The Preston equation describes CMP removal rate as proportional to:',
@@ -291,6 +292,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Slurry concentration only', correct: false },
         { text: 'Wafer rotation speed only', correct: false },
       ],
+      explanation: 'The Preston equation (RR = k * P * V) shows removal rate is proportional to both the applied pressure and the relative velocity between the wafer and pad.',
     },
     {
       question: 'CMP slurries are complex chemical formulations that cost $500-$2000 per liter and are critical to the process. CMP uses slurry that contains:',
@@ -300,6 +302,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Only acids', correct: false },
         { text: 'Pure copper', correct: false },
       ],
+      explanation: 'CMP slurry combines abrasive nanoparticles (e.g., silica or alumina) with chemical oxidizers and complexing agents that weaken the surface for controlled material removal.',
     },
     {
       question: 'When a CMP process runs too long on copper damascene structures, a characteristic defect pattern appears. "Dishing" in CMP refers to:',
@@ -309,6 +312,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Adding more slurry', correct: false },
         { text: 'Wafer warping', correct: false },
       ],
+      explanation: 'Dishing occurs when softer copper is over-polished in wide trenches, causing its surface to dip below the surrounding oxide -- increasing line resistance.',
     },
     {
       question: 'In areas with high metal density, the surrounding dielectric material can be affected by extended polishing times. "Erosion" in CMP refers to:',
@@ -318,6 +322,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Chemical damage to copper', correct: false },
         { text: 'Slurry degradation', correct: false },
       ],
+      explanation: 'Erosion is the thinning of the oxide dielectric in regions with many closely spaced metal lines, caused by non-uniform pad pressure over dense pattern areas.',
     },
     {
       question: 'CMP slurry chemistry is carefully engineered to remove different materials at controlled rates using oxidizers and complexing agents. Selectivity in CMP slurry means:',
@@ -327,6 +332,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'The slurry selects which areas to polish', correct: false },
         { text: 'The pad selects the pressure', correct: false },
       ],
+      explanation: 'Selectivity is the ratio of removal rates between two materials (e.g., copper vs. oxide), allowing engineers to stop on a barrier layer or preserve surrounding dielectric.',
     },
     {
       question: 'Modern logic chips have 15+ metal layers, each requiring precise surface preparation before the next layer can be patterned. Why is planarization critical for multi-layer chips?',
@@ -336,6 +342,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'It reduces chip weight', correct: false },
         { text: 'It is only cosmetic', correct: false },
       ],
+      explanation: 'Lithography requires an extremely flat surface for proper focus. Without CMP, topography from lower layers accumulates and makes nanometer-scale patterning impossible.',
     },
     {
       question: 'Stopping the CMP process at exactly the right moment is critical - too early leaves excess material, too late causes defects. The endpoint of CMP (when to stop polishing) is typically detected by:',
@@ -345,6 +352,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Fixed time only', correct: false },
         { text: 'Temperature measurement only', correct: false },
       ],
+      explanation: 'Endpoint detection uses optical reflectance changes (different materials reflect differently) or motor current shifts (friction changes when a new layer is exposed).',
     },
     {
       question: 'Process engineers must carefully balance removal time against defect formation in copper CMP applications. Over-polishing in copper CMP causes:',
@@ -354,6 +362,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Faster circuit operation', correct: false },
         { text: 'No problems', correct: false },
       ],
+      explanation: 'Over-polishing removes too much copper (dishing) and surrounding oxide (erosion), thinning interconnects and increasing their electrical resistance -- degrading chip performance.',
     },
     {
       question: 'The damascene process revolutionized copper interconnect manufacturing when introduced by IBM in 1997. The damascene process combines:',
@@ -363,6 +372,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
         { text: 'Only CMP without deposition', correct: false },
         { text: 'Only copper deposition', correct: false },
       ],
+      explanation: 'The damascene process patterns trenches in the dielectric, fills them with copper via electroplating, then uses CMP to remove the excess -- named after an ancient metalwork technique.',
     },
   ];
 
@@ -1703,20 +1713,37 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             </p>
           </div>
 
-          {testQuestions.map((q, qIndex) => {
-            const userAnswer = testAnswers[qIndex];
-            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-            return (
-              <div key={qIndex} style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`, marginBottom: '12px' }}>
-                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold', fontSize: typo.small }}>Q{qIndex + 1}. {q.question}</p>
-                {q.options.map((opt, oIndex) => (
-                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontSize: typo.small }}>
-                    {opt.correct ? '✓ ' : userAnswer === oIndex ? '✗ ' : ''}{opt.text}
+          <div style={{ padding: '16px' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
+              const userAnswer = testAnswers[idx];
+              const correctOption = q.options.find(o => o.correct);
+              const correctIdx = q.options.indexOf(correctOption!);
+              const isCorrect = userAnswer === correctIdx;
+              return (
+                <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                   </div>
-                ))}
-              </div>
-            );
-          })}
+                  {!isCorrect && userAnswer !== null && (
+                    <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                      <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                      <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                    </div>
+                  )}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                    <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                    <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                  </div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                    <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                    <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
           {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review Material')}
         </>);

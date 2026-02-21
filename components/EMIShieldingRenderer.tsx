@@ -208,6 +208,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Cable overheating', correct: false },
         { text: 'Poor quality copper', correct: false },
       ],
+      explanation: 'External electromagnetic fields induce unwanted currents in conductors through Faraday\'s law of induction. Any time-varying magnetic field near a wire will generate a voltage that interferes with the intended signal.',
     },
     {
       question: 'Twisted pair cables reduce noise because:',
@@ -217,6 +218,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Twisted wires carry more current', correct: false },
         { text: 'The twist creates a magnetic barrier', correct: false },
       ],
+      explanation: 'The twist ensures both wires are equally exposed to external fields, so noise couples identically to both. Differential signaling then subtracts the two signals, canceling the common-mode noise.',
     },
     {
       question: 'Common mode noise is:',
@@ -226,6 +228,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Noise from the power company', correct: false },
         { text: 'Noise that varies with temperature', correct: false },
       ],
+      explanation: 'Common mode noise appears identically on both conductors because external fields couple to both wires in a twisted pair equally. This is precisely the type of noise that differential signaling can reject.',
     },
     {
       question: 'Higher frequency signals radiate more EMI because:',
@@ -235,6 +238,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'The electrons move faster', correct: false },
         { text: 'High frequencies generate more heat', correct: false },
       ],
+      explanation: 'Radiation efficiency of a conductor increases with frequency. When a cable\'s length approaches a significant fraction of the signal wavelength, it becomes an effective antenna both for emitting and receiving interference.',
     },
     {
       question: 'A Faraday cage blocks EMI by:',
@@ -244,6 +248,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Reflecting all radio waves back', correct: false },
         { text: 'Creating a vacuum inside', correct: false },
       ],
+      explanation: 'External fields induce currents in the cage\'s conductive walls. These induced currents generate their own field that exactly opposes the external field inside the cage, creating a shielded zone.',
     },
     {
       question: 'Crosstalk between adjacent cable pairs is reduced by:',
@@ -253,6 +258,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Making all pairs the same color', correct: false },
         { text: 'Using thicker insulation only', correct: false },
       ],
+      explanation: 'Different twist rates prevent systematic coupling between pairs. If all pairs had the same twist, their fields would consistently align and create persistent crosstalk, but varying the rate randomizes the coupling.',
     },
     {
       question: 'Shielded Twisted Pair (STP) combines:',
@@ -262,6 +268,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Digital and analog signals', correct: false },
         { text: 'Power and data transmission', correct: false },
       ],
+      explanation: 'STP provides two layers of defense: the twist enables differential noise cancellation for common-mode noise, while the metallic shield (foil or braid) blocks external fields before they can reach the conductors.',
     },
     {
       question: 'Differential signaling transmits data by:',
@@ -271,6 +278,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Using different frequencies for 0 and 1', correct: false },
         { text: 'Changing the current flow direction', correct: false },
       ],
+      explanation: 'Differential signaling sends equal-but-opposite voltages on two wires. The receiver measures only the voltage difference, which doubles the signal amplitude while rejecting any noise common to both wires.',
     },
     {
       question: 'Ferrite cores on cables reduce EMI by:',
@@ -280,6 +288,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: 'Increasing signal strength', correct: false },
         { text: 'Cooling the cable', correct: false },
       ],
+      explanation: 'Ferrite cores act as frequency-dependent resistors. At high frequencies, the ferrite material\'s magnetic properties cause it to absorb electromagnetic energy and convert it to heat, suppressing RF noise.',
     },
     {
       question: 'Why do 10Gbps Ethernet cables need better shielding than 1Gbps?',
@@ -289,6 +298,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
         { text: '10Gbps uses more power', correct: false },
         { text: '10Gbps cables are longer', correct: false },
       ],
+      explanation: '10Gbps uses higher signaling frequencies (up to 500 MHz vs 125 MHz for 1Gbps), making cables both more effective antennas for emitting interference and more susceptible to picking up external noise.',
     },
   ];
 
@@ -1688,20 +1698,26 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
                   {testScore >= 7 ? 'You understand EMI shielding physics!' : 'Review the material and try again.'}
                 </p>
               </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, idx) => {
+                  const userAnswer = testAnswers[idx];
+                  const correctOption = q.options.find(o => o.correct);
+                  const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                  const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                  return (
+                    <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
+                      {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption.text}</span></div>)}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry', testScore >= 7 ? goNext : () => {
               setTestSubmitted(false);
@@ -1874,7 +1890,12 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
 
             {renderVisualization(true)}
           </div>
-          {renderBottomBar(true, 'Complete')}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+            <button onClick={() => { const score = testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length; onGameEvent?.({ type: 'mastery_achieved', details: { score, total: testQuestions.length } }); window.location.href = '/games'; }}
+              style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Complete Game →
+            </button>
+          </div>
         </>
       );
     }

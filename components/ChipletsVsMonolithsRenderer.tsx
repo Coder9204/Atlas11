@@ -267,6 +267,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Yield is independent of area', correct: false },
         { text: 'Yield increases exponentially with area', correct: false },
       ],
+      explanation: 'The Poisson yield model shows that doubling die area more than doubles the chance of hitting a defect, causing yield to drop exponentially -- not linearly.',
     },
     {
       question: 'Splitting a 400mm² die into four 100mm² chiplets improves yield because:',
@@ -276,6 +277,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Defects are eliminated in smaller dice', correct: false },
         { text: 'Packaging removes all defects', correct: false },
       ],
+      explanation: 'Each 100mm² chiplet has exponentially higher yield than a 400mm² die. Even though you need four good chiplets, the combined system yield typically exceeds the monolithic yield.',
     },
     {
       question: 'The main cost disadvantage of chiplets compared to monolithic is:',
@@ -285,6 +287,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Larger total silicon area', correct: false },
         { text: 'More expensive wafer processing', correct: false },
       ],
+      explanation: 'Chiplets require advanced packaging (silicon interposers, TSVs, microbumps) that adds significant cost beyond the silicon itself.',
     },
     {
       question: 'Inter-chiplet communication compared to on-die communication typically has:',
@@ -294,6 +297,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'The same latency but lower power', correct: false },
         { text: 'No difference in performance', correct: false },
       ],
+      explanation: 'Signals crossing chiplet boundaries must traverse package-level interconnects that are longer and have higher capacitance than on-die wires, increasing both latency and energy per bit.',
     },
     {
       question: 'Advanced packaging technologies like 2.5D/3D help chiplets by:',
@@ -303,6 +307,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Increasing die size limits', correct: false },
         { text: 'Reducing defect density', correct: false },
       ],
+      explanation: 'Silicon interposers (2.5D) and die stacking (3D) provide much shorter, denser interconnects than organic substrates, dramatically reducing the latency and power penalty of chiplet communication.',
     },
     {
       question: 'For small die sizes (<100mm²), monolithic is often preferred because:',
@@ -312,6 +317,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Chiplets cannot be made small', correct: false },
         { text: 'Monolithic has zero defects', correct: false },
       ],
+      explanation: 'Small dies already have high yield, so splitting them into chiplets adds packaging cost without meaningful yield improvement -- the break-even favors monolithic.',
     },
     {
       question: 'System yield for N identical chiplets (all must work) is:',
@@ -321,6 +327,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Average of individual yields', correct: false },
         { text: 'Maximum of individual yields', correct: false },
       ],
+      explanation: 'Since every chiplet must be functional, system yield is the product of individual chiplet yields (Y^N), which decreases as more chiplets are required.',
     },
     {
       question: 'Heterogeneous integration allows:',
@@ -330,6 +337,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Eliminating the need for packaging', correct: false },
         { text: 'Zero interconnect latency', correct: false },
       ],
+      explanation: 'Different functions (logic, memory, I/O, analog) have different optimal process nodes. Chiplets let each be manufactured on its best technology and combined in one package.',
     },
     {
       question: 'The break-even point for chiplets vs monolithic depends on:',
@@ -339,6 +347,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Only packaging technology', correct: false },
         { text: 'Only defect density', correct: false },
       ],
+      explanation: 'The chiplet vs. monolithic decision involves a three-way tradeoff: larger area and higher defect density favor chiplets, but only if the packaging cost overhead does not erase the yield savings.',
     },
     {
       question: 'Companies like AMD use identical chiplets (like 8-core CCDs) to:',
@@ -348,6 +357,7 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
         { text: 'Avoid using advanced packaging', correct: false },
         { text: 'Increase power consumption', correct: false },
       ],
+      explanation: 'Reusing the same chiplet design across product lines amortizes engineering costs and increases wafer volume, driving down per-unit cost through economies of scale.',
     },
   ];
 
@@ -2035,20 +2045,37 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
                 {testScore >= 8 ? 'You\'ve mastered chiplet economics!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>Q{qIndex + 1} of {testQuestions.length}: {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -2231,7 +2258,12 @@ const [internalPhase, setInternalPhase] = useState<Phase>('hook');
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

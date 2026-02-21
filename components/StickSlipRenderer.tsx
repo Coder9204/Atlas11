@@ -653,6 +653,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'Static friction only applies to earthquakes' },
         { id: 'd', text: 'Kinetic friction is always greater' },
       ],
+      explanation: 'Static friction acts on stationary objects to prevent motion and is always greater than kinetic friction, which acts on objects already in motion. This difference is key to the stick-slip cycle.',
     },
     {
       id: 2,
@@ -663,6 +664,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'Static friction breaks and kinetic friction is lower', correct: true },
         { id: 'd', text: 'The plates stop moving' },
       ],
+      explanation: 'When accumulated stress exceeds static friction, the fault slips. Kinetic friction is significantly lower than static friction, so the stored elastic energy is rapidly released as seismic waves.',
     },
     {
       id: 3,
@@ -673,6 +675,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'The time of day' },
         { id: 'd', text: 'The color of the rocks' },
       ],
+      explanation: 'Earthquake magnitude is determined by how much elastic strain energy has accumulated before the fault ruptures. More stored energy means a larger rupture area, more displacement, and a stronger earthquake.',
     },
     {
       id: 4,
@@ -683,6 +686,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'The rocks get harder over time' },
         { id: 'd', text: "It's just random chance" },
       ],
+      explanation: 'Tectonic plates continue moving even when a fault is locked. The longer the fault remains stuck, the more elastic strain energy builds up, resulting in a more energetic release when it finally breaks.',
     },
     {
       id: 5,
@@ -693,6 +697,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'Light bulb turning on' },
         { id: 'd', text: 'Radio waves' },
       ],
+      explanation: 'A squeaking door hinge alternates between sticking (static friction grips) and slipping (kinetic friction releases), producing audible vibrations through the same stick-slip mechanism as earthquakes.',
     },
     {
       id: 6,
@@ -703,6 +708,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'An earthquake is occurring' },
         { id: 'd', text: 'The plates are moving apart' },
       ],
+      explanation: 'During the stick phase, the fault is locked by static friction while tectonic forces continue to push. The rock on either side of the fault deforms elastically, storing potential energy like a compressed spring.',
     },
     {
       id: 7,
@@ -713,6 +719,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'Earthquakes are caused by aliens' },
         { id: 'd', text: "Technology isn't advanced enough to detect faults" },
       ],
+      explanation: 'The exact breaking threshold depends on microscopic surface roughness, fluid pressure, temperature, and other variables deep underground that we cannot measure precisely. This makes exact timing unpredictable.',
     },
     {
       id: 8,
@@ -723,6 +730,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'Repeated stick-slip cycles vibrate the string at audio frequencies', correct: true },
         { id: 'd', text: 'The bow hits the string like a drum' },
       ],
+      explanation: 'Rosin on the bow creates high static friction that grips the string, then releases when it slips. This stick-slip cycle repeats hundreds of times per second, driving the string vibration that produces musical tones.',
     },
     {
       id: 9,
@@ -733,6 +741,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'They grip together and resist movement until they snap apart', correct: true },
         { id: 'd', text: 'They cause the earth to heat up' },
       ],
+      explanation: 'Asperities are interlocking irregularities on fault surfaces that act as friction points. They resist motion by gripping together, building stress until they fracture or shear, triggering sudden slip events.',
     },
     {
       id: 10,
@@ -743,6 +752,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
         { id: 'c', text: 'No change in earthquake patterns' },
         { id: 'd', text: 'The fault would stop completely' },
       ],
+      explanation: 'Lower friction means the fault cannot lock and store as much energy. It would slip more frequently at lower stress levels, producing smaller events or even smooth creep instead of catastrophic ruptures.',
     },
   ];
 
@@ -1508,42 +1518,27 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
               </p>
             </div>
 
-            {testQuestions.map((q, idx) => {
-              const correctOption = q.options.find(o => o.correct);
-              const userAnswer = testAnswers[q.id];
-              const isCorrectAnswer = userAnswer === correctOption?.id;
-
-              return (
-                <div
-                  key={q.id}
-                  style={{
-                    background: isCorrectAnswer ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    border: `1px solid ${isCorrectAnswer ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                    margin: '12px 16px',
-                    padding: '14px',
-                    borderRadius: '10px',
-                    maxWidth: '800px',
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ color: isCorrectAnswer ? colors.success : colors.error, fontSize: '16px' }}>
-                      {isCorrectAnswer ? '\u2713' : '\u2717'}
-                    </span>
-                    <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 'bold' }}>
-                      Question {idx + 1} of {testQuestions.length}
-                    </span>
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[q.id];
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctAnswer;
+                return (
+                  <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                   </div>
-                  <p style={{ color: colors.textSecondary, fontSize: '12px', margin: '0 0 4px 0', lineHeight: '1.5' }}>
-                    {q.question}
-                  </p>
-                  {!isCorrectAnswer && (
-                    <p style={{ color: colors.success, fontSize: '11px', margin: 0, lineHeight: '1.5' }}>
-                      Correct: {correctOption?.text}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(true, true, score >= 70 ? 'Complete!' : 'Review & Continue')}
         </div>
@@ -1658,7 +1653,8 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                     setShowExplanation(false);
                   } else if (showExplanation && testQuestion === testQuestions.length - 1) {
                     setTestSubmitted(true);
-                    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
+                    const score = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length;
+                    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                   }
                 }}
                 style={{
@@ -1750,7 +1746,12 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game &rarr;
+          </button>
+        </div>
       </div>
     );
   }

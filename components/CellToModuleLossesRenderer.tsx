@@ -240,6 +240,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'The cell with the highest voltage', correct: false },
         { text: 'Current is independent of individual cells', correct: false },
       ],
+      explanation: 'In a series circuit, all cells carry the same current. The weakest cell limits the entire string, just like the narrowest pipe restricts water flow.',
     },
     {
       question: 'What is the "Cell-to-Module" (CTM) ratio?',
@@ -249,6 +250,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'Cell efficiency / Module efficiency', correct: false },
         { text: 'The weight ratio of cells to frame', correct: false },
       ],
+      explanation: 'CTM ratio quantifies how much power is retained when individual cells are assembled into a module. A ratio below 1.0 indicates net losses from interconnection, optics, and mismatch.',
     },
     {
       question: 'Why do ribbon interconnects cause power loss?',
@@ -258,6 +260,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'They conduct heat away from the cells', correct: false },
         { text: 'Ribbons reduce the cell voltage', correct: false },
       ],
+      explanation: 'Ribbon interconnects have finite resistance, and the power dissipated as heat follows P = I^2 * R, making losses grow quadratically with current.',
     },
     {
       question: 'What is "mismatch loss" in a solar module?',
@@ -267,6 +270,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'Loss from cells facing different directions', correct: false },
         { text: 'Loss from different cell colors', correct: false },
       ],
+      explanation: 'When cells in a series string have slightly different outputs, the weakest cell constrains the string current, wasting potential power from the stronger cells.',
     },
     {
       question: 'How much light do glass and EVA typically absorb in a module?',
@@ -276,6 +280,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'About 20%', correct: false },
         { text: 'They don\'t absorb any light', correct: false },
       ],
+      explanation: 'Standard glass absorbs ~2-4% and EVA encapsulant absorbs ~1%, combining for 3-5% optical loss before light even reaches the solar cells.',
     },
     {
       question: 'Why is cell binning (sorting by current) important?',
@@ -285,6 +290,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'To reduce manufacturing cost', correct: false },
         { text: 'To meet shipping weight limits', correct: false },
       ],
+      explanation: 'Binning groups cells with similar current output so that series strings have minimal mismatch, preventing strong cells from being dragged down by weaker ones.',
     },
     {
       question: 'One slightly weak cell in a 60-cell module will:',
@@ -294,6 +300,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'Increase the module voltage', correct: false },
         { text: 'Only affect that one cell\'s power', correct: false },
       ],
+      explanation: 'Series connection means every cell in the string must carry the same current. One weak cell forces all 59 other cells down to its lower current level.',
     },
     {
       question: 'The purpose of bypass diodes in a module is to:',
@@ -303,6 +310,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'Convert DC to AC', correct: false },
         { text: 'Store energy during the night', correct: false },
       ],
+      explanation: 'Bypass diodes activate when a cell becomes shaded or weak, routing current around the affected sub-string to prevent hot spots and limit power loss.',
     },
     {
       question: 'Series resistance losses scale with current as:',
@@ -312,6 +320,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: 'Inverse (P = R/I)', correct: false },
         { text: 'Constant regardless of current', correct: false },
       ],
+      explanation: 'Joule heating follows P = I^2 * R, so doubling the current quadruples the resistive loss -- which is why higher-current cell architectures demand lower-resistance ribbons.',
     },
     {
       question: 'A typical CTM ratio for a well-made module is approximately:',
@@ -321,6 +330,7 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
         { text: '95-100% (or even >100% with light capture enhancements)', correct: true },
         { text: 'Over 120%', correct: false },
       ],
+      explanation: 'Well-engineered modules retain 95-100% of cell power. Some achieve >100% CTM by using white backsheets or reflective edges that redirect stray photons into cells.',
     },
   ];
 
@@ -1522,20 +1532,37 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered cell-to-module losses!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1682,7 +1709,12 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

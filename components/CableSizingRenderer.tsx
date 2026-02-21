@@ -69,6 +69,7 @@ const TEST_QUESTIONS = [
       { text: 'Power loss decreases with resistance', correct: false },
       { text: 'Power loss is independent of current', correct: false },
     ],
+    explanation: 'The I² term means doubling current quadruples power loss. This square relationship is why reducing current (by raising voltage) is so effective at cutting losses.',
   },
   {
     question: 'Why do data centers use thick copper bus bars?',
@@ -78,6 +79,7 @@ const TEST_QUESTIONS = [
       { text: 'Copper is cheaper than aluminum', correct: false },
       { text: 'Regulations require specific sizes', correct: false },
     ],
+    explanation: 'Thicker conductors have lower resistance (R = ρL/A). With data centers drawing thousands of amps, even small resistance reductions save significant power as heat losses.',
   },
   {
     question: 'If you double the voltage while keeping power the same, what happens to current?',
@@ -87,6 +89,7 @@ const TEST_QUESTIONS = [
       { text: 'Current is halved', correct: true },
       { text: 'Current quadruples', correct: false },
     ],
+    explanation: 'From P = V × I, if power P is constant and voltage V doubles, current I must halve. This is why high-voltage transmission uses much thinner wires than low-voltage distribution.',
   },
   {
     question: 'What happens to I² × R losses when you double voltage (same power)?',
@@ -96,6 +99,7 @@ const TEST_QUESTIONS = [
       { text: 'Losses are reduced to 1/4', correct: true },
       { text: 'Losses quadruple', correct: false },
     ],
+    explanation: 'Doubling voltage halves current (P=VI). Since losses = I²R, halving current reduces losses to (I/2)² × R = I²R/4, a 75% reduction.',
   },
   {
     question: 'Why does transmission use 400kV+ instead of 120V?',
@@ -105,6 +109,7 @@ const TEST_QUESTIONS = [
       { text: 'It is cheaper to generate', correct: false },
       { text: 'Lower voltage would blow fuses', correct: false },
     ],
+    explanation: 'At 400kV vs 120V (3333x higher), current drops by 3333x, and I²R losses drop by 11 million times. Without high voltage, most power would be lost as heat in the wires.',
   },
   {
     question: 'What is "ampacity"?',
@@ -114,6 +119,7 @@ const TEST_QUESTIONS = [
       { text: 'The resistance per meter', correct: false },
       { text: 'The cost per amp of capacity', correct: false },
     ],
+    explanation: 'Ampacity is limited by how much I²R heating the cable insulation can withstand before degrading. Exceeding ampacity causes overheating, insulation breakdown, and fire risk.',
   },
   {
     question: 'How does cable resistance change with temperature?',
@@ -123,6 +129,7 @@ const TEST_QUESTIONS = [
       { text: 'Temperature has no effect', correct: false },
       { text: 'Only affects aluminum, not copper', correct: false },
     ],
+    explanation: 'Metal resistance increases with temperature because lattice vibrations scatter electrons more. Copper has a temperature coefficient of about +0.4%/°C, creating a feedback loop with I²R heating.',
   },
   {
     question: 'What voltage drop is typically acceptable for branch circuits?',
@@ -132,6 +139,7 @@ const TEST_QUESTIONS = [
       { text: '15% maximum', correct: false },
       { text: 'Any amount is acceptable', correct: false },
     ],
+    explanation: 'NEC recommends 3% for branch circuits and 5% total (feeder + branch). Excessive voltage drop causes motors to run hot, lights to dim, and electronics to malfunction.',
   },
   {
     question: 'Why might a data center choose 480V distribution over 208V?',
@@ -141,6 +149,7 @@ const TEST_QUESTIONS = [
       { text: '480V is safer than 208V', correct: false },
       { text: 'Government incentives for 480V', correct: false },
     ],
+    explanation: 'At 480V vs 208V, current drops by 2.3x for the same power. This allows thinner cables, smaller breakers, and less copper -- saving millions in large data center installations.',
   },
   {
     question: 'What is the relationship between wire gauge (AWG) and resistance?',
@@ -150,6 +159,7 @@ const TEST_QUESTIONS = [
       { text: 'AWG has no relation to resistance', correct: false },
       { text: 'AWG only applies to aluminum', correct: false },
     ],
+    explanation: 'AWG uses an inverted scale: higher numbers = thinner wire = more resistance. Each 3 AWG step halves the cross-sectional area and doubles resistance per unit length.',
   },
 ];
 
@@ -1721,19 +1731,32 @@ export default function CableSizingRenderer({
               </p>
             </div>
 
-            {/* Answer Review */}
+            {/* Rich Answer Key */}
             <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: 'rgba(30, 41, 59, 0.8)', marginBottom: '24px' }}>
-              <h4 style={{ fontWeight: 700, color: '#f8fafc', marginBottom: '16px', fontSize: '16px' }}>Answer Review</h4>
+              <h4 style={{ fontWeight: 700, color: '#f8fafc', marginBottom: '16px', fontSize: '16px' }}>Answer Key</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {TEST_QUESTIONS.map((q, qIndex) => {
                   const userAnswer = testAnswers[qIndex];
-                  const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                  const correctIndex = q.options.findIndex(o => o.correct);
+                  const isCorrect = userAnswer === correctIndex;
                   return (
-                    <div key={qIndex} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(15, 23, 42, 0.6)' }}>
-                      <span style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 700, fontSize: '14px', backgroundColor: isCorrect ? '#22c55e' : '#ef4444' }}>
-                        {isCorrect ? '✓' : '✗'}
-                      </span>
-                      <span style={{ fontSize: '14px', color: 'rgba(148, 163, 184, 0.7)' }}>Q{qIndex + 1}: {isCorrect ? 'Correct' : 'Incorrect'}</span>
+                    <div key={qIndex} style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(15, 23, 42, 0.6)', borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}` }}>
+                      <p style={{ fontSize: '14px', color: '#f8fafc', fontWeight: 'bold', marginBottom: '8px' }}>
+                        {qIndex + 1}. {q.question}
+                      </p>
+                      {!isCorrect && userAnswer !== null && (
+                        <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', fontSize: '13px' }}>
+                          Your answer: {q.options[userAnswer].text}
+                        </div>
+                      )}
+                      <div style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', fontSize: '13px' }}>
+                        Correct: {q.options[correctIndex].text}
+                      </div>
+                      {q.explanation && (
+                        <div style={{ padding: '6px 10px', marginTop: '6px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '12px', lineHeight: 1.5 }}>
+                          {q.explanation}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1788,12 +1811,35 @@ export default function CableSizingRenderer({
         </ul>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 20px',
+        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))',
+        borderTop: '1px solid rgba(245, 158, 11, 0.3)',
+        zIndex: 1000,
+      }}>
         <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ padding: '16px 32px', borderRadius: '16px', fontWeight: 600, fontSize: '18px', border: 'none', cursor: 'pointer', backgroundColor: '#334155', color: '#e2e8f0', minHeight: '44px', transition: 'all 0.3s ease' }}
+          onClick={() => {
+            onGameEvent?.({ type: 'mastery_achieved', details: {} });
+            window.location.href = '/games';
+          }}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: '12px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            minHeight: '44px',
+          }}
         >
-          Complete
+          Complete Game
         </button>
       </div>
     </div>

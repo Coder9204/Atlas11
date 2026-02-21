@@ -2333,7 +2333,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Knowledge Assessment</h2>
-          <p style={{ color: '#94a3b8', marginBottom: '24px', fontWeight: 400 }}>Faraday cage electromagnetic shielding mastery test covering electron redistribution, mesh wavelength principles, and real-world applications</p>
+          <p style={{ color: '#94a3b8', marginBottom: '24px', fontWeight: 400 }}>Faraday cage electromagnetic shielding mastery test</p>
           <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '32px', maxWidth: '480px', width: '100%', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>{testScore >= 7 ? '🏆' : '📚'}</div>
             <h3 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>Score: {testScore}/{testQuestions.length}</h3>
@@ -2342,10 +2342,32 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             </p>
             <button
               onClick={() => { if (testScore >= 7) { goToPhase('mastery'); } else { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); setCurrentQuestionIdx(0); setConfirmedIndex(null); setShowTestResults(false); goToPhase('review'); } }}
-              style={{ padding: '12px 32px', background: testScore >= 7 ? 'linear-gradient(135deg, #059669, #0d9488)' : 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', border: 'none', color: 'white', fontWeight: 600, fontSize: '16px', cursor: 'pointer' }}
+              style={{ padding: '12px 32px', background: testScore >= 7 ? 'linear-gradient(135deg, #059669, #0d9488)' : 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', border: 'none', color: 'white', fontWeight: 600, fontSize: '16px', cursor: 'pointer', marginBottom: '24px' }}
             >
               {testScore >= 7 ? 'Claim Mastery Badge' : 'Review and Try Again'}
             </button>
+          </div>
+          <div style={{ padding: '16px', maxWidth: '640px', width: '100%' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
+              const userAnswer = testAnswers[idx];
+              const correctOption = q.options.find(o => 'correct' in o && o.correct);
+              const correctIdx = q.options.indexOf(correctOption!);
+              const userOption = userAnswer !== null ? q.options[userAnswer] : undefined;
+              const isCorrect = userAnswer !== null && q.options[userAnswer!]?.correct;
+              const optText = (opt: any) => 'label' in opt ? opt.label : ('text' in opt ? opt.text : '');
+              return (
+                <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                    <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                  </div>
+                  {!isCorrect && userOption && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{optText(userOption)}</span></div>)}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption ? optText(correctOption) : ''}</span></div>
+                  {q.explanation && <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>}
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -2476,6 +2498,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍿</div><p className="text-sm text-slate-300">Microwave Ovens</p></div>
             <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📱</div><p className="text-sm text-slate-300">Signal Blocking</p></div>
           </div>
+
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testScore, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', maxWidth: '400px', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game &rarr;
+          </button>
         </div>
       </div>
     );

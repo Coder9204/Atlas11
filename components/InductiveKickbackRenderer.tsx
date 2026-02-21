@@ -1874,12 +1874,12 @@ export default function InductiveKickbackRenderer({
         >
           Review Again
         </button>
-        <a
-          href="/"
-          className="block w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-2xl shadow-lg shadow-amber-500/25 text-center"
+        <button
+          onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] === q.correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+          style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '16px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          Return to Dashboard
-        </a>
+          Complete Game →
+        </button>
       </div>
 
       {renderNavDots()}

@@ -1698,31 +1698,45 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             </div>
           </div>
 
-          {/* Answer breakdown */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '6px',
-            marginBottom: '24px',
-            flexWrap: 'wrap',
-          }}>
-            {testAnswers.map((ans, i) => {
-              const correct = ans !== null && testQuestions[i].options[ans]?.correct;
+          {/* Answer Key */}
+          <div style={{ padding: '16px', textAlign: 'left' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
+              const userAnswer = testAnswers[idx];
+              const correctOption = q.options.find(o => o.correct);
+              const correctIdx = q.options.indexOf(correctOption!);
+              const isCorrect = userAnswer === correctIdx;
+              const userOption = userAnswer !== null ? q.options[userAnswer] : null;
               return (
-                <div key={i} style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  background: correct ? `${colors.success}22` : `${colors.danger}22`,
-                  color: correct ? colors.success : colors.danger,
-                  border: `1px solid ${correct ? colors.success : colors.danger}44`,
+                <div key={idx} style={{
+                  background: 'rgba(30, 41, 59, 0.9)',
+                  margin: '12px 0',
+                  padding: '16px',
+                  borderRadius: '10px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.danger}`
                 }}>
-                  {i + 1}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: isCorrect ? colors.success : colors.danger, fontSize: '18px', flexShrink: 0 }}>
+                      {isCorrect ? '\u2713' : '\u2717'}
+                    </span>
+                    <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                      Q{idx + 1}. {q.question}
+                    </span>
+                  </div>
+                  {!isCorrect && (
+                    <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                      <span style={{ color: colors.danger, fontSize: '13px' }}>Your answer: </span>
+                      <span style={{ color: colors.textMuted, fontSize: '13px' }}>{userOption?.text}</span>
+                    </div>
+                  )}
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                    <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                    <span style={{ color: colors.textMuted, fontSize: '13px' }}>{correctOption?.text}</span>
+                  </div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                    <span style={{ color: colors.warning, fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                    <span style={{ color: colors.textMuted, fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                  </div>
                 </div>
               );
             })}
@@ -2160,24 +2174,23 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
           >
             Replay Lesson
           </button>
-          <a
-            href="/games"
+          <button
+            onClick={() => { onGameEvent?.({ type: 'mastery_achieved', data: { game: 'bernoulli_principle', score: testScore, total: 10 } }); window.location.href = '/games'; }}
             style={{
               padding: '14px 24px',
               borderRadius: '12px',
               border: 'none',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
+              background: `linear-gradient(135deg, ${colors.success}, #059669)`,
               color: 'white',
               fontWeight: 600,
               cursor: 'pointer',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
+              minHeight: '52px',
+              fontSize: '16px',
               transition: 'all 0.2s ease',
             }}
           >
-            Browse All Lessons
-          </a>
+            Complete Game →
+          </button>
           {onBack && (
             <button
               onClick={() => {

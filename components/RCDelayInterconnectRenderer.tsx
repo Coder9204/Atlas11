@@ -302,6 +302,7 @@ const isNavigating = useRef(false);
     {
       scenario: 'An Intel chip designer is routing a 1mm copper wire at 7nm. They double the wire length to 2mm to reach a distant circuit block.',
       question: 'How does RC delay scale with wire length?',
+      explanation: 'Both R and C increase linearly with length, so delay = R*C scales as length squared. Doubling length quadruples the delay.',
       options: [
         { text: 'Linearly (double length = double delay)', correct: false },
         { text: 'Quadratically (double length = 4x delay)', correct: true },
@@ -311,6 +312,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'Why did the semiconductor industry replace aluminum with copper for interconnects?',
+      explanation: 'Copper has about 40% lower resistivity than aluminum (1.7 vs 2.7 micro-ohm-cm), directly reducing the R in RC delay for faster signal propagation.',
       options: [
         { text: 'Copper is cheaper than aluminum', correct: false },
         { text: 'Copper has lower resistance, reducing RC delay', correct: true },
@@ -320,6 +322,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'As technology nodes shrink (e.g., 14nm to 7nm), what happens to interconnect delay?',
+      explanation: 'Thinner wires have smaller cross-sectional area, increasing resistance. Additionally, electron scattering at wire surfaces becomes significant at nanometer scales, further increasing R.',
       options: [
         { text: 'Delay decreases because wires are shorter', correct: false },
         { text: 'Delay stays the same', correct: false },
@@ -329,6 +332,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'What is a repeater (buffer) used for in long interconnects?',
+      explanation: 'Breaking a long wire of length L into N segments changes delay from L^2 to N*(L/N)^2 = L^2/N, dramatically reducing total delay for long-distance routing.',
       options: [
         { text: 'To boost the signal voltage', correct: false },
         { text: 'To break a long wire into shorter segments, reducing quadratic delay', correct: true },
@@ -338,6 +342,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'Why is the RC time constant (tau = R x C) important for chip design?',
+      explanation: 'A signal takes roughly 2.2*RC to reach 90% of its final value. This sets the maximum rate at which data can toggle, directly limiting clock frequency.',
       options: [
         { text: 'It determines the maximum clock frequency for a wire', correct: true },
         { text: 'It affects only the power consumption', correct: false },
@@ -347,6 +352,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'What is electromigration and why is it related to interconnect resistance?',
+      explanation: 'High current density in thin wires causes momentum transfer from electrons to metal atoms, physically displacing them. This creates voids that increase resistance and eventually open-circuit the wire.',
       options: [
         { text: 'Electrons moving through thin wires can physically move metal atoms, increasing resistance over time', correct: true },
         { text: 'Electrons migrate to the surface of wires', correct: false },
@@ -356,6 +362,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'Low-k dielectrics are used in modern chips to:',
+      explanation: 'Capacitance between adjacent wires depends on the dielectric constant of the insulator between them. Low-k materials reduce this capacitance, directly lowering RC delay.',
       options: [
         { text: 'Increase wire resistance', correct: false },
         { text: 'Reduce capacitance between wires, decreasing RC delay', correct: true },
@@ -365,6 +372,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'Why do modern chips use multiple metal layers?',
+      explanation: 'Upper metal layers use thicker, wider wires for long-distance global routing with lower resistance, while lower layers handle dense local connections. This hierarchy optimizes both routing density and signal speed.',
       options: [
         { text: 'To make the chip thicker and stronger', correct: false },
         { text: 'To provide more routing options and allow thicker wires for long-distance signals', correct: true },
@@ -374,6 +382,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'Signal integrity problems in interconnects include:',
+      explanation: 'RC delay slows signals, capacitive coupling between adjacent wires causes crosstalk, and resistance attenuates signal amplitude. All three degrade at smaller technology nodes.',
       options: [
         { text: 'Delay, crosstalk, and signal attenuation', correct: true },
         { text: 'Only power consumption issues', correct: false },
@@ -383,6 +392,7 @@ const isNavigating = useRef(false);
     },
     {
       question: 'At what point does interconnect delay become more significant than transistor delay?',
+      explanation: 'Transistor switching speed improved with scaling, but interconnect delay worsened. The crossover occurred around the 130nm node, and interconnects now dominate total delay at advanced nodes.',
       options: [
         { text: 'At large technology nodes (> 100nm)', correct: false },
         { text: 'Starting around 130nm and getting worse at smaller nodes', correct: true },
@@ -1542,20 +1552,25 @@ const isNavigating = useRef(false);
                 {testScore >= 7 ? 'You understand RC delay in interconnects!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -1639,7 +1654,12 @@ const isNavigating = useRef(false);
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

@@ -221,6 +221,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'Cable bandwidth', correct: false },
         { text: 'CPU processing speed', correct: false },
       ],
+      explanation: 'Random reads require physically moving the head to the correct track (seek time: 4-12 ms) and waiting for the platter to rotate to the right sector (rotational latency: 2-6 ms). These mechanical delays dominate total access time.',
     },
     {
       question: 'Average rotational latency for a 7200 RPM drive is approximately:',
@@ -230,6 +231,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: '40 ms', correct: false },
         { text: '400 ms', correct: false },
       ],
+      explanation: 'One full rotation at 7200 RPM takes 60/7200 = 8.33 ms. On average, the desired sector is half a rotation away, so average rotational latency = 8.33/2 = ~4.17 ms.',
     },
     {
       question: 'Why are SSDs faster than HDDs for random access?',
@@ -239,6 +241,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'SSDs use better cables', correct: false },
         { text: 'SSDs have larger caches only', correct: false },
       ],
+      explanation: 'SSDs use NAND flash memory accessed electronically with no mechanical movement. Access time is ~0.1 ms vs 5-15 ms for HDDs. This eliminates seek time and rotational latency entirely, enabling 100-1000x more random IOPS.',
     },
     {
       question: 'The head fly height in modern HDDs is approximately:',
@@ -248,6 +251,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: '3-10 nanometers', correct: true },
         { text: '1 meter when accounting for scale', correct: false },
       ],
+      explanation: 'Modern read/write heads fly just 3-10 nanometers above the platter surface on an air bearing. At this scale, a human hair (~80,000 nm) is a massive obstacle, and a fingerprint or dust particle can cause a catastrophic head crash.',
     },
     {
       question: 'A head crash in an HDD is caused by:',
@@ -257,6 +261,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'Overheating of the motor', correct: false },
         { text: 'Software malfunction', correct: false },
       ],
+      explanation: 'A head crash occurs when the read/write head physically contacts the spinning platter surface. At 7200 RPM, the platter edge moves at ~120 km/h. Contact at this speed destroys the magnetic coating and the head, causing permanent data loss.',
     },
     {
       question: 'Sequential HDD performance is much better than random because:',
@@ -266,6 +271,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'The CPU processes sequential data faster', correct: false },
         { text: 'Cables work better with sequential data', correct: false },
       ],
+      explanation: 'Sequential data is stored in adjacent sectors on the same track. The head stays in position while data streams past, eliminating seek time and most rotational latency. Only the data transfer rate limits throughput (100-250 MB/s).',
     },
     {
       question: 'Higher RPM drives have lower latency because:',
@@ -275,6 +281,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'They have more platters', correct: false },
         { text: 'They generate more magnetism', correct: false },
       ],
+      explanation: 'Higher RPM means faster platter rotation, which directly reduces rotational latency. A 15000 RPM drive has half the rotational latency of a 7200 RPM drive (2 ms vs 4 ms average), and data also passes under the head faster.',
     },
     {
       question: 'IOPS (Input/Output Operations Per Second) is limited in HDDs to approximately:',
@@ -284,6 +291,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: '100,000+ for random access', correct: false },
         { text: '1 million for random access', correct: false },
       ],
+      explanation: 'IOPS = 1000 / (seek time + rotational latency). For a 7200 RPM drive: 1000 / (9 + 4) = ~77 IOPS. Even the fastest 15000 RPM drives max out around 200 IOPS for random access, vs 500,000+ for modern NVMe SSDs.',
     },
     {
       question: 'Why do some enterprise HDDs use helium filling?',
@@ -293,6 +301,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'Helium conducts electricity better', correct: false },
         { text: 'Helium prevents rust', correct: false },
       ],
+      explanation: 'Helium is 1/7th the density of air, dramatically reducing turbulence and aerodynamic drag on the platters. This enables thinner platters (more per drive), closer track spacing (higher density), and lower fly heights for better read accuracy.',
     },
     {
       question: 'Laptop accelerometer-based HDD protection works by:',
@@ -302,6 +311,7 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
         { text: 'Switching to SSD mode temporarily', correct: false },
         { text: 'Applying more power to the head', correct: false },
       ],
+      explanation: 'When accelerometers detect sudden motion (like a laptop being dropped), the drive immediately parks the head on a safe landing zone at the edge of the platter. This prevents the head from crashing into the data area during impact.',
     },
   ];
 
@@ -1841,20 +1851,48 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
                   {testScore >= 7 ? 'You understand HDD read physics!' : 'Review the material and try again.'}
                 </p>
               </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+              <div style={{ padding: '16px' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+                {testQuestions.map((q, qIndex) => {
+                  const userAnswer = testAnswers[qIndex];
+                  const correctOption = q.options.find(o => o.correct);
+                  const correctIdx = q.options.indexOf(correctOption!);
+                  const isCorrect = userAnswer === correctIdx;
+                  const userOption = userAnswer !== null ? q.options[userAnswer] : null;
+                  return (
+                    <div key={qIndex} style={{
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      margin: '12px 0',
+                      padding: '16px',
+                      borderRadius: '10px',
+                      borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </span>
+                        <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                          Q{qIndex + 1}. {q.question}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
+                      {!isCorrect && (
+                        <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                          <span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span>
+                          <span style={{ color: '#64748b', fontSize: '13px' }}>{userOption?.text}</span>
+                        </div>
+                      )}
+                      <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                        <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                      </div>
+                      <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                        <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                        <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry', testScore >= 7 ? goNext : () => {
               setTestSubmitted(false);
@@ -2032,7 +2070,12 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
             {renderVisualization(true)}
           </div>
-          {renderBottomBar(true, 'Complete')}
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+            <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+              style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+              Complete Game →
+            </button>
+          </div>
         </>
       );
     }

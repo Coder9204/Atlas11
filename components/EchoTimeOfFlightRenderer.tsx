@@ -2448,6 +2448,28 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
               passed ? 'success' : 'primary'
             )}
           </div>
+
+          {/* Answer Key */}
+          <div style={{ padding: '16px', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
+            <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+            {testQuestions.map((q, idx) => {
+              const correctOption = q.options.find(o => o.correct);
+              const correctIndex = q.options.findIndex(o => o.correct);
+              const userAnswer = idx < testQuestions.length ? selectedAnswer : null;
+              const storedAnswer = idx === currentQuestion ? selectedAnswer : null;
+              const isCorrect = testScore > 0 && correctOption ? true : false;
+              const wasCorrectCalc = (() => { const labels = ['A', 'B', 'C', 'D']; return correctOption; })();
+              return (
+                <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${correctIndex >= 0 ? '#10b981' : '#ef4444'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                  </div>
+                  <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.label}</span></div>
+                  <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }
@@ -2752,12 +2774,17 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         </div>
 
         {renderButton(
-          'Complete Lesson ✓',
-          () => {
-            emitEvent('mastery_achieved', { testScore, percentage });
-          },
-          'success'
+          '← Explore Again',
+          () => goToPhase('hook'),
+          'secondary'
         )}
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { emitEvent('mastery_achieved', { testScore, percentage }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

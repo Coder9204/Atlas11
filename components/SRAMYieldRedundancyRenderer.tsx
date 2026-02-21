@@ -385,6 +385,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Memory is made with different technology', correct: false },
         { text: 'Memory is tested last in the manufacturing flow', correct: false },
       ],
+      explanation: 'Memory arrays occupy a large fraction of die area with billions of identical cells. The Poisson model shows yield drops exponentially with area, making memory the most defect-prone block.',
     },
     {
       question: 'Spare rows and columns in SRAM provide:',
@@ -394,6 +395,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Faster memory access', correct: false },
         { text: 'Lower power consumption', correct: false },
       ],
+      explanation: 'Spare rows and columns are backup structures that can be switched in to replace any row or column containing a defective cell, salvaging otherwise failed dies.',
     },
     {
       question: 'The Poisson distribution is used for yield modeling because:',
@@ -403,6 +405,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'It provides the most optimistic estimate', correct: false },
         { text: 'It is the simplest model', correct: false },
       ],
+      explanation: 'Manufacturing defects are random events with a known average density (defects/cm^2), making the Poisson distribution a natural statistical model for yield prediction.',
     },
     {
       question: 'ECC (Error Correcting Code) in memory:',
@@ -412,6 +415,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Only works during manufacturing test', correct: false },
         { text: 'Replaces redundancy completely', correct: false },
       ],
+      explanation: 'ECC adds parity bits that allow the memory controller to detect and correct bit errors in real time during normal operation, protecting against both manufacturing defects and soft errors.',
     },
     {
       question: 'A SECDED code can:',
@@ -421,6 +425,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Only detect errors, not correct them', correct: false },
         { text: 'Correct errors in multiple words simultaneously', correct: false },
       ],
+      explanation: 'SECDED (Single Error Correct, Double Error Detect) uses Hamming codes with an extra parity bit to correct any single-bit error and detect (but not correct) any double-bit error.',
     },
     {
       question: 'Redundancy repair information is typically stored in:',
@@ -430,6 +435,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'The operating system', correct: false },
         { text: 'Temporary registers', correct: false },
       ],
+      explanation: 'During wafer testing, repair maps are permanently burned into on-chip fuses (or anti-fuses), telling the memory controller which spare rows/columns to activate at power-up.',
     },
     {
       question: 'The yield improvement from redundancy saturates when:',
@@ -439,6 +445,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Testing becomes too expensive', correct: false },
         { text: 'Power consumption is too high', correct: false },
       ],
+      explanation: 'When defect density is high enough that most dies have more defective rows/columns than available spares, adding more redundancy gives diminishing returns.',
     },
     {
       question: 'Combining redundancy with ECC is effective because:',
@@ -448,6 +455,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'ECC is free', correct: false },
         { text: 'Redundancy requires no area overhead', correct: false },
       ],
+      explanation: 'Redundancy excels at replacing entire rows/columns with clustered defects, while ECC catches isolated random bit flips -- together they cover both failure modes.',
     },
     {
       question: 'Defect density in semiconductor manufacturing:',
@@ -457,6 +465,7 @@ const navigationRef = useRef<boolean>(false);
         { text: 'Only affects logic, not memory', correct: false },
         { text: 'Is the same for all manufacturers', correct: false },
       ],
+      explanation: 'Defect density (D0, in defects/cm^2) is the fundamental yield parameter. Even the best fabs have non-zero defect density, typically 0.05-0.5 defects/cm^2 depending on process maturity.',
     },
     {
       question: 'A memory chip with 1Gb capacity and 0.1 defects/Mb has approximately:',
@@ -466,6 +475,7 @@ const navigationRef = useRef<boolean>(false);
         { text: '100 defects total', correct: true },
         { text: '1000 defects total', correct: false },
       ],
+      explanation: '1 Gb = 1024 Mb. At 0.1 defects/Mb, the expected count is ~100 defects. This is why redundancy and ECC are essential for memory chips to function.',
     },
   ];
 
@@ -1909,20 +1919,37 @@ const navigationRef = useRef<boolean>(false);
                 {testScore >= 8 ? 'You\'ve mastered SRAM yield and redundancy!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctOption = q.options.find(o => o.correct);
+                const correctIdx = q.options.indexOf(correctOption!);
+                const isCorrect = userAnswer === correctIdx;
+                return (
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
                     </div>
-                  ))}
-                </div>
-              );
-            })}
+                    {!isCorrect && userAnswer !== null && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: '#64748b', fontSize: '13px' }}>{q.options[userAnswer]?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
@@ -2070,7 +2097,12 @@ const navigationRef = useRef<boolean>(false);
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(true, true, 'Complete Game')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game
+          </button>
+        </div>
       </div>
     );
   }

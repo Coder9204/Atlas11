@@ -214,6 +214,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'In the levitation demonstration, when the ball is displaced sideways from the center of the airstream, what physical mechanism brings it back to the center?',
       scenario: 'Imagine a ping-pong ball floating in a vertical airstream from a hair dryer. You gently push it sideways.',
+      explanation: 'When the ball moves sideways, airflow speeds up on the side closer to the stream center, creating lower pressure there (Bernoulli effect), which pushes the ball back.',
       options: [
         { text: 'The ball is lighter than air', correct: false },
         { text: 'Pressure differences from varying airflow speeds create a restoring force', correct: true },
@@ -224,6 +225,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'According to Bernoulli\'s principle, when airflow velocity increases as it squeezes past the edges of the levitating ball, what happens to the air pressure in that region?',
       scenario: 'Consider air flowing around a ball. Where the stream narrows, velocity increases.',
+      explanation: 'Bernoulli\'s principle states that in a flowing fluid, increased velocity corresponds to decreased pressure, as total energy (kinetic + pressure) is conserved.',
       options: [
         { text: 'Pressure increases because more air is flowing', correct: false },
         { text: 'Pressure decreases (Bernoulli principle: faster flow = lower pressure)', correct: true },
@@ -234,6 +236,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'When you gradually tilt the hair dryer to one side while the ball is levitating, the ball initially moves sideways. What happens next?',
       scenario: 'A ball floats in a tilted airstream at about 20 degrees from vertical.',
+      explanation: 'The pressure gradient across the airstream still creates a restoring force that pushes the ball back toward the center of the stream, even when tilted.',
       options: [
         { text: 'The ball falls out of the stream completely', correct: false },
         { text: 'The ball stays displaced to one side permanently', correct: false },
@@ -244,6 +247,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'The stable levitation point acts like a potential energy:',
       scenario: 'Think about the energy landscape the ball experiences in the airstream.',
+      explanation: 'The levitation point is a potential energy minimum: any displacement increases energy, so the ball naturally returns to the lowest-energy position, like a ball in a bowl.',
       options: [
         { text: 'Maximum (unstable equilibrium - like a ball on a hilltop)', correct: false },
         { text: 'Minimum (stable equilibrium - like a ball in a bowl, a "potential well")', correct: true },
@@ -254,6 +258,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'Compared to a normal ping-pong ball, a heavier ball in the same airstream:',
       scenario: 'You replace the ping-pong ball with a heavier ball of the same size.',
+      explanation: 'A heavier ball requires more restoring force to counteract gravity. The same airflow produces insufficient force at large tilt angles, so the ball escapes at smaller tilts.',
       options: [
         { text: 'Is more stable and can handle larger tilts', correct: false },
         { text: 'Is less stable and falls out at smaller tilt angles', correct: true },
@@ -264,6 +269,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'Bernoulli\'s principle states that for flowing fluid:',
       scenario: 'You are studying fluid dynamics and the relationship between speed and pressure.',
+      explanation: 'Conservation of energy along a streamline means kinetic energy (speed) and pressure energy trade off: P + 1/2 rho v^2 = constant, so faster flow has lower pressure.',
       options: [
         { text: 'Faster flow means higher pressure (like a fire hose)', correct: false },
         { text: 'Faster flow means lower pressure (conservation of energy)', correct: true },
@@ -274,6 +280,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'Why does increasing airflow strength improve levitation stability?',
       scenario: 'You increase the hair dryer power from low to high setting.',
+      explanation: 'Stronger airflow creates larger velocity differences around the ball, producing greater pressure differentials and thus a stronger restoring force for any given displacement.',
       options: [
         { text: 'It makes the air heavier and pushes harder', correct: false },
         { text: 'It increases the restoring force for a given displacement', correct: true },
@@ -284,6 +291,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'The Coanda effect describes which physical phenomenon?',
       scenario: 'You observe that airflow tends to follow curved surfaces rather than moving in straight lines.',
+      explanation: 'The Coanda effect is the tendency of a fluid jet to stay attached to a nearby curved surface, caused by entrainment of surrounding fluid creating a low-pressure zone.',
       options: [
         { text: 'Heavy objects falling faster than light ones in air', correct: false },
         { text: 'A fluid jet following a curved surface (adhesion to surfaces)', correct: true },
@@ -294,6 +302,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'Air hockey pucks stay centered on the table because:',
       scenario: 'An air hockey table blows air through tiny holes. When a puck drifts toward an edge...',
+      explanation: 'The air cushion beneath the puck creates pressure differences when the puck drifts off-center, similar to Bernoulli-based restoring forces in levitation.',
       options: [
         { text: 'The pucks are magnetic and attracted to the center', correct: false },
         { text: 'The table surface is perfectly flat and frictionless', correct: false },
@@ -304,6 +313,7 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
     {
       question: 'VTOL aircraft hovering is challenging primarily because:',
       scenario: 'A Harrier jet is trying to hover stationary at a fixed altitude.',
+      explanation: 'Like a ball balanced on an airstream, a VTOL aircraft must maintain balance on its thrust column, requiring constant active control to counteract instabilities.',
       options: [
         { text: 'The aircraft must balance on its thrust column like a ball on an airstream', correct: true },
         { text: 'The jet engines are too weak for sustained hovering', correct: false },
@@ -1625,18 +1635,21 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered stable levitation physics!' : 'Review the material and try again.'}
               </p>
             </div>
-            <div style={{ maxHeight: '60vh', overflowY: 'auto', padding: '0 16px' }}>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer!].correct;
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ color: '#f8fafc', fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
+              {testQuestions.map((q, idx) => {
+                const userAnswer = testAnswers[idx];
+                const correctIndex = q.options.findIndex(o => o.correct);
+                const isCorrect = userAnswer === correctIndex;
                 return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '8px 0', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '6px 10px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontSize: '13px' }}>
-                        {opt.correct ? '✓ Correct: ' : userAnswer === oIndex ? '✗ Your answer: ' : '  '} {opt.text}
-                      </div>
-                    ))}
+                  <div key={idx} style={{ background: 'rgba(30, 41, 59, 0.9)', margin: '12px 0', padding: '16px', borderRadius: '10px', borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? '#10b981' : '#ef4444', fontSize: '18px', flexShrink: 0 }}>{isCorrect ? '\u2713' : '\u2717'}</span>
+                      <span style={{ color: '#f8fafc', fontSize: '14px', fontWeight: 600 }}>Q{idx + 1}. {q.question}</span>
+                    </div>
+                    {!isCorrect && (<div style={{ marginLeft: '26px', marginBottom: '6px' }}><span style={{ color: '#ef4444', fontSize: '13px' }}>Your answer: </span><span style={{ color: '#64748b', fontSize: '13px' }}>{userAnswer !== null ? q.options[userAnswer]?.text : 'No answer'}</span></div>)}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}><span style={{ color: '#10b981', fontSize: '13px' }}>Correct answer: </span><span style={{ color: '#94a3b8', fontSize: '13px' }}>{q.options[correctIndex]?.text}</span></div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}><span style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 600 }}>Why? </span><span style={{ color: '#94a3b8', fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span></div>
                   </div>
                 );
               })}
@@ -1800,7 +1813,12 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
 
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => { const correctIdx = q.options.findIndex(o => o.correct); return testAnswers[i] === correctIdx; }).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }

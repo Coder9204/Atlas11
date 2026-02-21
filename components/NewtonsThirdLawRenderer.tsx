@@ -1751,22 +1751,34 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {passed ? "You've mastered Newton's Third Law!" : 'Review the concepts and try again.'}
             </p>
 
-            {/* Answer Review */}
-            <div style={{ textAlign: 'left', marginBottom: '24px', maxHeight: '300px', overflowY: 'auto', border: `1px solid ${colors.border}`, borderRadius: '12px', padding: '12px' }}>
-              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>Answer Review</h3>
+            {/* Rich Answer Key */}
+            <div style={{ textAlign: 'left', marginBottom: '24px', maxHeight: '400px', overflowY: 'auto' }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px', textAlign: 'center' }}>Answer Key</h3>
               {testQuestions.map((q, i) => {
-                const correctId = q.options.find(o => o.correct)?.id;
+                const correctOpt = q.options.find(o => o.correct);
+                const correctId = correctOpt?.id;
                 const userAnswer = testAnswers[i];
                 const isCorrect = userAnswer === correctId;
+                const userOpt = q.options.find(o => o.id === userAnswer);
                 return (
                   <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px',
-                    borderRadius: '8px', marginBottom: '6px',
-                    background: isCorrect ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                    border: `1px solid ${isCorrect ? colors.success : colors.error}`,
+                    padding: '12px 16px', borderRadius: '12px', marginBottom: '10px',
+                    background: 'rgba(30,41,59,0.5)',
+                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                   }}>
-                    <span style={{ fontSize: '16px' }}>{isCorrect ? '✓' : '✗'}</span>
-                    <span style={{ ...typo.small, color: colors.textPrimary }}>Question {i + 1}: {isCorrect ? 'Correct' : 'Incorrect'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '18px' }}>{isCorrect ? '\u2705' : '\u274c'}</span>
+                      <span style={{ ...typo.small, fontWeight: 700, color: colors.textPrimary }}>Q{i + 1}: {q.question}</span>
+                    </div>
+                    {!isCorrect && userOpt && (
+                      <p style={{ ...typo.small, color: colors.error, margin: '4px 0' }}>Your answer: {userOpt.label || userOpt.text}</p>
+                    )}
+                    <p style={{ ...typo.small, color: colors.success, margin: '4px 0' }}>Correct: {correctOpt?.label || correctOpt?.text}</p>
+                    {q.explanation && (
+                      <div style={{ marginTop: '6px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', borderLeft: '3px solid #f59e0b' }}>
+                        <p style={{ fontSize: '12px', color: '#fbbf24' }}><strong>Why?</strong> {q.explanation}</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1993,16 +2005,19 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
           >
             Play Again
           </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
+        </div>
+
+        {/* Fixed Complete Game button */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: `1px solid ${colors.border}`, zIndex: 50 }}>
+          <button
+            onClick={() => {
+              emitEvent('mastery_achieved', { game: 'newtons_third_law' });
+              window.location.href = '/games';
             }}
+            style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}
           >
-            Return to Dashboard
-          </a>
+            Complete Game
+          </button>
         </div>
 
         {renderNavDots()}

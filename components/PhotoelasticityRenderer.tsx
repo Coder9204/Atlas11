@@ -2065,6 +2065,13 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
         onAnimateToggle={() => setIsAnimating(!isAnimating)}
         onReset={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
       />
+      <div style={{ marginTop: '24px' }}>
+        <button
+          onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter((q, i) => testAnswers[i] !== null && q.options[testAnswers[i]!].correct).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+          style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: '#f8fafc', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          Complete Game →
+        </button>
+      </div>
     </div>
   );
 

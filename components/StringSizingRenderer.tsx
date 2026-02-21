@@ -2046,23 +2046,22 @@ export default function StringSizingRenderer({
         >
           Play Again
         </button>
-        <a
-          href="/"
+        <button
+          onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[testQuestions.indexOf(q)] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
           style={{
             padding: '12px 24px',
             fontSize: '14px',
             fontWeight: 'bold',
             color: 'white',
-            background: 'linear-gradient(135deg, #eab308 0%, #f59e0b 100%)',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
             border: 'none',
             borderRadius: '12px',
             cursor: 'pointer',
-            textDecoration: 'none',
-            display: 'inline-block',
+            minHeight: '52px',
           }}
         >
-          Return Home
-        </a>
+          Complete Game →
+        </button>
       </div>
     </div>
   );

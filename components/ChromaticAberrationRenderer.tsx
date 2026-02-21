@@ -483,7 +483,7 @@ export default function ChromaticAberrationRenderer({
       setShowResult(false);
     } else {
       setTestSubmitted(true);
-      onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
+      onGameEvent?.({ type: 'game_completed', details: { score: score, total: questions.length } } as any);
     }
   }, [currentQuestion]);
 
@@ -2234,34 +2234,40 @@ export default function ChromaticAberrationRenderer({
             padding: defined.spacing.lg,
             marginBottom: defined.spacing.lg,
           }}>
-            <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md }}>Answer Review</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: defined.spacing.sm }}>
-              {userAnswers.map((answer, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: defined.spacing.sm,
-                    padding: defined.spacing.sm,
-                    background: answer.correct ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    borderRadius: defined.radius.md,
-                    border: `1px solid ${answer.correct ? defined.colors.success : defined.colors.error}`,
-                  }}
-                >
-                  <span style={{
-                    color: answer.correct ? defined.colors.success : defined.colors.error,
-                    fontWeight: defined.typography.weights.bold,
-                    fontSize: defined.typography.sizes.lg,
-                    minWidth: '24px',
-                  }}>
-                    {answer.correct ? '✓' : '✗'}
-                  </span>
-                  <span style={{ color: '#e2e8f0', fontSize: defined.typography.sizes.sm, fontWeight: defined.typography.weights.normal }}>
-                    Question {answer.questionIndex + 1}: {answer.correct ? 'Correct' : 'Incorrect'}
-                  </span>
-                </div>
-              ))}
+            <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md }}>Answer Key</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: defined.spacing.sm, maxHeight: '400px', overflowY: 'auto' }}>
+              {userAnswers.map((answer, idx) => {
+                const q = questions[answer.questionIndex];
+                const correctOpt = q.options.find((o: any) => o.correct);
+                const userOpt = q.options[answer.answerIndex];
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: `${defined.spacing.md}px`,
+                      borderRadius: defined.radius.md,
+                      background: 'rgba(30,41,59,0.5)',
+                      borderLeft: `4px solid ${answer.correct ? defined.colors.success : defined.colors.error}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: `${defined.spacing.sm}px`, marginBottom: '6px' }}>
+                      <span style={{ fontSize: '18px' }}>{answer.correct ? '\u2705' : '\u274c'}</span>
+                      <span style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.bold, fontSize: defined.typography.sizes.sm }}>
+                        Q{idx + 1}: {q.question}
+                      </span>
+                    </div>
+                    {!answer.correct && userOpt && (
+                      <p style={{ fontSize: defined.typography.sizes.sm, color: defined.colors.error, margin: '4px 0' }}>Your answer: {userOpt.text}</p>
+                    )}
+                    <p style={{ fontSize: defined.typography.sizes.sm, color: defined.colors.success, margin: '4px 0' }}>Correct: {correctOpt?.text}</p>
+                    {q.explanation && (
+                      <div style={{ marginTop: '6px', padding: '8px 12px', borderRadius: `${defined.radius.md}px`, background: 'rgba(245,158,11,0.1)', borderLeft: '3px solid #f59e0b' }}>
+                        <p style={{ fontSize: defined.typography.sizes.xs, color: '#fbbf24' }}><strong>Why?</strong> {q.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -2387,6 +2393,7 @@ export default function ChromaticAberrationRenderer({
   const renderMastery = () => (
     <div style={{
       padding: defined.spacing.lg,
+      paddingBottom: '100px',
       maxWidth: '600px',
       margin: '0 auto',
       textAlign: 'center',
@@ -2432,6 +2439,19 @@ export default function ChromaticAberrationRenderer({
           <li>Achromatic doublets combine crown and flint glass to correct</li>
           <li>Apochromats correct for three wavelengths</li>
         </ul>
+      </div>
+
+      {/* Fixed Complete Game button */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(15,23,42,0.95)', borderTop: '1px solid rgba(71,85,105,0.3)', zIndex: 50 }}>
+        <button
+          onClick={() => {
+            onGameEvent?.({ type: 'game_completed', details: { finalEvent: 'mastery_achieved', game: 'chromatic_aberration' } } as any);
+            window.location.href = '/games';
+          }}
+          style={{ width: '100%', padding: '16px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', fontSize: '18px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.5px' }}
+        >
+          Complete Game
+        </button>
       </div>
     </div>
   );
