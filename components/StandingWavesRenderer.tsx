@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // STANDING WAVES - Premium Design System
 // ============================================================================
@@ -153,19 +155,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [confirmed, setConfirmed] = useState<boolean[]>(Array(10).fill(false));
   const [showResult, setShowResult] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const animationRef = useRef<number>();
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const animationRef = useRef<number>();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -437,7 +429,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
     return (
       <div className="flex flex-col items-center gap-2 w-full">
-        <svg viewBox="0 0 500 200" className="w-full h-full max-h-52">
+        <svg viewBox="0 0 500 200" className="w-full h-full max-h-52" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Standing Waves visualization">
           <defs>
             {/* Premium wave gradient */}
             <linearGradient id="standWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -622,7 +614,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     if (app.id === 'guitar') {
       return (
         <div className="flex flex-col items-center gap-2">
-          <svg viewBox="0 0 300 170" className="w-full h-36">
+          <svg viewBox="0 0 300 170" className="w-full h-36" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Premium guitar body gradient */}
               <radialGradient id="standGuitarBody" cx="40%" cy="30%">
@@ -735,7 +727,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     if (app.id === 'laser') {
       return (
         <div className="flex flex-col items-center gap-2">
-          <svg viewBox="0 0 300 160" className="w-full h-36">
+          <svg viewBox="0 0 300 160" className="w-full h-36" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Premium laser beam gradient */}
               <linearGradient id="standLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -851,7 +843,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     if (app.id === 'quantum') {
       return (
         <div className="flex flex-col items-center gap-2">
-          <svg viewBox="0 0 300 160" className="w-full h-36">
+          <svg viewBox="0 0 300 160" className="w-full h-36" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Premium nucleus gradient */}
               <radialGradient id="standNucleus" cx="35%" cy="35%">
@@ -985,7 +977,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     if (app.id === 'acoustics') {
       return (
         <div className="flex flex-col items-center gap-2">
-          <svg viewBox="0 0 300 160" className="w-full h-36">
+          <svg viewBox="0 0 300 160" className="w-full h-36" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Room wall gradient */}
               <linearGradient id="standWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1154,7 +1146,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             marginBottom: '24px',
             boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2)'
           }}>
-            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }}>
+            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }} preserveAspectRatio="xMidYMid meet">
               <path
                 d={`M 5 30 Q 15 ${30 - 12 * Math.sin(time * 4)} 30 30 Q 45 ${30 + 12 * Math.sin(time * 4)} 55 30`}
                 fill="none"
@@ -1305,7 +1297,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               borderRadius: '16px',
               border: '1px solid rgba(51, 65, 85, 0.5)'
             }}>
-              <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto' }}>
+              <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predictStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#d97706" />
@@ -1751,7 +1743,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               borderRadius: '16px',
               border: '1px solid rgba(51, 65, 85, 0.5)'
             }}>
-              <svg viewBox="0 0 400 140" style={{ width: '100%', height: 'auto' }}>
+              <svg viewBox="0 0 400 140" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#7c3aed" />

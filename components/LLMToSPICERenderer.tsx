@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for LLM-to-SPICE design workflow
 const realWorldApps = [
   {
@@ -84,6 +86,7 @@ interface LLMToSPICERendererProps {
   gamePhase?: SPICEPhase;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Sound utility for feedback
@@ -114,6 +117,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   const phaseOrder: SPICEPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const phaseLabels: Record<SPICEPhase, string> = {
@@ -172,16 +176,8 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -385,6 +381,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -594,7 +591,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
     }).join(' ');
 
     return (
-      <svg width="100%" height="500" viewBox="0 0 500 500" style={{ maxWidth: '560px', display: 'block', margin: '0 auto' }}>
+      <svg width="100%" height="500" viewBox="0 0 500 500" style={{ maxWidth: '560px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="L L M To S P I C E visualization">
         <defs>
           <linearGradient id="llmGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#8b5cf6" />
@@ -775,7 +772,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
   // Compact pipeline SVG for predict/review phases (no overlaps)
   const renderCompactSVG = () => (
-    <svg width="100%" height="220" viewBox="0 0 440 220" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }}>
+    <svg width="100%" height="220" viewBox="0 0 440 220" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <filter id="glow3">
           <feGaussianBlur stdDeviation="2" result="coloredBlur" />
@@ -836,7 +833,7 @@ const LLMToSPICERenderer: React.FC<LLMToSPICERendererProps> = ({
 
   // Stability SVG for twist review
   const renderStabilitySVG = () => (
-    <svg width="100%" height="200" viewBox="0 0 440 200" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }}>
+    <svg width="100%" height="200" viewBox="0 0 440 200" style={{ maxWidth: '480px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <filter id="glowStab">
           <feGaussianBlur stdDeviation="2" result="coloredBlur" />

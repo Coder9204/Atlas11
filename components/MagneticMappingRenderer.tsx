@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for magnetic field mapping
 const realWorldApps = [
   {
@@ -249,17 +251,8 @@ const phaseLabels: Record<Phase, string> = {
 
 const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gamePhase, onPhaseComplete, onGameEvent, onBack }) => {
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync from props
+  const { isMobile } = useViewport();
+// Phase sync from props
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
@@ -594,7 +587,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
         onPointerMove={interactive ? handleProbePointerMove : undefined}
         onPointerUp={interactive ? handleProbePointerUp : undefined}
         onPointerLeave={interactive ? handleProbePointerUp : undefined}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Magnetic Mapping visualization">
         {/* ============================================================= */}
         {/* PREMIUM SVG DEFINITIONS - Gradients, Filters, Patterns        */}
         {/* ============================================================= */}
@@ -1055,7 +1048,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
   const renderElectromagnet = () => {
     const currentNormalized = electromagnetCurrent / 100;
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
+      <svg viewBox="0 0 400 280" className="w-full h-56" preserveAspectRatio="xMidYMid meet">
         {/* Premium SVG Definitions for Electromagnet */}
         <defs>
           {/* Lab background gradient */}
@@ -1338,7 +1331,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
     const fieldOpacity = earthFieldIntensity / 100;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
+      <svg viewBox="0 0 400 280" className="w-full h-56" preserveAspectRatio="xMidYMid meet">
         {/* Premium SVG Definitions for Earth Field */}
         <defs>
           {/* Space background gradient */}
@@ -1678,7 +1671,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
           minHeight: '48px',
           opacity: isFirstPhase ? 0.4 : 1,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -1733,7 +1726,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
           fontSize: '16px',
           minHeight: '48px',
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
           boxShadow: canProceed ? `0 4px 12px rgba(6, 182, 212, 0.3)` : 'none',
         }}
       >
@@ -1919,7 +1912,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
 
   // Static SVG for predict phase
   const renderPredictSVG = () => (
-    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }}>
+    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predictNorth" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#ef4444" />
@@ -2251,7 +2244,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({ gameP
 
   // Static SVG for twist_predict phase - Earth's magnetic field
   const renderTwistPredictSVG = () => (
-    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }}>
+    <svg viewBox="0 0 400 200" className="w-full h-48" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="twistEarthGrad" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#3b82f6" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Conservation of Energy - Complete 10-Phase Game
 // Why energy can never be created or destroyed, only transformed
@@ -261,9 +263,8 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [releaseHeight, setReleaseHeight] = useState(50); // % of max height
   const [frictionLevel, setFrictionLevel] = useState(0); // 0-100
   const [isSimulating, setIsSimulating] = useState(false);
@@ -291,14 +292,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -555,7 +549,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
     const pathD = trackPath.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Energy Conservation visualization">
         <defs>
           <linearGradient id="trackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#475569" />
@@ -902,7 +896,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 300 : 400} height={isMobile ? 150 : 180} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 150 : 180}`} style={{ display: 'block', margin: '0 auto' }}>
+              <svg width={isMobile ? 300 : 400} height={isMobile ? 150 : 180} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 150 : 180}`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="uTrack" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#475569" />
@@ -1337,7 +1331,7 @@ const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 300 : 400} height={isMobile ? 160 : 200} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 160 : 200}`} style={{ display: 'block', margin: '0 auto' }}>
+              <svg width={isMobile ? 300 : 400} height={isMobile ? 160 : 200} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 160 : 200}`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="frictionTrack" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#475569" />

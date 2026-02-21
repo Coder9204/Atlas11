@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Premium Design System
 const premiumDesign = {
   colors: {
@@ -32,7 +34,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -96,17 +98,8 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography responsive system
+  const { isMobile } = useViewport();
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -273,14 +266,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync
+// Phase sync
   useEffect(() => {
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -798,7 +784,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             Explore Convection
-            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg style={{ width: '20px', height: '20px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Convection Currents visualization">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </span>
@@ -873,7 +859,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           maxWidth: 400,
           margin: `0 auto ${premiumDesign.spacing.lg}px`,
         }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200 }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictTempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="#ef4444" />
@@ -998,7 +984,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             border: '1px solid rgba(255,255,255,0.1)',
             position: 'relative',
           }}>
-            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               {/* Premium SVG Definitions */}
               <defs>
                 {/* Hot zone gradient - warm colors with multiple stops */}
@@ -1564,7 +1550,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
           maxWidth: 350,
           margin: `0 auto ${premiumDesign.spacing.lg}px`,
         }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 180 }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 180 }} preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="300" height="200" fill="#0a0f1a" />
             {/* Pot outline */}
             <path d="M60 50 L60 150 Q60 170 80 170 L220 170 Q240 170 240 150 L240 50" fill="none" stroke="#9ca3af" strokeWidth="4" />
@@ -1658,7 +1644,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             border: '1px solid rgba(255,255,255,0.1)',
             position: 'relative',
           }}>
-            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               {/* Premium SVG Definitions for Pot Simulation */}
               <defs>
                 {/* Pot metal gradient - brushed steel look */}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Precession & Nutation - Complete 10-Phase Game
 // The physics of spinning tops, gyroscopes, and Earth's wobble
@@ -261,9 +263,8 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Top simulation state
+  const { isMobile } = useViewport();
+// Top simulation state
   const [spinSpeed, setSpinSpeed] = useState(5);
   const [tiltAngle, setTiltAngle] = useState(20);
   const [showVectors, setShowVectors] = useState(true);
@@ -291,14 +292,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Top animation
+// Top animation
   useEffect(() => {
     if (!isSpinning) return;
     const interval = setInterval(() => {
@@ -575,7 +569,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     const fillPathD = pathD + ` L ${points[points.length - 1].x.toFixed(1)} ${padT + plotH} L ${points[0].x.toFixed(1)} ${padT + plotH} Z`;
 
     return (
-      <svg width={graphW} height={graphH} viewBox={`0 0 ${graphW} ${graphH}`} style={{ maxWidth: '100%' }}>
+      <svg width={graphW} height={graphH} viewBox={`0 0 ${graphW} ${graphH}`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Precession Nutation visualization">
         <defs>
           <linearGradient id="curveFillGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#6366F1" stopOpacity="0.3" />
@@ -871,7 +865,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
     const height = isMobile ? 250 : 280;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93c5fd" />
@@ -1496,7 +1490,7 @@ const PrecessionNutationRenderer: React.FC<PrecessionNutationRendererProps> = ({
               <p style={{ ...typo.body, color: colors.textSecondary }}>
                 Earth is like a cosmic spinning top, tilted with respect to its orbit around the Sun...
               </p>
-              <svg width="200" height="200" viewBox="0 0 200 200" style={{ maxWidth: '100%', margin: '16px auto' }}>
+              <svg width="200" height="200" viewBox="0 0 200 200" style={{ maxWidth: '100%', margin: '16px auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <radialGradient id="twistEarthGrad" cx="35%" cy="35%" r="65%">
                     <stop offset="0%" stopColor="#93c5fd" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Speaker Principle - Complete 10-Phase Game
 // The Lorentz force: How speakers convert electrical signals to sound
@@ -261,9 +263,8 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [audioAmplitude, setAudioAmplitude] = useState(50); // 0-100%
   const [magnetStrength, setMagnetStrength] = useState(70); // 0-100%
   const [audioFrequency, setAudioFrequency] = useState(440); // Hz
@@ -286,14 +287,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   const [animPhase, setAnimPhase] = useState(0);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(prev => (prev + audioFrequency / 50) % (Math.PI * 2));
@@ -407,7 +401,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     }, [soundIntensity]);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Speaker Principle visualization">
         <defs>
           <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#7f1d1d" />
@@ -944,7 +938,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="300" height="150" viewBox="0 0 300 150" style={{ marginBottom: '16px' }}>
+            <svg width="300" height="150" viewBox="0 0 300 150" style={{ marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               {/* Magnet poles */}
               <rect x="80" y="20" width="140" height="30" rx="4" fill="#dc2626" />
               <text x="150" y="40" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
@@ -1346,7 +1340,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               Consider a speaker cone with mass. At 100 Hz, it must reverse direction 200 times per second. At 10,000 Hz, it must reverse 20,000 times per second!
             </p>
-            <svg width="300" height="180" viewBox="0 0 300 180" style={{ display: 'block', margin: '0 auto' }}>
+            <svg width="300" height="180" viewBox="0 0 300 180" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <title>Frequency Comparison Visualization</title>
               {/* Low frequency wave - slow oscillation */}
               <text x="10" y="20" fill={colors.accent} fontSize="11" fontWeight="600">Low Frequency (100 Hz)</text>

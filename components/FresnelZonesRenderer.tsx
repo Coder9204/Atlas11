@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // FRESNEL ZONES RENDERER - RADIO WAVE PROPAGATION
 // Complete 10-Phase Game teaching Fresnel zone physics in wireless communications
@@ -271,9 +273,8 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [frequency, setFrequency] = useState(2.4); // GHz
   const [distance, setDistance] = useState(1000); // meters
   const [obstacleHeight, setObstacleHeight] = useState(0); // percentage of first Fresnel zone
@@ -294,14 +295,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -450,7 +444,7 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent
     const curvePath = curvePoints.join(' ');
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fresnel Zones visualization">
         <defs>
           <linearGradient id="zone1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.zone1} stopOpacity="0.3" />

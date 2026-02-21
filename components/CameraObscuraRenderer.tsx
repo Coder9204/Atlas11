@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface CameraObscuraRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
   gamePhase?: string;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -35,6 +39,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
   gamePhase,
+  onGameEvent,
 }) => {
   // Internal phase management - start at hook if no valid phase provided
   const [internalPhase, setInternalPhase] = useState<string>('hook');
@@ -58,15 +63,8 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
   const currentPhaseIndex = PHASES.indexOf(phase);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography system
+  const { isMobile } = useViewport();
+// Typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -258,6 +256,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -378,7 +377,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="Camera Obscura visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="camLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

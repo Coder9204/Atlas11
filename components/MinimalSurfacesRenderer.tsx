@@ -16,6 +16,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -364,18 +366,9 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
   // Transfer phase state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const animationRef = useRef<number>();
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const animationRef = useRef<number>();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -482,7 +475,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
           ))}
         </div>
 
-        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label="Minimal Surfaces visualization">
           <defs>
             <linearGradient id="filmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={colors.iridescent1} stopOpacity={filmOpacity} />
@@ -1055,7 +1048,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
 
             {/* Static SVG graphic — no sliders */}
             <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-              <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
+              <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="cityBg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#1e1b4b" />
@@ -1157,7 +1150,7 @@ const MinimalSurfacesRenderer: React.FC<MinimalSurfacesRendererProps> = ({
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 {/* Interactive Steiner tree visualization */}
                 <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-                  <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                  <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                     <defs>
                       <linearGradient id="steinerBg" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#1e1b4b" />

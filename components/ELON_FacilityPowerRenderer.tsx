@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // FACILITY POWER - Complete 10-Phase Game (ELON Game #9 of 36)
 // Data center power architecture — power flow from utility through UPS, PDUs,
@@ -262,9 +264,8 @@ const ELON_FacilityPowerRenderer: React.FC<ELON_FacilityPowerRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [itLoad, setItLoad] = useState(48);
   const [coolingMode, setCoolingMode] = useState<'air' | 'liquid'>('air');
 
@@ -285,14 +286,7 @@ const ELON_FacilityPowerRenderer: React.FC<ELON_FacilityPowerRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // PUE calculations
+// PUE calculations
   const airPUE = 1.4;
   const liquidPUE = 1.05;
   const currentPUE = coolingMode === 'air' ? airPUE : liquidPUE;
@@ -493,7 +487,7 @@ const ELON_FacilityPowerRenderer: React.FC<ELON_FacilityPowerRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Facility Power visualization">
         <defs>
           <linearGradient id="utilityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" />

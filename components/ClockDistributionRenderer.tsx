@@ -3,12 +3,16 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type ClockPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ClockDistributionRendererProps {
   gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -48,6 +52,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): ClockPhase => {
@@ -58,8 +63,8 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<ClockPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
   // Sync with external gamePhase if provided (for resume)
@@ -70,14 +75,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   }, [gamePhase]);
 
   // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -327,6 +325,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -483,7 +482,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '700px' }}
-        >
+         role="img" aria-label="Clock Distribution visualization">
           <defs>
             <linearGradient id="clkdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
@@ -1179,7 +1178,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
           {/* Concept diagram SVG */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
-            <svg width="320" height="200" viewBox="0 0 320 200">
+            <svg width="320" height="200" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewConceptGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor={colors.clock} />
@@ -1408,7 +1407,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
           {/* Light speed limit diagram SVG */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
-            <svg width="320" height="180" viewBox="0 0 320 180">
+            <svg width="320" height="180" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistReviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.warning} />

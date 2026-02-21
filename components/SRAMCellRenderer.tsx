@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 184: SRAM CELL STABILITY
 // ============================================================================
@@ -18,6 +20,7 @@ interface SRAMCellRendererProps {
   gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const realWorldApps = [
@@ -135,6 +138,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -158,15 +162,8 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -478,6 +475,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -510,7 +508,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="S R A M Cell visualization">
           <defs>
             {/* Premium PMOS transistor gradient - blue-purple tones */}
             <linearGradient id="sramPmosGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1569,7 +1567,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How 6T SRAM Works</h3>
 
             {/* Simple diagram showing cross-coupled inverters */}
-            <svg width="100%" height="120" viewBox="0 0 300 120" style={{ marginBottom: '16px' }}>
+            <svg width="100%" height="120" viewBox="0 0 300 120" style={{ marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <rect width="300" height="120" fill="#1e293b" rx="8" />
               <text x="150" y="20" fill={colors.accent} fontSize="12" textAnchor="middle" fontWeight="bold">Cross-Coupled Bistable Storage</text>
 
@@ -1799,7 +1797,7 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Design Dilemma</h3>
 
             {/* SNM vs Voltage diagram */}
-            <svg width="100%" height="140" viewBox="0 0 300 140" style={{ marginBottom: '16px' }}>
+            <svg width="100%" height="140" viewBox="0 0 300 140" style={{ marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <rect width="300" height="140" fill="#1e293b" rx="8" />
               <text x="150" y="20" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="bold">Stability Decreases with Lower Voltage</text>
 

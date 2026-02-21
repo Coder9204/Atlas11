@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // EGGDROP RENDERER - CRUMPLE ZONES & IMPULSE PHYSICS
 // Teaching: Force = Δp/Δt → More time = less force = surviving eggs
@@ -190,15 +192,8 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   const [score, setScore] = useState(0);
 
   // Responsive
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation ref
+  const { isMobile } = useViewport();
+// Animation ref
   const animationRef = useRef<number | null>(null);
 
   // Phase sync
@@ -503,7 +498,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
 
     return (
       <div style={{ maxWidth: '500px', margin: '0 auto', width: '100%' }}>
-        <svg viewBox="0 0 400 400" style={{ width: '100%', height: 'auto', maxHeight: '400px' }}>
+        <svg viewBox="0 0 400 400" style={{ width: '100%', height: 'auto', maxHeight: '400px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Egg Drop visualization">
           <defs>
             <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#bfdbfe" />
@@ -715,7 +710,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   const renderStaticEggPreview = () => {
     return (
       <div style={{ maxWidth: '500px', margin: '0 auto', width: '100%' }}>
-        <svg viewBox="0 0 400 350" style={{ width: '100%', height: 'auto', maxHeight: '350px' }}>
+        <svg viewBox="0 0 400 350" style={{ width: '100%', height: 'auto', maxHeight: '350px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="staticSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#bfdbfe" />
@@ -1189,7 +1184,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
             </p>
 
             <div style={{ maxWidth: '500px', margin: '0 auto', marginBottom: design.spacing.xl }}>
-              <svg viewBox="0 0 400 350" style={{ width: '100%', height: 'auto' }}>
+              <svg viewBox="0 0 400 350" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistSky" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#bfdbfe" />

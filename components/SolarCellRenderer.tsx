@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -168,21 +170,11 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation debouncing
+  const { isMobile } = useViewport();
+// Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase order for navigation
+// Phase order for navigation
   const phaseOrder: SCPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const phaseLabels: Record<SCPhase, string> = {
     hook: 'Introduction',
@@ -517,7 +509,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '700px' }}
-        >
+         role="img" aria-label="Solar Cell visualization">
           <defs>
             <linearGradient id="solcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />

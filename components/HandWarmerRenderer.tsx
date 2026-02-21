@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Hand Warmer Physics - Complete 10-Phase Game
 // Exothermic reactions: Iron oxidation and sodium acetate crystallization
@@ -284,9 +286,8 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Phase change warmer simulation
+  const { isMobile } = useViewport();
+// Phase change warmer simulation
   const [warmerState, setWarmerState] = useState<'liquid' | 'crystallizing' | 'solid'>('liquid');
   const [temperature, setTemperature] = useState(20);
   const [crystalProgress, setCrystalProgress] = useState(0);
@@ -322,14 +323,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -736,7 +730,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const chartH = height - 120;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Hand Warmer visualization">
         <defs>
           <radialGradient id="liquidGrad" cx="40%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
@@ -858,7 +852,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 180 : 200;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="ironGrad" cx="40%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#94a3b8" />
@@ -1058,7 +1052,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={predictWidth} height={predictHeight} viewBox={`0 0 ${predictWidth} ${predictHeight}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+            <svg width={predictWidth} height={predictHeight} viewBox={`0 0 ${predictWidth} ${predictHeight}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="predictLiquidGrad" cx="40%" cy="35%" r="65%">
                   <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
@@ -1328,7 +1322,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
 
           {/* Review SVG visualization */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={reviewWidth} height={reviewHeight} viewBox={`0 0 ${reviewWidth} ${reviewHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={reviewWidth} height={reviewHeight} viewBox={`0 0 ${reviewWidth} ${reviewHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewEnergyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3b82f6" />
@@ -1452,7 +1446,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
 
           {/* SVG comparison graphic */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={twistPredictWidth} height={twistPredictHeight} viewBox={`0 0 ${twistPredictWidth} ${twistPredictHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={twistPredictWidth} height={twistPredictHeight} viewBox={`0 0 ${twistPredictWidth} ${twistPredictHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               {/* Phase change warmer */}
               <ellipse cx={twistPredictWidth * 0.25} cy={twistPredictHeight * 0.4} rx="50" ry="35" fill="#38bdf8" stroke="#0ea5e9" strokeWidth="2" />
               <text x={twistPredictWidth * 0.25} y={twistPredictHeight * 0.7} textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">Phase-Change</text>
@@ -1546,7 +1540,7 @@ const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, ga
           }}>
             {/* SVG Visualization */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgSecondary, borderRadius: '12px', maxWidth: '100%' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgSecondary, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="tempBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#ef4444" />

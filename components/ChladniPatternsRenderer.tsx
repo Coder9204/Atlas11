@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface ChladniPatternsRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -34,6 +38,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state for self-managing navigation
   const [internalPhaseIndex, setInternalPhaseIndex] = useState(0);
@@ -51,15 +56,8 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
   }, [phase]);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography system
+  const { isMobile } = useViewport();
+// Typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -280,6 +278,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 

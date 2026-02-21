@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ===============================================================================
 // TYPES & INTERFACES
 // ===============================================================================
@@ -251,15 +253,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   onIncorrectAnswer
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -473,7 +468,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
     return (
       <>
-        <svg viewBox="0 0 500 320" className="w-full h-64">
+        <svg viewBox="0 0 500 320" className="w-full h-64" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Faraday Cage visualization">
           <defs>
             {/* Premium metallic cage frame gradient */}
             <linearGradient id="faraCageFrame" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1038,7 +1033,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
     return (
       <>
-        <svg viewBox="0 0 500 320" className="w-full h-64">
+        <svg viewBox="0 0 500 320" className="w-full h-64" preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="faraTwistBackground" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1547,7 +1542,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
         <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
 
         {/* SVG diagram of a metal box with incoming waves */}
-        <svg width="320" height="180" viewBox="0 0 320 180" style={{ marginBottom: 16 }}>
+        <svg width="320" height="180" viewBox="0 0 320 180" style={{ marginBottom: 16 }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="fcPredWave" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
@@ -1569,25 +1564,25 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           <rect x="142" y="42" width="96" height="96" rx="3" fill="rgba(30,41,59,0.3)" />
           {/* Phone inside */}
           <rect x="175" y="65" width="30" height="50" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
-          <text x="190" y="95" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="sans-serif">📱</text>
+          <text x="190" y="95" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily={theme.fontFamily}>📱</text>
           {/* Incoming EM waves from left */}
           <path d="M 20,70 Q 40,55 60,70 Q 80,85 100,70 Q 120,55 140,70" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.7" filter="url(#fcPredGlow)" />
           <path d="M 20,90 Q 40,75 60,90 Q 80,105 100,90 Q 120,75 140,90" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.5" />
           <path d="M 20,110 Q 40,95 60,110 Q 80,125 100,110 Q 120,95 140,110" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.3" />
           {/* Blocked indicator */}
-          <text x="135" y="75" fill="#ef4444" fontSize="16" fontWeight="bold" fontFamily="sans-serif">✕</text>
-          <text x="135" y="100" fill="#ef4444" fontSize="16" fontWeight="bold" fontFamily="sans-serif">✕</text>
+          <text x="135" y="75" fill="#ef4444" fontSize="16" fontWeight="bold" fontFamily={theme.fontFamily}>✕</text>
+          <text x="135" y="100" fill="#ef4444" fontSize="16" fontWeight="bold" fontFamily={theme.fontFamily}>✕</text>
           {/* Question mark inside cage */}
-          <text x="190" y="58" textAnchor="middle" fill="#22c55e" fontSize="14" fontFamily="sans-serif">?</text>
+          <text x="190" y="58" textAnchor="middle" fill="#22c55e" fontSize="14" fontFamily={theme.fontFamily}>?</text>
           {/* Labels */}
-          <text x="60" y="140" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily="sans-serif">EM Waves</text>
-          <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Metal Enclosure</text>
+          <text x="60" y="140" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>EM Waves</text>
+          <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>Metal Enclosure</text>
           {/* Electrons on cage surface */}
           <circle cx="140" cy="60" r="3" fill="#60a5fa" />
           <circle cx="140" cy="80" r="3" fill="#60a5fa" />
           <circle cx="140" cy="100" r="3" fill="#60a5fa" />
           <circle cx="140" cy="120" r="3" fill="#60a5fa" />
-          <text x="280" y="30" fill="#60a5fa" fontSize="11" fontFamily="sans-serif">e- redistribute</text>
+          <text x="280" y="30" fill="#60a5fa" fontSize="11" fontFamily={theme.fontFamily}>e- redistribute</text>
         </svg>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1705,7 +1700,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             {/* Shielding Effectiveness Chart - primary SVG */}
             <div style={{ background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: '16px', padding: '16px', marginBottom: '16px', width: '100%' }}>
-              <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="280">
+              <svg viewBox={`0 0 ${chartW} ${chartH}`} width="100%" height="280" preserveAspectRatio="xMidYMid meet">
                 <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
 
                 {/* Grid lines */}
@@ -1958,7 +1953,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
             <h2 className="text-2xl font-bold text-amber-400 mb-6">The Mesh Question</h2>
 
             {/* SVG diagram of mesh with waves */}
-            <svg width="320" height="160" viewBox="0 0 320 160" style={{ marginBottom: 16 }}>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ marginBottom: 16 }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="fcTwpMesh" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#94a3b8" />
@@ -1985,9 +1980,9 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               {/* Waves leaking through holes */}
               <path d="M 230,80 Q 245,30 260,80 Q 275,130 290,80 Q 305,30 310,80" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.7" />
               {/* Labels */}
-              <text x="90" y="145" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Short wavelength</text>
-              <text x="260" y="145" fill="#ef4444" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Leaks through!</text>
-              <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Large holes in cage mesh</text>
+              <text x="90" y="145" fill="#f59e0b" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>Short wavelength</text>
+              <text x="260" y="145" fill="#ef4444" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>Leaks through!</text>
+              <text x="190" y="155" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>Large holes in cage mesh</text>
               {/* Arrow showing wave direction */}
               <polygon points="145,50 135,45 135,55" fill="#f59e0b" />
             </svg>
@@ -2453,6 +2448,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   });
                   setTestScore(score);
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                   setShowTestResults(true);
                 }}
                 style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #059669, #0d9488)', borderRadius: '10px', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer' }}
@@ -2490,7 +2486,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   // ─── Main Render ───────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #0f172a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #0f172a 100%)', color: 'white', fontFamily: theme.fontFamily, minHeight: '100dvh' }}>
       {/* Progress bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #f59e0b, #d97706)', zIndex: 60, transition: 'width 0.5s ease' }} />
 

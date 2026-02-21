@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for internal state management
 type EAPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -14,6 +16,7 @@ interface EtchAnisotropyRendererProps {
   gamePhase?: EAPhase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -54,17 +57,11 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -341,6 +338,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -438,7 +436,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Etch Anisotropy visualization">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="etchLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

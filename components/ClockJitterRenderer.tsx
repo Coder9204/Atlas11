@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Clock Jitter - Complete 10-Phase Game
 // Understanding timing variations and their impact on digital system performance
@@ -261,9 +263,8 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [jitterAmount, setJitterAmount] = useState(50); // picoseconds RMS
   const [clockFrequency, setClockFrequency] = useState(100); // MHz
   const [dataRate, setDataRate] = useState(1); // Gbps
@@ -288,14 +289,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -447,7 +441,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const yMid = (yHigh + yLow) / 2;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Clock Jitter visualization">
         {/* Gradient and filter definitions for premium quality */}
         <defs>
           <linearGradient id="clockGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -608,7 +602,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const eyeOpeningV = Math.max(0, plotHeight * 0.4 - jitterAmount * 0.5);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width / 2} y={16} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
           Eye Diagram - Data at {dataRate} Gbps
@@ -725,7 +719,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
     const yLow = padding.top + plotHeight - 20;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width / 2} y={16} fill={colors.textSecondary} fontSize="12" textAnchor="middle" fontWeight="600">
           1 GHz Clock with +/- 10ps Jitter
@@ -1582,7 +1576,7 @@ const ClockJitterRenderer: React.FC<ClockJitterRendererProps> = ({ onGameEvent, 
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 320 : 450} height={isMobile ? 150 : 180} viewBox={`0 0 ${isMobile ? 320 : 450} ${isMobile ? 150 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px', maxWidth: '100%' }}>
+              <svg width={isMobile ? 320 : 450} height={isMobile ? 150 : 180} viewBox={`0 0 ${isMobile ? 320 : 450} ${isMobile ? 150 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
                 <text x="50%" y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
                   Eye Diagram Concept
                 </text>

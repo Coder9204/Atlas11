@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // FUEL DELIVERY - Complete 10-Phase Game (ELON Game #7 of 36)
 // Hidden infrastructure feeding power plants — supply chain logistics
@@ -279,9 +281,8 @@ const ELON_FuelDeliveryRenderer: React.FC<FuelDeliveryRendererProps> = ({ onGame
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [transportDistance, setTransportDistance] = useState(500);
   const [selectedFuel, setSelectedFuel] = useState(0);
 
@@ -303,14 +304,7 @@ const ELON_FuelDeliveryRenderer: React.FC<FuelDeliveryRendererProps> = ({ onGame
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate transport cost
+// Calculate transport cost
   const calculateTransportCost = (distance: number, fuel: FuelType) => {
     const tons = fuel.name === 'Uranium' ? 0.025 : fuel.name === 'Coal' ? 10000 : fuel.name === 'Natural Gas' ? 5000 : 200;
     return (fuel.costPerTonMile * tons * distance) / 100;
@@ -507,7 +501,7 @@ const ELON_FuelDeliveryRenderer: React.FC<FuelDeliveryRendererProps> = ({ onGame
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Fuel Delivery visualization">
         <defs>
           <linearGradient id="coalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#6B7280" />

@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // LAMINAR FLOW RENDERER - Complete 10-Phase Learning Game
 // Physics: Laminar vs Turbulent Flow, Reynolds Number
@@ -264,9 +266,8 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Play phase - flow simulator
+  const { isMobile } = useViewport();
+// Play phase - flow simulator
   const [flowVelocity, setFlowVelocity] = useState(0.5);
   const [pipeDiameter, setPipeDiameter] = useState(2);
   const [fluidViscosity, setFluidViscosity] = useState(1);
@@ -286,16 +287,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
 
   // Navigation ref
   const isNavigating = useRef(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Cleanup animation on unmount
+// Cleanup animation on unmount
   useEffect(() => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -569,7 +561,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
       background: colors.bgPrimary,
       color: colors.textPrimary,
       fontWeight: 400,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       height: '100dvh',
       overflow: 'hidden',
     }}>
@@ -599,7 +591,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
     const height = 220;
 
     return (
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', background: colors.bgSecondary, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Laminar Flow visualization">
         <defs>
           <linearGradient id="pipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -808,7 +800,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           marginBottom: '24px',
           textAlign: 'center',
         }}>
-          <svg width="100%" height="100" viewBox="0 0 400 100">
+          <svg width="100%" height="100" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet">
             <g transform="translate(100, 40)">
               <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
               <rect x="-55" y="-10" width="110" height="20" fill={colors.laminar} opacity="0.4" />
@@ -1042,7 +1034,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
 
         {/* Force diagram SVG */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <svg width="100%" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          <svg width="100%" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
             <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
               Re = Inertial Forces / Viscous Forces
             </text>
@@ -1145,7 +1137,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           marginBottom: '24px',
           textAlign: 'center',
         }}>
-          <svg width="100%" height="120" viewBox="0 0 400 120">
+          <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet">
             {/* Smooth sphere with large wake */}
             <g transform="translate(100, 60)">
               <circle cx="0" cy="0" r="30" fill="#666" />
@@ -1219,7 +1211,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           marginBottom: '24px',
         }}>
           {/* Boundary layer diagram */}
-          <svg width="100%" height="200" viewBox="0 0 450 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+          <svg width="100%" height="200" viewBox="0 0 450 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="blGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={colors.accent} stopOpacity="0" />

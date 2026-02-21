@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // DAMPING - Premium Design (Inline Styles Only)
 // 10-Phase Learning Structure
@@ -309,15 +311,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Damping simulation state
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const [dampingRatio, setDampingRatio] = useState(0.1);
+  const { isMobile } = useViewport();
+const [dampingRatio, setDampingRatio] = useState(0.1);
   const [isOscillating, setIsOscillating] = useState(false);
   const [position, setPosition] = useState(100);
   const [velocity, setVelocity] = useState(0);
@@ -597,7 +592,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         alignItems: isMobile ? 'center' : 'flex-start',
       }}>
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
-        <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}`, maxWidth: `${svgWidth}px` }}>
+        <svg width="100%" height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}`, maxWidth: `${svgWidth}px` }} role="img" aria-label="Damping visualization">
           <defs>
             <linearGradient id="dampBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24"/>
@@ -1720,7 +1715,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           )}
           {isConfirmed && currentQuestion === 9 && (
             <button
-              onClick={() => setTestSubmitted(true)}
+              onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }}
               style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >
               Submit Test

@@ -3,6 +3,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for MOSFET switching
 const realWorldApps = [
   {
@@ -85,23 +88,19 @@ interface MOSFETSwitchingRendererProps {
   gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  accentGlow: 'rgba(245, 158, 11, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  gate: '#8b5cf6',
+  drain: '#ef4444',
+  source: '#22c55e',
+  channel: '#06b6d4',
   chip: '#6366f1',
   power: '#ef4444',
-  gate: '#22c55e',
 };
 
 const phaseOrder: MOSFETPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -123,6 +122,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): MOSFETPhase => {
@@ -133,8 +133,8 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<MOSFETPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
   // Sync with external gamePhase if provided (for resume)
@@ -145,14 +145,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
   }, [gamePhase]);
 
   // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -407,6 +400,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -491,7 +485,7 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="M O S F E T Switching visualization">
           <defs>
             <linearGradient id="mosfetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor={colors.chip} />
@@ -512,6 +506,27 @@ const MOSFETSwitchingRenderer: React.FC<MOSFETSwitchingRendererProps> = ({
             <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.5)" />
             </filter>
+            <filter id="activeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#06b6d4" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient id="metalBody" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3a3a48" />
+              <stop offset="50%" stopColor="#22222e" />
+              <stop offset="100%" stopColor="#3a3a48" />
+            </linearGradient>
+            <linearGradient id="waveformFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.05" />
+            </linearGradient>
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
+            </pattern>
           </defs>
 
           {/* Title */}

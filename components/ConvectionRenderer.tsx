@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // CONVECTION RENDERER - PREMIUM 10-PHASE PHYSICS GAME
 // Physics: Heat transfer through fluid motion (Q = hAΔT)
@@ -337,9 +339,8 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   }, [gamePhase]);
 
   // Responsive state
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Audio context for sounds
+  const { isMobile } = useViewport();
+// Audio context for sounds
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Game state
@@ -360,14 +361,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const [simRunning, setSimRunning] = useState(true);
 
   // Initialize responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
   // DESIGN SYSTEM
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -664,7 +658,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const renderConvectionTank = (): React.ReactNode => {
     return (
       <div className="relative">
-        <svg viewBox="0 0 300 260" className="w-full h-56">
+        <svg viewBox="0 0 300 260" className="w-full h-56" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Convection visualization">
           <defs>
             {/* Temperature gradient */}
             <linearGradient id="convTempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1083,7 +1077,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
       {/* Animated illustration */}
       <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl shadow-orange-500/5 mb-8">
-        <svg viewBox="0 0 280 180" className="w-full h-40 mx-auto">
+        <svg viewBox="0 0 280 180" className="w-full h-40 mx-auto" preserveAspectRatio="xMidYMid meet">
           {/* Pot */}
           <ellipse cx="140" cy="150" rx="80" ry="15" fill="#64748b" />
           <rect x="60" y="80" width="160" height="70" fill="#475569" rx="5" />
@@ -1179,7 +1173,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
       {/* Visual diagram */}
       <div className="bg-blue-900/30 rounded-xl p-4 border border-blue-500/30">
-        <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto">
+        <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto" preserveAspectRatio="xMidYMid meet">
           <rect x="40" y="20" width="120" height="60" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="5" />
           <rect x="45" y="60" width="110" height="15" fill="#ef4444" opacity="0.4" />
           <text x="100" y="70" textAnchor="middle" fill="#fca5a5" fontSize="11">HOT ZONE</text>
@@ -1454,7 +1448,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
       {/* Visual */}
       <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
-        <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto">
+        <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto" preserveAspectRatio="xMidYMid meet">
           {/* Fan */}
           <circle cx="40" cy="50" r="25" fill="#64748b" stroke="#94a3b8" strokeWidth="2" />
           <line x1="40" y1="25" x2="40" y2="75" stroke="white" strokeWidth="3">
@@ -2135,7 +2129,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const canGoNext = !isLast && (!isTestPhase || quizComplete);
 
   return (
-    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: theme.fontFamily }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#f97316' }}>Convection</span>
@@ -2149,7 +2143,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
       {/* Bottom bar */}
       <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
-        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentPhaseIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentPhaseIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: theme.fontFamily }}>
           ← Back
         </button>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -2157,7 +2151,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             <div key={p} onClick={() => i <= currentPhaseIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#f97316' : i < currentPhaseIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentPhaseIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
           ))}
         </div>
-        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #f97316, #ef4444)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #f97316, #ef4444)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: theme.fontFamily }}>
           Next →
         </button>
       </div>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 199: RADIATION EFFECTS ON ELECTRONICS
 // Physics: SEU rate, Total Ionizing Dose (TID), Latchup from energetic particles
@@ -144,10 +146,8 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const [seuCount, setSeuCount] = useState(0);
   const [tidAccumulated, setTidAccumulated] = useState(0);
   const [discoveryMessage, setDiscoveryMessage] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener("resize", c); return () => window.removeEventListener("resize", c); }, []);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const { isMobile } = useViewport();
+const audioContextRef = useRef<AudioContext | null>(null);
 
   // Physics calculations
   const calculateRadiation = useCallback(() => {
@@ -452,7 +452,7 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     const gridXAlts = [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000];
 
     return (
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '600px' }}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Radiation Effects visualization">
         <defs>
           <linearGradient id="radCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />

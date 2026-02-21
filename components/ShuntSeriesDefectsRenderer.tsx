@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🔍',
@@ -83,6 +86,7 @@ interface ShuntSeriesDefectsRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -121,6 +125,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -188,17 +193,8 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -476,6 +472,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -537,7 +534,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '750px' }}
-        >
+         role="img" aria-label="Shunt Series Defects visualization">
           {/* ============ PREMIUM DEFS SECTION ============ */}
           <defs>
             {/* Premium dark background gradient */}

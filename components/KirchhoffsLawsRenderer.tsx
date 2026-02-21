@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Kirchhoff's Laws - Complete 10-Phase Game
 // The fundamental rules governing every electrical circuit
@@ -261,9 +263,8 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Circuit simulation state
+  const { isMobile } = useViewport();
+// Circuit simulation state
   const [voltage, setVoltage] = useState(12); // V
   const [resistance1, setResistance1] = useState(200); // ohms
   const [resistance2, setResistance2] = useState(300); // ohms
@@ -292,14 +293,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation timer
+// Animation timer
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationOffset(prev => (prev + 1) % 100);
@@ -406,7 +400,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     const voltages = calculateVoltages();
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kirchhoffs Laws visualization">
         <defs>
           <linearGradient id="wireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />
@@ -546,7 +540,7 @@ const KirchhoffsLawsRenderer: React.FC<KirchhoffsLawsRendererProps> = ({ onGameE
     const { i1, i2, iShared } = calculateMultiLoop();
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="wireGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />

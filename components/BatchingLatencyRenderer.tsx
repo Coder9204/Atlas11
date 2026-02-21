@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Batching vs Latency - Complete 10-Phase Game
 // Understanding the tradeoff between throughput and response time in ML inference
@@ -261,9 +263,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [batchSize, setBatchSize] = useState(4);
   const [requestRate, setRequestRate] = useState(20); // requests per second
   const [processingTime, setProcessingTime] = useState(50); // ms per batch
@@ -293,14 +294,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -310,18 +304,12 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#6366F1', // Indigo for ML/tech theme
-    accentGlow: 'rgba(99, 102, 241, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // Bright enough for contrast (brightness >= 180)
-    textMuted: 'rgba(226, 232, 240, 0.7)', // Using rgba for muted colors
-    border: '#2a2a3a',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    batch: '#8b5cf6',
+    latency: '#ef4444',
+    throughput: '#22c55e',
   };
 
   const typo = {
@@ -464,8 +452,11 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     const maxVisibleRequests = 8;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} role="img" aria-label="Batching Latency visualization">
         <defs>
+          <filter id="batchGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feFlood floodColor="#8b5cf6" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="batchGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" /><stop offset="100%" stopColor="#06b6d4" stopOpacity="0.5" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           {/* Gradients for premium visual quality */}
           <linearGradient id="queueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={colors.warning} stopOpacity="0.8" />

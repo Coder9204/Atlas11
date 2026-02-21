@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for manufacturing drives architecture
 const realWorldApps = [
   {
@@ -84,6 +87,7 @@ interface ManufacturingDrivesArchitectureRendererProps {
   gamePhase?: ManufacturingPhase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -105,6 +109,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): ManufacturingPhase => {
@@ -123,18 +128,20 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
       setPhase(gamePhase);
     }
   }, [gamePhase]);
+  const { isMobile } = useViewport();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const colors = {
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    factory: '#f59e0b',
+    pipeline: '#06b6d4',
+    constraint: '#ef4444',
+    optimized: '#22c55e',
+    code: '#3b82f6',
+  };
 
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -417,6 +424,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -543,7 +551,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     const dieScale = Math.sqrt(dieSize) / 2;
 
     return (
-      <svg width="100%" height="500" viewBox="0 0 520 500" style={{ maxWidth: '640px' }}>
+      <svg width="100%" height="500" viewBox="0 0 520 500" style={{ maxWidth: '640px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Manufacturing Drives Architecture visualization">
         <defs>
           {/* === PREMIUM LINEAR GRADIENTS === */}
 
@@ -721,6 +729,28 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
           {/* Grid pattern for background */}
           <pattern id="mdaGridPattern" width="25" height="25" patternUnits="userSpaceOnUse">
             <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+          </pattern>
+
+          {/* Factory glow filter */}
+          <filter id="factoryGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="#f59e0b" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Pipeline gradient */}
+          <linearGradient id="factoryPipeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Dot grid pattern */}
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
           </pattern>
         </defs>
 
@@ -1167,7 +1197,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
 
         {/* Static visualization for prediction */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
             <rect width="400" height="200" fill="#0f172a" rx="8" />
             <text x="200" y="30" fill="#e2e8f0" fontSize="14" textAnchor="middle" fontWeight="bold">Die Size Comparison</text>
             {/* 400mm2 die */}
@@ -1417,7 +1447,7 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
         <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Chiplet Architecture</h2>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px' }}>
+          <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px' }} preserveAspectRatio="xMidYMid meet">
             <rect width="500" height="200" fill="#0f172a" rx="8" />
             <text x="250" y="22" fill="#f59e0b" fontSize="14" textAnchor="middle" fontWeight="bold">Monolithic vs Chiplet Architecture</text>
             <rect x="30" y="40" width="160" height="120" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" rx="6" />

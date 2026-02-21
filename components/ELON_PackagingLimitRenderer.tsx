@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #20: PACKAGING LIMIT - Complete 10-Phase Game
 // Advanced chip packaging (CoWoS, chiplets, 3D stacking) as the new bottleneck
@@ -262,9 +264,8 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [interconnectPitch, setInterconnectPitch] = useState(150);
   const [animFrame, setAnimFrame] = useState(0);
 
@@ -285,14 +286,7 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -528,7 +522,7 @@ const ELON_PackagingLimitRenderer: React.FC<ELON_PackagingLimitRendererProps> = 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Packaging Limit visualization">
         <defs>
           <linearGradient id="interposerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.interposer} />

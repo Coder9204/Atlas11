@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -268,15 +270,8 @@ export default function ElectromagnetRenderer({
   setTestScore
 }: ElectromagnetRendererProps) {
   // ─── Responsive Detection ──────────────────────────────────────────────────
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -746,7 +741,7 @@ export default function ElectromagnetRenderer({
 
     return (
       <div className="space-y-3">
-        <svg viewBox="0 0 400 280" className="w-full h-56">
+        <svg viewBox="0 0 400 280" className="w-full h-56" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electromagnet visualization">
           {renderSVGDefs()}
 
           {/* Premium dark lab background with gradient */}
@@ -1053,7 +1048,7 @@ export default function ElectromagnetRenderer({
 
     return (
       <div className="space-y-3">
-        <svg viewBox="0 0 400 280" className="w-full h-56">
+        <svg viewBox="0 0 400 280" className="w-full h-56" preserveAspectRatio="xMidYMid meet">
           {renderSVGDefs()}
 
           {/* Premium dark lab background */}
@@ -1520,7 +1515,7 @@ export default function ElectromagnetRenderer({
       <h2 className="text-2xl font-bold text-pink-400 mb-6">The Motor Question</h2>
 
       {/* SVG diagram showing DC vs AC current concept */}
-      <svg width="320" height="180" viewBox="0 0 320 180" style={{ marginBottom: 16 }}>
+      <svg width="320" height="180" viewBox="0 0 320 180" style={{ marginBottom: 16 }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twpEmagCoil" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#fbbf24" />
@@ -1538,34 +1533,34 @@ export default function ElectromagnetRenderer({
         </defs>
         <rect width="320" height="180" rx="12" fill="#0f172a" />
         {/* DC side */}
-        <text x="80" y="20" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="bold" fontFamily="sans-serif">DC (steady)</text>
+        <text x="80" y="20" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="bold" fontFamily={theme.fontFamily}>DC (steady)</text>
         <rect x="40" y="55" width="80" height="20" rx="3" fill="url(#twpEmagCore)" />
         {[0,1,2,3].map(i => (
           <ellipse key={`dc-${i}`} cx={50 + i * 20} cy={65} rx="7" ry="16" fill="none" stroke="url(#twpEmagCoil)" strokeWidth="2" />
         ))}
-        <text x="30" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
-        <text x="125" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily="sans-serif">N</text>
+        <text x="30" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily={theme.fontFamily}>S</text>
+        <text x="125" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily={theme.fontFamily}>N</text>
         <path d="M 30,65 C 30,15 130,15 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
         <path d="M 30,65 C 30,115 130,115 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
         {/* Arrow showing steady current */}
         <line x1="60" y1="100" x2="100" y2="100" stroke="#eab308" strokeWidth="2" />
         <polygon points="100,95 110,100 100,105" fill="#eab308" />
-        <text x="80" y="115" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">Fixed poles</text>
+        <text x="80" y="115" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Fixed poles</text>
         {/* AC side */}
-        <text x="240" y="20" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily="sans-serif">AC (alternating)</text>
+        <text x="240" y="20" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily={theme.fontFamily}>AC (alternating)</text>
         <rect x="200" y="55" width="80" height="20" rx="3" fill="url(#twpEmagCore)" />
         {[0,1,2,3].map(i => (
           <ellipse key={`ac-${i}`} cx={210 + i * 20} cy={65} rx="7" ry="16" fill="none" stroke="url(#twpEmagCoil)" strokeWidth="2" />
         ))}
-        <text x="190" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily="sans-serif">N</text>
-        <text x="285" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
-        <text x="240" y="50" fill="#22c55e" fontSize="14" fontFamily="sans-serif">???</text>
+        <text x="190" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily={theme.fontFamily}>N</text>
+        <text x="285" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily={theme.fontFamily}>S</text>
+        <text x="240" y="50" fill="#22c55e" fontSize="14" fontFamily={theme.fontFamily}>???</text>
         {/* AC wave */}
         <path d="M 210,100 Q 220,55 230,100 Q 240,145 250,100 Q 260,55 270,100" fill="none" stroke="#22c55e" strokeWidth="2" />
-        <text x="240" y="125" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">Poles flip?</text>
+        <text x="240" y="125" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Poles flip?</text>
         {/* Divider */}
         <line x1="160" y1="25" x2="160" y2="165" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" />
-        <text x="160" y="170" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily="sans-serif">vs</text>
+        <text x="160" y="170" textAnchor="middle" fill="#64748b" fontSize="11" fontFamily={theme.fontFamily}>vs</text>
       </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -2054,6 +2049,7 @@ export default function ElectromagnetRenderer({
                   const score = calculateScore();
                   setTestScore?.(score);
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                   setShowTestResults(true);
                   playSound(score >= 7 ? 'complete' : 'incorrect');
                   onGameEvent?.({ type: 'test_completed', data: { score, total: testQuestions.length } });
@@ -2172,7 +2168,7 @@ export default function ElectromagnetRenderer({
 
   // ─── Main Render ───────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #1a1a2e 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #1a1a2e 50%, #0a0f1a 100%)', color: 'white', fontFamily: theme.fontFamily, minHeight: '100dvh' }}>
       {/* Progress bar */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #a855f7, #3b82f6)', zIndex: 60, transition: 'width 0.5s ease' }} />
 

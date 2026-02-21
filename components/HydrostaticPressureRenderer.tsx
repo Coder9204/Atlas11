@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // HYDROSTATIC PRESSURE - Complete 10-Phase Interactive Learning Game
 // Understanding pressure in fluids: P = rho * g * h
@@ -295,9 +297,8 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction states
+  const { isMobile } = useViewport();
+// Prediction states
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
@@ -337,14 +338,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
   }, [gamePhase]);
 
   // ========== RESPONSIVE DETECTION ==========
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ========== RESPONSIVE TYPOGRAPHY ==========
+// ========== RESPONSIVE TYPOGRAPHY ==========
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -488,7 +482,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Hydrostatic Pressure visualization">
           <defs>
             {/* Water gradient with depth effect */}
             <linearGradient id="hydroWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -676,7 +670,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="containerWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
@@ -810,7 +804,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
         border: `1px solid ${colors.bgHover}`,
         marginBottom: '32px'
       }}>
-        <svg width={isMobile ? 260 : 320} height={140} viewBox={`0 0 ${isMobile ? 260 : 320} 140`} style={{ display: 'block', margin: '0 auto' }}>
+        <svg width={isMobile ? 260 : 320} height={140} viewBox={`0 0 ${isMobile ? 260 : 320} 140`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="hookWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.3" />
@@ -932,7 +926,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
           border: `1px solid ${colors.bgHover}`,
           marginBottom: '24px'
         }}>
-          <svg width={isMobile ? 300 : 380} height={260} viewBox={`0 0 ${isMobile ? 300 : 380} 260`} style={{ display: 'block', margin: '0 auto' }}>
+          <svg width={isMobile ? 300 : 380} height={260} viewBox={`0 0 ${isMobile ? 300 : 380} 260`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.35" />
@@ -2359,7 +2353,7 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
       flexDirection: 'column',
       background: colors.bgDeep,
       color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       overflow: 'hidden'
     }}>
       {/* Background gradient effects */}

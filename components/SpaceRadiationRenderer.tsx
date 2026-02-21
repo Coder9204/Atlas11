@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Space Radiation & Bit Flips - Complete 10-Phase Game
 // Why triple-redundancy exists: Ionizing particles cause SEUs in space computers
@@ -261,9 +263,8 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Memory simulation state
+  const { isMobile } = useViewport();
+// Memory simulation state
   const [memoryBits, setMemoryBits] = useState<number[]>(Array(32).fill(0).map(() => Math.random() > 0.5 ? 1 : 0));
   const [protectionMode, setProtectionMode] = useState<'none' | 'ecc' | 'tmr'>('none');
   const [faultRate, setFaultRate] = useState(0.5); // faults per second
@@ -318,14 +319,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
   }, []);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -962,7 +956,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }}>
+            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Space Radiation visualization">
               <defs>
                 <linearGradient id="chipBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#1e293b" />
@@ -1748,7 +1742,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }}>
+            <svg viewBox="0 0 600 300" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="trans45" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor={colors.bitOne} />
@@ -1906,7 +1900,7 @@ const SpaceRadiationRenderer: React.FC<SpaceRadiationRendererProps> = ({ onGameE
             <MemoryVisualization />
 
             {/* Process Node SVG Visualization - directly reflects processNode slider */}
-            <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto', display: 'block', margin: '12px auto 0' }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto', display: 'block', margin: '12px auto 0' }} preserveAspectRatio="xMidYMid meet">
               <rect x="0" y="0" width="400" height="120" fill={colors.bgSecondary} rx="8" />
               {/* Transistor size visualization - size scales with processNode */}
               {[0, 1, 2, 3, 4].map(i => {

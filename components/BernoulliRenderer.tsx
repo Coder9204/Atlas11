@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // BERNOULLI RENDERER - FLUID DYNAMICS & LIFT
 // Premium 10-phase educational game with comprehensive learning structure
@@ -292,9 +294,8 @@ const realWorldApps = [
 const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, onBack }) => {
   // Phase management
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction state
+  const { isMobile } = useViewport();
+// Prediction state
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -335,14 +336,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   };
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync from props
+// Phase sync from props
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
@@ -504,7 +498,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const wingLength = 120;
 
     return (
-      <svg width={simWidth} height={simHeight} viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto">
+      <svg width={simWidth} height={simHeight} viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Bernoulli visualization">
         <defs>
           <linearGradient id="bernSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0c1929" />
@@ -740,7 +734,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const spinDirection = ballSpin > 0 ? 1 : -1;
 
     return (
-      <svg width={simWidth} height={simHeight} viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto">
+      <svg width={simWidth} height={simHeight} viewBox={`0 0 ${simWidth} ${simHeight}`} className="mx-auto" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="bernFieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#064e3b" />
@@ -1835,6 +1829,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 }, 0);
                 setTestScore(score);
                 setTestSubmitted(true);
+                onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                 playSound(score >= 7 ? 'complete' : 'failure');
               }}
               style={{
@@ -2023,7 +2018,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
           opacity: isFirstPhase ? 0.4 : 1,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -2071,7 +2066,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
           opacity: canAdvance ? 1 : 0.4,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Next →
@@ -2088,7 +2083,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       display: 'flex',
       flexDirection: 'column',
       color: 'white',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      fontFamily: theme.fontFamily,
     }}>
       {/* Progress bar */}
       <div style={{

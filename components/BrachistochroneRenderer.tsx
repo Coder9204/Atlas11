@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 114: BRACHISTOCHRONE
 // The curve of fastest descent - a cycloid, not a straight line!
@@ -12,6 +14,7 @@ interface BrachistochroneRendererProps {
   gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase sequence for self-managing navigation
@@ -46,6 +49,7 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
   gamePhase,
   onPhaseComplete,
   onPredictionMade,
+  onGameEvent,
 }) => {
   // Internal phase management for self-managing mode
   const [internalPhase, setInternalPhase] = useState('hook');
@@ -60,18 +64,8 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
   // Determine which phase to use - external prop takes precedence
   const phase = externalPhase || gamePhase || internalPhase;
   const isSelfManaged = !externalPhase && !gamePhase;
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -246,7 +240,7 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Brachistochrone visualization">
           {/* ============================================= */}
           {/* PREMIUM SVG DEFINITIONS - Gradients & Filters */}
           {/* ============================================= */}
@@ -1008,7 +1002,7 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
 
           {/* Key insights diagram */}
           <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px' }}>
-            <svg viewBox="0 0 300 100" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 300 100" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewCycloidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#22c55e" />
@@ -1540,7 +1534,7 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
                       Review Answers
                     </button>
                     <button
-                      onClick={() => setTestSubmitted(true)}
+                      onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
                       style={{
                         padding: '10px 20px',
                         minHeight: '44px',

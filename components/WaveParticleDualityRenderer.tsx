@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
    eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -97,15 +99,8 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]); // Track completed apps
 
    // --- RESPONSIVE DESIGN ---
-   const [isMobile, setIsMobile] = useState(false);
-   useEffect(() => {
-      const checkMobile = () => setIsMobile(window.innerWidth < 768);
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-   }, []);
-
-   // --- AI COACH GUIDED MODE ---
+  const { isMobile } = useViewport();
+// --- AI COACH GUIDED MODE ---
    const [guidedMode, setGuidedMode] = useState(true); // Default ON for guided experience
    const [lastCoachMessage, setLastCoachMessage] = useState<string>('');
 
@@ -822,7 +817,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
    // Helper function that returns JSX - NOT a component to avoid React reconciliation issues
    const renderQuantumLabVisualizer = (interactive: boolean = false, showDetector: boolean = false) => {
       return (
-         <svg viewBox="0 0 700 350" className="w-full h-full" style={{ maxHeight: '100%' }}>
+         <svg viewBox="0 0 700 350" className="w-full h-full" style={{ maxHeight: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Wave Particle Duality visualization">
             <defs>
                {/* Premium electron gun metal gradient */}
                <linearGradient id="wpdGunMetal" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1428,7 +1423,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   marginBottom: isMobile ? '16px' : '24px'
                }}>
                   {/* Orbit rings */}
-                  <svg viewBox="0 0 140 140" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                  <svg viewBox="0 0 140 140" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
                      <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad1)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', animation: 'spin 8s linear infinite' }} />
                      <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad2)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', transform: 'rotate(60deg)', animation: 'spin 10s linear infinite reverse' }} />
                      <ellipse cx="70" cy="70" rx="65" ry="25" fill="none" stroke="url(#orbitGrad3)" strokeWidth="1.5" opacity="0.6" style={{ transformOrigin: 'center', transform: 'rotate(120deg)', animation: 'spin 12s linear infinite' }} />
@@ -1659,7 +1654,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                <p style={{ fontSize: typo.body, lineHeight: 1.5, color: colors.textSecondary, margin: 0, marginBottom: typo.elementGap }}>
                   An <strong style={{ color: colors.primary }}>electron gun</strong> fires electrons one at a time through <strong style={{ color: colors.primary }}>two slits</strong> onto a <strong style={{ color: colors.primary }}>detection screen</strong>.
                </p>
-               <svg viewBox="0 0 500 110" style={{ width: '100%', height: isMobile ? '75px' : '90px' }}>
+               <svg viewBox="0 0 500 110" style={{ width: '100%', height: isMobile ? '75px' : '90px' }} preserveAspectRatio="xMidYMid meet">
                   {/* Electron gun */}
                   <rect x="20" y="40" width="70" height="50" rx="8" fill={colors.bgCardLight} stroke={colors.border} strokeWidth="2" />
                   <circle cx="55" cy="65" r="12" fill={colors.primary} opacity="0.3">
@@ -1996,7 +1991,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
             {/* Compact diagram with detector */}
             <div style={{ padding: typo.cardPadding, borderRadius: '12px', marginBottom: typo.sectionGap, background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-               <svg viewBox="0 0 350 90" style={{ width: '100%', height: isMobile ? '70px' : '80px' }}>
+               <svg viewBox="0 0 350 90" style={{ width: '100%', height: isMobile ? '70px' : '80px' }} preserveAspectRatio="xMidYMid meet">
                   <rect x="30" y="25" width="45" height="40" rx="5" fill={colors.bgCardLight} stroke={colors.border} />
                   <circle cx="52" cy="45" r="7" fill={colors.primary} opacity="0.5" />
                   <text x="52" y="75" textAnchor="middle" style={{ fontSize: '8px', fill: colors.textMuted, fontWeight: 600 }}>Source</text>
@@ -2619,7 +2614,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   <p style={{ textAlign: 'center', fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', color: currentApp.color }}>
                      🔬 How {currentApp.title} Uses Quantum Mechanics
                   </p>
-                  <svg viewBox="0 0 600 320" style={{ width: '100%', maxHeight: '340px' }}>
+                  <svg viewBox="0 0 600 320" style={{ width: '100%', maxHeight: '340px' }} preserveAspectRatio="xMidYMid meet">
                               {selectedApp === 0 && (
                                  /* Quantum Computing - Shows superposition like double-slit */
                                  <g>

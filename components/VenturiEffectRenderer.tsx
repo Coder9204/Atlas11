@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Venturi Effect - Complete 10-Phase Game
 // Physics: Continuity (A1v1 = A2v2) + Bernoulli (P + 1/2 pv^2 = const)
@@ -267,9 +269,8 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Venturi tube
+  const { isMobile } = useViewport();
+// Simulation state - Venturi tube
   const [flowRate, setFlowRate] = useState(50); // percentage
   const [constrictionSize, setConstrictionSize] = useState(30); // percentage of original
   const [showPressure, setShowPressure] = useState(true);
@@ -309,14 +310,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
   const meterNarrowPressure = Math.max(REFERENCE_PRESSURE - meterPressureDrop, 10);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -528,7 +522,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     const mid = (tubeTop + tubeBot) / 2;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Venturi Effect visualization">
         <defs>
           <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4a6a8c" />
@@ -682,7 +676,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     const height = isMobile ? 240 : 280;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="meterTubeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4a6a8c" />
@@ -868,7 +862,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
             </h2>
 
             {/* SVG Diagram */}
-            <svg viewBox="0 0 400 180" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 180" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="venturiPredGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <linearGradient id="venturiPredGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient>
@@ -1281,7 +1275,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
               Engineers need to measure flow rate in a pipe without inserting any probes. What do you predict - how can a Venturi tube help?
             </h2>
 
-            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistPGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <linearGradient id="twistPGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>

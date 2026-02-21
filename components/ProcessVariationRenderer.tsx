@@ -3,6 +3,9 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '💻',
@@ -149,8 +152,8 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<PVPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationRef = useRef<boolean>(false);
+  const { isMobile } = useViewport();
+const navigationRef = useRef<boolean>(false);
 
   // Sync with external gamePhase prop changes
   useEffect(() => {
@@ -160,14 +163,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -453,6 +449,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -615,7 +612,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '750px', maxHeight: '480px' }}
-        >
+         role="img" aria-label="Process Variation visualization">
           <defs>
             {/* === PREMIUM BACKGROUND GRADIENTS === */}
             <linearGradient id="pvarLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

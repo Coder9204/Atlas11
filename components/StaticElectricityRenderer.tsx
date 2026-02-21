@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Premium Design System
 const premiumDesign = {
   colors: {
@@ -35,7 +37,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -174,9 +176,8 @@ interface StaticElectricityRendererProps {
 export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPhaseComplete }: StaticElectricityRendererProps) {
   // Core State
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -327,14 +328,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
   const [testComplete, setTestComplete] = useState(false);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -801,7 +795,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           margin: '0 auto',
           marginBottom: premiumDesign.spacing.xl,
         }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Static Electricity visualization">
             <defs>
               <radialGradient id="predictBalloon" cx="30%" cy="30%" r="70%">
                 <stop offset="0%" stopColor="#FF8888" />
@@ -963,7 +957,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium background gradient */}
                 <linearGradient id="staticLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1651,7 +1645,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
           margin: '0 auto',
           marginBottom: premiumDesign.spacing.xl,
         }}>
-          <svg viewBox="0 0 300 150" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 300 150" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             <rect width="300" height="150" fill="#0a0f1a" rx="8" />
 
             {/* Positive charge */}
@@ -1765,7 +1759,7 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium lab background gradient */}
                 <linearGradient id="staticCoulombBg" x1="0%" y1="0%" x2="100%" y2="100%">

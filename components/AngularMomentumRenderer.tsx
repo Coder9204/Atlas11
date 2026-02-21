@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Angular Momentum Conservation - Complete 10-Phase Game
 // Why figure skaters spin faster when they pull their arms in
@@ -302,9 +304,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - spinning figure
+  const { isMobile } = useViewport();
+// Simulation state - spinning figure
   const [armExtension, setArmExtension] = useState(0.8); // 0 = tucked, 1 = extended
   const [hasWeights, setHasWeights] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -339,14 +340,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   const animationRef = useRef<number>();
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for frame counter
+// Animation loop for frame counter
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -448,7 +442,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
     const weightSize = hasWeights ? 14 : 5;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Angular Momentum visualization">
         <defs>
           <radialGradient id="spinGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={colors.accent} stopOpacity="0.6" />
@@ -924,7 +918,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ margin: '0 auto' }}>
+            <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="predictBodyGrad" cx="30%" cy="30%" r="70%">
                   <stop offset="0%" stopColor="#64748b" />
@@ -1354,7 +1348,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 320 : 400} height={160} viewBox="0 0 400 160" style={{ margin: '0 auto' }}>
+            <svg width={isMobile ? 320 : 400} height={160} viewBox="0 0 400 160" style={{ margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="twistBodyGrad" cx="30%" cy="30%" r="70%">
                   <stop offset="0%" stopColor="#64748b" />

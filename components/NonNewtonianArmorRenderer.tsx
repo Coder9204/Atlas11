@@ -16,6 +16,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS (matching evaluation framework requirements)
 // Primary text: #f8fafc, Secondary: #e2e8f0 minimum
@@ -387,16 +389,8 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Viewport
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -580,7 +574,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
-        >
+         role="img" aria-label="Non Newtonian Armor visualization">
           <defs>
             {/* Bowl gradient */}
             <linearGradient id="bowlGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1721,7 +1715,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   border: `1px solid ${colors.border}`,
                   overflow: 'hidden'
                 }}>
-                  <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
+                  <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                     <rect width="400" height="200" fill={colors.bgDark} />
                     <text x="200" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="700">
                       Starch Ratio Effect
@@ -2470,6 +2464,7 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
                   playSound('click');
                 } else {
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                   goToPhase('mastery');
                 }
               }}

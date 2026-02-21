@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Static vs Kinetic Friction - Complete 10-Phase Game
 // Why it's harder to START sliding than to KEEP sliding
@@ -270,9 +272,8 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [surface, setSurface] = useState<Surface>('wood');
   const [appliedForce, setAppliedForce] = useState(0);
   const [blockPosition, setBlockPosition] = useState(0);
@@ -306,14 +307,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const kineticFriction = blockWeight * surfaceProperties[surface].kineticCoef;
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -458,7 +452,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     const graphW = width - 80;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Static Kinetic Friction visualization">
         <defs>
           <linearGradient id="surfaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={surfaceProperties[surface].color} />
@@ -914,7 +908,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
           {/* Static SVG Diagram */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 340 : 500} height="220" viewBox={`0 0 ${isMobile ? 340 : 500} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 340 : 500} height="220" viewBox={`0 0 ${isMobile ? 340 : 500} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               {/* Title */}
               <text x={isMobile ? 170 : 250} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Static vs Kinetic Friction — Predict</text>
 
@@ -1387,7 +1381,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
           {/* Static SVG showing surface comparison */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <text x={isMobile ? 160 : 230} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Surface Friction Comparison</text>
 
               {/* Wood bar */}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Magnus Effect - Complete 10-Phase Game
 // How spinning balls curve through the air
@@ -261,9 +263,8 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [spinRate, setSpinRate] = useState(50);
   const [ballSpeed, setBallSpeed] = useState(50);
   const [spinDirection, setSpinDirection] = useState<'topspin' | 'backspin' | 'sidespin'>('topspin');
@@ -291,14 +292,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Ball flight animation
+// Ball flight animation
   useEffect(() => {
     if (!isAnimating) return;
 
@@ -412,7 +406,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
     const height = isMobile ? 280 : 320;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Magnus Effect visualization">
         <defs>
           <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0c1929" />
@@ -1293,7 +1287,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="320" height="200" viewBox="0 0 320 200" style={{ maxWidth: '100%' }}>
+            <svg width="320" height="200" viewBox="0 0 320 200" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <rect width="320" height="200" fill="#1e3a5f" rx="8" />
               {/* Smooth ball */}
               <circle cx="60" cy="80" r="25" fill="#fbbf24" opacity="0.8" />
@@ -1423,7 +1417,7 @@ const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent
               }}>
                 {/* SVG responding to spin rate */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                  <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }}>
+                  <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
                     <rect width="300" height="180" fill="#1e3a5f" rx="8" />
                     <line x1="30" y1="90" x2="270" y2="90" stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
                     {/* Ball */}

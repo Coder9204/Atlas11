@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '☀️',
@@ -165,9 +168,8 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   const [workFunction, setWorkFunction] = useState(2.3);
   const [hasExperimented, setHasExperimented] = useState(false);
   const [hasTestedIntensity, setHasTestedIntensity] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Test state
+  const { isMobile } = useViewport();
+// Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testScore, setTestScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -265,14 +267,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   };
 
   // ============ MOBILE DETECTION ============
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync with external gamePhase prop
+// Sync with external gamePhase prop
   useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase as PEPhase) && gamePhase !== phase) {
       setPhase(gamePhase as PEPhase);
@@ -547,7 +542,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   // Static preview SVG for predict phases (no animation, no sliders)
   const renderStaticPreview = () => {
     return (
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Photoelectric Effect visualization">
         {/* Background */}
         <rect width="400" height="200" fill="#0a0f1a" rx="8" />
 
@@ -602,7 +597,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
   // Static preview for twist_predict (intensity focus)
   const renderIntensityPreview = () => {
     return (
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '360px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         {/* Background */}
         <rect width="400" height="200" fill="#0a0f1a" rx="8" />
 
@@ -662,7 +657,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <svg viewBox="0 0 600 320" style={{ width: '100%', height: '100%', maxHeight: isMobile ? '200px' : '280px' }}>
+        <svg viewBox="0 0 600 320" style={{ width: '100%', height: '100%', maxHeight: isMobile ? '200px' : '280px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* === PREMIUM GRADIENTS === */}
 

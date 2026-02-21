@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Power Delivery Network - Complete 10-Phase Game
 // Why chips need hundreds of power pins and careful impedance engineering
@@ -261,9 +263,8 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [currentDemand, setCurrentDemand] = useState(100); // Amps
   const [decouplingCapacitance, setDecouplingCapacitance] = useState(100); // uF total
   const [pathInductance, setPathInductance] = useState(100); // pH
@@ -288,14 +289,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationTime(t => (t + 1) % 360);
@@ -590,7 +584,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     const isSurging = Math.sin(surgePhase * 2) > 0.7;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Power Delivery Network visualization">
         <defs>
           <linearGradient id="pdnPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.power} stopOpacity="0.8" />
@@ -1314,7 +1308,7 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               An Intel Core processor has over 1,000 pins. About half are for power and ground - not data!
             </p>
-            <svg width="320" height="100" viewBox="0 0 320 100" style={{ overflow: 'visible' }}>
+            <svg width="320" height="100" viewBox="0 0 320 100" style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor={colors.accent} stopOpacity="0.9" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // TRANSFORMER TIMELINE - Complete 10-Phase Game (#4 of 36)
 // Voltage transformation across the grid — why we step up to 765kV for
@@ -262,9 +264,8 @@ const ELON_TransformerTimelineRenderer: React.FC<ELON_TransformerTimelineRendere
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [transmissionVoltage, setTransmissionVoltage] = useState(345);
   const [distance, setDistance] = useState(100);
   const [selectedStage, setSelectedStage] = useState(0);
@@ -288,14 +289,7 @@ const ELON_TransformerTimelineRenderer: React.FC<ELON_TransformerTimelineRendere
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Grid stages for visualization
+// Grid stages for visualization
   const gridStages = [
     { name: 'Generator', voltage: 13.8, unit: 'kV', color: '#22c55e' },
     { name: 'Step-Up Transformer', voltage: 345, unit: 'kV', color: '#F97316' },
@@ -498,7 +492,7 @@ const ELON_TransformerTimelineRenderer: React.FC<ELON_TransformerTimelineRendere
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Transformer Timeline visualization">
         <defs>
           {/* Voltage gradient - low to high */}
           <linearGradient id="voltGradLow" x1="0%" y1="0%" x2="100%" y2="0%">

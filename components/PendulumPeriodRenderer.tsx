@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // PENDULUM PERIOD - Premium Design (Inline Styles Only)
 // 10-Phase Learning Structure
@@ -293,11 +295,8 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   const [isSwinging, setIsSwinging] = useState(false);
   const [simTime, setSimTime] = useState(0);
   const [gravity, setGravity] = useState(9.8);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
-
-  const animationRef = useRef<number | null>(null);
+  const { isMobile } = useViewport();
+const animationRef = useRef<number | null>(null);
 
   const colors = {
     primary: '#10b981',
@@ -395,7 +394,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-        <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: `${svgW}px`, height: 'auto', borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+        <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: `${svgW}px`, height: 'auto', borderRadius: '16px', border: `1px solid ${colors.border}` }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Pendulum Period visualization">
           <defs>
             <linearGradient id="pendBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24" />
@@ -541,7 +540,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Prediction</h2>
       <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>Two pendulums of equal length but different masses...</p>
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="200" viewBox="0 0 360 200">
+        <svg width="360" height="200" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="predPendBg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1a1a24" /><stop offset="100%" stopColor="#0a0a0f" /></linearGradient>
             <radialGradient id="predHeavy" cx="30%" cy="25%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#d97706" /></radialGradient>
@@ -664,7 +663,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🌀</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Twist</h2></div>
       <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>What happens to the period on different planets?</p>
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="180" viewBox="0 0 360 180">
+        <svg width="360" height="180" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistPendBg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1a1a24" /><stop offset="100%" stopColor="#0a0a0f" /></linearGradient>
             <radialGradient id="twistEarth" cx="50%" cy="50%"><stop offset="0%" stopColor="#22c55e" /><stop offset="100%" stopColor="#15803d" /></radialGradient>
@@ -839,7 +838,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
         <div style={{ display: 'flex', gap: '12px', maxWidth: '520px', width: '100%' }}>
           {currentAnswer && !isConfirmed && (<button onClick={() => { setConfirmedQuestions(prev => new Set(prev).add(currentQuestion)); const sel = question.options.find(o => o.id === currentAnswer); if (sel?.correct) { setTestScore(s => s + 1); playSound('success'); } else { playSound('failure'); } }} style={{ ...primaryBtnStyle, flex: 1 }}>Check Answer</button>)}
           {isConfirmed && currentQuestion < 9 && (<button onClick={() => setCurrentQuestion(currentQuestion + 1)} style={{ ...primaryBtnStyle, flex: 1 }}>Next Question</button>)}
-          {isConfirmed && currentQuestion === 9 && (<button onClick={() => setTestSubmitted(true)} style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}>Submit Test</button>)}
+          {isConfirmed && currentQuestion === 9 && (<button onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }} style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}>Submit Test</button>)}
         </div>
       </div>
     );

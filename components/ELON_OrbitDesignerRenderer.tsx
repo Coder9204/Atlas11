@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #24: ORBIT DESIGNER - Complete 10-Phase Game
 // Orbital mechanics — altitude, inclination, eccentricity determine coverage,
@@ -262,9 +264,8 @@ const ELON_OrbitDesignerRenderer: React.FC<ELON_OrbitDesignerRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [orbitalAltitude, setOrbitalAltitude] = useState(550);
   const [inclination, setInclination] = useState(0);
   const [animFrame, setAnimFrame] = useState(0);
@@ -286,14 +287,7 @@ const ELON_OrbitDesignerRenderer: React.FC<ELON_OrbitDesignerRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -578,7 +572,7 @@ const ELON_OrbitDesignerRenderer: React.FC<ELON_OrbitDesignerRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Orbit Designer visualization">
         <defs>
           <linearGradient id="earthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1E40AF" />

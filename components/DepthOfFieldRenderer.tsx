@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // DEPTH OF FIELD RENDERER - Complete 10-Phase Learning Game
 // Discover how aperture, distance, and focus create blur in photography
@@ -87,8 +89,8 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
 
   // Play phase state
   const [apertureSize, setApertureSize] = useState(50);
@@ -109,15 +111,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [answerConfirmed, setAnswerConfirmed] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Sync with external gamePhase changes
+// Sync with external gamePhase changes
   useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -531,7 +525,7 @@ const DepthOfFieldRenderer: React.FC<DepthOfFieldRendererProps> = ({
     const currentY = chartY + chartH - currentBlurNorm * chartH;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Depth of field ray diagram simulation">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Depth of field ray diagram simulation" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="dofLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0a0f1a" />

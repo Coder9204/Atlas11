@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Lens Focusing - Complete 10-Phase Game
 // The thin lens equation: how lenses form images
@@ -261,9 +263,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [focalLength, setFocalLength] = useState(80);
   const [objectDistance, setObjectDistance] = useState(160);
   const [animationTime, setAnimationTime] = useState(0);
@@ -286,14 +287,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for light pulses
+// Animation loop for light pulses
   useEffect(() => {
     const animate = () => {
       setAnimationTime(t => t + 0.02);
@@ -420,7 +414,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     const isVirtual = !imgData.isReal;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} role="img" aria-label="Lens Focusing visualization">
         <defs>
           <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.1"/>
@@ -731,7 +725,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
         flexDirection: 'column',
         color: 'white',
         fontWeight: 400,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: theme.fontFamily,
       }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
@@ -811,7 +805,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
         flexDirection: 'column',
         color: 'white',
         fontWeight: 400,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: theme.fontFamily,
       }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -832,7 +826,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             What happens when you hold a magnifying glass between a candle and a wall?
           </h2>
 
-          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent} stopOpacity="0.2" />
@@ -1267,7 +1261,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             Think about using a magnifying glass. What do you expect to see?
           </h2>
 
-          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistLensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent} stopOpacity="0.2" />

@@ -8,6 +8,7 @@ import {
   addGameToPath, getPathStats, type LearnerPath, type PathStats,
 } from '../services/LearningPathService';
 import PathProgressBar, { PathGameNode } from './PathProgressBar';
+import RetentionBanner from './RetentionBanner';
 
 // ============================================================================
 // LEARNING PATH PAGE — Browse paths, view active paths, customize
@@ -261,6 +262,8 @@ export default function LearningPathPage() {
             ))}
           </div>
         </div>
+
+        <RetentionBanner />
 
         {/* ── BROWSE VIEW ── */}
         {view === 'browse' && (

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Inverter Sine Wave Synthesis - Complete 10-Phase Game
 // How inverters create AC power from DC using PWM and filtering
@@ -261,9 +263,8 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [waveformType, setWaveformType] = useState<'square' | 'modified' | 'pwm'>('square');
   const [dcVoltage, setDcVoltage] = useState(400);
   const [frequency, setFrequency] = useState(60);
@@ -289,14 +290,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     if (!isAnimating) return;
     const interval = setInterval(() => {
@@ -476,7 +470,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '720px', background: colors.bgCard }}
-        >
+         role="img" aria-label="Inverter Sine Wave visualization">
           <defs>
             <linearGradient id="iswSineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
@@ -652,7 +646,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
         marginBottom: '16px',
       }}>
         {/* SVG motor temperature visualization */}
-        <svg viewBox="0 0 320 160" style={{ width: '100%', height: '160px', marginBottom: '12px' }}>
+        <svg viewBox="0 0 320 160" style={{ width: '100%', height: '160px', marginBottom: '12px' }} preserveAspectRatio="xMidYMid meet">
           {/* Grid */}
           <line x1="0" y1="80" x2="320" y2="80" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
           {/* Motor body */}
@@ -1376,7 +1370,7 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({ onG
 
           {/* SVG showing waveform quality impact - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
-            <svg viewBox="0 0 320 120" style={{ width: '100%', height: '120px' }}>
+            <svg viewBox="0 0 320 120" style={{ width: '100%', height: '120px' }} preserveAspectRatio="xMidYMid meet">
               {/* Grid */}
               <line x1="0" y1="60" x2="320" y2="60" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
               {/* Square wave */}

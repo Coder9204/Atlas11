@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Straw Instrument - Complete 10-Phase Game
 // How tube length creates different musical notes through resonance
@@ -282,9 +284,8 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [strawLength, setStrawLength] = useState(20); // cm
   const [playing, setPlaying] = useState(false);
 
@@ -306,14 +307,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate frequency from length (open pipe approximation)
+// Calculate frequency from length (open pipe approximation)
   const lengthToFrequency = (lengthCm: number) => {
     const lengthM = lengthCm / 100;
     return 343 / (2 * lengthM);
@@ -427,7 +421,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const strawHeight = strawLength * 6;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Straw Instrument visualization">
         <defs>
           <linearGradient id="strawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#0284c7" />
@@ -582,7 +576,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C\''];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           {scaleStraws.map((_, i) => (
             <linearGradient key={i} id={`scaleGrad${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -896,7 +890,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
     const shortX = Math.round(width * 0.62);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predStrawGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#0284c7" />
@@ -1390,7 +1384,7 @@ const StrawInstrumentRenderer: React.FC<StrawInstrumentRendererProps> = ({ onGam
           }}>
             {/* Scale pattern SVG visualization */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg width={isMobile ? 320 : 440} height={200} viewBox={`0 0 ${isMobile ? 320 : 440} 200`} style={{ borderRadius: '8px' }}>
+              <svg width={isMobile ? 320 : 440} height={200} viewBox={`0 0 ${isMobile ? 320 : 440} 200`} style={{ borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="scaleLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.warning} />

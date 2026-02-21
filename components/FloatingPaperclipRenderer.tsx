@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // FLOATING PAPERCLIP RENDERER - SURFACE TENSION PHYSICS
 // Premium 10-phase educational game teaching surface tension support
@@ -489,15 +491,8 @@ export default function FloatingPaperclipRenderer({
 
   const phase = (phaseProp || gamePhase || internalPhase) as Phase;
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -701,7 +696,7 @@ export default function FloatingPaperclipRenderer({
           cursor: isFirst ? 'not-allowed' : 'pointer',
           opacity: isFirst ? 0.4 : 1,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -734,7 +729,7 @@ export default function FloatingPaperclipRenderer({
           cursor: canGoNext ? 'pointer' : 'not-allowed',
           opacity: canGoNext ? 1 : 0.4,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Next →
@@ -841,7 +836,7 @@ export default function FloatingPaperclipRenderer({
     gamma: number,
     weight: number
   ) => (
-    <svg viewBox="0 0 400 280" className="w-full h-64">
+    <svg viewBox="0 0 400 280" className="w-full h-64" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Floating Paperclip visualization">
       <PremiumSVGDefs />
 
       {/* Container */}
@@ -992,7 +987,7 @@ export default function FloatingPaperclipRenderer({
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
 
         <div className="relative">
-          <svg viewBox="0 0 400 250" className="w-full h-56 mb-4">
+          <svg viewBox="0 0 400 250" className="w-full h-56 mb-4" preserveAspectRatio="xMidYMid meet">
             <PremiumSVGDefs />
 
             {/* Premium container */}
@@ -1077,7 +1072,7 @@ export default function FloatingPaperclipRenderer({
 
       {/* Static visualization */}
       <div className="mb-6">
-        <svg width="300" height="200" viewBox="0 0 300 200">
+        <svg width="300" height="200" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
           <PremiumSVGDefs />
           {/* Water container */}
           <rect x="50" y="100" width="200" height="80" fill="url(#clipWaterDepth)" stroke="url(#clipContainerRim)" strokeWidth="3" rx="4" />
@@ -1374,7 +1369,7 @@ export default function FloatingPaperclipRenderer({
           The paperclip floats because water molecules create hydrogen bonds that form an invisible "skin" on the surface. When the paperclip is gently placed, this membrane deforms and creates an upward force along the contact perimeter. This force is strong enough to balance the weight because the paperclip distributes its weight across a large perimeter relative to its mass.
         </p>
 
-        <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
+        <svg viewBox="0 0 300 140" className="w-full h-32 mb-4" preserveAspectRatio="xMidYMid meet">
           <PremiumSVGDefs />
 
           <rect x="20" y="70" width="260" height="60" fill="url(#clipWaterDepth)" opacity="0.5" rx="4" />
@@ -1431,7 +1426,7 @@ export default function FloatingPaperclipRenderer({
 
       {/* Static visualization showing floating paperclip with soap droplet */}
       <div className="mb-6">
-        <svg width="320" height="200" viewBox="0 0 320 200">
+        <svg width="320" height="200" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
           <PremiumSVGDefs />
           {/* Water container */}
           <rect x="60" y="80" width="200" height="100" fill="url(#clipWaterDepth)" stroke="url(#clipContainerRim)" strokeWidth="3" rx="4" />
@@ -1526,7 +1521,7 @@ export default function FloatingPaperclipRenderer({
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Visualization */}
         <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full">
-          <svg viewBox="0 0 400 280" className="w-full h-60">
+          <svg viewBox="0 0 400 280" className="w-full h-60" preserveAspectRatio="xMidYMid meet">
             <PremiumSVGDefs />
 
             <defs>
@@ -2163,7 +2158,7 @@ export default function FloatingPaperclipRenderer({
       flexDirection: 'column',
       overflow: 'hidden',
       position: 'relative',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      fontFamily: theme.fontFamily,
       lineHeight: '1.6',
     }}>
       {/* Progress bar */}

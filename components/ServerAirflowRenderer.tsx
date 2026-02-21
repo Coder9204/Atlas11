@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Server Airflow Management - Complete 10-Phase Game
 // Teaching hot aisle/cold aisle containment in data centers
@@ -261,9 +263,8 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [fanSpeed, setFanSpeed] = useState(70); // percent
   const [serverLoad, setServerLoad] = useState(80); // percent — start high so slider change to 60 is visible
   const [blankingPanels, setBlankingPanels] = useState(true);
@@ -285,14 +286,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -413,7 +407,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
     const flowOffset = (animationFrame * 2) % 40;
 
     return (
-      <svg width={width} height={height} viewBox="0 0 500 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox="0 0 500 350" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Server Airflow visualization">
         <defs>
           {/* Cold air gradient */}
           <linearGradient id="coldAirGrad" x1="0%" y1="100%" x2="0%" y2="0%">
@@ -909,7 +903,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               {/* Background */}
               <rect width="400" height="180" fill={colors.bgCard} rx="8" />
 
@@ -1421,7 +1415,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEve
 
           {/* Static graphic showing gap in rack - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg width="300" height="200" viewBox="0 0 300 200" style={{ maxWidth: '100%' }}>
+            <svg width="300" height="200" viewBox="0 0 300 200" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <rect width="300" height="200" fill={colors.bgCard} />
               {/* Title */}
               <text x="150" y="20" fill={colors.warning} fontSize="12" textAnchor="middle" fontWeight="600">Missing Blanking Panels: Hot Air Shortcuts</text>

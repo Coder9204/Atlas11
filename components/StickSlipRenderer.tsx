@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 111: STICK-SLIP EARTHQUAKES
 // The sudden release of stored elastic energy when friction breaks
@@ -169,9 +171,8 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testQuestion, setTestQuestion] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Phase management
+  const { isMobile } = useViewport();
+// Phase management
   const phase = gamePhase || phaseProp || internalPhase;
   const validPhases = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
   const phaseLabels: Record<string, string> = {
@@ -193,16 +194,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     setInternalPhase(nextPhase);
     onPhaseComplete?.();
   };
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -374,7 +366,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
           viewBox="0 0 500 420"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', borderRadius: '12px' }}
-        >
+         role="img" aria-label="Stick Slip visualization">
           <defs>
             <linearGradient id="stslLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
@@ -826,7 +818,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
     background: 'linear-gradient(135deg, #0f172a, #1e293b)',
     color: colors.textPrimary,
   };
@@ -1666,6 +1658,7 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
                     setShowExplanation(false);
                   } else if (showExplanation && testQuestion === testQuestions.length - 1) {
                     setTestSubmitted(true);
+                    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                   }
                 }}
                 style={{

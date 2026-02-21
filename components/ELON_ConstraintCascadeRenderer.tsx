@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // CONSTRAINT CASCADE - Complete 10-Phase Game (ELON Game #1 of 36)
 // How changing one constraint ripples through an entire system design
@@ -302,9 +304,8 @@ const ELON_ConstraintCascadeRenderer: React.FC<ConstraintCascadeRendererProps> =
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [constraintTightness, setConstraintTightness] = useState(30);
   const [selectedConstraint, setSelectedConstraint] = useState(0);
 
@@ -325,14 +326,7 @@ const ELON_ConstraintCascadeRenderer: React.FC<ConstraintCascadeRendererProps> =
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate cascade depth based on tightness
+// Calculate cascade depth based on tightness
   const calculateCascadeDepth = (tightness: number): number => {
     return Math.floor(1 + (tightness / 100) * 3);
   };
@@ -586,7 +580,7 @@ const ELON_ConstraintCascadeRenderer: React.FC<ConstraintCascadeRendererProps> =
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Constraint Cascade visualization">
         <defs>
           <linearGradient id="cascadeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={ct.color} />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // CRITICAL MINERALS - Complete 10-Phase Game
 // Supply chain concentration risk — geographic concentration creates
@@ -281,9 +283,8 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [demandGrowthRate, setDemandGrowthRate] = useState(10);
   const [selectedMineral, setSelectedMineral] = useState(0);
   const [exportBanActive, setExportBanActive] = useState(false);
@@ -302,14 +303,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate HHI (Herfindahl-Hirschman Index) for concentration measurement
+// Calculate HHI (Herfindahl-Hirschman Index) for concentration measurement
   const calculateHHI = (shares: Record<string, number>): number => {
     return Object.values(shares).reduce((sum, share) => sum + share * share, 0);
   };
@@ -557,7 +551,7 @@ const ELON_CriticalMineralsRenderer: React.FC<ELON_CriticalMineralsRendererProps
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Critical Minerals visualization">
         <defs>
           <linearGradient id="flowGradMine" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" />

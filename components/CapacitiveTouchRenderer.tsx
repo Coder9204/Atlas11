@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ===============================================================================
 // TYPES & INTERFACES
 // ===============================================================================
@@ -281,15 +283,8 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   };
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System with accent colors for visual hierarchy
+  const { isMobile } = useViewport();
+// Premium Design System with accent colors for visual hierarchy
   const colors = {
     primary: '#06b6d4',       // cyan-500
     primaryDark: '#0891b2',   // cyan-600
@@ -482,6 +477,8 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
           viewBox="0 0 400 280"
           className="w-full h-56 cursor-pointer touch-none"
           onPointerDown={handleSvgTouch}
+          preserveAspectRatio="xMidYMid meet"
+          role="img" aria-label="Capacitive Touch visualization"
           onPointerMove={(e) => e.buttons && handleSvgTouch(e)}
           onPointerUp={handleTouchEnd}
           onPointerLeave={handleTouchEnd}
@@ -826,7 +823,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
 
   const renderCapacitorDiagram = () => (
     <div style={{ position: 'relative' }}>
-      <svg viewBox="0 0 300 150" className="w-full h-32">
+      <svg viewBox="0 0 300 150" className="w-full h-32" preserveAspectRatio="xMidYMid meet">
         <defs>
           {/* Background gradient */}
           <linearGradient id="capDiagramBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1227,7 +1224,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
             </p>
 
             {/* Decorative capacitive touch diagram SVG */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '480px', marginBottom: '24px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '480px', marginBottom: '24px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="hookScreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#1e3a5f" />
@@ -1336,7 +1333,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // Static prediction diagram for predict phases
   const renderPredictDiagram = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
-      <svg viewBox="0 0 400 180" className="w-full h-44 mb-2">
+      <svg viewBox="0 0 400 180" className="w-full h-44 mb-2" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predictScreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e3a5f" />
@@ -1450,7 +1447,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
 
     return (
       <div style={{ position: 'relative' }}>
-        <svg viewBox="0 0 400 200" className="w-full h-48">
+        <svg viewBox="0 0 400 200" className="w-full h-48" preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="capVizBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -2162,7 +2159,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
           className="w-full h-64 cursor-pointer touch-none"
           onClick={handleGridClick}
           style={{ zIndex: 10 }}
-        >
+         preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="capMultiBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -2508,7 +2505,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // Static diagram for twist predict phase
   const renderTwistPredictDiagram = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
-      <svg viewBox="0 0 400 170" className="w-full h-40 mb-2">
+      <svg viewBox="0 0 400 170" className="w-full h-40 mb-2" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistScreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e3a5f" />
@@ -2781,7 +2778,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   // Twist review diagram
   const renderTwistReviewDiagram = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
-      <svg viewBox="0 0 400 150" className="w-full h-36 mb-2">
+      <svg viewBox="0 0 400 150" className="w-full h-36 mb-2" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistRevScreen" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#1e3a5f" />

@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // TYPES & INTERFACES
 // =============================================================================
@@ -286,9 +288,8 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [faucetFlow, setFaucetFlow] = useState(0);
 
@@ -316,16 +317,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
   // Navigation ref
   const isNavigating = useRef(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate Reynolds number
+// Calculate Reynolds number
   const calculateReynolds = (velocity: number, diameter: number, viscosity: number): number => {
     const density = 1000; // water kg/m3
     // Re = rho*v*D/mu (diameter in cm -> m, viscosity relative to water)
@@ -658,7 +650,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
               </p>
 
               {/* Faucet visualization */}
-              <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '20px auto', display: 'block' }}>
+              <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '20px auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Laminar Turbulent visualization">
                 <defs>
                   <linearGradient id="hookFaucetMetal" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#9ca3af" />
@@ -857,7 +849,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" height="100" viewBox="0 0 400 100">
+            <svg width="100%" height="100" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet">
               {/* Water pipe */}
               <g transform="translate(100, 40)">
                 <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
@@ -983,7 +975,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
           }}>
             {/* Pipe visualization with dye */}
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <svg width="100%" height="240" viewBox="0 0 450 240">
+              <svg width="100%" height="240" viewBox="0 0 450 240" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="pipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#6b7280" />
@@ -1406,7 +1398,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" height="120" viewBox="0 0 400 120">
+            <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet">
               {/* Smooth ball */}
               <g transform="translate(100, 60)">
                 <circle r="35" fill="#fff" />
@@ -1521,7 +1513,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onG
 
             {/* Visualization */}
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-              <svg width="100%" height="200" viewBox="0 0 500 200">
+              <svg width="100%" height="200" viewBox="0 0 500 200" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <radialGradient id="sphereGrad" cx="35%" cy="35%" r="65%">
                     <stop offset="0%" stopColor="#e5e7eb" />

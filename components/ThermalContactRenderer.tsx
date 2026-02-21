@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Thermal Contact Resistance - Complete 10-Phase Game
 // Why microscopic air gaps are the enemy of heat transfer
@@ -261,9 +263,8 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Main experiment
+  const { isMobile } = useViewport();
+// Simulation state - Main experiment
   const [interfaceType, setInterfaceType] = useState<'air_gap' | 'bare_contact' | 'thermal_paste'>('bare_contact');
   const [hotBlockTemp, setHotBlockTemp] = useState(80);
   const [coldBlockTemp, setColdBlockTemp] = useState(20);
@@ -294,14 +295,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
   const [contactPressure, setContactPressure] = useState(50); // 0-100 range
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -439,7 +433,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     const barWidth = Math.round(Math.min(460 * conductivity, 460));
 
     return (
-      <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+      <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Thermal Contact visualization">
         <defs>
           <linearGradient id="htHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fef3c7" />
@@ -587,7 +581,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="cpuGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -849,7 +843,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
         </p>
 
         {/* Hook concept SVG */}
-        <svg width="300" height="80" viewBox="0 0 300 80" style={{ marginBottom: '24px', display: 'block' }}>
+        <svg width="300" height="80" viewBox="0 0 300 80" style={{ marginBottom: '24px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <rect x="10" y="20" width="110" height="40" rx="6" fill="#ef4444" stroke="#dc2626" strokeWidth="2" />
           <text x="65" y="45" textAnchor="middle" fill="white" fontSize="14" fontWeight="700">HOT 80°C</text>
           <rect x="100" y="28" width="100" height="24" rx="3" fill="#64748b" stroke="#94a3b8" strokeWidth="1" />
@@ -894,7 +888,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
     const height = isMobile ? 200 : 240;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="hotGradPredict" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fef3c7" />
@@ -1394,7 +1388,7 @@ const ThermalContactRenderer: React.FC<ThermalContactRendererProps> = ({ onGameE
           </h2>
 
           {/* Static SVG comparing CPU with/without paste */}
-          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }}>
+          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="cpuGlow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="3" result="blur" />

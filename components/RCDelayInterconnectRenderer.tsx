@@ -3,6 +3,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '💻',
@@ -84,6 +87,7 @@ interface RCDelayInterconnectRendererProps {
   gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -123,6 +127,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): RCPhase => {
@@ -133,8 +138,8 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   };
 
   const [phase, setPhase] = useState<RCPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
   // Sync with external gamePhase if provided (for resume)
@@ -145,14 +150,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   }, [gamePhase]);
 
   // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -409,6 +407,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -448,7 +447,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="R C Delay Interconnect visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="rcdiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

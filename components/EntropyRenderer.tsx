@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
 // ─────────────────────────────────────────────────────────────────────────────
 // Entropy & The Second Law of Thermodynamics - Complete 10-Phase Game
 // ─────────────────────────────────────────────────────────────────────────────
@@ -468,7 +469,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     const areaD = pathD + ` L ${points[points.length - 1].x} ${pad.top + plotH} L ${points[0].x} ${pad.top + plotH} Z`;
 
     return (
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Entropy visualization">
         <defs>
           <linearGradient id="entropyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.cold} />
@@ -573,7 +574,7 @@ const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhas
     const curY = pad.top + plotH - (eff / 100) * plotH;
 
     return (
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="effGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.success} />

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for internal state management
 type DTPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -11,6 +13,7 @@ interface DepositionTypesRendererProps {
   gamePhase?: DTPhase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -51,17 +54,11 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -361,6 +358,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -494,7 +492,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Deposition Types visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="depLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1651,7 +1649,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         {/* Review diagram */}
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
+        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="reviewPvdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" />
@@ -1886,7 +1884,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
         </div>
 
         {/* Twist review diagram showing void formation */}
-        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto 16px' }}>
+        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto 16px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistReviewGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" />

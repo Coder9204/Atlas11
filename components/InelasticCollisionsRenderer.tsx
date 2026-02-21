@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // INELASTIC COLLISIONS RENDERER - Complete 10-Phase Learning Structure
 // Game 32: Car Crashes & Safety Physics - Why Cars Are Designed to Crumple
@@ -262,9 +264,8 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Play phase
+  const { isMobile } = useViewport();
+// Simulation state - Play phase
   const [impactSpeed, setImpactSpeed] = useState(30); // mph
   const [hasCrumpleZone, setHasCrumpleZone] = useState(true);
   const [carPosition, setCarPosition] = useState(0);
@@ -293,14 +294,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Crash animation for play phase
+// Crash animation for play phase
   useEffect(() => {
     if (!isAnimating) return;
     const interval = setInterval(() => {
@@ -649,7 +643,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const carWidth = 80 - crumpleAmount;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Inelastic Collisions visualization">
         <defs>
           <linearGradient id="carBodySafe" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -815,7 +809,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
     const combined = twistProgress >= 100;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Perfectly Inelastic Collision
@@ -1012,7 +1006,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 320 : 400} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 320 : 400} ${isMobile ? 160 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+            <svg width={isMobile ? 320 : 400} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 320 : 400} ${isMobile ? 160 : 180}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
               {/* Crumpling car */}
               <rect x="30" y="60" width="70" height="40" rx="5" fill="#3b82f6" />
               <rect x="45" y="45" width="35" height="25" rx="3" fill="#1e293b" />
@@ -1486,7 +1480,7 @@ const InelasticCollisionsRenderer: React.FC<InelasticCollisionsRendererProps> = 
 
           {/* Static SVG diagram of perfectly inelastic collision */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 320 : 460} height="180" viewBox={`0 0 ${isMobile ? 320 : 460} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <text x={isMobile ? 160 : 230} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Perfectly Inelastic Collision</text>
 
               {/* Before collision */}

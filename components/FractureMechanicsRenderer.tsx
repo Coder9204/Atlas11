@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Fracture Mechanics - Complete 10-Phase Game
 // Why sharp corners fail: stress concentration and crack propagation
@@ -270,9 +272,8 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - main play
+  const { isMobile } = useViewport();
+// Simulation state - main play
   const [notchType, setNotchType] = useState<'none' | 'round' | 'vsharp' | 'crack'>('none');
   const [appliedStress, setAppliedStress] = useState(30);
   const [isFractured, setIsFractured] = useState(false);
@@ -297,14 +298,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -543,7 +537,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const stretch = appliedStress / 15;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fracture Mechanics visualization">
         <defs>
           <linearGradient id="steelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -734,7 +728,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const crackTipX = 80 + crackLength;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="plateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748b" />
@@ -868,7 +862,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
     const width = 400;
     const height = 200;
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="glowTP">
             <feGaussianBlur stdDeviation="2" result="blur" />
@@ -1014,7 +1008,7 @@ const FractureMechanicsRenderer: React.FC<FractureMechanicsRendererProps> = ({ o
           marginBottom: '24px',
           textAlign: 'center',
         }}>
-          <svg width="320" height="160" viewBox="0 0 320 160" style={{ maxWidth: '100%' }}>
+          <svg width="320" height="160" viewBox="0 0 320 160" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             {/* Circular hole plate */}
             <rect x="20" y="20" width="80" height="120" rx="4" fill="#6b7280" stroke="#9ca3af" strokeWidth="2" />
             <circle cx="60" cy="80" r="14" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />

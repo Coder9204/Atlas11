@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // LASER SPECKLE RENDERER - Coherence Makes "Grainy Light"
 // =============================================================================
@@ -152,8 +154,8 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { isMobile } = useViewport();
+const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [transferUnderstood, setTransferUnderstood] = useState(false);
 
   // Simulation states
@@ -166,15 +168,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   const [animationFrame, setAnimationFrame] = useState(0);
 
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Update currentPhase when prop changes
+// Update currentPhase when prop changes
   useEffect(() => {
     const newPhase = (gamePhase || phase || 'hook') as typeof PHASES[number];
     const validNewPhase = PHASES.includes(newPhase) ? newPhase : 'hook';
@@ -569,7 +563,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
     const effectiveCoherence = useLaser ? coherenceLength / 100 : 0.1;
 
     return (
-      <svg viewBox="0 0 700 400" style={{ width: '100%', maxWidth: '700px', minWidth: '300px', height: 'auto', minHeight: '200px', borderRadius: '16px' }}>
+      <svg viewBox="0 0 700 400" style={{ width: '100%', maxWidth: '700px', minWidth: '300px', height: 'auto', minHeight: '200px', borderRadius: '16px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Laser Speckle visualization">
         <defs>
           {/* ========== PREMIUM BACKGROUND GRADIENTS ========== */}
           {/* Lab background with deep space feel */}
@@ -1230,7 +1224,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       {/* Visual card */}
       <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8))', borderRadius: '24px', padding: '32px', maxWidth: '500px', width: '100%', border: '1px solid rgba(71, 85, 105, 0.5)', marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <svg viewBox="0 0 200 120" style={{ width: '200px' }}>
+          <svg viewBox="0 0 200 120" style={{ width: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Laser beam */}
             <rect x="10" y="55" width="40" height="10" fill="#22c55e" />
 
@@ -1305,7 +1299,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG visualization for predict phase */}
       <div style={{ marginBottom: '24px' }}>
-        <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+        <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '300px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="predictLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
@@ -1572,7 +1566,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG diagram for review */}
       <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <svg viewBox="0 0 400 180" style={{ width: '100%', height: 'auto' }}>
+        <svg viewBox="0 0 400 180" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="reviewBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
@@ -1691,7 +1685,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG visualization for twist predict */}
       <div style={{ marginBottom: '24px' }}>
-        <svg viewBox="0 0 350 150" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
+        <svg viewBox="0 0 350 150" style={{ width: '100%', maxWidth: '350px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
@@ -1909,7 +1903,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
       {/* SVG diagram */}
       <div style={{ marginBottom: '24px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <svg viewBox="0 0 400 160" style={{ width: '100%', height: 'auto' }}>
+        <svg viewBox="0 0 400 160" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
           <rect width="400" height="160" fill="#0f172a" rx="8" />
           {/* Left: Laser with speckle */}
           <g transform="translate(10, 20)">

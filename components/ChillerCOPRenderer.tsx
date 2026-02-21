@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Chiller COP (Coefficient of Performance) - Complete 10-Phase Game
 // Understanding how chillers work and what affects their efficiency
@@ -261,9 +263,8 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [condenserTemp, setCondenserTemp] = useState(38); // °C
   const [evaporatorTemp, setEvaporatorTemp] = useState(7); // °C
   const [loadPercentage, setLoadPercentage] = useState(80); // %
@@ -283,14 +284,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -410,7 +404,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     const curY = toY(currentCOP);
 
     return (
-      <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }}>
+      <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ maxWidth: '100%', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chiller C O P visualization">
         <defs>
           <linearGradient id="coldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
@@ -623,7 +617,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
     const staticCOP = 5.5;
 
     return (
-      <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="coldGradientStatic" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
@@ -1205,7 +1199,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
             justifyContent: 'center',
             marginBottom: '24px',
           }}>
-            <svg width="320" height="180" viewBox="0 0 400 300" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="320" height="180" viewBox="0 0 400 300" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistPredictGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
@@ -1364,7 +1358,7 @@ const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, ga
                 const curLoadY = yScale(currentCOP);
 
                 return (
-                  <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ margin: '0 auto', display: 'block' }}>
+                  <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                     {/* Interactive point - first in DOM */}
                     <circle cx={curLoadX} cy={curLoadY} r={8} filter="url(#glowTwist)" stroke="#fff" strokeWidth={2} fill={colors.warning} />
 

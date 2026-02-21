@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // ELECTRIC FIELD RENDERER - SPEC-COMPLIANT IMPLEMENTATION
 // The fundamental concept of force per unit charge
@@ -248,9 +250,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation states
+  const { isMobile } = useViewport();
+// Simulation states
   const [sourceCharges, setSourceCharges] = useState<SourceCharge[]>([
     { id: 1, x: 250, y: 200, q: 5 }
   ]);
@@ -265,16 +266,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const lastClickRef = useRef(0);
   const hasEmittedStart = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -819,7 +811,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       </p>
 
       <div style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '24px', maxWidth: '600px', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
-        <svg viewBox="0 0 500 300" className="w-full max-w-md mx-auto mb-6">
+        <svg viewBox="0 0 500 300" className="w-full max-w-md mx-auto mb-6" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electric Field visualization">
           <defs>
             {/* Premium gradient for positive charge - 3D effect */}
             <radialGradient id="elecHookPosGrad" cx="35%" cy="35%" r="60%">
@@ -970,7 +962,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           A positive test charge is placed near a large negative source charge.
           The test charge experiences a force pulling it toward the source.
         </p>
-        <svg viewBox="0 0 400 150" className="w-full max-w-sm mx-auto my-4">
+        <svg viewBox="0 0 400 150" className="w-full max-w-sm mx-auto my-4" preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium gradient for negative charge - 3D effect */}
             <radialGradient id="elecPredictNegGrad" cx="35%" cy="35%" r="60%">
@@ -1130,7 +1122,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             onPointerMove={handleMouseMove}
             onPointerUp={handleMouseUp}
             onPointerLeave={handleMouseUp}
-          >
+           preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Premium positive charge gradient - 3D sphere effect */}
               <radialGradient id="elecPlayPosGrad" cx="35%" cy="35%" r="60%">
@@ -1586,7 +1578,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto mb-4">
+        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto mb-4" preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium positive charge gradient */}
             <radialGradient id="elecTwistPredPosGrad" cx="35%" cy="35%" r="60%">
@@ -1758,7 +1750,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       }}>
       <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        <svg viewBox="0 0 500 300" className="w-full">
+        <svg viewBox="0 0 500 300" className="w-full" preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium positive charge gradient */}
             <radialGradient id="elecTwistPlayPosGrad" cx="35%" cy="35%" r="60%">
@@ -2307,7 +2299,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   );
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: theme.fontFamily, minHeight: '100dvh' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Electric Fields</span>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ═══════════════════════════════════════════════════════════════════════════
 // Centripetal Force - Complete 10-Phase Learning Game
 // Understanding the force that keeps objects moving in circles
@@ -261,9 +263,8 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [mass, setMass] = useState(1.0); // kg
   const [speed, setSpeed] = useState(5); // m/s
   const [radius, setRadius] = useState(70); // m (scaled for display)
@@ -291,14 +292,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Circular motion animation
+// Circular motion animation
   useEffect(() => {
     if (!isAnimating || phase === 'twist_play' && stringBroken) return;
     const interval = setInterval(() => {
@@ -440,7 +434,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     const trailAngles = [1, 2, 3, 4, 5].map(i => carAngle - i * 10);
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Centripetal Force visualization">
         <defs>
           <radialGradient id="trackGradient" cx="50%" cy="50%" r="60%">
             <stop offset="0%" stopColor="#1e293b" />
@@ -598,7 +592,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     const ballY = centerY + Math.sin(carAngle * Math.PI / 180) * simRadius;
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="ballGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93C5FD" />
@@ -1179,7 +1173,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             display: 'flex',
             justifyContent: 'center',
           }}>
-            <svg width={isMobile ? 260 : 300} height={isMobile ? 260 : 300} viewBox="0 0 300 300" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 260 : 300} height={isMobile ? 260 : 300} viewBox="0 0 300 300" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="ballGradPredict" cx="35%" cy="35%" r="65%">
                   <stop offset="0%" stopColor="#93C5FD" />

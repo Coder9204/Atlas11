@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ChipletArchitectureRendererProps {
   gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -25,22 +29,20 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 const colors = {
-  textPrimary: '#ffffff',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#22c55e',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  chiplet: '#8b5cf6',
+  interconnect: '#06b6d4',
+  silicon: '#f59e0b',
+  package: '#22c55e',
 };
 
 const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -51,17 +53,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -469,6 +462,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -576,7 +570,7 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     const rows = Math.ceil(chipletCount / cols);
 
     return (
-      <svg width="100%" height="450" viewBox="0 0 500 450" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="450" viewBox="0 0 500 450" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chiplet Architecture visualization">
         <defs>
           <linearGradient id="monolithicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6366f1" />
@@ -606,6 +600,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="chipGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feFlood floodColor="#8b5cf6" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" /><stop offset="100%" stopColor="#06b6d4" stopOpacity="0.4" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
         </defs>
 
         {/* Background */}

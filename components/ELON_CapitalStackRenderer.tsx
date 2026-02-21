@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #34: CAPITAL STACK - Complete 10-Phase Game
 // Project finance capital structure — debt, equity, tax credits, revenue contracts
@@ -261,9 +263,8 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [debtToEquity, setDebtToEquity] = useState(60);
   const [animFrame, setAnimFrame] = useState(0);
 
@@ -285,14 +286,7 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -571,7 +565,7 @@ const ELON_CapitalStackRenderer: React.FC<ELON_CapitalStackRendererProps> = ({ o
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Capital Stack visualization">
         <defs>
           <linearGradient id="stackEquityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.equity} />

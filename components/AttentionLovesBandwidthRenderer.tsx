@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for internal state management
 type BandwidthPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -8,6 +10,7 @@ interface AttentionLovesBandwidthRendererProps {
   gamePhase?: BandwidthPhase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -206,6 +209,7 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): BandwidthPhase => {
@@ -317,16 +321,8 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
       attentionFlopsPerToken,
     };
   }, [contextLength, modelDim, numLayers, kvBits, hbmBandwidth, computeFlops]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+  const { isMobile } = useViewport();
+const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;
     setTestAnswers(newAnswers);
@@ -341,6 +337,7 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -506,7 +503,7 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
     const pointCx = roofX + 10 + aiFrac * (roofW - 20);
 
     return (
-      <svg width="100%" height={svgH} viewBox={`0 0 500 ${svgH}`} style={{ maxWidth: '600px' }}>
+      <svg width="100%" height={svgH} viewBox={`0 0 500 ${svgH}`} style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Attention Loves Bandwidth visualization">
         <defs>
           <linearGradient id="memGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6" />

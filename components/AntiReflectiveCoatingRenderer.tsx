@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for this game
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -8,6 +10,7 @@ interface AntiReflectiveCoatingRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -46,6 +49,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -56,17 +60,8 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -371,6 +366,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -535,7 +531,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '750px' }}
-        >
+         role="img" aria-label="Anti Reflective Coating visualization">
           <defs>
             {/* === PREMIUM BACKGROUND GRADIENTS === */}
             <linearGradient id="arcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1283,7 +1279,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
 
           {/* Visual diagram for review */}
           <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-            <svg width="300" height="200" viewBox="0 0 300 200">
+            <svg width="300" height="200" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewCoatingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#60a5fa" />
@@ -1525,7 +1521,7 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
 
           {/* Visual diagram for twist review */}
           <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-            <svg width="300" height="180" viewBox="0 0 300 180">
+            <svg width="300" height="180" viewBox="0 0 300 180" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistSpectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#7c3aed" />

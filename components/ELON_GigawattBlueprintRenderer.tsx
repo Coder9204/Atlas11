@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #36 CAPSTONE: GIGAWATT BLUEPRINT - Complete 10-Phase Game
 // Integrated GW-scale clean energy + compute + manufacturing campus
@@ -259,8 +261,8 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const [animFrame, setAnimFrame] = useState(0);
   const [totalBudget, setTotalBudget] = useState(10); // $B
   const [tropicalLocation, setTropicalLocation] = useState(false); // twist
@@ -274,14 +276,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
   const [selectedApp, setSelectedApp] = useState(0);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -491,7 +486,7 @@ const ELON_GigawattBlueprintRenderer: React.FC<ELON_GigawattBlueprintRendererPro
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Gigawatt Blueprint visualization">
         <defs>
           <linearGradient id="gwSolarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={colors.solar} />

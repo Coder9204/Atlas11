@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Solar Panel Temperature Coefficient - Complete 10-Phase Self-Managing Game
 // ─────────────────────────────────────────────────────────────────────────────
@@ -257,17 +259,8 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [checkedQuestions, setCheckedQuestions] = useState<Set<number>>(new Set());
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase navigation
+  const { isMobile } = useViewport();
+// Phase navigation
   const phaseOrder = VALID_PHASES;
 
   const goToPhase = useCallback((p: Phase) => {
@@ -349,6 +342,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
   }, [testAnswers]);
 
   // ─── SVG Visualization ─────────────────────────────────────────────────────
@@ -402,7 +396,7 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '560px' }}
-        >
+         role="img" aria-label="Solar Temp Coefficient visualization">
           <defs>
             <linearGradient id="stcSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c1929" />

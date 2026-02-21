@@ -1,10 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface TexturingVsLithographyRendererProps {
   gamePhase?: string; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -107,6 +111,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Phase navigation
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -170,18 +175,8 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
       goToPhase(phaseOrder[idx - 1]);
     }
   }, [phase, goToPhase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -391,6 +386,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -408,7 +404,7 @@ const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererPro
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="Texturing Vs Lithography visualization">
           <defs>
             <linearGradient id="solarSurface" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e3a8a" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Fan Laws - Complete 10-Phase Game
 // Understanding how fan speed affects airflow, pressure, and power
@@ -272,9 +274,8 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [fanSpeed, setFanSpeed] = useState(50); // 0-100%
   const [baselineSpeed] = useState(100);
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -307,14 +308,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -419,7 +413,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
     const speedColor = speed > 75 ? '#EF4444' : speed > 40 ? '#F59E0B' : '#10B981';
 
     return (
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fan Laws visualization">
         <defs>
           <linearGradient id="fanChartBg" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#1a1a24" />
@@ -553,7 +547,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
   // Render function: Predict phase SVG
   const renderPredictSVG = () => {
     return (
-      <svg width="350" height="200" viewBox="0 0 350 200">
+      <svg width="350" height="200" viewBox="0 0 350 200" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predictBg" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#1a1a24" />
@@ -1263,7 +1257,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
               display: 'flex',
               justifyContent: 'center',
             }}>
-              <svg width="350" height="200" viewBox="0 0 350 200">
+              <svg width="350" height="200" viewBox="0 0 350 200" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistPredBg" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#1a1a24" />
@@ -1380,7 +1374,7 @@ const FanLawsRenderer: React.FC<FanLawsRendererProps> = ({ onGameEvent, gamePhas
       const speedColor = fanSpeed > 75 ? '#EF4444' : fanSpeed > 40 ? '#F59E0B' : '#10B981';
 
       return (
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistBg" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#1a1a24" />

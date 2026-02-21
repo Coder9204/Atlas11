@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
@@ -49,6 +51,7 @@ interface CMPPlanarizationRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -75,6 +78,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase management - use gamePhase or phase prop, default to 'hook'
   const [phase, setPhase] = useState<Phase>(() => {
@@ -115,18 +119,8 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       goToPhase(PHASES[idx - 1]);
     }
   }, [phase, goToPhase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -387,6 +381,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -618,7 +613,7 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           data-polish-pressure={polishPressure}
           data-slurry-selectivity={slurrySelectivity}
           style={{ borderRadius: '12px', maxWidth: '550px', background: 'rgba(0,0,0,0.3)' }}
-        >
+         role="img" aria-label="C M P Planarization visualization">
           <defs>
             {/* Premium copper gradient with metallic sheen */}
             <linearGradient id="cmpCopperGrad" x1="0%" y1="0%" x2="100%" y2="100%">

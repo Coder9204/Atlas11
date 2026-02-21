@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface EncapsulationUVAgingRendererProps {
@@ -8,6 +11,7 @@ interface EncapsulationUVAgingRendererProps {
   gamePhase?: string;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -41,16 +45,10 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -296,6 +294,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -331,7 +330,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Encapsulation U V Aging visualization">
           <defs>
             <linearGradient id="encapLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e1b4b" />
@@ -778,7 +777,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
   // ── Phase shell ──
   const outerStyle: React.CSSProperties = {
     minHeight: '100dvh', display: 'flex', flexDirection: 'column',
-    overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+    overflow: 'hidden', background: colors.bgPrimary, fontFamily: theme.fontFamily,
   };
   const scrollStyle: React.CSSProperties = {
     flex: 1, overflowY: 'auto', paddingTop: '60px', paddingBottom: '16px',

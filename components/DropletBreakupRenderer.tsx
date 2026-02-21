@@ -16,6 +16,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -348,18 +350,9 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
   // Transfer phase state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const animationRef = useRef<number>();
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography responsive system
+  const { isMobile } = useViewport();
+const animationRef = useRef<number>();
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',

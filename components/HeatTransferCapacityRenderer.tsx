@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // HEAT TRANSFER CAPACITY RENDERER - THERMAL PHYSICS
 // Complete 10-phase learning structure
@@ -279,9 +281,8 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - heat conduction
+  const { isMobile } = useViewport();
+// Simulation state - heat conduction
   const [selectedMaterial, setSelectedMaterial] = useState<keyof typeof materials>('copper');
   const [heatSourceTemp, setHeatSourceTemp] = useState(100);
   const [barTemperatures, setBarTemperatures] = useState<number[]>(Array(20).fill(25));
@@ -306,14 +307,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors - using high contrast colors (brightness >= 180)
+// Premium design colors - using high contrast colors (brightness >= 180)
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -602,7 +596,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     const gridTemps = [25, 50, 75, 100, 150, 200];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Heat Transfer Capacity visualization">
         <defs>
           <linearGradient id="curveGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6" />
@@ -692,7 +686,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     const spacing = (width - 4 * beakerWidth) / 5;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="beakerFlame" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#dc2626" />
@@ -869,7 +863,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
     const height = 200;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Metal spoon */}
         <g transform={`translate(${width * 0.25}, 60)`}>
           <ellipse cx={0} cy={30} rx={35} ry={50} fill="#94a3b8" opacity={0.3} />
@@ -1410,7 +1404,7 @@ const HeatTransferCapacityRenderer: React.FC<HeatTransferCapacityRendererProps> 
 
             {/* Twist predict diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 340 : 500} height={140} viewBox={`0 0 ${isMobile ? 340 : 500} 140`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 340 : 500} height={140} viewBox={`0 0 ${isMobile ? 340 : 500} 140`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 {Object.entries(specificHeats).map(([key, data], idx) => {
                   const bw = 60;
                   const spacing = ((isMobile ? 340 : 500) - 4 * bw) / 5;

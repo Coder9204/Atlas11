@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // ENDOTHERMIC/EXOTHERMIC RENDERER - Game 138
 // Physics: Energy balance in dissolution - bond breaking vs hydration energy
@@ -74,15 +76,8 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
   }, [gamePhase, phaseProp]);
 
   // Responsive
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Sound
+  const { isMobile } = useViewport();
+// Sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
     try {
@@ -301,7 +296,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     const tChange = s.tempChange * amount / 10;
 
     return (
-      <svg viewBox="0 0 400 240" style={{ width: '100%', maxWidth: 560 }}>
+      <svg viewBox="0 0 400 240" style={{ width: '100%', maxWidth: 560 }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Endothermic Exothermic visualization">
         <defs>
           <linearGradient id="endoBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -425,7 +420,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         background: 'rgba(15,23,42,0.98)', borderTop: '1px solid rgba(148,163,184,0.15)',
         boxShadow: '0 -4px 20px rgba(0,0,0,0.5)', padding: '10px 20px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: theme.fontFamily,
       }}>
         <button
           onClick={goBack}
@@ -466,7 +461,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
       style={{
         display: 'flex', flexDirection: 'column', minHeight: '100dvh',
         background: design.bg, overflow: 'hidden',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: theme.fontFamily,
         color: design.textPrimary,
       }}
     >
@@ -584,7 +579,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.textPrimary, marginBottom: '24px' }}>Make Your Prediction</h2>
 
-          <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: 500, marginBottom: '24px' }}>
+          <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: 500, marginBottom: '24px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" /><stop offset="100%" stopColor="#1e293b" />
@@ -805,7 +800,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             </div>
           )}
 
-          <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', marginBottom: '24px' }}>
+          <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', marginBottom: '24px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="revBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" /><stop offset="100%" stopColor="#1e293b" />
@@ -860,7 +855,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800, color: design.warning, marginBottom: '24px' }}>New Variable: The Ranking Twist</h2>
 
-          <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 500, marginBottom: '24px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 500, marginBottom: '24px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twPredBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" /><stop offset="100%" stopColor="#1e293b" />
@@ -1355,6 +1350,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                     const sc = testAnswers.reduce((acc, ans, i) => acc + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
                     setMasteryScore(sc);
                     setTestSubmitted(true);
+                    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                   }}
                   style={{
                     flex: 1, padding: '14px', borderRadius: '12px', border: 'none',

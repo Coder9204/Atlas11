@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🧹',
@@ -188,8 +191,8 @@ export default function SoapBoatRenderer({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeApp, setActiveApp] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
+  const { isMobile } = useViewport();
+const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Simulation state
@@ -211,15 +214,7 @@ export default function SoapBoatRenderer({
   const [twistBoatPosition, setTwistBoatPosition] = useState(50);
   const [twistSoapAdded, setTwistSoapAdded] = useState(false);
   const [twistAnimating, setTwistAnimating] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
   // PREMIUM DESIGN SYSTEM (matches WaveParticleDuality template)
   // ─────────────────────────────────────────────────────────────────────────
   const colors = {
@@ -410,6 +405,7 @@ export default function SoapBoatRenderer({
 
   const submitTest = () => {
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
     const score = testQuestions.reduce((acc, q, i) => {
       if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
         return acc + 1;
@@ -590,7 +586,7 @@ export default function SoapBoatRenderer({
               Can you power a boat with nothing but a tiny drop of soap?
             </p>
 
-            <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
+            <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Soap Boat visualization">
               <defs>
                 {/* Premium water gradient with depth */}
                 <linearGradient id="soapHookWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -785,7 +781,7 @@ export default function SoapBoatRenderer({
               behind the boat, what happens?
             </p>
 
-            <svg viewBox="0 0 400 140" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
+            <svg viewBox="0 0 400 140" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Water gradient */}
                 <linearGradient id="soapPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1097,7 +1093,7 @@ export default function SoapBoatRenderer({
               alignItems: isMobile ? 'center' : 'flex-start',
             }}>
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
-            <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
+            <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Container gradient (tank walls) */}
                 <linearGradient id="soapPlayContainerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1563,7 +1559,7 @@ export default function SoapBoatRenderer({
             }}>
               <h3 style={{ color: '#1d4ed8', marginBottom: '0.75rem' }}>What is Surface Tension?</h3>
 
-              <svg viewBox="0 0 300 100" style={{ width: '100%', marginBottom: '1rem' }}>
+              <svg viewBox="0 0 300 100" style={{ width: '100%', marginBottom: '1rem' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   {/* Bulk molecule gradient */}
                   <radialGradient id="soapReviewBulkMol" cx="30%" cy="30%" r="70%">
@@ -1735,7 +1731,7 @@ export default function SoapBoatRenderer({
               Or on <strong>cooking oil</strong>?
             </p>
 
-            <svg viewBox="0 0 400 90" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
+            <svg viewBox="0 0 400 90" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Clean water gradient */}
                 <linearGradient id="soapTwistWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1910,7 +1906,7 @@ export default function SoapBoatRenderer({
               alignItems: isMobile ? 'center' : 'flex-start',
             }}>
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
-            <svg viewBox="0 0 400 170" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
+            <svg viewBox="0 0 400 170" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Container gradient */}
                 <linearGradient id="soapTwistPlayContainer" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -2224,7 +2220,7 @@ export default function SoapBoatRenderer({
             </div>
 
             {/* Visual diagram showing surface tension gradient */}
-            <svg viewBox="0 0 500 200" style={{ width: '100%', maxWidth: 500, marginBottom: '1.5rem' }}>
+            <svg viewBox="0 0 500 200" style={{ width: '100%', maxWidth: 500, marginBottom: '1.5rem' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="tensionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
@@ -2541,7 +2537,7 @@ export default function SoapBoatRenderer({
             </div>
 
             {/* Confetti */}
-            <svg viewBox="0 0 300 100" style={{ width: '100%', maxWidth: 300 }}>
+            <svg viewBox="0 0 300 100" style={{ width: '100%', maxWidth: 300 }} preserveAspectRatio="xMidYMid meet">
               {[...Array(20)].map((_, i) => (
                 <circle
                   key={i}
@@ -2607,7 +2603,7 @@ export default function SoapBoatRenderer({
       display: 'flex',
       flexDirection: 'column',
       color: 'white',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      fontFamily: theme.fontFamily,
       position: 'relative'
     }}>
       {/* Premium background gradient */}

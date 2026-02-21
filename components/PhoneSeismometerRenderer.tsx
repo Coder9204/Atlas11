@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Phone Seismometer - Complete 10-Phase Game
 // Discover how the accelerometer in your phone can detect earthquakes
@@ -261,9 +263,8 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - vibration source and amplitude
+  const { isMobile } = useViewport();
+// Simulation state - vibration source and amplitude
   const [vibrationAmp, setVibrationAmp] = useState(50);
   const [vibrationFreq, setVibrationFreq] = useState(3);
   const [signalHistory, setSignalHistory] = useState<number[]>(Array(100).fill(0));
@@ -289,14 +290,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation effect
+// Animation effect
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(p => p + 0.05);
@@ -466,7 +460,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         height={svgHeight}
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Phone Seismometer visualization">
         <defs>
           <linearGradient id="seismicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
@@ -623,7 +617,7 @@ const PhoneSeismometerRenderer: React.FC<PhoneSeismometerRendererProps> = ({ onG
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}
-      >
+       preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="epicenterGrad" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#fca5a5" />

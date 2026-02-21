@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '📸',
@@ -144,7 +147,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -168,9 +171,8 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -326,14 +328,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
   const [testComplete, setTestComplete] = useState(false);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -809,7 +804,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     const refMarkerY = height - padding - (refV / maxVoltage) * innerH;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 240 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 240 }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="R C Time Constant visualization">
         {renderSVGDefs()}
 
         {/* Layer 1: Background & grid */}
@@ -1010,7 +1005,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           >
             <span className="flex items-center gap-3">
               {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </span>
@@ -1071,7 +1066,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           maxWidth: 600,
           margin: '0 auto 24px auto',
         }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 240 }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 240 }} preserveAspectRatio="xMidYMid meet">
             {renderSVGDefs()}
 
             {/* Lab background */}
@@ -1242,7 +1237,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 220 }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 220 }} preserveAspectRatio="xMidYMid meet">
                 {renderSVGDefs()}
 
                 {/* Lab background */}
@@ -1653,7 +1648,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
           maxWidth: 560,
           margin: '0 auto 20px auto',
         }}>
-          <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 240 }}>
+          <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 240 }} preserveAspectRatio="xMidYMid meet">
             {renderSVGDefs()}
             <rect width="300" height="220" fill="url(#rctcLabBg)" rx="4" />
             <rect width="300" height="220" fill="url(#rctcLabGrid)" rx="4" />
@@ -1778,7 +1773,7 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 280 170" style={{ width: '100%', maxHeight: 190 }}>
+              <svg viewBox="0 0 280 170" style={{ width: '100%', maxHeight: 190 }} preserveAspectRatio="xMidYMid meet">
                 {renderSVGDefs()}
 
                 {/* Additional gradient for discharge/purple theme */}

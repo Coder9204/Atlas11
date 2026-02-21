@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // PCIe Bandwidth - Complete 10-Phase Game
 // Why you can't just add more GPUs to make training faster
@@ -268,9 +270,8 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [pcieGen, setPcieGen] = useState<keyof typeof PCIE_SPECS>('PCIe 4.0');
   const [numLanes, setNumLanes] = useState(16);
   const [numGPUs, setNumGPUs] = useState(2);
@@ -292,14 +293,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 100);
@@ -432,7 +426,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
     const gpuX = busX + busW + 16; const gpuW = isMobile ? 80 : 100;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="P C Ie Bandwidth visualization">
         <defs>
           <linearGradient id="cpuGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fb923c" />
@@ -857,7 +851,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
           {/* Static SVG diagram - no sliders */}
           <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-            <svg width="400" height="220" viewBox="0 0 400 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="400" height="220" viewBox="0 0 400 220" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">PCIe Bandwidth Bottleneck</text>
               {/* CPU box */}
               <rect x="20" y="80" width="70" height="50" rx="8" fill="#fb923c44" stroke="#fb923c" strokeWidth="2" />
@@ -1269,7 +1263,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({ onGameEve
 
           {/* Static SVG - no sliders */}
           <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-            <svg width="400" height="200" viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="400" height="200" viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">Gradient Synchronization</text>
               {/* 4 GPUs in a ring */}
               {[0, 1, 2, 3].map(i => {

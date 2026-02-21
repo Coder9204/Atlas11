@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface AIInferenceLatencyRendererProps {
   gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -42,6 +46,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -52,17 +57,8 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -489,6 +485,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -498,7 +495,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     const generatedText = "The quick brown fox jumps over the lazy dog".split(' ').slice(0, tokensGenerated);
 
     return (
-      <svg width="100%" height="420" viewBox="0 0 500 420" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
+      <svg width="100%" height="420" viewBox="0 0 500 420" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="A I Inference Latency visualization">
         <defs>
           <linearGradient id="prefillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#8b5cf6" />
@@ -827,7 +824,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Static SVG for predict phases (no sliders)
   const renderStaticVisualization = () => (
-    <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }}>
+    <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predictPrefillGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#8b5cf6" />
@@ -1034,7 +1031,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Review phase SVG diagram
   const renderReviewDiagram = () => (
-    <svg width="100%" height="180" viewBox="0 0 500 180" style={{ maxWidth: '600px' }}>
+    <svg width="100%" height="180" viewBox="0 0 500 180" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
       <rect width="500" height="180" fill="#0f172a" rx="12" />
 
       {/* Grid lines */}
@@ -1177,7 +1174,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Static SVG for twist predict (streaming vs batching concept)
   const renderTwistStaticVisualization = () => (
-    <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '600px' }}>
+    <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
       <rect width="500" height="200" fill="#0f172a" rx="12" />
 
       {/* Grid lines */}
@@ -1358,7 +1355,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Twist review phase SVG diagram
   const renderTwistReviewDiagram = () => (
-    <svg width="100%" height="160" viewBox="0 0 500 160" style={{ maxWidth: '600px' }}>
+    <svg width="100%" height="160" viewBox="0 0 500 160" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
       <rect width="500" height="160" fill="#0f172a" rx="12" />
 
       {/* Grid lines */}

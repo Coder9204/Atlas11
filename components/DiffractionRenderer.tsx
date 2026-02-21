@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // DIFFRACTION RENDERER - SINGLE & DOUBLE SLIT PATTERNS
 // =============================================================================
@@ -39,7 +41,7 @@ const defined = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
     sizes: {
       xs: '0.75rem',
       sm: '0.875rem',
@@ -432,9 +434,8 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Interactive simulation state
+  const { isMobile } = useViewport();
+// Interactive simulation state
   const [slitWidth, setSlitWidth] = useState(50); // Arbitrary units
   const [slitSeparation, setSlitSeparation] = useState(100); // For double slit
   const [wavelength, setWavelength] = useState<'red' | 'green' | 'blue'>('red');
@@ -497,16 +498,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography responsive system
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -842,7 +834,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           {slitMode === 'single' ? 'Single Slit' : 'Double Slit'} Diffraction
         </div>
 
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Diffraction visualization">
           <defs>
             {/* Premium laser glow filter */}
             <filter id="diffLaserGlow" x="-100%" y="-100%" width="300%" height="300%">
@@ -1337,10 +1329,10 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           )}
 
           {/* Labels inside SVG */}
-          <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Laser</text>
-          <text x={slitX} y={patternTop + 30} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Slit</text>
-          <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Screen</text>
-          <text x={(slitX + screenX) / 2} y={patternTop + patternHeight + 28} fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Intensity Pattern</text>
+          <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Laser</text>
+          <text x={slitX} y={patternTop + 30} fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Slit</text>
+          <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Screen</text>
+          <text x={(slitX + screenX) / 2} y={patternTop + patternHeight + 28} fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Intensity Pattern</text>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -1935,7 +1927,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         Make Your Prediction
       </h2>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predLaser" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
@@ -1943,13 +1935,13 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
           </linearGradient>
         </defs>
         <rect x="0" y="0" width="400" height="200" fill="#0F172A" rx="8" />
-        <text x="30" y="30" fill="#94A3B8" fontSize="12" fontFamily="sans-serif">Laser Source</text>
+        <text x="30" y="30" fill="#94A3B8" fontSize="12" fontFamily={theme.fontFamily}>Laser Source</text>
         <circle cx="40" cy="100" r="15" fill="#EF4444" opacity="0.6" />
         <circle cx="40" cy="100" r="8" fill="#EF4444" />
         <line x1="55" y1="100" x2="180" y2="100" stroke="#EF4444" strokeWidth="3" opacity="0.8" />
         <rect x="180" y="60" width="6" height="80" fill="#334155" />
         <rect x="180" y="92" width="6" height="16" fill="#0F172A" />
-        <text x="175" y="55" fill="#94A3B8" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Slit</text>
+        <text x="175" y="55" fill="#94A3B8" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Slit</text>
         <line x1="186" y1="100" x2="350" y2="60" stroke="url(#predLaser)" strokeWidth="2" opacity="0.5" />
         <line x1="186" y1="100" x2="350" y2="80" stroke="url(#predLaser)" strokeWidth="2" opacity="0.7" />
         <line x1="186" y1="100" x2="350" y2="100" stroke="url(#predLaser)" strokeWidth="3" opacity="0.9" />
@@ -1961,8 +1953,8 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         <rect x="351" y="115" width="2" height="15" fill="#EF4444" opacity="0.4" />
         <rect x="351" y="55" width="2" height="10" fill="#EF4444" opacity="0.2" />
         <rect x="351" y="135" width="2" height="10" fill="#EF4444" opacity="0.2" />
-        <text x="355" y="50" fill="#94A3B8" fontSize="11" fontFamily="sans-serif">Screen</text>
-        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">What happens to the pattern?</text>
+        <text x="355" y="50" fill="#94A3B8" fontSize="11" fontFamily={theme.fontFamily}>Screen</text>
+        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">What happens to the pattern?</text>
       </svg>
 
       <p
@@ -2306,9 +2298,9 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         New Variable: Young's Double-Slit Experiment
       </h2>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <rect x="0" y="0" width="400" height="200" fill="#0F172A" rx="8" />
-        <text x="30" y="25" fill="#F59E0B" fontSize="12" fontFamily="sans-serif">Double Slit Setup</text>
+        <text x="30" y="25" fill="#F59E0B" fontSize="12" fontFamily={theme.fontFamily}>Double Slit Setup</text>
         <circle cx="40" cy="100" r="12" fill="#EF4444" opacity="0.6" />
         <circle cx="40" cy="100" r="6" fill="#EF4444" />
         <line x1="52" y1="100" x2="175" y2="85" stroke="#EF4444" strokeWidth="2" opacity="0.6" />
@@ -2316,7 +2308,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         <rect x="175" y="50" width="6" height="80" fill="#334155" />
         <rect x="175" y="78" width="6" height="10" fill="#0F172A" />
         <rect x="175" y="108" width="6" height="10" fill="#0F172A" />
-        <text x="178" y="45" fill="#94A3B8" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Two Slits</text>
+        <text x="178" y="45" fill="#94A3B8" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Two Slits</text>
         {[60,75,85,95,100,105,115,125,140].map((y, i) => (
           <line key={i} x1="181" y1="83" x2="350" y2={y} stroke="#EF4444" strokeWidth="1" opacity={0.3 + 0.4 * Math.exp(-Math.pow((y-100)/20, 2))} />
         ))}
@@ -2327,7 +2319,7 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
         {[55,70,85,100,115,130,145].map((y, i) => (
           <rect key={i} x="351" y={y-3} width="2" height="6" fill="#EF4444" opacity={i % 2 === 0 ? 0.2 : 0.8} />
         ))}
-        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Predict: What pattern do you expect?</text>
+        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily={theme.fontFamily} textAnchor="middle">Predict: What pattern do you expect?</text>
       </svg>
 
       <p

@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '📊',
@@ -83,6 +86,7 @@ interface SolarYieldPredictionRendererProps {
   gamePhase?: SolarPhase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Sound utility for feedback
@@ -113,6 +117,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Phase order and labels for navigation
   const phaseOrder: SolarPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -169,15 +174,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   const [testScore, setTestScore] = useState(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -443,6 +441,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -582,7 +581,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
     return (
       <div style={{ position: 'relative' }}>
-        <svg width="100%" height="490" viewBox="0 0 600 490" style={{ maxWidth: '700px' }}>
+        <svg width="100%" height="490" viewBox="0 0 600 490" style={{ maxWidth: '700px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Solar Yield Prediction visualization">
           <defs>
             {/* Premium sky gradient with multiple stops */}
             <linearGradient id="sypSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1278,7 +1277,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
           {/* Static SVG for predict phase */}
-          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }}>
+          <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#0c4a6e" />
@@ -1445,7 +1444,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Uncertainty</h2>
 
-          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }}>
+          <svg width="100%" height="160" viewBox="0 0 500 160" style={{ marginBottom: '24px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="uncertaintyGlow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="3" result="blur" />

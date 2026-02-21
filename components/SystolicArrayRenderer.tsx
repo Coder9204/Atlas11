@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Systolic Arrays - Complete 10-Phase Game
 // How AI accelerators like TPUs perform massively parallel matrix multiplication
@@ -261,9 +263,8 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [cycle, setCycle] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -300,14 +301,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for systolic simulation
+// Animation loop for systolic simulation
   useEffect(() => {
     if (isPlaying && (phase === 'play' || phase === 'twist_play')) {
       const maxCycles = arraySize * 3 - 2; // Total cycles for complete computation
@@ -326,17 +320,14 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#06B6D4', // Cyan for tech/computing theme
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    pe: '#22c55e',
+    data: '#06b6d4',
+    accumulate: '#f59e0b',
+    array: '#8b5cf6',
     accentGlow: 'rgba(6, 182, 212, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#C8CDD8',
-    textMuted: '#9CA3AF',
     border: '#2a2a3a',
     dataA: '#F472B6', // Pink for matrix A data
     dataB: '#60A5FA', // Blue for matrix B data
@@ -445,7 +436,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
     const sizeIndicatorY = height - 20;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Systolic Array visualization">
         {/* Title */}
         <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
           {arraySize}x{arraySize} Systolic Array - Cycle {cycle}
@@ -717,6 +708,9 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
             <stop offset="0%" stopColor={colors.success} />
             <stop offset="100%" stopColor="#059669" />
           </linearGradient>
+          <filter id="peGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="arrayGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
         </defs>
 
         <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
@@ -1003,7 +997,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
               display: 'flex',
               justifyContent: 'center',
             }}>
-              <svg width="300" height="300" viewBox="0 0 300 300" style={{ background: colors.bgCard }}>
+              <svg width="300" height="300" viewBox="0 0 300 300" style={{ background: colors.bgCard }} preserveAspectRatio="xMidYMid meet">
                 <text x="150" y="25" fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
                   4×4 Systolic Array Preview
                 </text>
@@ -1574,7 +1568,7 @@ const SystolicArrayRenderer: React.FC<SystolicArrayRendererProps> = ({ onGameEve
 
           {/* Static scaling diagram - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-            <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgCard, borderRadius: '8px' }}>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgCard, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
               <text x="160" y="18" fill={colors.textPrimary} fontSize="12" fontWeight="600" textAnchor="middle">Array Scaling: Data Reuse vs Size</text>
               {/* Y-axis */}
               <line x1="40" y1="25" x2="40" y2="135" stroke={colors.border} strokeWidth="1.5" />

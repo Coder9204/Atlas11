@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // MOMENTUM CONSERVATION - Complete 10-Phase Game
 // Discover the fundamental law: total momentum is always conserved
@@ -268,9 +270,8 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [massLeft, setMassLeft] = useState(1);
   const [massRight, setMassRight] = useState(2);
   const [isCompressed, setIsCompressed] = useState(true);
@@ -300,14 +301,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Cleanup animation on unmount
+// Cleanup animation on unmount
   useEffect(() => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -450,7 +444,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     const totalMomentum = momentumLeft + momentumRight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} role="img" aria-label="Momentum Conservation visualization">
         <defs>
           <linearGradient id="cartBlueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60A5FA" />

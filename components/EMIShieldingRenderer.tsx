@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for internal state management
 type EMIPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -10,6 +12,7 @@ interface EMIShieldingRendererProps {
   gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -43,6 +46,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Phase order and labels for navigation
   const phaseOrder: EMIPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -98,15 +102,8 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -405,6 +402,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
@@ -618,7 +616,7 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="E M I Shielding visualization">
           <defs>
             <linearGradient id="emiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />

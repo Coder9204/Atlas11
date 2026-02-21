@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // WAVE SPEED & TENSION - Premium Design System
 // ============================================================================
@@ -159,20 +161,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [answerChecked, setAnswerChecked] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Physics constants
+  const { isMobile } = useViewport();
+// Physics constants
   const ropeLength = 5;
 
   // Mobile detection
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -423,7 +417,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
   // Static rope SVG for predict/review phases (no pulse animation, no sliders)
   const renderStaticRopeVisualization = () => {
     return (
-      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Wave Speed Tension visualization">
         <defs>
           <linearGradient id="wstBgStatic" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#05060a" />
@@ -515,7 +509,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     const pulseX = 80 + pulsePosition * 480;
 
     return (
-      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+      <svg viewBox="0 0 700 300" style={{ width: '100%', height: '100%', maxHeight: '280px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="wstBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#05060a" />
@@ -637,7 +631,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     switch (appId) {
       case 'guitar':
         return (
-          <svg viewBox="0 0 200 120" className="w-full h-32">
+          <svg viewBox="0 0 200 120" className="w-full h-32" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="200" height="120" fill="#05060a" rx="8" />
             <defs>
               <linearGradient id="guitarBody" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -660,7 +654,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
       case 'bridge':
         return (
-          <svg viewBox="0 0 200 120" className="w-full h-32">
+          <svg viewBox="0 0 200 120" className="w-full h-32" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="200" height="120" fill="#05060a" rx="8" />
             <rect x="0" y="90" width="200" height="30" fill="#0ea5e9" opacity="0.3" />
             <rect x="50" y="25" width="12" height="70" rx="2" fill="#92400e" />
@@ -681,7 +675,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
       case 'medical':
         return (
-          <svg viewBox="0 0 200 120" className="w-full h-32">
+          <svg viewBox="0 0 200 120" className="w-full h-32" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="200" height="120" fill="#05060a" rx="8" />
             <ellipse cx="100" cy="70" rx="70" ry="45" fill="#fca5a5" opacity="0.3" stroke="#f87171" strokeWidth="2" />
             <rect x="85" y="5" width="30" height="30" rx="4" fill="#374151" />
@@ -702,7 +696,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
       case 'seismic':
         return (
-          <svg viewBox="0 0 200 120" className="w-full h-32">
+          <svg viewBox="0 0 200 120" className="w-full h-32" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="200" height="120" fill="#05060a" rx="8" />
             <circle cx="100" cy="100" r="90" fill="#fbbf24" opacity="0.2" />
             <circle cx="100" cy="100" r="65" fill="#dc2626" opacity="0.3" />
@@ -1795,6 +1789,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   onClick={() => {
                     if (testAnswers.every(a => a !== null)) {
                       setTestSubmitted(true);
+                      emitEvent('game_completed', { score: testScore, total: testQuestions.length });
                       emitEvent('test_completed', {
                         score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
                         total: testQuestions.length

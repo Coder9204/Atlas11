@@ -16,6 +16,7 @@ export interface AnalyticsEvent {
   timestamp: number;
   data?: Record<string, unknown>;
   sessionId: string;
+  userId?: string;
 }
 
 export interface FunnelMetrics {
@@ -59,6 +60,13 @@ export interface SearchAnalytics {
   timestamp: number;
 }
 
+export interface DateRange {
+  start: number;
+  end: number;
+}
+
+export type DatePreset = 'today' | '7d' | '30d' | 'all';
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -66,6 +74,8 @@ export interface SearchAnalytics {
 const ANALYTICS_KEY = 'atlas_analytics';
 const SESSION_KEY = 'atlas_session_id';
 const MAX_EVENTS = 5000;
+
+const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 // ============================================================
 // HELPERS
@@ -114,6 +124,48 @@ function saveEvents(events: AnalyticsEvent[]): void {
   safeSetItem(ANALYTICS_KEY, JSON.stringify(trimmed));
 }
 
+/** Get current Firebase user ID if available */
+function getTrackingUserId(): string | undefined {
+  try {
+    const { getAuthInstance } = require('../services/firebase');
+    const auth = getAuthInstance();
+    return auth?.currentUser?.uid || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Convert a date preset to a DateRange */
+export function dateRangeFromPreset(preset: DatePreset): DateRange | undefined {
+  if (preset === 'all') return undefined;
+  const now = Date.now();
+  const end = now;
+  let start: number;
+  switch (preset) {
+    case 'today': {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      start = d.getTime();
+      break;
+    }
+    case '7d':
+      start = now - 7 * 24 * 60 * 60 * 1000;
+      break;
+    case '30d':
+      start = now - 30 * 24 * 60 * 60 * 1000;
+      break;
+    default:
+      return undefined;
+  }
+  return { start, end };
+}
+
+/** Filter events by date range */
+function filterByRange(events: AnalyticsEvent[], range?: DateRange): AnalyticsEvent[] {
+  if (!range) return events;
+  return events.filter(e => e.timestamp >= range.start && e.timestamp <= range.end);
+}
+
 // ============================================================
 // TRACKING API
 // ============================================================
@@ -128,6 +180,7 @@ export function trackEvent(type: string, data?: Record<string, unknown>): void {
     timestamp: Date.now(),
     data,
     sessionId: getSessionId(),
+    userId: getTrackingUserId(),
   });
   saveEvents(events);
 }
@@ -203,6 +256,46 @@ export function trackSessionEnded(durationMs: number): void {
 }
 
 // ============================================================
+// MONETIZATION FUNNEL TRACKERS (Improvement 1)
+// ============================================================
+
+export function trackPaywallShown(slug: string, reason: string): void {
+  trackEvent('paywall_shown', { slug, reason });
+}
+
+export function trackUpgradeClicked(source: string): void {
+  trackEvent('upgrade_clicked', { source });
+}
+
+export function trackCheckoutStarted(priceId: string): void {
+  trackEvent('checkout_started', { priceId });
+}
+
+export function trackAuthModalShown(reason: string): void {
+  trackEvent('auth_modal_shown', { reason });
+}
+
+export function trackAuthModalDismissed(reason: string): void {
+  trackEvent('auth_modal_dismissed', { reason });
+}
+
+export function trackSignupCompleted(method: string, wasAnonymous: boolean): void {
+  trackEvent('signup_completed', { method, wasAnonymous });
+}
+
+export function trackAICoachSessionStarted(gameSlug: string): void {
+  trackEvent('ai_coach_session_started', { gameSlug });
+}
+
+export function trackAICoachMessageSent(gameSlug: string, phase: string): void {
+  trackEvent('ai_coach_message_sent', { gameSlug, phase });
+}
+
+export function trackAICoachHintRequested(gameSlug: string, phase: string): void {
+  trackEvent('ai_coach_hint_requested', { gameSlug, phase });
+}
+
+// ============================================================
 // COMPUTED METRICS
 // ============================================================
 
@@ -216,8 +309,8 @@ export function getAllEvents(): AnalyticsEvent[] {
 /**
  * Computes the full funnel metrics from stored events.
  */
-export function getFunnelMetrics(): FunnelMetrics {
-  const events = loadEvents();
+export function getFunnelMetrics(range?: DateRange): FunnelMetrics {
+  const events = filterByRange(loadEvents(), range);
 
   const onboardingStarted = events.filter(e => e.type === 'onboarding_started').length;
   const onboardingCompleted = events.filter(e => e.type === 'onboarding_completed').length;
@@ -236,7 +329,6 @@ export function getFunnelMetrics(): FunnelMetrics {
   const firstGamePlayed = [...completedSessions].filter(s => sessionsWithGame.has(s)).length;
 
   // Session durations
-  const sessionStarts = events.filter(e => e.type === 'session_started');
   const sessionEnds = events.filter(e => e.type === 'session_ended');
   const sessionDurations = sessionEnds
     .map(e => (e.data?.durationMs as number) || 0)
@@ -248,13 +340,19 @@ export function getFunnelMetrics(): FunnelMetrics {
   // Unique sessions
   const uniqueSessions = new Set(events.map(e => e.sessionId)).size;
 
-  // Return rate: sessions that have more than one session_started event
-  const sessionStartCounts = new Map<string, number>();
+  // Return rate (Improvement 6): Group session_started events by userId || sessionId,
+  // count users with events on >1 distinct calendar day
+  const sessionStarts = events.filter(e => e.type === 'session_started');
+  const userDays = new Map<string, Set<string>>();
   for (const e of sessionStarts) {
-    sessionStartCounts.set(e.sessionId, (sessionStartCounts.get(e.sessionId) || 0) + 1);
+    const userKey = e.userId || e.sessionId;
+    const dayKey = new Date(e.timestamp).toISOString().slice(0, 10);
+    if (!userDays.has(userKey)) userDays.set(userKey, new Set());
+    userDays.get(userKey)!.add(dayKey);
   }
-  const returningSessions = [...sessionStartCounts.values()].filter(c => c > 1).length;
-  const returnRate = uniqueSessions > 0 ? returningSessions / uniqueSessions : 0;
+  const totalUsers = userDays.size;
+  const returningUsers = [...userDays.values()].filter(days => days.size > 1).length;
+  const returnRate = totalUsers > 0 ? returningUsers / totalUsers : 0;
 
   return {
     onboardingStarted,
@@ -277,8 +375,8 @@ export function getFunnelMetrics(): FunnelMetrics {
 /**
  * Per-game analytics from events.
  */
-export function getPerGameAnalytics(): GameAnalytics[] {
-  const events = loadEvents();
+export function getPerGameAnalytics(range?: DateRange): GameAnalytics[] {
+  const events = filterByRange(loadEvents(), range);
   const gameMap = new Map<string, {
     starts: number;
     completes: number;
@@ -357,43 +455,66 @@ export function getPerGameAnalytics(): GameAnalytics[] {
 }
 
 /**
- * Phase drop-off analysis across all games.
+ * Phase drop-off analysis across all games (Improvement 7).
+ * Groups game_phase_entered events by sessionId:slug to get per-game-session phase sets.
+ * Computes drop-off as difference between users reaching phase N vs phase N+1.
  */
-export function getPhaseDropOffAnalysis(): PhaseDropOff[] {
-  const events = loadEvents();
-  const entered = new Map<string, number>();
-  const completed = new Map<string, number>();
+export function getPhaseDropOffAnalysis(range?: DateRange): PhaseDropOff[] {
+  const events = filterByRange(loadEvents(), range);
 
+  // Group phase events by sessionId:slug to get per-game-session phase sets
+  const sessionPhases = new Map<string, Set<string>>();
   for (const e of events) {
     if (e.type === 'game_phase_entered') {
+      const slug = e.data?.slug as string;
       const phase = e.data?.phase as string;
-      if (phase) entered.set(phase, (entered.get(phase) || 0) + 1);
-    }
-    if (e.type === 'game_phase_completed') {
-      const phase = e.data?.phase as string;
-      if (phase) completed.set(phase, (completed.get(phase) || 0) + 1);
+      if (!slug || !phase) continue;
+      const key = `${e.sessionId}:${slug}`;
+      if (!sessionPhases.has(key)) sessionPhases.set(key, new Set());
+      sessionPhases.get(key)!.add(phase);
     }
   }
 
-  const phases: PhaseDropOff[] = [];
-  for (const [phase, enteredCount] of entered) {
-    const completedCount = completed.get(phase) || 0;
-    phases.push({
+  // Count how many sessions reached each phase
+  const phaseReachCount = new Map<string, number>();
+  for (const phase of PHASE_ORDER) {
+    phaseReachCount.set(phase, 0);
+  }
+
+  for (const phases of sessionPhases.values()) {
+    for (const phase of PHASE_ORDER) {
+      if (phases.has(phase)) {
+        phaseReachCount.set(phase, (phaseReachCount.get(phase) || 0) + 1);
+      }
+    }
+  }
+
+  // Compute sequential drop-off
+  const results: PhaseDropOff[] = [];
+  for (let i = 0; i < PHASE_ORDER.length; i++) {
+    const phase = PHASE_ORDER[i];
+    const entered = phaseReachCount.get(phase) || 0;
+    if (entered === 0) continue;
+    const nextPhaseCount = i < PHASE_ORDER.length - 1
+      ? (phaseReachCount.get(PHASE_ORDER[i + 1]) || 0)
+      : entered; // last phase has no drop-off to next
+    const dropOffRate = entered > 0 ? (entered - nextPhaseCount) / entered : 0;
+    results.push({
       phase,
-      entered: enteredCount,
-      completed: completedCount,
-      dropOffRate: enteredCount > 0 ? (enteredCount - completedCount) / enteredCount : 0,
+      entered,
+      completed: nextPhaseCount,
+      dropOffRate: Math.max(0, dropOffRate),
     });
   }
 
-  return phases.sort((a, b) => b.dropOffRate - a.dropOffRate);
+  return results;
 }
 
 /**
  * Score distribution histograms by difficulty level.
  */
-export function getScoreDistribution(): Record<string, number[]> {
-  const events = loadEvents();
+export function getScoreDistribution(range?: DateRange): Record<string, number[]> {
+  const events = filterByRange(loadEvents(), range);
   const dist: Record<string, number[]> = {};
 
   for (const e of events) {
@@ -418,8 +539,8 @@ export function getScoreDistribution(): Record<string, number[]> {
 /**
  * Custom game requests aggregation.
  */
-export function getCustomRequestsAnalytics(): Array<{ topic: string; validationResult: string; count: number; lastRequested: number }> {
-  const events = loadEvents().filter(e => e.type === 'custom_game_requested');
+export function getCustomRequestsAnalytics(range?: DateRange): Array<{ topic: string; validationResult: string; count: number; lastRequested: number }> {
+  const events = filterByRange(loadEvents(), range).filter(e => e.type === 'custom_game_requested');
   const topicMap = new Map<string, { validationResult: string; count: number; lastRequested: number }>();
 
   for (const e of events) {
@@ -447,8 +568,8 @@ export function getCustomRequestsAnalytics(): Array<{ topic: string; validationR
 /**
  * Page view analytics.
  */
-export function getPageViewAnalytics(): Array<{ route: string; views: number; lastVisited: number }> {
-  const events = loadEvents().filter(e => e.type === 'page_view');
+export function getPageViewAnalytics(range?: DateRange): Array<{ route: string; views: number; lastVisited: number }> {
+  const events = filterByRange(loadEvents(), range).filter(e => e.type === 'page_view');
   const routeMap = new Map<string, { views: number; lastVisited: number }>();
 
   for (const e of events) {
@@ -470,13 +591,13 @@ export function getPageViewAnalytics(): Array<{ route: string; views: number; la
 /**
  * User cohort breakdown.
  */
-export function getUserCohorts(): {
+export function getUserCohorts(range?: DateRange): {
   byDifficulty: Record<string, number>;
   byInterest: Record<string, number>;
   onboarded: number;
   notOnboarded: number;
 } {
-  const events = loadEvents();
+  const events = filterByRange(loadEvents(), range);
   const byDifficulty: Record<string, number> = {};
   const byInterest: Record<string, number> = {};
   let onboarded = 0;

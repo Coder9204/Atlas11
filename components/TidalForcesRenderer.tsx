@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Tidal Forces - Complete 10-Phase Game
 // Why there are TWO tidal bulges on Earth
@@ -261,9 +263,8 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [showVectors, setShowVectors] = useState(false);
   const [showDifferential, setShowDifferential] = useState(false);
   const [moonAngle, setMoonAngle] = useState(0);
@@ -287,14 +288,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Orbital animation
+// Orbital animation
   useEffect(() => {
     if (!isAnimating) return;
     const interval = setInterval(() => {
@@ -414,7 +408,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
     const bulgeAngle = moonAngle;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tidal Forces visualization">
         <title>Tidal Forces Visualization - Differential Gravity</title>
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
@@ -647,7 +641,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
     const moonFacingAngle = isTidallyLocked ? moonAngle + Math.PI : moonRotation;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <title>Tidal Locking Visualization</title>
         <defs>
           <radialGradient id="earthGrad2" cx="35%" cy="35%" r="65%">
@@ -1029,7 +1023,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 340 : 480} height={isMobile ? 180 : 200} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 180 : 200}`} style={{ margin: '0 auto', display: 'block' }}>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 180 : 200} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 180 : 200}`} style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <title>Two Tidal Bulges Diagram</title>
               <defs>
                 <radialGradient id="earthGradPredict" cx="35%" cy="35%" r="65%">
@@ -1469,7 +1463,7 @@ const TidalForcesRenderer: React.FC<TidalForcesRendererProps> = ({ onGameEvent, 
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
               Think about it: For us to always see the same side, the Moon must rotate exactly once per orbit. How did that happen?
             </p>
-            <svg width={isMobile ? 320 : 460} height={200} viewBox={`0 0 ${isMobile ? 320 : 460} 200`} style={{ margin: '0 auto', display: 'block' }}>
+            <svg width={isMobile ? 320 : 460} height={200} viewBox={`0 0 ${isMobile ? 320 : 460} 200`} style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <title>Tidal Locking Comparison - Locked vs Unlocked Moon</title>
               {/* Background */}
               <rect width={isMobile ? 320 : 460} height={200} fill="#0f172a" rx="8" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // CLUSTER COMMS - Complete 10-Phase Game (Game #21 of 36 ELON Games)
 // GPU cluster networking — how thousands of GPUs communicate during distributed AI training
@@ -261,9 +263,8 @@ const ELON_ClusterCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — bisection bandwidth ratio (0.25 = 1:4 oversubscribed, 1.0 = full bisection)
+  const { isMobile } = useViewport();
+// Simulation state — bisection bandwidth ratio (0.25 = 1:4 oversubscribed, 1.0 = full bisection)
   const [bisectionRatio, setBisectionRatio] = useState(0.5);
   const [gpuCount, setGpuCount] = useState(256);
   const [animTick, setAnimTick] = useState(0);
@@ -286,14 +287,7 @@ const ELON_ClusterCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation tick
+// Animation tick
   useEffect(() => {
     const interval = setInterval(() => setAnimTick(t => (t + 1) % 360), 50);
     return () => clearInterval(interval);
@@ -547,7 +541,7 @@ const ELON_ClusterCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Cluster Comms visualization">
         <defs>
           <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#22D3EE" />

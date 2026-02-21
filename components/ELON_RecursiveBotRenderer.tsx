@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON RECURSIVE BOT - Complete 10-Phase Game
 // Robots building robots — manufacturing recursion and scaling humanoid production
@@ -261,9 +263,8 @@ const ELON_RecursiveBotRenderer: React.FC<ELON_RecursiveBotRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — Robot Factory Simulator
+  const { isMobile } = useViewport();
+// Simulation state — Robot Factory Simulator
   const [automationLevel, setAutomationLevel] = useState(30);
   const [annualVolume, setAnnualVolume] = useState(100);
 
@@ -281,14 +282,7 @@ const ELON_RecursiveBotRenderer: React.FC<ELON_RecursiveBotRendererProps> = ({ o
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate cost per unit using Wright's law: C(n) = C(1) * n^(log2(learningRate))
+// Calculate cost per unit using Wright's law: C(n) = C(1) * n^(log2(learningRate))
   const calculateUnitCost = (volume: number, automation: number) => {
     const baseCost = 150000; // $150K base cost at unit 1
     const learningRate = 0.85; // 85% learning curve
@@ -503,7 +497,7 @@ const ELON_RecursiveBotRenderer: React.FC<ELON_RecursiveBotRendererProps> = ({ o
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Recursive Bot visualization">
         <defs>
           <linearGradient id="robotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#8B5CF6" />

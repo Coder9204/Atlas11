@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // ROLLING VS SLIDING RENDERER - Complete 10-Phase Learning Game
 // Discover why rolling friction is much less than sliding friction
@@ -265,16 +267,8 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase());
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const c = () => setIsMobile(window.innerWidth < 768);
-    c();
-    window.addEventListener('resize', c);
-    return () => window.removeEventListener('resize', c);
-  }, []);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [mass, setMass] = useState(50); // kg
   const [force, setForce] = useState(100); // N
   const [surfaceType, setSurfaceType] = useState<'concrete' | 'ice'>('concrete');
@@ -568,7 +562,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
     const svgContent = (
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-2">
           <h3 className="text-lg font-bold text-center text-indigo-300 mb-2">Friction Force Comparison</h3>
-          <svg width="100%" viewBox="0 0 600 450" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet">
+          <svg width="100%" viewBox="0 0 600 450" className="bg-slate-900/30 rounded-lg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Rolling Vs Sliding visualization">
             <defs>
               <linearGradient id="slidingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
    eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -102,16 +104,8 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
    const [confetti, setConfetti] = useState<Array<{x: number, y: number, color: string, delay: number}>>([]);
    const [selectedApp, setSelectedApp] = useState(0);
    const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
-
-   const [isMobile, setIsMobile] = useState(false);
-   useEffect(() => {
-      const checkMobile = () => setIsMobile(window.innerWidth < 768);
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-   }, []);
-
-   // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
    const typo = {
       title: isMobile ? '28px' : '36px',
       heading: isMobile ? '20px' : '24px',
@@ -521,7 +515,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       const energyPercent = Math.max(0, Math.min(100, (energyAdded / 3200) * 100));
 
       return (
-         <svg viewBox="0 0 400 280" style={{ width: '100%', height: '100%' }}>
+         <svg viewBox="0 0 400 280" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Phase Change Energy visualization">
             <defs>
                {/* === PREMIUM LINEAR GRADIENTS === */}
 
@@ -997,7 +991,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       const progress = Math.min(1, energyAdded / maxEnergy);
 
       return (
-         <svg viewBox="0 0 400 220" style={{ width: '100%', height: '100%' }}>
+         <svg viewBox="0 0 400 220" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
                {/* Chart background gradient */}
                <linearGradient id="pceChartBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1592,7 +1586,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   {renderSectionHeader("Step 1 • Make Your Prediction", "The Ice Cube Mystery", "What happens to temperature during melting?")}
 
                   <div style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <svg viewBox="0 0 400 120" style={{ width: '100%', height: '120px' }}>
+                     <svg viewBox="0 0 400 120" style={{ width: '100%', height: '120px' }} preserveAspectRatio="xMidYMid meet">
                         {/* Ice cube */}
                         <g transform="translate(70, 20)">
                            <rect x="0" y="0" width="60" height="60" rx="8" fill={colors.secondary} opacity="0.6" stroke={colors.secondary} strokeWidth="2" />
@@ -1914,7 +1908,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   </div>
 
                   <div style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-                     <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px' }}>
+                     <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px' }} preserveAspectRatio="xMidYMid meet">
                         {/* Steam */}
                         <g transform="translate(70, 20)">
                            <circle cx="30" cy="30" r="25" fill={colors.accent} opacity="0.3" />

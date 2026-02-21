@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🛰️',
@@ -118,19 +121,9 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const [passProgress, setPassProgress] = useState(50); // 0-100, 50 = overhead
   const [animPhase, setAnimPhase] = useState(0);
   const [isTracking, setIsTracking] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const audioContextRef = useRef<AudioContext | null>(null);
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -614,7 +607,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     const isApproaching = passProgress < 50;
 
     return (
-      <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', maxWidth: '600px' }}>
+      <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Satellite Doppler visualization">
         <defs>
           {/* === PREMIUM SKY/SPACE GRADIENTS === */}
           <linearGradient id="satdSpaceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1647,7 +1640,7 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const currentIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', backgroundColor: '#0a0f1a', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', lineHeight: '1.6' }}>
+    <div style={{ minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative', backgroundColor: '#0a0f1a', color: 'white', fontFamily: theme.fontFamily, lineHeight: '1.6' }}>
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />

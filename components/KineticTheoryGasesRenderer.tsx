@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // KINETIC THEORY OF GASES - COMPLETE 10-PHASE LEARNING GAME
 // =============================================================================
@@ -281,9 +283,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [temperature, setTemperature] = useState(300); // Kelvin
   const [volume, setVolume] = useState(100); // Arbitrary units
   const [particleCount, setParticleCount] = useState(40);
@@ -309,14 +310,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   const animationRef = useRef<number | null>(null);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate RMS speed: v_rms = sqrt(3kT/m)
+// Calculate RMS speed: v_rms = sqrt(3kT/m)
   const calculateRmsSpeed = useCallback((temp: number, mass: number = 4.65e-26) => {
     return Math.sqrt((3 * k_B * temp) / mass);
   }, []);
@@ -562,7 +556,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
     const pressure = (count * temp / vol).toFixed(1);
 
     return (
-      <svg width={containerSize} height={containerSize} viewBox={`0 0 ${containerSize} ${containerSize}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={containerSize} height={containerSize} viewBox={`0 0 ${containerSize} ${containerSize}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kinetic Theory Gases visualization">
         <defs>
           <radialGradient id="molSlow" cx="35%" cy="35%" r="60%">
             <stop offset="0%" stopColor="#93c5fd" />

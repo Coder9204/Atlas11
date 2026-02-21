@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Polarized Sky - Complete 10-Phase Game
 // How Vikings and bees navigate using sky polarization patterns
@@ -263,9 +265,8 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [sunAzimuth, setSunAzimuth] = useState(45);
   const [sunElevation, setSunElevation] = useState(45);
   const [polarizerAngle, setPolarizerAngle] = useState(0);
@@ -289,14 +290,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -421,7 +415,7 @@ const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent
     const polarizerRad = (polarizerAngle * Math.PI) / 180;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} role="img" aria-label="Polarized Sky visualization">
         <title>Sky Polarization Simulation Visualization</title>
         <defs>
           <radialGradient id="skyGrad" cx="50%" cy="30%" r="70%">

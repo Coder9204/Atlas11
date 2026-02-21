@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🔷',
@@ -83,6 +86,7 @@ interface SiliconTexturingRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -121,6 +125,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -158,17 +163,8 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -423,6 +419,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -459,7 +456,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
           data-depth={textureDepth}
           data-angle={lightAngle}
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px', transition: 'all 0.3s ease' }}
-        >
+         role="img" aria-label="Silicon Texturing visualization">
           <defs>
             <linearGradient id="siliconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#374151" />

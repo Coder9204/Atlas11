@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON ACTUATOR LIMITS - Complete 10-Phase Game
 // Robot actuator physics — torque-speed curves, gear reduction, and joint design
@@ -259,8 +261,8 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const [animFrame, setAnimFrame] = useState(0);
 
   // Simulation state
@@ -280,16 +282,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
   // Transfer state
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
   const [selectedApp, setSelectedApp] = useState(0);
-
-  // Responsive
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation
+// Animation
   useEffect(() => {
     const timer = setInterval(() => setAnimFrame(f => f + 1), 50);
     return () => clearInterval(timer);
@@ -529,7 +522,7 @@ const ELON_ActuatorLimitsRenderer: React.FC<ELON_ActuatorLimitsRendererProps> = 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Actuator Limits visualization">
         <defs>
           <linearGradient id="torqueGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#10B981" />

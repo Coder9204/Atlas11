@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAS LAWS RENDERER - Complete 10-Phase Learning Game
 // Discover how pressure, volume, and temperature are interconnected
@@ -285,12 +287,12 @@ const colors = {
 };
 
 const typo = {
-  h1: { fontSize: '32px', fontWeight: 700, lineHeight: 1.2, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  h2: { fontSize: '24px', fontWeight: 600, lineHeight: 1.3, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  h3: { fontSize: '18px', fontWeight: 600, lineHeight: 1.4, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  body: { fontSize: '16px', fontWeight: 400, lineHeight: 1.6, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  small: { fontSize: '14px', fontWeight: 400, lineHeight: 1.5, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  label: { fontSize: '12px', fontWeight: 500, lineHeight: 1.4, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+  h1: { fontSize: '32px', fontWeight: 700, lineHeight: 1.2, fontFamily: theme.fontFamily },
+  h2: { fontSize: '24px', fontWeight: 600, lineHeight: 1.3, fontFamily: theme.fontFamily },
+  h3: { fontSize: '18px', fontWeight: 600, lineHeight: 1.4, fontFamily: theme.fontFamily },
+  body: { fontSize: '16px', fontWeight: 400, lineHeight: 1.6, fontFamily: theme.fontFamily },
+  small: { fontSize: '14px', fontWeight: 400, lineHeight: 1.5, fontFamily: theme.fontFamily },
+  label: { fontSize: '12px', fontWeight: 500, lineHeight: 1.4, fontFamily: theme.fontFamily },
 };
 
 // ============================================================================
@@ -298,8 +300,8 @@ const typo = {
 // ============================================================================
 const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhase }) => {
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
+  const { isMobile } = useViewport();
+const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
@@ -332,10 +334,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase]);
-
-  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
-
-  // Initialize molecules
+// Initialize molecules
   useEffect(() => {
     const mols = Array.from({ length: 30 }, () => ({
       x: Math.random() * 180 + 10,
@@ -627,7 +626,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
     const highZoneY = chartTop;
 
     return (
-      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }}>
+      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gas Laws visualization">
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -756,7 +755,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
     const pointColor = isHot ? colors.error : isCold ? '#3b82f6' : colors.warning;
 
     return (
-      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }}>
+      <svg viewBox="0 0 450 300" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -917,7 +916,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
             </p>
 
             {/* Simple syringe visualization */}
-            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }}>
+            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }} preserveAspectRatio="xMidYMid meet">
               <rect width="400" height="100" fill="transparent" />
               {/* Before */}
               <rect x="30" y="30" width="120" height="40" rx="6" fill={colors.bgInput} stroke={colors.border} strokeWidth="2" />
@@ -1214,7 +1213,7 @@ const GasLawsRenderer: React.FC<GasLawsRendererProps> = ({ onGameEvent, gamePhas
             </p>
 
             {/* Balloon visualization */}
-            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }}>
+            <svg viewBox="0 0 400 100" style={{ width: '100%', height: '100px', marginTop: '16px' }} preserveAspectRatio="xMidYMid meet">
               <rect width="400" height="100" fill="transparent" />
               {/* Before */}
               <circle cx="80" cy="45" r="30" fill={`${colors.accentAlt}20`} stroke={colors.accentAlt} strokeWidth="2" />

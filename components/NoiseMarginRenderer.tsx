@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Noise Margin - Complete 10-Phase Game
 // How digital logic reliably distinguishes between 0 and 1
@@ -261,9 +263,8 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [vdd, setVdd] = useState(3.3);
   const [vih, setVih] = useState(2.0);
   const [vil, setVil] = useState(0.8);
@@ -291,14 +292,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     if (!isAnimating) return;
     const interval = setInterval(() => {
@@ -427,7 +421,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Noise Margin visualization">
         <defs>
           <linearGradient id="highRegionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.logicHigh} stopOpacity="0.3" />
@@ -872,7 +866,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 200" width="100%" height="180" style={{ maxWidth: '400px' }}>
+            <svg viewBox="0 0 400 200" width="100%" height="180" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictHighGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
@@ -1404,7 +1398,7 @@ const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({ onGameEvent, 
 
           {/* Static SVG showing voltage scaling concept - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg viewBox="0 0 400 180" width="100%" height="160" style={{ maxWidth: '400px' }}>
+            <svg viewBox="0 0 400 180" width="100%" height="160" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistPredGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />

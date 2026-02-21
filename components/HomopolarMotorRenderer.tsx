@@ -15,6 +15,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS (matching Wave Particle Duality)
 // ============================================================
@@ -364,16 +366,8 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Viewport
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -583,7 +577,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             <span style={{ fontSize: typo.bodyLarge, color: colors.current, fontWeight: 700 }}>
               I
             </span>
-            <svg width="24" height="12" viewBox="0 0 24 12">
+            <svg width="24" height="12" viewBox="0 0 24 12" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Homopolar Motor visualization">
               <defs>
                 <marker id="homoCurrentArrowSmall" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                   <path d="M0,0 L0,6 L6,3 z" fill={colors.current} />
@@ -2549,6 +2543,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                   setTestQuestion(testQuestion + 1);
                 } else {
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                 }
               }}
               onClick={() => {
@@ -2556,6 +2551,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                   setTestQuestion(testQuestion + 1);
                 } else {
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                 }
               }}
               style={{

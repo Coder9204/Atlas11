@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface CycloidMotionRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -39,6 +43,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Use gamePhase if provided, otherwise phase, default to 'hook'
   const getValidPhase = (p: string | undefined): PhaseType => {
@@ -68,15 +73,8 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
   const currentPhaseIndex = PHASES.indexOf(phase);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography system
+  const { isMobile } = useViewport();
+// Typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -330,6 +328,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -1267,7 +1266,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
 
         {/* SVG diagram for review */}
         <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-          <svg width="300" height="150" viewBox="0 0 300 150" style={{ background: colors.bgDark, borderRadius: '8px' }}>
+          <svg width="300" height="150" viewBox="0 0 300 150" style={{ background: colors.bgDark, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
             <text x="150" y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Velocity Distribution on Rolling Wheel</text>
             <circle cx="150" cy="85" r="40" fill="none" stroke={colors.wheel} strokeWidth="2" />
             <circle cx="150" cy="85" r="4" fill={colors.wheel} />
@@ -1518,7 +1517,7 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
 
         {/* SVG diagram for twist review */}
         <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-          <svg width="350" height="120" viewBox="0 0 350 120" style={{ background: colors.bgDark, borderRadius: '8px' }}>
+          <svg width="350" height="120" viewBox="0 0 350 120" style={{ background: colors.bgDark, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
             <text x="175" y="15" fill={colors.textSecondary} fontSize="11" textAnchor="middle">The Cycloid Family</text>
             {/* True cycloid */}
             <path d="M 20 80 Q 50 20 80 80 Q 110 20 140 80" fill="none" stroke={colors.cycloid} strokeWidth="2" />

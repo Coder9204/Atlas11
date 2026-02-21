@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 110: KÁRMÁN VORTEX STREET
 // The alternating pattern of vortices behind an obstacle in fluid flow
@@ -31,6 +33,7 @@ interface KarmanVortexRendererProps {
   onPredictionMade?: (prediction: string) => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Color palette with proper contrast
@@ -73,6 +76,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   onPredictionMade,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -109,24 +113,14 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { isMobile } = useViewport();
+const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync phase with gamePhase prop changes
+// Sync phase with gamePhase prop changes
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
@@ -489,7 +483,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           viewBox="0 0 400 350"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
-        >
+         role="img" aria-label="Karman Vortex visualization">
           <defs>
             {/* ============ PREMIUM GRADIENTS ============ */}
 
@@ -1700,7 +1694,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
 
           {/* Visual diagram showing alternating vortices */}
           <div style={{ margin: '16px', borderRadius: '12px', overflow: 'hidden' }}>
-            <svg viewBox="0 0 300 120" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }}>
+            <svg viewBox="0 0 300 120" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="reviewVortexCW" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
@@ -1968,7 +1962,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
 
           {/* Visual diagram showing resonance concept */}
           <div style={{ margin: '16px', borderRadius: '12px', overflow: 'hidden' }}>
-            <svg viewBox="0 0 300 140" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }}>
+            <svg viewBox="0 0 300 140" style={{ width: '100%', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#64748b" />
@@ -2274,7 +2268,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
                   Review Answers
                 </button>
                 <button
-                  onClick={() => setTestSubmitted(true)}
+                  onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
                   style={{
                     flex: 1,
                     padding: '12px',
@@ -2394,7 +2388,7 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           </span>
           {isLastQuestion && currentAnswered ? (
             <button
-              onClick={() => setTestSubmitted(true)}
+              onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
               style={{
                 padding: '10px 24px',
                 borderRadius: '10px',

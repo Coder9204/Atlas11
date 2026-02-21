@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 185: DRAM REFRESH
 // ============================================================================
@@ -17,6 +19,7 @@ interface DRAMRefreshRendererProps {
   gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -307,6 +310,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -330,15 +334,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -484,6 +481,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const score = calculateTestScore();
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -503,7 +501,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           style={{ borderRadius: '12px' }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="D R A M Refresh visualization">
           <defs>
             {/* Premium chip substrate gradient */}
             <linearGradient id="dramChipSubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1426,7 +1424,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Diagram for review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="320" height="200" viewBox="0 0 320 200">
+            <svg width="320" height="200" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
               <rect width="320" height="200" fill="#0f172a" rx="8" />
               <text x="160" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">DRAM Cell Structure</text>
               {/* Capacitor */}
@@ -1518,7 +1516,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Visualization for Twist Predict */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="320" height="200" viewBox="0 0 320 200">
+            <svg width="320" height="200" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
               <rect width="320" height="200" fill="#0f172a" rx="8" />
               <text x="160" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">DDR4 vs DDR5 Capacitor Size</text>
 
@@ -1738,7 +1736,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
           {/* SVG Diagram for Twist Review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="340" height="220" viewBox="0 0 340 220">
+            <svg width="340" height="220" viewBox="0 0 340 220" preserveAspectRatio="xMidYMid meet">
               <rect width="340" height="220" fill="#0f172a" rx="8" />
               <text x="170" y="22" fill="#f8fafc" fontSize="13" fontWeight="700" textAnchor="middle">Speed vs Refresh Rate Trade-off</text>
 

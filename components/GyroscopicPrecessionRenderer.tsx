@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -86,11 +88,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     }
     return 'hook';
   });
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c); }, []);
-
-  // Audio feedback
+  const { isMobile } = useViewport();
+// Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
     try {
@@ -354,7 +353,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       flexDirection: 'column',
       background: colors.bgPrimary,
       color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -561,7 +560,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     const refY = padT + (1 - refPrec / maxPrecession) * plotH;
 
     return (
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gyroscopic Precession visualization">
         <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -662,7 +661,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         padding: space.lg,
         border: `1px solid ${colors.border}`,
       }}>
-        <svg viewBox="0 0 400 300" style={{ width: '100%', display: 'block' }}>
+        <svg viewBox="0 0 400 300" style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="gyroDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fbbf24" />
@@ -992,7 +991,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
 
   // Static prediction SVG (no sliders)
   const renderPredictionSVG = () => (
-    <svg viewBox="0 0 400 250" style={{ width: '100%', display: 'block' }}>
+    <svg viewBox="0 0 400 250" style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predWheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fbbf24" />

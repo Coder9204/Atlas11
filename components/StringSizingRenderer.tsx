@@ -3,6 +3,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────
@@ -305,6 +307,7 @@ interface StringSizingRendererProps {
   gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -364,15 +367,8 @@ export default function StringSizingRenderer({
   const [testScore, setTestScore] = useState(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -704,6 +700,7 @@ export default function StringSizingRenderer({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7) {
       playSound('complete');
       if (onCorrectAnswer) onCorrectAnswer();
@@ -742,7 +739,7 @@ export default function StringSizingRenderer({
         Too few panels and you lose power. Too many and you destroy your inverter. The sweet spot depends on physics!
       </p>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="String Sizing visualization">
         <defs>
           <linearGradient id="strPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -816,7 +813,7 @@ export default function StringSizingRenderer({
       </h2>
 
       {/* Static visualization */}
-      <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+      <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="strPanelGradPredict" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -940,7 +937,7 @@ export default function StringSizingRenderer({
       }}>
       <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {/* SVG visualization of panels and voltage chart */}
-      <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+      <svg viewBox="0 0 400 300" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="strPanelGradPlay" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -1209,7 +1206,7 @@ export default function StringSizingRenderer({
       </h2>
 
       {/* Static SVG visualization for twist predict */}
-      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -1349,7 +1346,7 @@ export default function StringSizingRenderer({
         const temps = [-20, -10, 0, 10, 20, 25, 30, 40, 50, 60];
         const tempX = (t: number) => 50 + ((t + 20) / 80) * 330;
         return (
-          <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+          <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="twistMarkerGlow">
                 <feGaussianBlur stdDeviation="3" result="blur" />

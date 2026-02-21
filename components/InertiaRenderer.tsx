@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // INERTIA RENDERER - Premium 10-Phase Learning Experience
 // ============================================================================
@@ -300,15 +302,8 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     h1: isMobile ? '26px' : '36px',
     h2: isMobile ? '20px' : '24px',
@@ -692,7 +687,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
 
         {/* SVG visualization for predict phase */}
         <div style={{ marginBottom: '20px', width: '100%', maxWidth: '420px' }}>
-          <svg width="100%" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet">
+          <svg width="100%" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Inertia visualization">
             <defs>
               <linearGradient id="predBg" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#1e293b" />
@@ -905,7 +900,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
 
               {/* Axis labels */}
               <g>
-                <text x="8" y="18" textAnchor="start" fill="#94a3b8" fontSize="11" transform="rotate(-90, 8, 18)">Accel (m/s²)</text>
+                <text x="18" y={chartTop + chartH / 2} textAnchor="middle" fill="#94a3b8" fontSize="11" transform={`rotate(-90, 18, ${chartTop + chartH / 2})`}>Acceleration (m/s²)</text>
                 <text x={chartLeft + chartW / 2} y="260" textAnchor="middle" fill="#94a3b8" fontSize="11">Applied Force (N)</text>
               </g>
 
@@ -1831,6 +1826,7 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
             <button
               onClick={() => {
                 setTestSubmitted(true);
+                emitEvent('game_completed', { score: testScore, total: testQuestions.length });
               }}
               style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >

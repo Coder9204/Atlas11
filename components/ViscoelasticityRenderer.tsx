@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ViscoelasticityRendererProps {
@@ -285,16 +288,8 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
     }
     if (onPhaseComplete) onPhaseComplete();
   }, [phase, goToPhase, onPhaseComplete]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const phaseIndex = validPhases.indexOf(phase);
+  const { isMobile } = useViewport();
+const phaseIndex = validPhases.indexOf(phase);
 
   // Physics calculations
   const relaxationTime = () => {
@@ -532,7 +527,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ maxWidth: '720px', display: 'block' }}
-      >
+       role="img" aria-label="Viscoelasticity visualization">
         <defs>
           <linearGradient id="viscBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -1299,6 +1294,7 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                 testQuestions.forEach((q, i) => { if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) score++; });
                 setTestScore(score);
                 setTestSubmitted(true);
+                onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                 if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
                 else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
               }} disabled={testAnswers.includes(null)} style={{

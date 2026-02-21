@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Induction Heating - Complete 10-Phase Game
 // How invisible magnetic fields generate heat without contact
@@ -261,9 +263,8 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [panMaterial, setPanMaterial] = useState<'steel' | 'aluminum' | 'glass' | 'copper'>('steel');
   const [temperature, setTemperature] = useState(25);
   const [frequency, setFrequency] = useState(25); // kHz
@@ -289,14 +290,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for field visualization
+// Animation loop for field visualization
   useEffect(() => {
     const interval = setInterval(() => {
       setFieldPhase(p => (p + frequency / 10) % (Math.PI * 2));
@@ -412,7 +406,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
     const height = isMobile ? 280 : 340;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Induction Heating visualization">
         <defs>
           <linearGradient id="cooktopSurface" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#1e293b" />
@@ -1387,7 +1381,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onG
 
           {/* Static SVG diagram - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '20px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg width={isMobile ? 300 : 460} height={160} viewBox={`0 0 ${isMobile ? 300 : 460} 160`} style={{ maxWidth: '100%' }}>
+            <svg width={isMobile ? 300 : 460} height={160} viewBox={`0 0 ${isMobile ? 300 : 460} 160`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="matGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#9ca3af" />

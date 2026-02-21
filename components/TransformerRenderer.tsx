@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Transformers - Complete 10-Phase Game
 // Understanding electromagnetic induction and voltage transformation
@@ -261,9 +263,8 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [primaryTurns, setPrimaryTurns] = useState(100);
   const [secondaryTurns, setSecondaryTurns] = useState(200);
   const [inputVoltage, setInputVoltage] = useState(120);
@@ -287,14 +288,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // AC animation
+// AC animation
   useEffect(() => {
     if (!isAC && phase !== 'twist_play') return;
     if (phase === 'twist_play' && twistMode === 'dc') return;
@@ -386,7 +380,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
     const currentIntensity = ac ? Math.abs(Math.sin(animP)) : 0;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Transformer visualization">
         <defs>
           <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
@@ -1399,7 +1393,7 @@ const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="320" height="160" viewBox="0 0 320 160" style={{ borderRadius: '8px', background: colors.bgPrimary }}>
+            <svg width="320" height="160" viewBox="0 0 320 160" style={{ borderRadius: '8px', background: colors.bgPrimary }} preserveAspectRatio="xMidYMid meet">
               {/* Background spanning path for AC vs DC comparison */}
               <path
                 d={`M 20 ${160 * 0.1} L 40 ${160 * 0.9} L 60 ${160 * 0.1} L 80 ${160 * 0.9} L 100 ${160 * 0.1} L 120 ${160 * 0.9} L 140 ${160 * 0.1} L 160 ${160 * 0.9} L 180 ${160 * 0.1} L 200 ${160 * 0.5}`}

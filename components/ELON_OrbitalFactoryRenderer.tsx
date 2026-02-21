@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON ORBITAL FACTORY - Complete 10-Phase Game (#27 of 36)
 // In-space manufacturing — microgravity enables materials impossible on Earth
@@ -261,9 +263,8 @@ const ELON_OrbitalFactoryRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [gravityLevel, setGravityLevel] = useState(0);
   const [vibrationLevel, setVibrationLevel] = useState(0);
 
@@ -281,14 +282,7 @@ const ELON_OrbitalFactoryRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate quality metrics based on gravity
+// Calculate quality metrics based on gravity
   const calculateCrystalQuality = (g: number) => Math.max(0, 100 - (g * 100) ** 1.5);
   const calculateFiberAttenuation = (g: number) => 0.01 + g * 9.99; // dB/km: 0.01 at 0g, ~10 at 1g
   const calculateAlloyHomogeneity = (g: number) => Math.max(0, 100 - g * 85);
@@ -481,7 +475,7 @@ const ELON_OrbitalFactoryRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Orbital Factory visualization">
         <defs>
           {/* Gradient: space background */}
           <linearGradient id="spaceBg" x1="0%" y1="0%" x2="100%" y2="100%">

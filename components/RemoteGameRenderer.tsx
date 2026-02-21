@@ -13,6 +13,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -258,15 +260,8 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
   const [confetti, setConfetti] = useState<Array<{ x: number; y: number; color: string; delay: number }>>([]);
 
   // --- RESPONSIVE DESIGN ---
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Emit events to AI coach
+  const { isMobile } = useViewport();
+// Emit events to AI coach
   const emitGameEvent = useCallback((
     eventType: GameEvent['eventType'],
     details: GameEvent['details']
@@ -421,7 +416,7 @@ const RemoteGameRenderer: React.FC<RemoteGameRendererProps> = ({ onGameEvent, ga
     const tickInterval = 1000 / actualTickRate;
 
     return (
-      <svg viewBox="0 0 700 350" style={{ width: '100%', maxHeight: '100%', borderRadius: '12px' }}>
+      <svg viewBox="0 0 700 350" style={{ width: '100%', maxHeight: '100%', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Remote Game visualization">
         <defs>
           {/* Gradients */}
           <linearGradient id="rgClientDevice" x1="0%" y1="0%" x2="100%" y2="100%">

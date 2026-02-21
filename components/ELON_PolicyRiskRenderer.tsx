@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON POLICY RISK - Complete 10-Phase Game
 // Regulatory and policy risk — government policies create uncertainty
@@ -284,9 +286,8 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — Policy Stability Index
+  const { isMobile } = useViewport();
+// Simulation state — Policy Stability Index
   const [stabilityIndex, setStabilityIndex] = useState(50);
   const [baseProjectNPV] = useState(100); // $100M base NPV
   const [projectHorizon] = useState(30); // 30-year project
@@ -310,14 +311,7 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate policy-adjusted NPV
+// Calculate policy-adjusted NPV
   const calculateAdjustedNPV = (stability: number) => {
     const reversalProb = Math.max(0.05, 0.50 - (stability / 100) * 0.45);
     const discountPremium = (1 - stability / 100) * 0.05;
@@ -541,7 +535,7 @@ const ELON_PolicyRiskRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Policy Risk visualization">
         <defs>
           <linearGradient id="policyGradFav" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#10B981" />

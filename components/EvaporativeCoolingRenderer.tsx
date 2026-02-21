@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Evaporative Cooling - Complete 10-Phase Game
 // Teaching how evaporation removes heat through phase change
@@ -261,8 +263,8 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [transferAppIndex, setTransferAppIndex] = useState(0);
+  const { isMobile } = useViewport();
+const [transferAppIndex, setTransferAppIndex] = useState(0);
 
   // Simulation state
   const [humidity, setHumidity] = useState(30);
@@ -290,14 +292,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
   const bodyTempNormal = 37;
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -430,7 +425,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     const currentSkinTemp = skinWet ? bodyTempNormal - calculateCooling(currentEvapRate) : bodyTempNormal;
 
     return (
-      <svg width={width} height={height} viewBox="0 0 450 320" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox="0 0 450 320" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evaporative Cooling visualization">
         <defs>
           <linearGradient id="airGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0c1929" />

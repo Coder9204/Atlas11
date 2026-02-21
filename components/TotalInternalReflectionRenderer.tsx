@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // TOTAL INTERNAL REFLECTION RENDERER - LIGHT TRAPPED IN WATER
 // =============================================================================
@@ -55,7 +57,7 @@ const defined = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
     sizes: {
       xs: '0.75rem',
       sm: '0.875rem',
@@ -455,9 +457,8 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Interactive simulation state
+  const { isMobile } = useViewport();
+// Interactive simulation state
   const [incidentAngle, setIncidentAngle] = useState(30);
   const [material, setMaterial] = useState<'water' | 'glass' | 'acrylic' | 'diamond'>('water');
   const [streamCurvature, setStreamCurvature] = useState(30);
@@ -515,16 +516,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not available */ }
   }, []);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -809,7 +801,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
           gap: defined.spacing.md,
         }}
       >
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Total Internal Reflection visualization">
           <defs>
             {/* Water gradient */}
             <linearGradient id="waterStreamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1107,7 +1099,7 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
     const criticalRad = (currentMaterial.criticalAngle * Math.PI) / 180;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="mediumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="rgba(56, 189, 248, 0.05)" />
@@ -1756,9 +1748,9 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         <line x1="160" y1="40" x2="160" y2="160" stroke="white" strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
         <line x1="120" y1="160" x2="160" y2="100" stroke="#22D3EE" strokeWidth="3" />
         <line x1="160" y1="100" x2="200" y2="160" stroke="#F472B6" strokeWidth="3" filter="url(#predictGlow)" />
-        <text x="10" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Air (n=1.0)</text>
-        <text x="10" y="190" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Water (n=1.33)</text>
-        <text x="165" y="85" fill="#22D3EE" fontSize="11" fontFamily="-apple-system, sans-serif">?</text>
+        <text x="10" y="20" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Air (n=1.0)</text>
+        <text x="10" y="190" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Water (n=1.33)</text>
+        <text x="165" y="85" fill="#22D3EE" fontSize="11" fontFamily={theme.fontFamily}>?</text>
         <circle cx="160" cy="100" r="4" fill="#F472B6" />
       </svg>
 
@@ -2119,8 +2111,8 @@ export default function TotalInternalReflectionRenderer(props: TotalInternalRefl
         </defs>
         <rect x="0" y="0" width="160" height="180" fill="rgba(56,189,248,0.15)" rx="4" />
         <rect x="160" y="0" width="160" height="180" fill="url(#twistDiamond)" rx="4" />
-        <text x="40" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Water (n=1.33)</text>
-        <text x="190" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Diamond (n=2.42)</text>
+        <text x="40" y="20" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Water (n=1.33)</text>
+        <text x="190" y="20" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>Diamond (n=2.42)</text>
         <line x1="80" y1="40" x2="80" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
         <line x1="240" y1="40" x2="240" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
         <path d="M 50 150 L 80 90 L 110 150" fill="none" stroke="#22D3EE" strokeWidth="2" />

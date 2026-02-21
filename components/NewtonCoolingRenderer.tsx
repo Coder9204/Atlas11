@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // NEWTON'S LAW OF COOLING - Complete 10-Phase Game
 // Physics: dT/dt = -k(T - T_ambient) - Exponential decay to ambient temperature
@@ -264,9 +266,8 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Slider-controlled physics parameters
+  const { isMobile } = useViewport();
+// Slider-controlled physics parameters
   const [initialTempSlider, setInitialTempSlider] = useState(65); // Initial coffee temperature (60-100C)
   const [kSlider, setKSlider] = useState(5); // Cooling coefficient slider (1-10, maps to 0.01-0.10)
   const [hasLid, setHasLid] = useState(false);
@@ -296,14 +297,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate effective k based on lid and stirring
+// Calculate effective k based on lid and stirring
   const getEffectiveK = useCallback(() => {
     let k = kCoefficient;
     if (hasLid) k *= 0.5;
@@ -664,7 +658,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         height={totalSvgH}
         viewBox={`0 0 ${svgWidth} ${totalSvgH}`}
         style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', maxWidth: `${svgWidth}px` }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Newton Cooling visualization">
         <defs>
           <linearGradient id="coolingGradient" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
@@ -837,7 +831,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
         height={totalH}
         viewBox={`0 0 ${svgWidth} ${totalH}`}
         style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', maxWidth: `${svgWidth}px` }}
-      >
+       preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="coolingGradient2" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="1" />
@@ -1499,7 +1493,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
             Two options for cooling your 90°C coffee — which changes k more?
           </p>
           {/* Static SVG comparing lid vs stirring cooling options */}
-          <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: colors.bgSecondary, borderRadius: '8px', width: '100%', maxWidth: '300px' }}>
+          <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: colors.bgSecondary, borderRadius: '8px', width: '100%', maxWidth: '300px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistGrad1" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
@@ -1746,7 +1740,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({ onGameEve
           textAlign: 'center',
         }}>
           <svg width={320} height={160} viewBox="0 0 320 160"
-            style={{ background: colors.bgSecondary, borderRadius: '8px', width: '100%', maxWidth: '320px' }}>
+            style={{ background: colors.bgSecondary, borderRadius: '8px', width: '100%', maxWidth: '320px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="kCompareGrad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#F59E0B" />

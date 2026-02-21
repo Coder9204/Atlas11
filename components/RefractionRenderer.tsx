@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Refraction (Broken Straw) - Complete 10-Phase Game
 // How light bends when passing between materials
@@ -261,9 +263,8 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [viewingAngle, setViewingAngle] = useState(30);
   const [refractiveIndex, setRefractiveIndex] = useState(1.33);
   const [waterLevel, setWaterLevel] = useState(60);
@@ -287,14 +288,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Get refractive index for material
+// Get refractive index for material
   const getMaterialIndex = (mat: string) => {
     const indices: Record<string, number> = {
       water: 1.33,
@@ -395,7 +389,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
     const waterSurfaceY = glassTop + glassHeight - waterHeight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Refraction visualization">
         <defs>
           <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
@@ -1238,7 +1232,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
               </p>
               {/* SVG comparison diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-              <svg width={isMobile ? 320 : 400} height={180} viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 320 : 400} height={180} viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />

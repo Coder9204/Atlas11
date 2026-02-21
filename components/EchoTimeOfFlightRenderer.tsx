@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // ECHO TIME OF FLIGHT RENDERER - Premium 10-Phase Learning Experience
 // ============================================================================
@@ -73,7 +75,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -105,9 +107,8 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -263,14 +264,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   const [testComplete, setTestComplete] = useState(false);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -711,7 +705,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         >
           <span className="relative z-10 flex items-center gap-3">
             Explore Echoes
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Echo Time Of Flight visualization">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </span>
@@ -763,7 +757,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         </div>
 
         {/* Static SVG visualization for predict phase */}
-        <svg width="100%" height="240" viewBox="0 0 600 240" style={{ marginBottom: premiumDesign.spacing.lg }}>
+        <svg width="100%" height="240" viewBox="0 0 600 240" style={{ marginBottom: premiumDesign.spacing.lg }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="predictSoundGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={premiumDesign.colors.sound} stopOpacity="0.8" />
@@ -932,7 +926,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
               aria-label="Echo distance visualization"
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium background gradient */}
                 <linearGradient id="echoLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1496,7 +1490,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
         </div>
 
         {/* Static SVG visualization for twist_predict phase */}
-        <svg width="100%" height="260" viewBox="0 0 600 260" style={{ marginBottom: premiumDesign.spacing.lg }}>
+        <svg width="100%" height="260" viewBox="0 0 600 260" style={{ marginBottom: premiumDesign.spacing.lg }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistAirGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
@@ -1645,7 +1639,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           border: '1px solid rgba(255,255,255,0.1)',
           marginBottom: premiumDesign.spacing.lg,
         }}>
-          <svg width="100%" height="180" viewBox="0 0 400 180">
+          <svg width="100%" height="180" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Air medium background gradient */}
               <linearGradient id="echoTwistAirBg" x1="0%" y1="0%" x2="100%" y2="100%">

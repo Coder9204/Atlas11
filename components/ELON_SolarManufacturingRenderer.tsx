@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #12 — SOLAR MANUFACTURING
 // From beach sand to solar electricity: the manufacturing journey of a solar cell
@@ -279,9 +281,8 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — wafer thickness slider
+  const { isMobile } = useViewport();
+// Simulation state — wafer thickness slider
   const [waferThickness, setWaferThickness] = useState(180); // μm, 180 = current, 80 = future
   const [cellTech, setCellTech] = useState<'PERC' | 'TOPCon' | 'HJT'>('PERC');
 
@@ -302,14 +303,7 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate manufacturing metrics
+// Calculate manufacturing metrics
   const kerfWidth = 120; // μm typical
   const wafersPerMm = 1000 / (waferThickness + kerfWidth);
   const kerfLossPercent = (kerfWidth / (waferThickness + kerfWidth)) * 100;
@@ -512,7 +506,7 @@ const ELON_SolarManufacturingRenderer: React.FC<ELON_SolarManufacturingRendererP
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Solar Manufacturing visualization">
         <defs>
           <linearGradient id="solarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#F97316" />

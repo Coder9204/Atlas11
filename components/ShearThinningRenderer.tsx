@@ -15,6 +15,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS (matching evaluation framework requirements)
 // ============================================================
@@ -361,16 +363,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Viewport
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -568,7 +562,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
-        >
+         role="img" aria-label="Shear Thinning visualization">
           <defs>
             {/* Premium ketchup bottle gradient - 6 color stops for depth */}
             <linearGradient id="shearBottleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1913,7 +1907,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
             <svg
               viewBox="0 0 400 180"
               style={{ width: '100%', maxWidth: '500px', height: 'auto', display: 'block', margin: '0 auto 16px auto' }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <rect x="0" y="0" width="400" height="180" fill={colors.bgCard} rx="12" />
               {/* Ketchup panel */}
               <rect x="20" y="20" width="160" height="140" fill={colors.bgDark} rx="10" stroke={`${colors.primary}40`} strokeWidth="1" />
@@ -2121,7 +2115,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               <h4 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>
                 📈 Viscosity vs Shear Rate Comparison
               </h4>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <rect x="0" y="0" width="400" height="200" fill={colors.bgDark} rx="8" />
                 {/* Axes */}
                 <line x1="50" y1="20" x2="50" y2="160" stroke={colors.border} strokeWidth="1.5" />
@@ -2770,6 +2764,7 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                   playSound('click');
                 } else {
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                   goToPhase('mastery');
                 }
               }}

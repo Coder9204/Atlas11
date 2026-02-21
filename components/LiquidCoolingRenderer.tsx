@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Liquid Cooling Heat Transfer - Complete 10-Phase Game
 // Why water is 25x better at cooling than air
@@ -261,9 +263,8 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [coolantType, setCoolantType] = useState<'air' | 'water' | 'oil'>('water');
   const [flowRate, setFlowRate] = useState(5); // L/min
   const [heatLoad, setHeatLoad] = useState(500); // Watts
@@ -288,14 +289,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -418,7 +412,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     const props = coolantProps[coolantType];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Liquid Cooling visualization">
         <defs>
           <linearGradient id="heatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#dc2626" />
@@ -576,7 +570,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
     const panelH = height - panelTop - 8;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           {useTwoPhase ? 'Two-Phase (Boiling) Cooling' : 'Single-Phase Liquid Cooling'}
@@ -892,7 +886,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 320 : 400} height={160} viewBox={`0 0 ${isMobile ? 320 : 400} 160`} style={{ maxWidth: '100%' }}>
+            <svg width={isMobile ? 320 : 400} height={160} viewBox={`0 0 ${isMobile ? 320 : 400} 160`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               {/* Heat source */}
               <rect x="20" y="40" width="80" height="80" rx="8" fill="#dc2626" />
               <text x="60" y="75" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">500W</text>
@@ -1345,7 +1339,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEve
               In two-phase immersion cooling, servers are submerged in a special fluid (like 3M Novec) that boils at low temperatures (34-61C). The fluid boils on hot chips, vapor rises, condenses, and drips back.
             </p>
             {/* Static SVG diagram for two-phase concept */}
-            <svg width={isMobile ? 320 : 400} height={140} viewBox={`0 0 ${isMobile ? 320 : 400} 140`} style={{ display: 'block', margin: '0 auto' }}>
+            <svg width={isMobile ? 320 : 400} height={140} viewBox={`0 0 ${isMobile ? 320 : 400} 140`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               {/* Tank */}
               <rect x="80" y="20" width="240" height="100" rx="8" fill="#7c3aed22" stroke="#7c3aed" strokeWidth="2" />
 

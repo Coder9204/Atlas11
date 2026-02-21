@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // COOLING STRATEGY - Complete 10-Phase Game (ELON Game #10 of 36)
 // Thermal management hierarchy — chip to facility level, heat through multiple mediums
@@ -261,9 +263,8 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [ambientTemp, setAmbientTemp] = useState(15);
   const [gpuPower, setGpuPower] = useState(500);
 
@@ -285,14 +286,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Thermal calculations
+// Thermal calculations
   const freeCoolingThreshold = 27; // degrees C
   const calculateFreeCoolingHours = (ambient: number) => {
     // Approximate: hours below threshold based on climate profile
@@ -510,7 +504,7 @@ const ELON_CoolingStrategyRenderer: React.FC<ELON_CoolingStrategyRendererProps> 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Cooling Strategy visualization">
         <defs>
           <linearGradient id="thermalGradChip" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#EF4444" />

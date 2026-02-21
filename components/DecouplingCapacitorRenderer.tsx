@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Decoupling Capacitors - Complete 10-Phase Game
 // Why local energy reservoirs matter for stable digital circuits
@@ -261,9 +263,8 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [capacitorValue, setCapacitorValue] = useState(100); // nF
   const [esr, setEsr] = useState(10); // mOhms
   const [loadTransient, setLoadTransient] = useState(500); // mA
@@ -286,14 +287,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop - only run during phases that need it
+// Animation loop - only run during phases that need it
   useEffect(() => {
     if (phase !== 'play' && phase !== 'twist_play') return;
     const timer = setInterval(() => {
@@ -464,7 +458,7 @@ const DecouplingCapacitorRenderer: React.FC<DecouplingCapacitorRendererProps> = 
     const markerY = voltToY(markerVoltage);
 
     return (
-      <svg width="100%" height={height} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px`, background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width="100%" height={height} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" style={{ maxWidth: `${width}px`, background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Decoupling Capacitor visualization">
         <title>Decoupling Capacitor Circuit Visualization</title>
         <defs>
           <linearGradient id="powerTraceGrad" x1="0" y1="0" x2="1" y2="0">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Angular Momentum Transfer - Complete 10-Phase Learning Game
 // How cats (and astronauts) rotate in mid-air with zero external torque
@@ -289,9 +291,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Cat animation state
+  const { isMobile } = useViewport();
+// Cat animation state
   const [fallProgress, setFallProgress] = useState(0);
   const [catRotation, setCatRotation] = useState(180);
   const [frontLegsExtended, setFrontLegsExtended] = useState(false);
@@ -318,14 +319,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Cat righting animation
+// Cat righting animation
   useEffect(() => {
     if (!isAnimating) return;
 
@@ -562,7 +556,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
     const centerY = vbH / 2;
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${vbW} ${vbH}`} style={{ overflow: 'visible' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${vbW} ${vbH}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Angular Momentum Transfer visualization">
         <defs>
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0369a1" />
@@ -1293,7 +1287,7 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
           Can they rotate to face a different direction without grabbing anything?
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
-          <svg width="300" height="200" viewBox="0 0 300 200">
+          <svg width="300" height="200" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
             <defs>
               <radialGradient id="stationGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#334155" />

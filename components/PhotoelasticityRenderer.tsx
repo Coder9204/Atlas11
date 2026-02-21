@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // PHOTOELASTICITY RENDERER - Self-Managing Game Component
 // ============================================================================
@@ -13,6 +15,7 @@ interface PhotoelasticityRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -345,7 +348,7 @@ const PhotoelasticVisualization: React.FC<VisualizationProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ borderRadius: '12px', maxWidth: '720px', background: 'rgba(3,7,18,0.9)' }}
-      >
+       role="img" aria-label="Photoelasticity visualization">
         <defs>
           <linearGradient id="phoelLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#030712" />
@@ -707,6 +710,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Normalize phase — default to hook for invalid/undefined phases
   const externalPhase = gamePhase || inputPhase;
@@ -741,17 +745,8 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   const [testConfirmed, setTestConfirmed] = useState(false);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Animation
+  const { isMobile } = useViewport();
+// Animation
   useEffect(() => {
     if (!isAnimating) return;
     const interval = setInterval(() => {
@@ -807,6 +802,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
@@ -1296,7 +1292,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.warning, textAlign: 'center', fontSize: '14px' }}>
                 Polarizers OFF
               </div>
-              <svg viewBox="0 0 320 160" style={{ width: '100%', borderRadius: '8px' }}>
+              <svg viewBox="0 0 320 160" style={{ width: '100%', borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="simpleBg2" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#030712" />
@@ -1568,7 +1564,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
             }}>
               <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.accent, textAlign: 'center', fontSize: '14px' }}>THIN Specimen</div>
-              <svg viewBox="0 0 300 160" style={{ width: '100%', borderRadius: '8px' }}>
+              <svg viewBox="0 0 300 160" style={{ width: '100%', borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 <rect width="300" height="160" fill="#0f172a" />
                 <rect x="80" y="72" width="140" height="14" fill="#3b82f6" opacity="0.6" rx="3" />
                 <text x="150" y="108" fill="#94a3b8" fontSize="13" textAnchor="middle">Thin = Fewer Fringes</text>
@@ -1585,7 +1581,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
               boxShadow: `0 4px 16px rgba(245,158,11,0.2)`,
             }}>
               <div style={{ marginBottom: '8px', fontWeight: 'bold', color: colors.warning, textAlign: 'center', fontSize: '14px' }}>THICK Specimen</div>
-              <svg viewBox="0 0 300 160" style={{ width: '100%', borderRadius: '8px' }}>
+              <svg viewBox="0 0 300 160" style={{ width: '100%', borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 <rect width="300" height="160" fill="#0f172a" />
                 <rect x="80" y="62" width="140" height="30" fill="#3b82f6" opacity="0.6" rx="3" />
                 <text x="150" y="112" fill="#94a3b8" fontSize="13" textAnchor="middle">Thick = More Fringes</text>
@@ -2103,7 +2099,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
       flexDirection: 'column',
       overflow: 'hidden',
       background: colors.bgPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      fontFamily: theme.fontFamily,
       lineHeight: 1.6,
     }}>
       {renderProgressBar()}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Network Congestion Physics - Complete 10-Phase Game
 // Queue utilization near 1 makes latency explode (queueing theory)
@@ -261,9 +263,8 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [arrivalRate, setArrivalRate] = useState(50); // packets per second (0-100)
   const [serviceRate, setServiceRate] = useState(60); // max processing rate
   const [queueDepth, setQueueDepth] = useState(0);
@@ -294,14 +295,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
   const packetIdRef = useRef(0);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -484,7 +478,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
     const maxQueueDisplay = 15;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Network Congestion visualization">
         <defs>
           <linearGradient id="queueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.success} stopOpacity="0.3" />
@@ -673,7 +667,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
       : '';
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '8px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <line
@@ -986,7 +980,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
 
           {/* Static SVG diagram */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg viewBox="0 0 500 220" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }}>
+            <svg viewBox="0 0 500 220" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="latencyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.success} stopOpacity="0.6" />
@@ -1495,7 +1489,7 @@ const NetworkCongestionRenderer: React.FC<NetworkCongestionRendererProps> = ({ o
 
           {/* Static SVG for twist_predict */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg viewBox="0 0 500 200" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }}>
+            <svg viewBox="0 0 500 200" width="100%" style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistGlow">
                   <feGaussianBlur stdDeviation="2" result="blur" />

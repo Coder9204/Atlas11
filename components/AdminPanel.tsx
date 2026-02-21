@@ -10,9 +10,12 @@ import {
   getPageViewAnalytics,
   getUserCohorts,
   getAllEvents,
+  dateRangeFromPreset,
   type FunnelMetrics,
   type GameAnalytics,
   type PhaseDropOff,
+  type DateRange,
+  type DatePreset,
 } from '../services/AnalyticsService';
 import {
   getAllGameProgress,
@@ -24,6 +27,14 @@ import {
   getPathStats,
   type LearnerPath,
 } from '../services/LearningPathService';
+import {
+  getFirestoreUserStats,
+  getFirestoreTestStats,
+  getConversionMetrics,
+  type FirestoreUserStats,
+  type FirestoreTestStats,
+  type ConversionMetrics,
+} from '../services/AdminAnalyticsService';
 
 // ============================================================================
 // ADMIN PANEL — Analytics dashboard for Atlas Coach
@@ -47,7 +58,7 @@ const theme = {
 const ADMIN_AUTH_KEY = 'atlas_admin_auth';
 const ADMIN_PASSWORD = 'atlas2024admin';
 
-type AdminTab = 'overview' | 'funnel' | 'games' | 'paths' | 'dropoff' | 'scores' | 'requests' | 'cohorts';
+type AdminTab = 'overview' | 'funnel' | 'games' | 'paths' | 'dropoff' | 'scores' | 'requests' | 'cohorts' | 'conversion';
 
 // ============================================================================
 // HELPERS
@@ -77,6 +88,46 @@ function formatTimeAgo(ts: number): string {
 
 function slugToName(slug: string): string {
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatCurrency(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+// ============================================================================
+// CSV EXPORT (Improvement 8)
+// ============================================================================
+
+function downloadCSV(filename: string, headers: string[], rows: (string | number)[][]): void {
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  const csv = [headers.map(escape).join(','), ...rows.map(r => r.map(escape).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ExportButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '4px 12px', borderRadius: 4, border: `1px solid ${theme.border}`,
+        background: 'transparent', color: theme.textSecondary, fontSize: 12, cursor: 'pointer',
+        fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4,
+      }}
+    >
+      Export CSV
+    </button>
+  );
 }
 
 // ============================================================================
@@ -174,6 +225,14 @@ export default function AdminPanel() {
   const [paths, setPaths] = useState<LearnerPath[]>([]);
   const [gameSort, setGameSort] = useState<'plays' | 'completion' | 'score'>('plays');
 
+  // Date range filter (Improvement 4)
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
+
+  // Firestore state (Improvement 2)
+  const [firestoreUsers, setFirestoreUsers] = useState<FirestoreUserStats | null>(null);
+  const [firestoreTests, setFirestoreTests] = useState<FirestoreTestStats | null>(null);
+  const [conversionData, setConversionData] = useState<ConversionMetrics | null>(null);
+
   // Check existing auth
   useEffect(() => {
     try {
@@ -185,20 +244,25 @@ export default function AdminPanel() {
 
   const [lastRefresh, setLastRefresh] = useState<number>(0);
 
-  // Load/refresh data when authenticated
+  // Load/refresh data when authenticated or date range changes
   const refreshData = useCallback(() => {
-    setFunnel(getFunnelMetrics());
-    setGameAnalytics(getPerGameAnalytics());
-    setPhaseDropOff(getPhaseDropOffAnalysis());
+    const range = dateRangeFromPreset(datePreset);
+    setFunnel(getFunnelMetrics(range));
+    setGameAnalytics(getPerGameAnalytics(range));
+    setPhaseDropOff(getPhaseDropOffAnalysis(range));
     setAllRecords(getAllGameProgress());
     setPaths(getAllPaths());
     setLastRefresh(Date.now());
-  }, []);
+
+    // Fetch Firestore data asynchronously
+    getFirestoreUserStats().then(setFirestoreUsers).catch(() => {});
+    getFirestoreTestStats().then(setFirestoreTests).catch(() => {});
+    getConversionMetrics().then(setConversionData).catch(() => {});
+  }, [datePreset]);
 
   useEffect(() => {
     if (!authenticated) return;
     refreshData();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
   }, [authenticated, refreshData]);
@@ -218,19 +282,18 @@ export default function AdminPanel() {
     localStorage.removeItem(ADMIN_AUTH_KEY);
   }, []);
 
-  // Score distribution — recompute on refresh
-  const scoreDist = useMemo(() => getScoreDistribution(), [lastRefresh]);
-  const customRequests = useMemo(() => getCustomRequestsAnalytics(), [lastRefresh]);
-  const pageViews = useMemo(() => getPageViewAnalytics(), [lastRefresh]);
-  const cohorts = useMemo(() => getUserCohorts(), [lastRefresh]);
+  // Computed metrics with date range
+  const dateRange = useMemo(() => dateRangeFromPreset(datePreset), [datePreset]);
+  const scoreDist = useMemo(() => getScoreDistribution(dateRange), [lastRefresh, dateRange]);
+  const customRequests = useMemo(() => getCustomRequestsAnalytics(dateRange), [lastRefresh, dateRange]);
+  const pageViews = useMemo(() => getPageViewAnalytics(dateRange), [lastRefresh, dateRange]);
+  const cohorts = useMemo(() => getUserCohorts(dateRange), [lastRefresh, dateRange]);
 
-  // Summary stats
   const summary = useMemo(() => {
     if (!authenticated) return null;
     return getAnalyticsSummary();
   }, [authenticated, lastRefresh]);
 
-  // Sorted game analytics
   const sortedGames = useMemo(() => {
     const copy = [...gameAnalytics];
     switch (gameSort) {
@@ -240,7 +303,6 @@ export default function AdminPanel() {
     }
   }, [gameAnalytics, gameSort]);
 
-  // Score histogram buckets
   const scoreHistogram = useMemo(() => {
     const scores = scoreDist['all'] || [];
     const buckets = [
@@ -257,13 +319,53 @@ export default function AdminPanel() {
     return buckets;
   }, [scoreDist]);
 
-  // Path analytics
   const pathAnalytics = useMemo(() => {
     return paths.map(p => {
       const stats = getPathStats(p);
       return { path: p, stats };
     });
   }, [paths]);
+
+  // CSV export handlers
+  const exportFunnel = useCallback(() => {
+    if (!funnel) return;
+    const ts = datePreset;
+    downloadCSV(`funnel_${ts}_${Date.now()}.csv`,
+      ['Step', 'Count', 'Rate'],
+      [
+        ['Unique Sessions', funnel.uniqueSessions, ''],
+        ['Onboarding Started', funnel.onboardingStarted, ''],
+        ['Onboarding Completed', funnel.onboardingCompleted, formatPercent(funnel.onboardingCompletionRate)],
+        ['First Game Played', funnel.firstGamePlayed, formatPercent(funnel.firstGameConversionRate)],
+        ['Games Completed', funnel.gamesCompleted, formatPercent(funnel.gameCompletionRate)],
+        ['Paths Enrolled', funnel.pathsEnrolled, ''],
+        ['Paths Completed', funnel.pathsCompleted, formatPercent(funnel.pathCompletionRate)],
+      ]);
+  }, [funnel, datePreset]);
+
+  const exportGames = useCallback(() => {
+    downloadCSV(`games_${datePreset}_${Date.now()}.csv`,
+      ['Game', 'Plays', 'Completion Rate', 'Avg Score', 'Avg Time (ms)', 'Drop-off Phase'],
+      sortedGames.map(g => [slugToName(g.slug), g.timesPlayed, formatPercent(g.completionRate), Math.round(g.avgScore), Math.round(g.avgTimeMs), g.mostCommonDropOffPhase]));
+  }, [sortedGames, datePreset]);
+
+  const exportDropoff = useCallback(() => {
+    downloadCSV(`dropoff_${datePreset}_${Date.now()}.csv`,
+      ['Phase', 'Entered', 'Proceeded', 'Drop-off Rate'],
+      phaseDropOff.map(p => [p.phase, p.entered, p.completed, formatPercent(p.dropOffRate)]));
+  }, [phaseDropOff, datePreset]);
+
+  const exportScores = useCallback(() => {
+    downloadCSV(`scores_${datePreset}_${Date.now()}.csv`,
+      ['Bucket', 'Count'],
+      scoreHistogram.map(b => [b.label, b.count]));
+  }, [scoreHistogram, datePreset]);
+
+  const exportRequests = useCallback(() => {
+    downloadCSV(`requests_${datePreset}_${Date.now()}.csv`,
+      ['Topic', 'Count', 'Validation', 'Last Requested'],
+      customRequests.map(r => [r.topic, r.count, r.validationResult, new Date(r.lastRequested).toISOString()]));
+  }, [customRequests, datePreset]);
 
   // ─── AUTH SCREEN ────────────────────────────────────────────────────────
   if (!authenticated) {
@@ -345,6 +447,14 @@ export default function AdminPanel() {
     { id: 'scores', label: 'Scores' },
     { id: 'requests', label: 'Requests' },
     { id: 'cohorts', label: 'Cohorts' },
+    { id: 'conversion', label: 'Revenue' },
+  ];
+
+  const datePresets: { id: DatePreset; label: string }[] = [
+    { id: 'today', label: 'Today' },
+    { id: '7d', label: '7d' },
+    { id: '30d', label: '30d' },
+    { id: 'all', label: 'All Time' },
   ];
 
   return (
@@ -429,6 +539,35 @@ export default function AdminPanel() {
         ))}
       </div>
 
+      {/* Date Range Filter (Improvement 4) */}
+      <div style={{
+        display: 'flex',
+        gap: 6,
+        padding: '8px 24px',
+        borderBottom: `1px solid ${theme.border}`,
+        alignItems: 'center',
+      }}>
+        <span style={{ fontSize: 12, color: theme.textMuted, marginRight: 8 }}>Period:</span>
+        {datePresets.map(dp => (
+          <button
+            key={dp.id}
+            onClick={() => setDatePreset(dp.id)}
+            style={{
+              padding: '4px 12px',
+              borderRadius: 4,
+              border: datePreset === dp.id ? `1px solid ${theme.accent}` : `1px solid ${theme.border}`,
+              backgroundColor: datePreset === dp.id ? `${theme.accent}20` : 'transparent',
+              color: datePreset === dp.id ? theme.accent : theme.textMuted,
+              fontSize: 12,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            {dp.label}
+          </button>
+        ))}
+      </div>
+
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
 
@@ -446,8 +585,31 @@ export default function AdminPanel() {
               <StatCard label="Games Played" value={summary?.totalGamesPlayed || 0} />
               <StatCard label="Paths Enrolled" value={funnel?.pathsEnrolled || 0} />
               <StatCard label="Avg Session" value={formatDuration(funnel?.averageSessionDurationMs || 0)} />
-              <StatCard label="Onboarding %" value={formatPercent(funnel?.onboardingCompletionRate || 0)} />
+              <StatCard label="Return Rate" value={formatPercent(funnel?.returnRate || 0)} />
             </div>
+
+            {/* Firestore stats (Improvement 2) */}
+            {firestoreUsers && (
+              <>
+                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Platform Users (Firestore)</h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: 16,
+                  marginBottom: 32,
+                }}>
+                  <StatCard label="Total Users" value={firestoreUsers.totalUsers} />
+                  <StatCard label="DAU" value={firestoreUsers.dau} />
+                  <StatCard label="MAU" value={firestoreUsers.mau} />
+                  <StatCard label="Authenticated" value={firestoreUsers.authenticatedUsers} />
+                  <StatCard label="Active Subscribers" value={
+                    Object.entries(firestoreUsers.subscribersByTier)
+                      .filter(([k]) => k !== 'free')
+                      .reduce((sum, [, v]) => sum + v, 0)
+                  } />
+                </div>
+              </>
+            )}
 
             {/* Quick stats */}
             <div style={{
@@ -482,8 +644,8 @@ export default function AdminPanel() {
                   <span style={{ fontSize: 13, color: theme.textPrimary }}>{summary?.streakDays || 0} days</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 13, color: theme.textMuted }}>Return Rate</span>
-                  <span style={{ fontSize: 13, color: theme.textPrimary }}>{formatPercent(funnel?.returnRate || 0)}</span>
+                  <span style={{ fontSize: 13, color: theme.textMuted }}>Onboarding %</span>
+                  <span style={{ fontSize: 13, color: theme.textPrimary }}>{formatPercent(funnel?.onboardingCompletionRate || 0)}</span>
                 </div>
               </div>
             </div>
@@ -493,7 +655,10 @@ export default function AdminPanel() {
         {/* ─── CONVERSION FUNNEL ────────────────────────────────────── */}
         {activeTab === 'funnel' && funnel && (
           <>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Conversion Funnel</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Conversion Funnel</h2>
+              <ExportButton onClick={exportFunnel} />
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 600 }}>
               <FunnelStep label="Landing (Unique Sessions)" count={funnel.uniqueSessions} />
               <FunnelStep label="Onboarding Started" count={funnel.onboardingStarted} prevCount={funnel.uniqueSessions} rate={funnel.uniqueSessions > 0 ? funnel.onboardingStarted / funnel.uniqueSessions : 0} />
@@ -512,6 +677,7 @@ export default function AdminPanel() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Game Analytics ({sortedGames.length} games)</h2>
               <div style={{ display: 'flex', gap: 8 }}>
+                <ExportButton onClick={exportGames} />
                 {(['plays', 'completion', 'score'] as const).map(s => (
                   <button
                     key={s}
@@ -601,9 +767,12 @@ export default function AdminPanel() {
         {/* ─── DROP-OFF ANALYSIS ─────────────────────────────────────── */}
         {activeTab === 'dropoff' && (
           <>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Drop-off Analysis</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Drop-off Analysis</h2>
+              <ExportButton onClick={exportDropoff} />
+            </div>
 
-            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Phase Drop-off Rates</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Sequential Phase Drop-off</h3>
             {phaseDropOff.length > 0 ? (
               <div style={{ marginBottom: 32 }}>
                 <BarChart
@@ -636,7 +805,10 @@ export default function AdminPanel() {
         {/* ─── SCORE DISTRIBUTION ────────────────────────────────────── */}
         {activeTab === 'scores' && (
           <>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Score Distribution</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Score Distribution</h2>
+              <ExportButton onClick={exportScores} />
+            </div>
 
             <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Test Score Histogram</h3>
             <div style={{ marginBottom: 32 }}>
@@ -667,7 +839,10 @@ export default function AdminPanel() {
         {/* ─── CUSTOM REQUESTS ───────────────────────────────────────── */}
         {activeTab === 'requests' && (
           <>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Custom Game Requests ({customRequests.length})</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Custom Game Requests ({customRequests.length})</h2>
+              <ExportButton onClick={exportRequests} />
+            </div>
             {customRequests.length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -746,6 +921,59 @@ export default function AdminPanel() {
               />
             ) : (
               <p style={{ color: theme.textMuted }}>No interest data yet</p>
+            )}
+          </>
+        )}
+
+        {/* ─── REVENUE / CONVERSION (Improvement 5) ──────────────────── */}
+        {activeTab === 'conversion' && (
+          <>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px' }}>Revenue & Conversion</h2>
+
+            {conversionData ? (
+              <>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: 16,
+                  marginBottom: 32,
+                }}>
+                  <StatCard label="MRR" value={formatCurrency(conversionData.mrr)} />
+                  <StatCard label="Active Subscribers" value={conversionData.totalActiveSubscribers} />
+                  <StatCard label="Trialing" value={conversionData.totalTrialing} />
+                  <StatCard label="Canceled" value={conversionData.totalCanceled} />
+                  <StatCard label="Trial-to-Paid" value={formatPercent(conversionData.trialToPaidRate)} />
+                  <StatCard label="Churn Rate" value={formatPercent(conversionData.churnRate)} />
+                </div>
+
+                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Subscribers by Tier</h3>
+                <div style={{ marginBottom: 32 }}>
+                  <BarChart
+                    data={Object.entries(conversionData.subscribersByTier)
+                      .filter(([k]) => k !== 'free')
+                      .map(([tier, count]) => ({
+                        label: tier.charAt(0).toUpperCase() + tier.slice(1),
+                        value: count,
+                        color: tier === 'lifetime' ? theme.success : tier === 'pro' ? theme.accent : theme.warning,
+                      }))}
+                  />
+                </div>
+
+                <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Conversion Funnel</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 600 }}>
+                  <FunnelStep label="Total Users" count={
+                    Object.values(conversionData.subscribersByTier).reduce((a, b) => a + b, 0)
+                  } />
+                  <FunnelStep label="Free Tier" count={conversionData.subscribersByTier['free'] || 0} />
+                  <FunnelStep label="Trialing" count={conversionData.totalTrialing} />
+                  <FunnelStep label="Paid" count={conversionData.totalActiveSubscribers} rate={conversionData.freeToPaidRate} />
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: 60 }}>
+                <p style={{ color: theme.textMuted, fontSize: 15 }}>Revenue data requires Firebase connection</p>
+                <p style={{ color: theme.textMuted, fontSize: 13, marginTop: 8 }}>Firestore user documents with subscription fields are needed</p>
+              </div>
             )}
           </>
         )}

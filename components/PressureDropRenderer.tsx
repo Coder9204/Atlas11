@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Pressure Drop in Fluid Systems - Complete 10-Phase Game
 // Understanding how pipe diameter, flow rate, length, and roughness affect pressure loss
@@ -261,9 +263,8 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [pipeDiameter, setPipeDiameter] = useState(4); // inches
   const [flowRate, setFlowRate] = useState(50); // GPM or CFM
   const [pipeLength, setPipeLength] = useState(100); // feet
@@ -285,14 +286,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -399,7 +393,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
         viewBox={`0 0 ${vbWidth} ${vbHeight}`}
         width="100%"
         style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Pressure Drop visualization">
         <defs>
           <linearGradient id="pdPipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.accent} />
@@ -792,7 +786,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               viewBox="0 0 500 200"
               width="100%"
               style={{ maxWidth: '500px', display: 'block', margin: '0 auto' }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="pdPredGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3B82F6" />
@@ -1133,7 +1127,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               viewBox="0 0 500 200"
               width="100%"
               style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="rvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3B82F6" />
@@ -1294,7 +1288,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               viewBox="0 0 500 180"
               width="100%"
               style={{ maxWidth: '500px', display: 'block', margin: '0 auto' }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="tpFilterClean" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#e2e8f0" />
@@ -1630,7 +1624,7 @@ const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent
               viewBox="0 0 500 180"
               width="100%"
               style={{ maxWidth: '500px', background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="trGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#10B981" />

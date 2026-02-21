@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // UPS Battery Sizing - Complete 10-Phase Game
 // Why battery capacity drops dramatically at high discharge rates
@@ -261,9 +263,8 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [batteryCapacity, setBatteryCapacity] = useState(100); // Ah
   const [loadPower, setLoadPower] = useState(2400); // Watts
   const [batteryVoltage] = useState(48); // Volts
@@ -288,14 +289,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -425,7 +419,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
     const lossPercent = 100 - fillPercent;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="U P S Battery Sizing visualization">
         <defs>
           <linearGradient id="batteryFillGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -825,7 +819,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
 
           {/* Static SVG diagram */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }}>
+            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="predictGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>
@@ -1168,7 +1162,7 @@ const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onG
           </h2>
 
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }}>
+            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistPredGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>

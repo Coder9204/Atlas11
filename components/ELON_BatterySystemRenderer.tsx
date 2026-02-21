@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // BATTERY ENERGY STORAGE SYSTEM (BESS) - Complete 10-Phase Game
 // Cell chemistry, pack architecture, degradation management
@@ -261,9 +263,8 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — C-rate slider
+  const { isMobile } = useViewport();
+// Simulation state — C-rate slider
   const [cRate, setCRate] = useState(1.0);
 
   // Chemistry state
@@ -286,14 +287,7 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate BESS metrics based on C-rate
+// Calculate BESS metrics based on C-rate
   const calculateEfficiency = (cr: number): number => {
     // Round-trip efficiency decreases with higher C-rate due to I²R losses
     // 0.25C -> ~92%, 1C -> ~89%, 2C -> ~86%, 4C -> ~82%
@@ -508,7 +502,7 @@ const ELON_BatterySystemRenderer: React.FC<ELON_BatterySystemRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Battery System visualization">
         <defs>
           {/* Cell gradient - charge level */}
           <linearGradient id="cellChargeGrad" x1="0%" y1="100%" x2="0%" y2="0%">

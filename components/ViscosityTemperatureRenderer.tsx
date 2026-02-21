@@ -15,6 +15,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -358,17 +360,8 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -525,7 +518,7 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
-        >
+         role="img" aria-label="Viscosity Temperature visualization">
           <defs>
             <linearGradient id="viscBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -1323,7 +1316,7 @@ const ViscosityTemperatureRenderer: React.FC<ViscosityTemperatureRendererProps> 
 
             {/* Static SVG showing viscosity comparison - no sliders */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', borderRadius: '12px', display: 'block' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#1e1b4b" />

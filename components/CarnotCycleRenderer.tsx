@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // CARNOT CYCLE RENDERER - THERMODYNAMIC EFFICIENCY & HEAT ENGINES
 // Premium 10-phase educational game with inline styles for test compliance
@@ -319,9 +321,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({
 
   // Phase and navigation state
   const [phase, setPhase] = useState<Phase>(initialPhase as Phase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction states
+  const { isMobile } = useViewport();
+// Prediction states
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -353,15 +354,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
   // ============================================================================
   // EFFECTS
   // ============================================================================
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync with external phase control
+// Sync with external phase control
   useEffect(() => {
     const externalPhase = gamePhase ?? currentPhase ?? phaseProp;
     if (externalPhase && externalPhase !== phase && PHASE_ORDER.includes(externalPhase as Phase)) {
@@ -546,7 +539,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       height: '100dvh',
       background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
       color: '#f8fafc',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       overflow: 'hidden',
       position: 'relative' as const
     },
@@ -695,7 +688,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
               onClick={onBack}
               style={{ ...styles.button, padding: '8px', minHeight: '36px', background: 'transparent', color: '#cbd5e1' }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Carnot Cycle visualization">
                 <path d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -769,7 +762,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
 
     return (
       <div style={{ position: 'relative', display: 'inline-block' }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '100%' }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -868,7 +861,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       </p>
 
       <div style={{ margin: '32px 0' }}>
-        <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }}>
+        <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="carBody" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
@@ -935,7 +928,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
         style={{ ...styles.button, ...styles.primaryButton, marginTop: '24px' }}
       >
         Discover the Limit
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" preserveAspectRatio="xMidYMid meet">
           <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </button>
@@ -949,7 +942,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       <p style={{ ...styles.paragraph, fontSize: '14px' }}>{predictions.initial.context}</p>
 
       <div style={{ margin: '24px 0', textAlign: 'center' as const }}>
-        <svg width="220" height="150" viewBox="0 0 220 150" style={{ maxWidth: '100%' }}>
+        <svg width="220" height="150" viewBox="0 0 220 150" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="hotRes" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ef4444" />
@@ -1222,7 +1215,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       <p style={{ ...styles.paragraph, fontSize: '14px' }}>{predictions.twist.context}</p>
 
       <div style={{ margin: '24px 0', textAlign: 'center' as const }}>
-        <svg width="220" height="160" viewBox="0 0 220 160" style={{ maxWidth: '100%' }}>
+        <svg width="220" height="160" viewBox="0 0 220 160" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="hotResT" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#ef4444" />
@@ -1312,7 +1305,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
         <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', textAlign: 'center' as const }}>
           <h3 style={{ ...styles.subheading, color: '#3b82f6', fontSize: '16px' }}>Refrigerator</h3>
-          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
+          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <rect x="50" y="15" width="80" height="90" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="6" />
             <rect x="57" y="22" width="66" height="35" fill="#0f172a" rx="4" />
             <text x="90" y="44" textAnchor="middle" fill="#93c5fd" fontSize="11">COLD</text>
@@ -1327,7 +1320,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({
 
         <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', textAlign: 'center' as const }}>
           <h3 style={{ ...styles.subheading, color: '#ef4444', fontSize: '16px' }}>Heat Pump</h3>
-          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
+          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <circle cx="90" cy="10" r={3} fill="#ef4444" opacity="0.6" />
             <polygon points="90,15 145,45 145,100 35,100 35,45" fill="none" stroke="#ef4444" strokeWidth="2" />
             <rect x="45" y="50" width="90" height="50" fill="rgba(254, 243, 199, 0.15)" />

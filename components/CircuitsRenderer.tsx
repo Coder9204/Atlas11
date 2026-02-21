@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Premium Design System
 const premiumDesign = {
   colors: {
@@ -36,7 +38,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -96,15 +98,8 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
   const lastClickRef = useRef(0);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography responsive system
+  const { isMobile } = useViewport();
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -277,14 +272,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
   const [testComplete, setTestComplete] = useState(false);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync
+// Phase sync
   useEffect(() => {
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -813,7 +801,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
           maxWidth: 500,
           margin: '0 auto 24px',
         }}>
-          <svg viewBox="0 0 300 180" style={{ width: '100%', maxHeight: 200, display: 'block' }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', maxHeight: 200, display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Circuits visualization">
             <defs>
               <linearGradient id="predCopperWire" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#CD7F32" />
@@ -945,7 +933,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               {/* Premium Defs - Gradients and Filters */}
               <defs>
                 {/* Copper wire gradient */}
@@ -1458,7 +1446,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
           maxWidth: 600,
           margin: '0 auto 24px',
         }}>
-          <svg viewBox="0 0 400 140" style={{ width: '100%', maxHeight: 160, display: 'block' }}>
+          <svg viewBox="0 0 400 140" style={{ width: '100%', maxHeight: 160, display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <rect width="100%" height="100%" fill="#1a1a2e" rx="8" />
             {/* Series circuit on left */}
             <text x="100" y="20" fill={premiumDesign.colors.text.primary} fontSize="12" textAnchor="middle" fontWeight="bold">SERIES</text>
@@ -1575,7 +1563,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 250 }}>
+            <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 250 }} preserveAspectRatio="xMidYMid meet">
               {/* Premium Defs - Gradients and Filters */}
               <defs>
                 {/* Copper wire gradient */}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // ESD Protection - Complete 10-Phase Game
 // Teaching electrostatic discharge protection in electronic circuits
@@ -291,9 +293,8 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [esdVoltage, setEsdVoltage] = useState(4000); // Volts
   const [hasProtection, setHasProtection] = useState(true);
   const [isDischarging, setIsDischarging] = useState(false);
@@ -320,14 +321,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -460,7 +454,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
     const flowOffset = (animationFrame * 3) % 40;
 
     return (
-      <svg width={isMobile ? 340 : 500} height={isMobile ? 280 : 350} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={isMobile ? 340 : 500} height={isMobile ? 280 : 350} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="E S D Protection visualization">
         <defs>
           {/* Spark gradient */}
           <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1086,7 +1080,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
 
   // Static SVG for predict phase (render function, not component)
   const renderPredictPhaseSVG = () => (
-    <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+    <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="humanGradStatic" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fdba74" />
@@ -1568,7 +1562,7 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEve
           textAlign: 'center',
         }}>
           {/* Twist predict SVG */}
-          <svg width={isMobile ? 320 : 400} height={220} viewBox="0 0 400 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          <svg width={isMobile ? 320 : 400} height={220} viewBox="0 0 400 220" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="glowTwist" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="3" result="blur" />

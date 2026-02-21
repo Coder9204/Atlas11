@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Thin Film Interference - Complete 10-Phase Game
 // Teaching interference patterns in thin films like soap bubbles
@@ -261,9 +263,8 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [thickness, setThickness] = useState(400);
   const [viewAngle, setViewAngle] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -284,14 +285,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop - only runs when actively animating
+// Animation loop - only runs when actively animating
   useEffect(() => {
     if (!isAnimating) return;
     const timer = setInterval(() => {
@@ -440,7 +434,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     }
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${isMobile ? 340 : 500} ${isMobile ? 320 : 400}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Thin Film Interference visualization">
         <defs>
           {/* Lab background gradient */}
           <linearGradient id="tfiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // PUE Calculator - Complete 10-Phase Learning Game
 // Understanding Power Usage Effectiveness in Data Centers
@@ -271,9 +273,8 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
 
   // Core state
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation debouncing
+  const { isMobile } = useViewport();
+// Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
@@ -312,14 +313,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -470,6 +464,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     });
     setTestScore(score);
     setTestSubmitted(true);
+    emitGameEvent('game_completed', { score: score, total: testQuestions.length });
     playSound(score >= 7 ? 'success' : 'failure');
     emitGameEvent('completion', { score, total: 10 });
   };
@@ -593,7 +588,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
     const coolingBarColor = outdoorTemp < 18 ? '#06b6d4' : outdoorTemp < 25 ? '#3b82f6' : '#6366f1';
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="P U E Calculator visualization">
         <defs>
           <linearGradient id="pueItGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -850,7 +845,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
 
           {/* Static SVG showing PUE formula */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }}>
+            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="pueGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
@@ -1229,7 +1224,7 @@ const PUECalculatorRenderer: React.FC<PUECalculatorRendererProps> = ({ onGameEve
           </h2>
 
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }}>
+            <svg width="100%" height="150" viewBox="0 0 500 150" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="freeCoolGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="3" result="blur" />

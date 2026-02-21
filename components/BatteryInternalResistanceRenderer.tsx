@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Battery Internal Resistance - Complete 10-Phase Learning Game
 // Why batteries feel weak when cold, nearly empty, or under heavy load
@@ -312,15 +314,8 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   gamePhase,
 }) => {
   // Mobile detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography with font weights
+  const { isMobile } = useViewport();
+// Responsive typography with font weights
   const typo = {
     title: isMobile ? '24px' : '32px',
     heading: isMobile ? '18px' : '22px',
@@ -532,7 +527,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '12px', maxWidth: '700px' }}>
+        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '12px', maxWidth: '700px' }} role="img" aria-label="Battery Internal Resistance visualization">
           <defs>
             <linearGradient id="labBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // UPS Efficiency & Battery Chemistry - Complete 10-Phase Game
 // Why 48V and lithium: understanding I²R losses and distribution voltage
@@ -261,9 +263,8 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [voltage, setVoltage] = useState(12); // Distribution voltage
   const [power, setPower] = useState(10000); // Watts
   const [wireResistance, setWireResistance] = useState(0.01); // Ohms
@@ -287,14 +288,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -516,7 +510,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
     const heatGlow = Math.min(1, displayLossPercent / 10);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="U P S Efficiency visualization">
         <defs>
           <filter id="wireGlow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -1053,7 +1047,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
 
           {/* Static SVG comparing lead-acid vs lithium */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }}>
+            <svg width="100%" height="160" viewBox="0 0 500 160" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="batteryGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
@@ -1183,7 +1177,7 @@ const UPSEfficiencyRenderer: React.FC<UPSEfficiencyRendererProps> = ({ onGameEve
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               {/* SVG Annual Energy Loss Bar Chart */}
               <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-            <svg width="100%" height="140" viewBox="0 0 480 140" style={{ display: 'block' }}>
+            <svg width="100%" height="140" viewBox="0 0 480 140" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="leadBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.error} stopOpacity="0.9" />

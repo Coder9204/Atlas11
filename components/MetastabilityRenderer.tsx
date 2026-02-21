@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // METASTABILITY - Complete 10-Phase Game
 // Why flip-flops fail when crossing clock domains and how to prevent it
@@ -245,9 +247,8 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - start at 0.5ns so 70% of max(2) = 1.4 changes the display
+  const { isMobile } = useViewport();
+// Simulation state - start at 0.5ns so 70% of max(2) = 1.4 changes the display
   const [setupTimeMargin, setSetupTimeMargin] = useState(0.5);
   const [clockFrequency, setClockFrequency] = useState(100);
   const [mtbfRequirement, setMtbfRequirement] = useState(100);
@@ -272,15 +273,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
 
   // Navigation ref
   const isNavigating = useRef(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
+useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
       setClockPhase(p => (p + 1) % 100);
@@ -499,7 +492,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const mtbfLabel = rawMTBF > 1e6 ? `${(rawMTBF / 1e6).toFixed(1)}M yr` : rawMTBF > 1e3 ? `${(rawMTBF / 1e3).toFixed(0)}K yr` : `${rawMTBF.toFixed(0)} yr`;
 
     return (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Flip-flop timing diagram">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Flip-flop timing diagram" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="ffClkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.clock} stopOpacity="0.7" />
@@ -660,7 +653,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
     const failurePpm = Math.min(999999, resolveProb * 1e6 / (syncStages * 2));
 
     return (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Synchronizer chain visualization">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} role="img" aria-label="Synchronizer chain visualization" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="syncBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#1a1a2e" />
@@ -794,7 +787,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
               A flip-flop samples data right as it is changing. What happens to the output?
             </h2>
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-              <svg width={pW} height={150} viewBox={`0 0 ${pW} 150`}>
+              <svg width={pW} height={150} viewBox={`0 0 ${pW} 150`} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.data} /><stop offset="100%" stopColor={colors.error} />
@@ -939,7 +932,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
             </p>
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <svg width={isMobile ? 300 : 400} height={200} viewBox={`0 0 ${isMobile ? 300 : 400} 200`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+                <svg width={isMobile ? 300 : 400} height={200} viewBox={`0 0 ${isMobile ? 300 : 400} 200`} style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <linearGradient id="engGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor={colors.success} /><stop offset="50%" stopColor={colors.error} /><stop offset="100%" stopColor={colors.success} />
@@ -998,7 +991,7 @@ const MetastabilityRenderer: React.FC<MetastabilityRendererProps> = ({ onGameEve
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px' }}>Engineers add a second flip-flop after the first. Why does this help?</h2>
             {/* SVG diagram showing the concept - no sliders */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 300 : 440} height={120} viewBox={`0 0 440 120`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 300 : 440} height={120} viewBox={`0 0 440 120`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="tpBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#1a1a2e" />

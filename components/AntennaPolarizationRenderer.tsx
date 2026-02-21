@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // ANTENNA POLARIZATION GAME
 // Core Concept: EM waves have polarization; antennas couple best when aligned
@@ -140,9 +142,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Game state
+  const { isMobile } = useViewport();
+// Game state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [antennaAngle, setAntennaAngle] = useState(0);
@@ -161,16 +162,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
   const [testScore, setTestScore] = useState(0);
 
   const isNavigating = useRef(false);
-
-  // Responsive check
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Wave animation offset
+// Wave animation offset
   useEffect(() => {
     const interval = setInterval(() => {
       setWaveOffset(prev => (prev + 2) % 40);
@@ -576,7 +568,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
         height="100%"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Antenna Polarization visualization">
         {/* === DEFINITIONS - Gradients, Filters, Markers === */}
         <defs>
           {/* Metallic antenna gradient */}
@@ -2152,7 +2144,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
     const ApplicationDiagram = () => {
       const diagrams: Record<number, JSX.Element> = {
         0: ( // Smartphone
-          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }}>
+          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Phone outline */}
             <rect x="110" y="30" width="80" height="140" rx="10" fill={colors.bgElevated} stroke={colors.textMuted} strokeWidth="2"/>
             {/* Screen */}
@@ -2175,7 +2167,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           </svg>
         ),
         1: ( // Satellite
-          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }}>
+          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Satellite */}
             <ellipse cx="150" cy="25" rx="30" ry="10" fill={colors.bgElevated}/>
             <rect x="145" y="18" width="10" height="15" fill={colors.textMuted}/>
@@ -2200,7 +2192,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           </svg>
         ),
         2: ( // Wi-Fi Router
-          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }}>
+          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Router body */}
             <rect x="100" y="100" width="100" height="30" rx="5" fill={colors.bgElevated}/>
             {/* Vertical antenna */}
@@ -2224,7 +2216,7 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
           </svg>
         ),
         3: ( // Radio Astronomy
-          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }}>
+          <svg viewBox="0 0 300 200" width="100%" height="auto" style={{ maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Black hole */}
             <circle cx="60" cy="100" r="20" fill={colors.bgDeep} stroke={colors.accent} strokeWidth="2"/>
             <ellipse cx="60" cy="100" rx="40" ry="10" stroke={colors.warning} strokeWidth="1" fill="none" transform="rotate(-20, 60, 100)"/>

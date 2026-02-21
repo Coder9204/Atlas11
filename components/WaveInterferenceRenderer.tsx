@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Wave Interference - Complete 10-Phase Game
 // How waves combine to create constructive and destructive interference
@@ -262,9 +264,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [time, setTime] = useState(0);
   const [wavelength, setWavelength] = useState(40);
   const [sourceSeparation] = useState(120);
@@ -296,14 +297,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   const s2 = { x: canvasWidth / 2 + sourceSeparation / 2, y: sourceY };
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Wave animation
+// Wave animation
   useEffect(() => {
     const interval = setInterval(() => setTime(t => t + 0.08), 30);
     return () => clearInterval(interval);
@@ -427,7 +421,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
         style={{ width: width, height: height, background: colors.bgCard, borderRadius: '12px', cursor: interactive ? 'crosshair' : 'default', touchAction: 'none' }}
         onPointerMove={handlePointerMove}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Wave Interference visualization">
         <defs>
           <linearGradient id="wiBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0a1628" />
@@ -585,7 +579,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     const resultColor = `rgb(${Math.round(redI * 255)}, ${Math.round(greenI * 255)}, ${Math.round(blueI * 255)})`;
 
     return (
-      <svg viewBox="0 0 500 350" style={{ width: width, height: height, background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox="0 0 500 350" style={{ width: width, height: height, background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="filmBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0a1628" />
@@ -871,7 +865,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       <svg
         viewBox={`0 0 ${canvasWidth} 280`}
         style={{ width: width, height: height, background: colors.bgCard, borderRadius: '12px' }}
-      >
+       preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0a1628" />
@@ -1392,7 +1386,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
             display: 'flex',
             justifyContent: 'center',
           }}>
-            <svg viewBox="0 0 400 200" style={{ width: isMobile ? 300 : 400, height: isMobile ? 150 : 200, background: colors.bgCard, borderRadius: '12px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: isMobile ? 300 : 400, height: isMobile ? 150 : 200, background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="thinFilmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#ff6b6b" stopOpacity="0.6" />

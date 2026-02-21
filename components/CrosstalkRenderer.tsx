@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // CROSSTALK - Complete 10-Phase Game
 // Signal interference between parallel traces in PCBs and cables
@@ -261,9 +263,8 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [traceSpacing, setTraceSpacing] = useState(0.5); // mm
   const [traceLength, setTraceLength] = useState(50); // mm
   const [signalFrequency, setSignalFrequency] = useState(100); // MHz
@@ -286,14 +287,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -449,7 +443,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
     const indicatorY = padding.top + traceY2 + spacingPixels;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} role="img" aria-label="Crosstalk visualization">
         {/* Title */}
         <text x={width / 2} y="16" fill={colors.textPrimary} fontSize="13" fontWeight="700" textAnchor="middle">
           PCB Signal Coupling Diagram
@@ -1395,7 +1389,7 @@ const CrosstalkRenderer: React.FC<CrosstalkRendererProps> = ({ onGameEvent, game
 
           {/* Static frequency diagram - no sliders */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '20px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg width={isMobile ? 300 : 460} height={160} viewBox={`0 0 ${isMobile ? 300 : 460} 160`} style={{ maxWidth: '100%' }}>
+            <svg width={isMobile ? 300 : 460} height={160} viewBox={`0 0 ${isMobile ? 300 : 460} 160`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="freqGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.success} />

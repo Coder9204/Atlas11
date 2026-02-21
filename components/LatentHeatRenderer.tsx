@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Latent Heat - Complete 10-Phase Game
 // Q = mL - Heat absorbed/released during phase changes at constant temperature
@@ -261,9 +263,8 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Heating ice through phases
+  const { isMobile } = useViewport();
+// Simulation state - Heating ice through phases
   const [temperature, setTemperature] = useState(-20); // Starting temp in C
   const [heatAdded, setHeatAdded] = useState(0); // Total heat added in kJ
   const [heatingPower, setHeatingPower] = useState(50); // Watts
@@ -300,14 +301,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
   const MASS = 0.1; // kg (100g of water)
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Simulation animation
+// Simulation animation
   useEffect(() => {
     if (!isSimulating) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -523,7 +517,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     };
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Latent Heat visualization">
         <defs>
           <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.ice} />
@@ -702,7 +696,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 200 : 240;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" />
@@ -901,7 +895,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
     const height = isMobile ? 220 : 260;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="steamBarGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#FEE2E2" />
@@ -1279,7 +1273,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox={`0 0 ${predWidth} ${predHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: predWidth }}>
+            <svg viewBox={`0 0 ${predWidth} ${predHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: predWidth }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="iceGradPred" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#DBEAFE" />
@@ -1761,7 +1755,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({ onGameEvent, ga
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox={`0 0 ${twistWidth} ${twistHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: twistWidth }}>
+            <svg viewBox={`0 0 ${twistWidth} ${twistHeight}`} width="100%" style={{ display: 'block', margin: '0 auto', maxWidth: twistWidth }} preserveAspectRatio="xMidYMid meet">
               <rect width="100%" height="100%" fill={colors.bgCard} rx="8" />
               <text x={twistWidth / 2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
                 Steam vs Water at 100C

@@ -4,10 +4,17 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useGameProgress } from '../hooks/useGameProgress';
 import { getLearnerProfile, getAllGameProgress } from '../services/GameProgressService';
 import { getActivePaths, advancePath, markGameInProgress, syncPathWithProgress } from '../services/LearningPathService';
-import { trackGameStarted, trackGameCompleted } from '../services/AnalyticsService';
+import { trackGameStarted, trackGameCompleted, trackPaywallShown } from '../services/AnalyticsService';
 import GameTutorialOverlay, { shouldShowTutorial } from './GameTutorialOverlay';
 import FreeUsageBanner, { isFreeUsageExhausted } from './FreeUsageBanner';
 import { useAuth } from '../contexts/AuthContext';
+import { useAICoach } from '../contexts/AICoachContext';
+import AICoachPanel from './AICoachPanel';
+import { updateMeta, resetMeta } from '../lib/seo';
+import { learningResourceSchema, breadcrumbSchema } from '../lib/seoSchemas';
+import { getGameSEO } from '../src/data/gameSEOData';
+import { getCategoryForGame } from '../src/data/gameCategories';
+import GameSEOFooter from './GameSEOFooter';
 
 // ============================================================================
 // GAME SHELL — Wraps game renderers to provide:
@@ -76,6 +83,56 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
   // Auth-aware gating
   let auth: ReturnType<typeof useAuth> | null = null;
   try { auth = useAuth(); } catch { /* AuthProvider may not be mounted */ }
+
+  // AI Coach integration (null-safe — context may not be mounted)
+  const coach = useAICoach();
+
+  // Derive human-readable title from slug
+  const gameTitle = slug
+    .split('-')
+    .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  // Notify coach when game mounts / unmounts
+  useEffect(() => {
+    coach?.setGameActive(true, slug, gameTitle);
+    return () => { coach?.setGameActive(false); };
+  }, [slug, gameTitle]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SEO: Set per-game meta tags, JSON-LD, and canonical URL
+  useEffect(() => {
+    if (!slug) return;
+    const seo = getGameSEO(slug);
+    const category = getCategoryForGame(
+      slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+    );
+
+    const breadcrumbs = [
+      { name: 'Home', url: '/' },
+      ...(category ? [{ name: category.name, url: `/learn/${category.id}` }] : []),
+      { name: seo.title, url: `/games/${slug}` },
+    ];
+
+    updateMeta({
+      title: `${seo.title} - Interactive Simulator | Atlas Coach`,
+      description: seo.description,
+      canonicalUrl: `/games/${slug}`,
+      jsonLd: [
+        learningResourceSchema({
+          name: seo.title,
+          description: seo.description,
+          url: `/games/${slug}`,
+          concepts: seo.concepts,
+          difficulty: seo.difficulty,
+          estimatedMinutes: seo.estimatedMinutes,
+          category: category?.name,
+        }),
+        breadcrumbSchema(breadcrumbs),
+      ],
+    });
+
+    return () => { resetMeta(); };
+  }, [slug]);
 
   // Load learner profile and find active path containing this game
   useEffect(() => {
@@ -157,9 +214,13 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
       const toPhase = (details.to as string) || (details.phase as string) || '';
       if (toPhase) {
         updatePhase(toPhase);
+        coach?.setGamePhase(toPhase);
       }
     }
-  }, [slug, submitTestScore, pathId, updatePhase]);
+
+    // Forward event to AI coach for real-time guidance
+    coach?.sendGameEvent(event);
+  }, [slug, submitTestScore, pathId, updatePhase, coach]);
 
   /**
    * onPhaseComplete bridge — called by renderers when a phase transitions.
@@ -188,6 +249,13 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
   }, [isAnonymousExpired]);
 
   const blocked = !isSubscribed && (isAnonymousExpired || freeExhausted);
+
+  // Track paywall shown
+  useEffect(() => {
+    if (blocked) {
+      trackPaywallShown(slug, isAnonymousExpired ? 'anonymous_expired' : 'free_exhausted');
+    }
+  }, [blocked, slug, isAnonymousExpired]);
 
   return (
     <div
@@ -264,6 +332,8 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
           </a>
         </div>
       ) : enhancedChildren}
+      <AICoachPanel />
+      {!blocked && <GameSEOFooter slug={slug} />}
     </div>
   );
 }

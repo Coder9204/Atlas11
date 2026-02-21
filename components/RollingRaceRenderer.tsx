@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🚗',
@@ -165,20 +168,10 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const animationRef = useRef<number | null>(null);
+  const { isMobile } = useViewport();
+const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -448,6 +441,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (onGameEvent) {
       onGameEvent({ type: 'test_completed', data: { score, total: testQuestions.length } });
     }
@@ -503,7 +497,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '580px' }}
-        >
+         role="img" aria-label="Rolling Race visualization">
           {/* ========== PREMIUM DEFS SECTION ========== */}
           <defs>
             {/* === BACKGROUND GRADIENTS === */}
@@ -1446,7 +1440,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
           {/* Visual diagram for review */}
           <div style={{ margin: '16px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#0f172a" />
@@ -1626,7 +1620,7 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
 
           {/* Visual diagram for twist review */}
           <div style={{ margin: '16px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#0f172a" />

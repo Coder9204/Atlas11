@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON BLADE FACTORY - Complete 10-Phase Game
 // Turbine engineering tradeoffs: bigger = more efficient but harder to build/transport/maintain
@@ -261,9 +263,8 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Rotor diameter in meters
+  const { isMobile } = useViewport();
+// Simulation state - Rotor diameter in meters
   const [rotorDiameter, setRotorDiameter] = useState(160);
 
   // Twist phase - offshore scenario
@@ -287,14 +288,7 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
   const [bladeAngle, setBladeAngle] = useState(0);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Blade rotation animation
+// Blade rotation animation
   useEffect(() => {
     const interval = setInterval(() => {
       setBladeAngle(prev => (prev + 1.5) % 360);
@@ -514,7 +508,7 @@ const ELON_BladeFactoryRenderer: React.FC<BladeFactoryRendererProps> = ({ onGame
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Blade Factory visualization">
         <defs>
           <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#94a3b8" />

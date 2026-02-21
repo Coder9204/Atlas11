@@ -66,6 +66,8 @@ export interface LearnerProfileData {
   level: string;
   completedOnboarding: boolean;
   createdAt: number;
+  email?: string;
+  name?: string;
 }
 
 // ============================================================
@@ -371,6 +373,79 @@ export function getLearnerProfile(): LearnerProfileData | null {
  */
 export function isOnboardingComplete(): boolean {
   return safeGetItem(ONBOARDING_KEY) === 'true';
+}
+
+// ============================================================
+// FREE TIER & SUBSCRIPTION
+// ============================================================
+
+const SUBSCRIPTION_KEY = 'atlas_subscription';
+const FREE_MONTHLY_LIMIT = 5;
+
+/**
+ * Returns true if the user has an active subscription.
+ */
+export function isSubscribed(): boolean {
+  return safeGetItem(SUBSCRIPTION_KEY) !== null;
+}
+
+/**
+ * Counts distinct games played in the current calendar month.
+ */
+export function getMonthlyPlayCount(): number {
+  const allRecords = getAllGameProgress();
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const uniqueSlugs = new Set<string>();
+  for (const record of allRecords) {
+    if (record.lastPlayedAt >= monthStart) {
+      uniqueSlugs.add(record.slug);
+    }
+  }
+  return uniqueSlugs.size;
+}
+
+/**
+ * Returns the free tier monthly game limit.
+ */
+export function getFreeMonthlyLimit(): number {
+  return FREE_MONTHLY_LIMIT;
+}
+
+// ============================================================
+// REVIEW & BADGES
+// ============================================================
+
+/**
+ * Returns games that are due for spaced repetition review.
+ */
+export function getGamesReadyForReview(): GameRecord[] {
+  const allRecords = getAllGameProgress();
+  const now = Date.now();
+  return allRecords.filter(r => r.nextReviewDate !== null && r.nextReviewDate <= now);
+}
+
+/**
+ * Computes earned badge IDs from progress data.
+ */
+export function getBadges(): string[] {
+  const allRecords = getAllGameProgress();
+  const summary = getAnalyticsSummary();
+  const badges: string[] = [];
+
+  const completed = allRecords.filter(r => r.completedAt !== null).length;
+  if (completed >= 5) badges.push('five_games');
+  if (completed >= 25) badges.push('twenty_five_games');
+  if (completed >= 100) badges.push('hundred_games');
+
+  if (summary.streakDays >= 3) badges.push('streak_3');
+  if (summary.streakDays >= 7) badges.push('streak_7');
+  if (summary.streakDays >= 30) badges.push('streak_30');
+
+  const passed = allRecords.filter(r => r.passed).length;
+  if (passed >= 10) badges.push('ten_passed');
+
+  return badges;
 }
 
 // ============================================================

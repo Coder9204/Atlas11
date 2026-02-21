@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Thermal Throttling - Complete 10-Phase Game
 // Why your phone slows down when it gets hot
@@ -261,9 +263,8 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [clockSpeed, setClockSpeed] = useState(3.5);
   const [voltage, setVoltage] = useState(1.2);
   const [workload, setWorkload] = useState(50);
@@ -294,14 +295,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
   const T_CRITICAL = 105;
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Power dissipation calculation
+// Power dissipation calculation
   const calculatePower = useCallback(() => {
     const C = 1;
     const dynamicPower = C * Math.pow(voltage, 2) * clockSpeed * (workload / 100);
@@ -527,7 +521,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
     const performanceRatio = clockSpeed / 4.5;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Thermal Throttling visualization">
         <defs>
           <linearGradient id="tempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={colors.cool} />
@@ -824,7 +818,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
           {/* Static SVG diagram */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="400" height="160" viewBox="0 0 400 160" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="400" height="160" viewBox="0 0 400 160" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.warning} />
@@ -1238,7 +1232,7 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({ o
 
           {/* Static SVG diagram */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor={colors.cool} />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────
@@ -108,12 +110,14 @@ interface BypassDiodesRendererProps {
   gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // ──────────────────────────────────────────────────────────────────────────
   // INTERNAL PHASE STATE MANAGEMENT
@@ -136,15 +140,8 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
   }, [gamePhase, phase]);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -752,6 +749,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -849,7 +847,7 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
           viewBox={`0 0 ${svgW} ${svgH}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '520px' }}
-        >
+         role="img" aria-label="Bypass Diodes visualization">
           <defs>
             <linearGradient id="cellGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e40af" />

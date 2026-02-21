@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -92,16 +94,8 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
   const [confetti, setConfetti] = useState<Array<{ x: number; y: number; color: string; delay: number }>>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const emitGameEvent = useCallback((
+  const { isMobile } = useViewport();
+const emitGameEvent = useCallback((
     eventType: GameEvent['eventType'],
     details: GameEvent['details']
   ) => {
@@ -389,7 +383,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
       backgroundColor: colors.bgDark,
       color: colors.textPrimary,
       overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       zIndex: 100,
       minHeight: '100dvh'
     }}>
@@ -610,7 +604,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
     const signalStrength = (soundAmplitude / 100) * 0.8;
 
     return (
-      <svg viewBox="0 0 600 400" style={{ width: '100%', maxHeight: '100%' }}>
+      <svg viewBox="0 0 600 400" style={{ width: '100%', maxHeight: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Microphone visualization">
         <defs>
           <linearGradient id="micBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748b" />
@@ -918,7 +912,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
           <p style={{ fontSize: typo.body, lineHeight: 1.5, color: colors.textSecondary, margin: 0, marginBottom: typo.elementGap }}>
             Sound waves hit a <strong style={{ color: colors.primary }}>diaphragm</strong> that vibrates. But how does this vibration become an <strong style={{ color: colors.primary }}>electrical signal</strong>?
           </p>
-          <svg viewBox="0 0 400 100" style={{ width: '100%', height: '80px' }}>
+          <svg viewBox="0 0 400 100" style={{ width: '100%', height: '80px' }} preserveAspectRatio="xMidYMid meet">
             {/* Sound wave */}
             <path d="M 30 50 Q 50 30, 70 50 T 110 50" fill="none" stroke={colors.primary} strokeWidth="2" />
             <text x="70" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Sound</text>
@@ -1185,7 +1179,7 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
 
         {/* Diagram showing frequency concept */}
         <div style={{ padding: typo.cardPadding, borderRadius: '12px', marginBottom: typo.sectionGap, background: colors.bgCard, border: `1px solid ${colors.border}` }}>
-          <svg viewBox="0 0 350 100" style={{ width: '100%', height: '80px' }}>
+          <svg viewBox="0 0 350 100" style={{ width: '100%', height: '80px' }} preserveAspectRatio="xMidYMid meet">
             {/* Low frequency wave */}
             <path d="M 30 50 Q 60 20, 90 50 T 150 50" fill="none" stroke={colors.primary} strokeWidth="2" />
             <text x="90" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Low Pitch (Bass)</text>

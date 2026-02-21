@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GOLD STANDARD: CORIOLIS EFFECT RENDERER
 // Physics: F_Coriolis = -2m(ω × v) - Apparent deflection in rotating frames
@@ -151,8 +153,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { isMobile } = useViewport();
+const [currentQuestion, setCurrentQuestion] = useState(0);
   const [confirmedQuestion, setConfirmedQuestion] = useState<number | null>(null);
   const [testSubmitted, setTestSubmitted] = useState(false);
 
@@ -163,16 +165,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const [rotationSpeed, setRotationSpeed] = useState(50); // 0-100 scale
 
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Responsive check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System
+// Premium Design System
   const colors = {
     primary: '#3b82f6',       // blue-500 (earth/atmosphere)
     primaryDark: '#2563eb',   // blue-600
@@ -471,7 +464,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const transferApps: TransferApp[] = [
     {
       icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
+        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Coriolis Effect visualization">
           <defs>
             <radialGradient id="hurricaneGrad" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -527,7 +520,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     },
     {
       icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
+        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="earthGradVert" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#38bdf8" />
@@ -580,7 +573,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     },
     {
       icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
+        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="oceanBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c4a6e" />
@@ -630,7 +623,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     },
     {
       icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
+        <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
           {/* Ground */}
           <rect x="0" y="70" width="100" height="30" fill="#166534" />
           {/* Gun */}
@@ -912,7 +905,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             {/* Premium card */}
             <div style={{ background: 'linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.8))', borderRadius: '24px', padding: '24px', maxWidth: '640px', border: '1px solid rgba(51,65,85,0.5)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', marginBottom: '32px' }}>
               <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden mx-auto">
-              <svg viewBox="0 0 400 300" className="w-full h-full">
+              <svg viewBox="0 0 400 300" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                 {renderSvgDefs()}
 
                 {/* Premium dark background with vignette */}
@@ -995,7 +988,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginBottom: '24px' }}>Make Your Prediction</h2>
-            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="predictGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <linearGradient id="predictGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#8b5cf6" /></linearGradient>
@@ -1078,7 +1071,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             }}>
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
-              <svg viewBox="0 0 400 280" className="w-full h-full">
+              <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                 {renderSvgDefs()}
 
                 {/* Premium dark background with vignette */}
@@ -1417,7 +1410,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         return (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#a855f7', marginBottom: '24px' }}>The Twist: Toilet Drains</h2>
-            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <radialGradient id="twistSinkGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stopColor="#475569" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -1497,7 +1490,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             }}>
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
-              <svg viewBox="0 0 400 280" className="w-full h-full">
+              <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                 {renderSvgDefs()}
 
                 {/* Premium dark background */}
@@ -1728,6 +1721,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                     <button
                       onClick={() => {
                         setTestSubmitted(true);
+                        onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                         setShowTestResults(true);
                         playSound('complete');
                         onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
@@ -1825,7 +1819,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
   const renderBottomBar = () => (
     <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
-      <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: theme.fontFamily }}>
         ← Back
       </button>
       <div style={{ display: 'flex', gap: '6px' }}>
@@ -1833,14 +1827,14 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
           <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseNames[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
         ))}
       </div>
-      <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: theme.fontFamily }}>
         Next →
       </button>
     </div>
   );
 
   return (
-    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: theme.fontFamily }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#3b82f6' }}>Coriolis Effect</span>

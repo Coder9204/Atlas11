@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #11: UPTIME ARCHITECT - Complete 10-Phase Game
 // Reliability engineering — designing for "five nines" (99.999%) uptime through
@@ -262,9 +264,8 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [redundancyLevel, setRedundancyLevel] = useState(1);
   const [componentReliability, setComponentReliability] = useState(99);
   const [animFrame, setAnimFrame] = useState(0);
@@ -287,14 +288,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for component pulse
+// Animation loop for component pulse
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -546,7 +540,7 @@ const ELON_UptimeArchitectRenderer: React.FC<ELON_UptimeArchitectRendererProps> 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Uptime Architect visualization">
         <defs>
           <linearGradient id="activeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.success} />

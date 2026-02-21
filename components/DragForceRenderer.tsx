@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // DRAG FORCE - Premium Design with 10-Phase Learning Structure
 // Physics of aerodynamic drag, air resistance, and terminal velocity
@@ -303,14 +305,8 @@ const testQuestions = [
 
 const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const { isMobile } = useViewport();
+const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
@@ -571,7 +567,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             {/* SVG diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg viewBox="0 0 400 200" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Drag Force visualization">
                 <defs>
                   <linearGradient id="predAirGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
@@ -736,7 +732,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 {/* SVG chart */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                  <svg viewBox={`0 0 ${chartW} ${chartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
+                  <svg viewBox={`0 0 ${chartW} ${chartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                     <defs>
                       <linearGradient id="dragGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
@@ -930,7 +926,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
 
               {/* SVG formula diagram */}
-              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto 16px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto 16px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="revGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
@@ -1006,7 +1002,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             {/* SVG showing falling objects */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg viewBox="0 0 400 280" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg viewBox="0 0 400 280" width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistSky" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.3" />
@@ -1192,7 +1188,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             }}>
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                  <svg viewBox={`0 0 ${tvChartW} ${tvChartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }}>
+                  <svg viewBox={`0 0 ${tvChartW} ${tvChartH + 60}`} width="100%" style={{ maxWidth: '600px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                     <defs>
                       <linearGradient id="tvGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
@@ -1295,7 +1291,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
 
               {/* SVG diagram */}
-              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
                 <rect x="0" y="0" width="400" height="200" fill={colors.bgCard} rx="8" />
                 <g>
                   <rect x="20" y="30" width="170" height="50" rx="8" fill={`${colors.primary}22`} stroke={colors.primary} strokeWidth="1" />
@@ -1747,6 +1743,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                     }, 0);
                     setTestScore(score);
                     setTestSubmitted(true);
+                    emit('game_completed', { score: score, total: testQuestions.length });
                     playSoundEffect(score >= 7 ? 'complete' : 'incorrect');
                   }}
                   style={{

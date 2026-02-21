@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Ground Fault Detection - Complete 10-Phase Game
 // How GFCIs detect current imbalance and protect against electrocution
@@ -261,9 +263,8 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [hotCurrent, setHotCurrent] = useState(10); // Amps flowing through load
   const [leakageCurrent, setLeakageCurrent] = useState(0); // mA escaping to ground
   const [gfciTripped, setGfciTripped] = useState(false);
@@ -287,14 +288,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -554,7 +548,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
     const pointY = chartBottom - (leakageCurrent / 10) * chartH;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Ground Fault visualization">
         <defs>
           <linearGradient id="hotWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
@@ -795,7 +789,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="360" height="200" viewBox="0 0 360 200" style={{ maxWidth: '100%' }}>
+            <svg width="360" height="200" viewBox="0 0 360 200" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               {/* Power source */}
               <rect x="20" y="60" width="50" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
               <text x="45" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">120V</text>
@@ -1227,7 +1221,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="400" height="220" viewBox="0 0 400 220" style={{ maxWidth: '100%' }}>
+            <svg width="400" height="220" viewBox="0 0 400 220" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.warning} stopOpacity="0.3" />
@@ -1349,7 +1343,7 @@ const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, 
           <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Fault current vs impedance SVG */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="480" height="260" viewBox="0 0 480 260" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+            <svg width="480" height="260" viewBox="0 0 480 260" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistPointGlow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
               </defs>

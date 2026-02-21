@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ════════════════════════════════════════════════════════════════════════════
 // ELECTROMAGNETIC INDUCTION - Faraday's Law and Lenz's Law
 // Complete 10-Phase Interactive Learning Experience
@@ -268,9 +270,8 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [magnetPosition, setMagnetPosition] = useState(0); // -100 to 100 (relative to coil)
   const [magnetVelocity, setMagnetVelocity] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -296,14 +297,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
   const lastFluxRef = useRef(0);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate magnetic flux through the coil
+// Calculate magnetic flux through the coil
   const calculateFlux = useCallback((pos: number) => {
     // Flux depends on magnet position (closer = stronger field through coil)
     // Maximum flux when magnet is at coil center (position = 0)
@@ -424,7 +418,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
 
       {/* Premium Card with Visualization */}
       <div style={{ backdropFilter: 'blur(16px)', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: isMobile ? '24px' : '32px', maxWidth: '672px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
-        <svg width={isMobile ? 280 : 360} height={200} viewBox={`0 0 ${isMobile ? 280 : 360} 200`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
+        <svg width={isMobile ? 280 : 360} height={200} viewBox={`0 0 ${isMobile ? 280 : 360} 200`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electromagnetic Induction visualization">
           <defs>
             <linearGradient id="hookBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -536,7 +530,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         }}
       >
         Discover the Secret
-        <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
@@ -579,7 +573,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
 
         <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '672px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
           {/* Static SVG diagram for predict phase */}
-          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -763,7 +757,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Main Visualization */}
         <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
-          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }}>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="labBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1151,7 +1145,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
 
         <div style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '672px', marginBottom: '24px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
           {/* Static SVG diagram for twist predict phase */}
-          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }}>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto 16px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistPredictBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1312,7 +1306,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {/* Normal Conductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Conductor</h3>
-          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }}>
+          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="normalBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1345,7 +1339,7 @@ const ElectromagneticInductionRenderer: React.FC<ElectromagneticInductionRendere
         {/* Superconductor */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Superconductor</h3>
-          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }}>
+          <svg width="280" height="220" viewBox="0 0 280 220" className="mx-auto" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="superBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />

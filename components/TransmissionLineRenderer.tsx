@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 181: TRANSMISSION LINE REFLECTIONS
 // ============================================================================
@@ -17,6 +19,7 @@ interface TransmissionLineRendererProps {
   gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -142,6 +145,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -182,15 +186,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -434,6 +431,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -602,7 +600,7 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '700px' }}
-        >
+         role="img" aria-label="Transmission Line visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="txlnLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

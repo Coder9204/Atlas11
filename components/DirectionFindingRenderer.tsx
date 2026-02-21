@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase types following standard game flow
 type GamePhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -12,6 +14,7 @@ interface DirectionFindingRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -37,6 +40,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   const [internalPhase, setInternalPhase] = useState<GamePhase>('hook');
 
@@ -48,16 +52,8 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
 
   const currentPhase: GamePhase = gamePhase || phaseProp || internalPhase;
   const currentPhaseIndex = PHASE_ORDER.indexOf(currentPhase);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = useMemo(() => ({
+  const { isMobile } = useViewport();
+const typo = useMemo(() => ({
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -285,6 +281,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -977,7 +974,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           </p>
         </div>
         <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-          <svg width="300" height="180" viewBox="0 0 300 180" style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px' }}>
+          <svg width="300" height="180" viewBox="0 0 300 180" style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="reviewBassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
@@ -1127,7 +1124,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           </p>
         </div>
         <div style={{ margin: '16px', display: 'flex', justifyContent: 'center' }}>
-          <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px' }}>
+          <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
             <text x="150" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="bold">Binaural Hearing Required</text>
             <ellipse cx="80" cy="80" rx="20" ry="35" fill="#22c55e" opacity="0.6" />
             <text x="80" y="85" textAnchor="middle" fill="#e2e8f0" fontSize="11">Left</text>

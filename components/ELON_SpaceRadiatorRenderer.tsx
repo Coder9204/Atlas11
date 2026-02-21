@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #26: SPACE RADIATOR - Complete 10-Phase Game
 // Spacecraft thermal control — rejecting waste heat in vacuum via radiation
@@ -259,8 +261,8 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const [animFrame, setAnimFrame] = useState(0);
 
   // Primary slider: Radiator Temperature (K)
@@ -283,14 +285,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
   const [selectedApp, setSelectedApp] = useState(0);
 
   // Effects
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  useEffect(() => {
+useEffect(() => {
     const timer = setInterval(() => setAnimFrame(f => f + 1), 50);
     return () => clearInterval(timer);
   }, []);
@@ -537,7 +532,7 @@ const ELON_SpaceRadiatorRenderer: React.FC<ELON_SpaceRadiatorRendererProps> = ({
     const xGridValues = [300, 350, 400, 450];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: showEclipse ? '#050510' : '#0a0a1a', borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: showEclipse ? '#050510' : '#0a0a1a', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="E L O N_ Space Radiator visualization">
         <defs>
           <linearGradient id="radiatorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.hot} />

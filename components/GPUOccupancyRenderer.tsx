@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // GPU Occupancy - Complete 10-Phase Game
 // Understanding how resource allocation affects parallel computing performance
@@ -261,9 +263,8 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [registersPerThread, setRegistersPerThread] = useState(32);
   const [sharedMemoryPerBlock, setSharedMemoryPerBlock] = useState(16); // KB
   const [threadsPerBlock, setThreadsPerBlock] = useState(256);
@@ -293,14 +294,7 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -310,18 +304,12 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#06B6D4', // Cyan for GPU/tech theme
-    accentGlow: 'rgba(6, 182, 212, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // High contrast for accessibility (brightness >= 180)
-    textMuted: '#94a3b8', // Improved contrast
-    border: '#2a2a3a',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    gpu: '#22c55e',
+    idle: '#ef4444',
+    warp: '#8b5cf6',
     warpActive: '#22D3EE',
     warpInactive: '#374151',
     registerColor: '#8B5CF6',
@@ -429,8 +417,11 @@ const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="G P U Occupancy visualization">
         <defs>
+          <filter id="gpuGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="occupancyGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           <linearGradient id="occActiveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#22D3EE" />
             <stop offset="100%" stopColor="#06B6D4" />

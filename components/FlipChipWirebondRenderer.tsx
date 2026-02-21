@@ -4,6 +4,9 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface GameEvent {
   type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';
   phase?: string;
@@ -73,9 +76,8 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<FCWBPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Sync with external gamePhase prop changes
+  const { isMobile } = useViewport();
+// Sync with external gamePhase prop changes
   useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase as FCWBPhase)) {
       setPhase(gamePhase as FCWBPhase);
@@ -83,14 +85,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -367,6 +362,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -474,7 +470,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
           viewBox={`0 0 ${width} ${height - 50}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Flip Chip Wirebond visualization">
           <defs>
             {/* Premium silicon die gradient with depth */}
             <linearGradient id="fcwbDieGrad" x1="0%" y1="0%" x2="0%" y2="100%">

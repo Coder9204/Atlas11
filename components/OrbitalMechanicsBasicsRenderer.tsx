@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface OrbitalMechanicsBasicsRendererProps {
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
@@ -33,17 +36,9 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
+  const { isMobile } = useViewport();
+const navigationLockRef = useRef(false);
+useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
     }
@@ -256,6 +251,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
   };
 
@@ -403,7 +399,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const indicatorY = Math.max(20, satY - 20);
 
     return (
-      <svg width="100%" height="400" viewBox="0 0 500 400" style={{ maxWidth: '600px', display: 'block', margin: '0 auto' }}>
+      <svg width="100%" height="400" viewBox="0 0 500 400" style={{ maxWidth: '600px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Orbital Mechanics Basics visualization">
         <defs>
           <radialGradient id="earthGrad2" cx="30%" cy="30%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -589,7 +585,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const earthRadius = 60;
     const orbitRadius = 120;
     return (
-      <svg width="100%" height="300" viewBox="0 0 500 360" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+      <svg width="100%" height="300" viewBox="0 0 500 360" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <rect width="500" height="360" fill="#0a0a1a" rx="12" />
         {[...Array(25)].map((_, i) => (
           <circle key={i} cx={(i * 97 + 40) % 480} cy={(i * 61 + 20) % 340} r={0.8} fill="#fff" opacity={0.5} />
@@ -623,7 +619,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
 
   const renderReviewVisualization = () => {
     return (
-      <svg width="100%" height="220" viewBox="0 0 500 220" style={{ maxWidth: '540px', margin: '0 auto', display: 'block' }}>
+      <svg width="100%" height="220" viewBox="0 0 500 220" style={{ maxWidth: '540px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <rect width="500" height="220" fill="#0a0a1a" rx="10" />
         {/* Newton's cannonball illustration */}
         {/* Mountain */}
@@ -662,7 +658,7 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const cx = 180;
     const cy = 120;
     return (
-      <svg width="100%" height="240" viewBox="0 0 500 240" style={{ maxWidth: '540px', margin: '0 auto', display: 'block' }}>
+      <svg width="100%" height="240" viewBox="0 0 500 240" style={{ maxWidth: '540px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <rect width="500" height="240" fill="#0a0a1a" rx="10" />
         <circle cx={cx} cy={cy} r="30" fill="#3b82f6" />
         <text x={cx} y={cy + 4} textAnchor="middle" fill="#fff" fontSize="11" fontWeight="bold">Earth</text>

@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -21,15 +23,8 @@ interface CavitationRendererProps {
 const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, gamePhase, onPhaseComplete, onGameEvent }) => {
   const initialPhase = currentPhase ?? gamePhase ?? 'hook';
   const [phase, setPhase] = useState<Phase>(initialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  const [hookStep, setHookStep] = useState(0);
+  const { isMobile } = useViewport();
+const [hookStep, setHookStep] = useState(0);
   const [showCollapse, setShowCollapse] = useState(false);
   const [bubbleSize, setBubbleSize] = useState(30);
   const collapseAnimRef = useRef<number>();
@@ -358,7 +353,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
               Inside that collapse: temperatures hotter than the <span style={{ color: '#f59e0b' }}>surface of the sun</span>. Let's discover how cavitation works!
             </p>
 
-            <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '0 auto', display: 'block' }}>
+            <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cavitation visualization">
               <defs>
                 <linearGradient id="hookWater" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#0c4a6e" />
@@ -457,7 +452,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
           Think about what happens when all that energy concentrates into a tiny point. What extreme condition would you expect?
         </p>
 
-        <svg width="100%" height="120" viewBox="0 0 500 120" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="120" viewBox="0 0 500 120" style={{ marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="predBubble" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
@@ -573,7 +568,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
         }}>
           <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
-          <svg width="100%" height="340" viewBox="0 0 500 340">
+          <svg width="100%" height="340" viewBox="0 0 500 340" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
@@ -782,7 +777,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
           The mantis shrimp punches at 23 m/s with 10,000 g acceleration. This creates a cavitation bubble. Watch what happens next \u2014 a new twist on cavitation physics.
         </p>
 
-        <svg width="100%" height="200" viewBox="0 0 500 200">
+        <svg width="100%" height="200" viewBox="0 0 500 200" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twpShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fb7185" />
@@ -897,7 +892,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, g
       }}>
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
-        <svg width="100%" height="220" viewBox="0 0 500 220">
+        <svg width="100%" height="220" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="tpWater" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c4a6e" />

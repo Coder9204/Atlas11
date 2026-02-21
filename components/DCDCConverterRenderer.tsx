@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // DC-DC Converter Physics - Complete 10-Phase Learning Game
 // How Buck and Boost Converters Transform Voltage Efficiently
@@ -278,9 +280,8 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [converterType, setConverterType] = useState<'buck' | 'boost'>('buck');
   const [inputVoltage, setInputVoltage] = useState(24);
   const [dutyCycle, setDutyCycle] = useState(40);
@@ -304,14 +305,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     if (!isAnimating) return;
     const timer = setInterval(() => {
@@ -519,7 +513,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({ onGameEve
           style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '16px' }}
           role="img"
           aria-label={`${converterType === 'buck' ? 'Buck' : 'Boost'} converter circuit diagram showing input ${inputVoltage}V, duty cycle ${dutyCycle}%, output ${output.outputVoltage.toFixed(1)}V`}
-        >
+         preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="dcInputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1E40AF" />

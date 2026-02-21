@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON ROBOT LEARNING - Complete 10-Phase Game (#31 of 36)
 // Sim-to-real transfer: training robot policies in simulation and deploying
@@ -262,9 +264,8 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [domainRandomization, setDomainRandomization] = useState(50);
   const [simEpisodes, setSimEpisodes] = useState(100000);
   const [animFrame, setAnimFrame] = useState(0);
@@ -283,14 +284,7 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation tick for SVG
+// Animation tick for SVG
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(prev => (prev + 1) % 360);
@@ -503,7 +497,7 @@ const ELON_RobotLearningRenderer: React.FC<ELON_RobotLearningRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Robot Learning visualization">
         <defs>
           {/* Sim side gradient — wireframe blue */}
           <linearGradient id="simGrad" x1="0%" y1="0%" x2="100%" y2="100%">

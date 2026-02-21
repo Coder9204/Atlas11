@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Grid Frequency Control - Complete 10-Phase Game
 // Why maintaining 50/60Hz is critical for grid stability
@@ -261,9 +263,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [generationOutput, setGenerationOutput] = useState(50); // % of max
   const [loadDemand, setLoadDemand] = useState(40); // % of max
   const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
@@ -289,14 +290,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -418,7 +412,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%', height: 'auto' }}
         role="img"
         aria-label="Grid frequency visualization"
-      >
+       preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={displayStatus.color} stopOpacity="0.8" />

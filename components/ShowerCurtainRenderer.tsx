@@ -3,6 +3,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '✈️',
@@ -156,20 +159,11 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
   const [answerFeedback, setAnswerFeedback] = useState<{correct: boolean; message: string} | null>(null);
 
   // UI state
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
+  const { isMobile } = useViewport();
+const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -607,7 +601,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
               trying to stick to your legs!
             </p>
 
-            <svg width="300" height="220" viewBox="0 0 300 220" style={{ margin: '0 auto', display: 'block' }}>
+            <svg width="300" height="220" viewBox="0 0 300 220" style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Shower Curtain visualization">
               <defs>
                 {/* Premium water flow gradient */}
                 <linearGradient id="showWaterFlow" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -821,7 +815,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           What causes this pressure difference?
         </p>
 
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Shower enclosure gradient */}
             <linearGradient id="showPredictEnclosure" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1029,7 +1023,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Shower visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-            <svg width="100%" height="220" viewBox="0 0 400 220">
+            <svg width="100%" height="220" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium water flow gradient - warm/cool based on temp */}
                 <linearGradient id="showPlayWaterFlow" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1591,7 +1585,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
           You test with a COLD shower (15°C) vs a HOT shower (45°C), same water flow rate.
         </p>
 
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Cold shower gradient */}
             <linearGradient id="showTwistColdBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1757,7 +1751,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
         {/* Visualization */}
         <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-          <svg width="100%" height="180" viewBox="0 0 400 180">
+          <svg width="100%" height="180" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Cold enclosure gradient */}
               <linearGradient id="showTwistPlayColdBg" x1="0%" y1="0%" x2="100%" y2="100%">

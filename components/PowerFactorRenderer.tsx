@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Power Factor - Complete 10-Phase Game
 // Why motors cost more to run than heaters at the same wattage
@@ -261,9 +263,8 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Play phase state
+  const { isMobile } = useViewport();
+// Play phase state
   const [loadType, setLoadType] = useState<'resistive' | 'motor'>('resistive');
   const [phaseSlider, setPhaseSlider] = useState(0); // 0 = resistive, 37 = motor
   const [animationTime, setAnimationTime] = useState(0);
@@ -290,14 +291,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
   const animationRef = useRef<number>();
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for waveforms
+// Animation loop for waveforms
   useEffect(() => {
     const animate = () => {
       setAnimationTime(prev => prev + 0.05);
@@ -656,7 +650,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 600 200" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 600 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Power Factor visualization">
               <defs>
                 <filter id="glow">
                   <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -802,7 +796,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             </div>
 
             {/* Waveform Visualization */}
-            <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', marginBottom: '16px' }}>
+            <svg viewBox="0 0 400 220" style={{ width: '100%', height: 'auto', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="waveBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#020617" />
@@ -1096,7 +1090,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             <div style={{ ...typo.small, color: 'rgba(255,255,255,0.8)', marginBottom: '12px' }}>
               The Power Triangle
             </div>
-            <svg viewBox="0 0 300 120" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+            <svg viewBox="0 0 300 120" style={{ width: '100%', maxWidth: '300px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               {/* Triangle */}
               <polygon points="50,100 250,100 250,30" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
 
@@ -1233,7 +1227,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 600 150" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 600 150" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistGlow">
                   <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -1498,7 +1492,7 @@ const PowerFactorRenderer: React.FC<PowerFactorRendererProps> = ({ onGameEvent, 
               <div style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '12px' }}>
                 Power Triangle (Changes with Slider)
               </div>
-              <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', height: 'auto', margin: '0 auto', display: 'block' }}>
+              <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', height: 'auto', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="powerGlow">
                     <feGaussianBlur stdDeviation="2" result="coloredBlur"/>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // ADIABATIC HEATING RENDERER - Compression Heats, Expansion Cools
 // =============================================================================
@@ -191,9 +193,8 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation states
+  const { isMobile } = useViewport();
+// Simulation states
   const [compressionRatio, setCompressionRatio] = useState(1);
   const [processSpeed, setProcessSpeed] = useState(100);
   const [temperature, setTemperature] = useState(300);
@@ -205,16 +206,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationRef = useRef<number | null>(null);
-
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -603,7 +595,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
     const padding = 50;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: '350px', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Adiabatic Heating visualization">
         <defs>
           <linearGradient id="pvBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -710,7 +702,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
     const tempColor = temperature < 350 ? '#3b82f6' : temperature < 500 ? '#f59e0b' : '#ef4444';
 
     return (
-      <svg viewBox="0 0 320 200" style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 320 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="piston" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />
@@ -884,7 +876,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   // Static SVG for predict phase
   const renderPredictDiagram = () => (
-    <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '320px', height: 'auto', display: 'block', margin: '0 auto' }}>
+    <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '320px', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predictCylinder" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#334155" />
@@ -1164,7 +1156,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   // Review phase SVG diagram
   const renderReviewDiagram = () => (
-    <svg viewBox="0 0 320 160" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto 16px' }}>
+    <svg viewBox="0 0 320 160" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto 16px' }} preserveAspectRatio="xMidYMid meet">
       <rect width="320" height="160" fill="#0f172a" rx="8" />
 
       {/* PV Diagram axes */}
@@ -1268,7 +1260,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   // Twist predict SVG diagram
   const renderTwistPredictDiagram = () => (
-    <svg viewBox="0 0 320 140" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto' }}>
+    <svg viewBox="0 0 320 140" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
       <rect width="320" height="140" fill="#0f172a" rx="8" />
 
       {/* Fast compression (left) */}
@@ -1404,7 +1396,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
     const fastTempColor = fastTemp < 350 ? '#3b82f6' : fastTemp < 500 ? '#f59e0b' : '#ef4444';
 
     return (
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '450px', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '450px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -1546,7 +1538,7 @@ const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
 
   // Twist review SVG diagram
   const renderTwistReviewDiagram = () => (
-    <svg viewBox="0 0 320 120" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto 16px' }}>
+    <svg viewBox="0 0 320 120" style={{ width: '100%', maxWidth: '350px', height: 'auto', display: 'block', margin: '0 auto 16px' }} preserveAspectRatio="xMidYMid meet">
       <rect width="320" height="120" fill="#0f172a" rx="8" />
 
       {/* Energy flow diagram */}

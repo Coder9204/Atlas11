@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Ground Bounce (Simultaneous Switching Noise) - Complete 10-Phase Game
 // Why digital circuits suffer from noise when multiple outputs switch together
@@ -261,9 +263,8 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [numOutputs, setNumOutputs] = useState(8); // Number of switching outputs
   const [packageInductance, setPackageInductance] = useState(5); // nH
   const [slewRate, setSlewRate] = useState(1); // V/ns (affects di/dt)
@@ -285,14 +286,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -440,7 +434,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const animProgress = showAnimation ? switchPhase : 100;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Ground Bounce visualization">
         <defs>
           <linearGradient id="bounceGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.noise} stopOpacity="0.8" />
@@ -684,7 +678,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
     const startX = (width - (numOutputs * (outputWidth + 4) - 4)) / 2;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Chip outline */}
         <rect
           x={20}
@@ -993,7 +987,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 300 : 400} height={200} viewBox={`0 0 ${isMobile ? 300 : 400} 200`} style={{ background: colors.bgCard }}>
+            <svg width={isMobile ? 300 : 400} height={200} viewBox={`0 0 ${isMobile ? 300 : 400} 200`} style={{ background: colors.bgCard }} preserveAspectRatio="xMidYMid meet">
               {/* IC Package */}
               <rect x={50} y={40} width={isMobile ? 200 : 300} height={60} fill={colors.bgSecondary} stroke={colors.signal} strokeWidth="2" rx="4" />
               <text x={isMobile ? 150 : 200} y={70} fill={colors.textPrimary} fontSize="14" textAnchor="middle">IC Package</text>
@@ -1531,7 +1525,7 @@ const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent
 
           {/* Package comparison SVG */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 340 : 420} height={220} viewBox={`0 0 ${isMobile ? 340 : 420} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 340 : 420} height={220} viewBox={`0 0 ${isMobile ? 340 : 420} 220`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="dipGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={colors.error} stopOpacity="0.6" />

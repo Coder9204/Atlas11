@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ORE TO METAL - Complete 10-Phase Game (ELON Game #15 of 36)
 // Raw ore to refined metal through energy-intensive multi-stage processes
@@ -261,9 +263,8 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — ore grade slider
+  const { isMobile } = useViewport();
+// Simulation state — ore grade slider
   const [oreGrade, setOreGrade] = useState(0.8); // percent Cu
 
   // Twist phase — bioleaching vs smelting
@@ -283,14 +284,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Ore processing calculations
+// Ore processing calculations
   const calculateOreRequired = (grade: number) => {
     // tonnes of ore per tonne of copper (with ~85% recovery)
     return 100 / (grade * 0.85);
@@ -505,7 +499,7 @@ const ELON_OreToMetalRenderer: React.FC<ELON_OreToMetalRendererProps> = ({ onGam
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Ore To Metal visualization">
         <defs>
           <linearGradient id="oreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#78716c" />

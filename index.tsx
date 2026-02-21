@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
 import { AuthProvider } from './contexts/AuthContext';
+import { AICoachProvider } from './contexts/AICoachContext';
 import AuthModal from './components/AuthModal';
 import { trackSessionStarted, trackSessionEnded, trackPageView } from './services/AnalyticsService';
 
@@ -48,8 +49,10 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
-      <AuthModal />
+      <AICoachProvider>
+        <RouterProvider router={router} />
+        <AuthModal />
+      </AICoachProvider>
     </AuthProvider>
   </React.StrictMode>
 );

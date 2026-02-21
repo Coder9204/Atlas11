@@ -8,6 +8,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -308,15 +310,8 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  const [prediction, setPrediction] = useState<string | null>(null);
+  const { isMobile } = useViewport();
+const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
   // Play phase state
@@ -445,7 +440,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     const markerY = padT + plotH / 2 - (torque / 2) * plotH;
 
     return (
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label="Classic D C Motor visualization">
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
@@ -1411,6 +1406,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                       setTestQuestion(testQuestion + 1);
                     } else {
                       setTestSubmitted(true);
+                      emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                     }
                   }}
                   style={{ padding: '14px 28px', borderRadius: '10px', fontWeight: 700, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', border: 'none', cursor: 'pointer' }}

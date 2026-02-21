@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #22: OPTICAL LINK - Complete 10-Phase Game
 // Fiber optic link budget — light attenuation through fiber, connectors,
@@ -262,9 +264,8 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [fiberLengthKm, setFiberLengthKm] = useState(500);
   const [animFrame, setAnimFrame] = useState(0);
 
@@ -285,14 +286,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop for photon pulse
+// Animation loop for photon pulse
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimFrame(f => (f + 1) % 360);
@@ -562,7 +556,7 @@ const ELON_OpticalLinkRenderer: React.FC<ELON_OpticalLinkRendererProps> = ({ onG
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Optical Link visualization">
         <defs>
           <linearGradient id="fiberGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.laser} />

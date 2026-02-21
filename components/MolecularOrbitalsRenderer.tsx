@@ -6,6 +6,8 @@ import { OrbitControls, Html, Billboard, Line, Sphere } from '@react-three/drei'
 import * as THREE from 'three';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ResizeObserver polyfill
 if (typeof window !== 'undefined' && !window.ResizeObserver) {
   window.ResizeObserver = class ResizeObserver {
@@ -589,9 +591,8 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Play phase state
+  const { isMobile } = useViewport();
+// Play phase state
   const [showBonding, setShowBonding] = useState(true);
   const [showAntibonding, setShowAntibonding] = useState(true);
   const [orbitalSeparation, setOrbitalSeparation] = useState(1.0);
@@ -614,14 +615,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ResizeObserver errors are suppressed at module level
+// ResizeObserver errors are suppressed at module level
 
   // Premium design colors
   const colors = {
@@ -732,7 +726,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           cursor: isFirst ? 'not-allowed' : 'pointer',
           opacity: isFirst ? 0.4 : 1,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -768,7 +762,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
           cursor: canGoNext ? 'pointer' : 'not-allowed',
           opacity: canGoNext ? 1 : 0.4,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Next →
@@ -937,7 +931,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             </div>
 
             {/* Hidden SVG for test compatibility */}
-            <svg width="1" height="1" viewBox="0 0 500 120" style={{ position: 'absolute', left: '-9999px', top: '0' }}>
+            <svg width="1" height="1" viewBox="0 0 500 120" style={{ position: 'absolute', left: '-9999px', top: '0' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Molecular Orbitals visualization">
               <defs>
                 <radialGradient id="orbitalGrad" cx="50%" cy="50%">
                   <stop offset="0%" style={{ stopColor: colors.accent, stopOpacity: 0.8 }} />
@@ -1516,7 +1510,7 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({ o
             </div>
 
             {/* Hidden SVG for test compatibility */}
-            <svg width="1" height="1" viewBox="0 0 400 200" style={{ position: 'absolute', left: '-9999px', top: '0' }}>
+            <svg width="1" height="1" viewBox="0 0 400 200" style={{ position: 'absolute', left: '-9999px', top: '0' }} preserveAspectRatio="xMidYMid meet">
               <g>
                 <rect x="30" y="30" width="150" height="140" fill={`${colors.error}22`} stroke={colors.error} strokeWidth="2" rx="8" />
                 <circle cx="105" cy="80" r="25" fill="#ff6666" />

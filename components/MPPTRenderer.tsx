@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // MPPT (Maximum Power Point Tracking) - Complete 10-Phase Game
 // Why solar controllers matter for harvesting maximum energy
@@ -261,9 +263,8 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [irradiance, setIrradiance] = useState(1000); // W/m²
   const [temperature, setTemperature] = useState(25); // °C
   const [loadResistance, setLoadResistance] = useState(5); // Ohms
@@ -285,14 +286,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -449,7 +443,7 @@ const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) =
     const mppY = padding.top + plotHeight - (mpp.current / 10) * plotHeight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="M P P T visualization">
         <defs>
           <linearGradient id="ivCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.8" />

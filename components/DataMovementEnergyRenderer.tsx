@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Movement Energy - Complete 10-Phase Game
 // Why moving data costs more energy than computing
@@ -261,9 +263,8 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [dataReusesFactor, setDataReuseFactor] = useState(1); // 1-100 reuses
   const [memoryLevel, setMemoryLevel] = useState(0); // 0=Register, 1=L1, 2=L2, 3=L3, 4=DRAM
   const [dataVolume, setDataVolume] = useState(1); // MB of data
@@ -284,14 +285,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -415,7 +409,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     const levelHeight = (height - 100) / 5;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Data Movement Energy visualization">
         <defs>
           <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.register} stopOpacity="0.8" />
@@ -575,7 +569,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="computeGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={colors.success} />
@@ -932,7 +926,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 300 : 400} height={120} viewBox={`0 0 ${isMobile ? 300 : 400} 120`}>
+              <svg width={isMobile ? 300 : 400} height={120} viewBox={`0 0 ${isMobile ? 300 : 400} 120`} preserveAspectRatio="xMidYMid meet">
                 {/* Memory box */}
                 <rect x={10} y={30} width={70} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
                 <text x={45} y={55} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Memory</text>
@@ -1362,7 +1356,7 @@ const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 280 : 350} height={90} viewBox={`0 0 ${isMobile ? 280 : 350} 90`}>
+              <svg width={isMobile ? 280 : 350} height={90} viewBox={`0 0 ${isMobile ? 280 : 350} 90`} preserveAspectRatio="xMidYMid meet">
                 {/* Data reuse scenario diagram */}
                 <rect x={10} y={10} width={60} height={60} rx={6} fill={`${colors.dram}33`} stroke={colors.dram} strokeWidth={2} />
                 <text x={40} y={35} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Data</text>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Poisson's Ratio - Complete 10-Phase Game
 // Understanding how materials deform when stretched or compressed
@@ -261,9 +263,8 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Play phase simulation state
+  const { isMobile } = useViewport();
+// Play phase simulation state
   const [material, setMaterial] = useState<'steel' | 'rubber' | 'cork'>('steel');
   const [stretch, setStretch] = useState(0);
 
@@ -284,14 +285,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Get Poisson's ratio for material
+// Get Poisson's ratio for material
   const getPoissonRatio = (mat: string): number => {
     switch (mat) {
       case 'steel': return 0.3;
@@ -424,7 +418,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     const markerY = chartBottom - (markerCont / maxContraction) * chartH * 0.9;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Poisson Ratio visualization">
         <defs>
           <linearGradient id="materialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={materialColors[material]} stopOpacity="1" />
@@ -524,7 +518,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
     const auxeticNewHeight = baseHeight * (1 + axialStretch);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="auxeticGlow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -883,7 +877,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictRubber" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#f9a8d4" />
@@ -1314,7 +1308,7 @@ const PoissonRatioRenderer: React.FC<PoissonRatioRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="auxPredGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#a78bfa" />

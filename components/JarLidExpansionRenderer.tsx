@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // JAR LID EXPANSION RENDERER - GAME 136 (Thermal Expansion for Jars)
 // Physics: Delta L = alpha * L0 * Delta T - Differential expansion between metal and glass
@@ -279,9 +281,8 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction states
+  const { isMobile } = useViewport();
+// Prediction states
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
@@ -304,14 +305,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate expansion
+// Calculate expansion
   const baseTemp = showChillFirst ? 0 : 20;
   const lidDiameter = 70; // mm
   const glassDiameter = 70; // mm
@@ -521,7 +515,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
     const tempBarCx = 10 + (temperature - (showChillFirst ? 0 : 20)) / (100 - (showChillFirst ? 0 : 20)) * 260;
 
     return (
-      <svg viewBox="0 0 300 320" style={{ width: '100%', maxWidth: '300px' }}>
+      <svg viewBox="0 0 300 320" style={{ width: '100%', maxWidth: '300px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Jar Lid Expansion visualization">
         <defs>
           <linearGradient id="jarGlass" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
@@ -814,7 +808,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             textAlign: 'center',
           }}>
             {/* Static SVG preview */}
-            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '250px', marginBottom: '16px' }}>
+            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '250px', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="0" y="0" width="300" height="200" fill="#1e293b" rx="12" />
               <path
                 d="M100 60 L100 160 Q100 175 115 175 L185 175 Q200 175 200 160 L200 60"
@@ -1185,7 +1179,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({ onGam
             textAlign: 'center',
           }}>
             {/* Static SVG - no sliders */}
-            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', marginBottom: '8px' }}>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', marginBottom: '8px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="0" y="0" width="300" height="180" fill="#1e293b" rx="12" />
               {/* Method A: Direct Heat */}
               <g id="method-a">

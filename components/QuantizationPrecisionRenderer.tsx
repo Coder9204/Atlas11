@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '📱',
@@ -85,6 +88,7 @@ interface QuantizationPrecisionRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -103,17 +107,12 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#a855f7',
-  accentGlow: 'rgba(168, 85, 247, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  precision: '#f59e0b',
+  quantized: '#8b5cf6',
+  loss: '#ef4444',
   fp32: '#3b82f6',
   fp16: '#8b5cf6',
   int8: '#22c55e',
@@ -400,6 +399,7 @@ const testQuestions = [
 
 const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps> = ({
   gamePhase,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -423,24 +423,14 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   const [showQuantizationError, setShowQuantizationError] = useState(true);
   const [layerSensitivity, setLayerSensitivity] = useState<'input' | 'middle' | 'output'>('middle');
   const [animationFrame, setAnimationFrame] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Sync phase with gamePhase prop changes (for resume functionality)
+  const { isMobile } = useViewport();
+// Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
     }
   }, [gamePhase, phase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -565,8 +555,11 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-full"
         style={{ maxHeight: '100%' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Quantization Precision visualization">
         <defs>
+          <filter id="quantGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feFlood floodColor="#f59e0b" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="quantGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.5" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           {/* Premium lab background gradient */}
           <linearGradient id="qprecLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#030712" />
@@ -1086,7 +1079,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           </p>
 
           {/* Static SVG for predict phase */}
-          <svg viewBox="0 0 500 200" style={{ width: '100%', maxHeight: '200px', marginBottom: '20px' }}>
+          <svg viewBox="0 0 500 200" style={{ width: '100%', maxHeight: '200px', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1318,7 +1311,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           </p>
 
           {/* Static SVG showing neural network layer sensitivity */}
-          <svg viewBox="0 0 500 220" style={{ width: '100%', maxHeight: '220px', marginBottom: '20px' }}>
+          <svg viewBox="0 0 500 220" style={{ width: '100%', maxHeight: '220px', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#0f172a" />
@@ -1945,7 +1938,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
               </button>
             ) : (
               <button
-                onClick={() => setTestSubmitted(true)}
+                onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',

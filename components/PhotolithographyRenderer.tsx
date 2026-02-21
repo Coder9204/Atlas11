@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '💻',
@@ -92,6 +95,7 @@ interface PhotolithographyRendererProps {
   gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -133,6 +137,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -156,15 +161,8 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -412,6 +410,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -433,7 +432,7 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Photolithography visualization">
           {/* ============================================ */}
           {/* PREMIUM DEFS SECTION - Gradients & Filters */}
           {/* ============================================ */}

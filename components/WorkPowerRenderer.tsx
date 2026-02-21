@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // WORK & POWER RENDERER - PREMIUM PHYSICS GAME
 // The Human Engine: Calculate the power you generate climbing stairs
@@ -150,7 +152,7 @@ const colors = {
 };
 
 const typography = {
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+  fontFamily: theme.fontFamily,
   hero: { fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 },
   h1: { fontSize: 28, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 },
   h2: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 },
@@ -372,15 +374,8 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
   const startTimeRef = useRef<number>(0);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -597,7 +592,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
             background: `linear-gradient(180deg, #0a0f1a 0%, #030712 100%)`,
             borderRadius: radius.md,
           }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="Work Power visualization">
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
           {/* PREMIUM DEFS SECTION - Gradients, Filters, and Effects */}
           {/* ═══════════════════════════════════════════════════════════════════════════ */}
@@ -1370,7 +1365,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               marginBottom: spacing.xl,
               border: `1px solid ${colors.border}`,
             }}>
-              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predStairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#4b5563" />
@@ -2021,7 +2016,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               marginBottom: spacing.xl,
               border: `1px solid ${colors.border}`,
             }}>
-              <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+              <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twPredStairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#4b5563" />
@@ -2183,7 +2178,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
                   marginBottom: spacing.lg,
                   border: `1px solid ${colors.border}`,
                 }}>
-                  <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }}>
+                  <svg viewBox="0 0 400 250" width="100%" style={{ display: 'block', background: '#030712', borderRadius: radius.md }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twPlayPowerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                     <stop offset="0%" stopColor="#1e40af" />
@@ -2945,7 +2940,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
               {testAnswers[testIndex] !== null && (
                 testIndex < testQuestions.length - 1
                   ? renderButton('Next Question →', () => setTestIndex(testIndex + 1), 'primary')
-                  : renderButton('See Results →', () => setTestSubmitted(true), 'success')
+                  : renderButton('See Results →', () => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }, 'success')
               )}
             </div>
           </div>

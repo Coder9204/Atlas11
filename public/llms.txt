@@ -1,0 +1,48 @@
+# Atlas Coach — AI-Friendly Summary
+# https://atlascoach-5e3af.web.app
+
+## What is Atlas Coach?
+Atlas Coach is an interactive education platform for learning physics, engineering, and AI concepts through 340+ browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook → Predict → Play → Review → Test.
+
+## Key Features
+- 340+ interactive simulation games
+- 14 major categories spanning physics, engineering, semiconductors, AI/computing, and more
+- AI coaching via Gemini Live (voice + text)
+- Spaced repetition scoring (SM-2 algorithm)
+- Learning paths with progress tracking
+- Difficulty gating (beginner/intermediate/advanced)
+- Free tier with 5 games/month, paid plans starting at $9.99/mo
+
+## Categories
+1. Classical Mechanics — Forces, motion, momentum, energy, rotational dynamics
+2. Oscillations & Waves — Pendulums, sound, standing waves, resonance
+3. Fluid Mechanics — Flow types, pressure, buoyancy, surface effects, viscosity
+4. Thermodynamics & Heat — Heat transfer, phase changes, gas laws, thermal management
+5. Electricity & Magnetism — Electric fields, circuits, magnetism, induction, motors
+6. Optics & Light — Reflection, refraction, lenses, interference, polarization
+7. Materials Science — Mechanical properties, corrosion, molecular physics
+8. Semiconductors & Electronics — MOSFET, fabrication, interconnects, packaging, timing
+9. AI & Computing — AI inference, GPU architecture, memory systems, networking
+10. Solar & Energy — Solar cells, modules, power electronics, batteries, grid
+11. Space & Orbital Mechanics — Orbits, satellites, earth effects
+12. RF & Communications — Antennas, signal propagation, acoustics
+13. Fun Experiments — Kitchen physics, optical illusions, strange physics
+14. Data Storage — HDD physics, capacitive touch
+
+## Key URLs
+- Homepage: https://atlascoach-5e3af.web.app/
+- All Games: https://atlascoach-5e3af.web.app/games
+- Pricing: https://atlascoach-5e3af.web.app/pricing
+- Learning Paths: https://atlascoach-5e3af.web.app/paths
+- Category Pages: https://atlascoach-5e3af.web.app/learn/{category-id}
+- Individual Games: https://atlascoach-5e3af.web.app/games/{game-slug}
+
+## Target Audience
+- Physics students (high school and university)
+- Engineering students and professionals
+- AP Physics / IB Physics exam prep
+- STEM educators looking for interactive lab alternatives
+- Self-learners interested in how things work
+
+## Contact
+Website: https://atlascoach-5e3af.web.app

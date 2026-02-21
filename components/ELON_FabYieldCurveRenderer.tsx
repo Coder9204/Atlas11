@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON FAB YIELD CURVE - Complete 10-Phase Game (#18 of 36 ELON Games)
 // Semiconductor yield — defect density determines good dies, key economic driver
@@ -261,9 +263,8 @@ const ELON_FabYieldCurveRenderer: React.FC<ELON_FabYieldCurveRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [defectDensity, setDefectDensity] = useState(0.1);
   const [dieWidth, setDieWidth] = useState(20);
   const [dieHeight, setDieHeight] = useState(20);
@@ -289,14 +290,7 @@ const ELON_FabYieldCurveRenderer: React.FC<ELON_FabYieldCurveRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Poisson yield model: Y = e^(-D * A)
+// Poisson yield model: Y = e^(-D * A)
   const calculateYield = (D: number, areaSquareMm: number): number => {
     const areaCm2 = areaSquareMm / 100;
     return Math.exp(-D * areaCm2);
@@ -558,7 +552,7 @@ const ELON_FabYieldCurveRenderer: React.FC<ELON_FabYieldCurveRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Fab Yield Curve visualization">
         <defs>
           <radialGradient id="waferGrad" cx="40%" cy="40%" r="60%">
             <stop offset="0%" stopColor="#334155" />

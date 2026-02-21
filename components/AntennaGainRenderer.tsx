@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Antenna Gain & Radiation Patterns - Complete 10-Phase Game
 // Why focusing electromagnetic energy matters for wireless communication
@@ -261,9 +263,8 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [antennaDiameter, setAntennaDiameter] = useState(1); // meters
   const [frequency, setFrequency] = useState(10); // GHz
   const [pointingAngle, setPointingAngle] = useState(0); // degrees from boresight
@@ -283,14 +284,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -424,7 +418,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     const bwRadius = maxRadius * 0.5;
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Antenna Gain visualization">
         <defs>
           {/* Gradient for radiation pattern */}
           <radialGradient id="patternGradient" cx="50%" cy="50%" r="50%">
@@ -767,7 +761,7 @@ const AntennaGainRenderer: React.FC<AntennaGainRendererProps> = ({ onGameEvent, 
     ).join(' ') + ' Z';
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="staticPatternGradient" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />

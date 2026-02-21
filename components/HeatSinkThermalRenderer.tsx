@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Heat Sink Thermal Resistance - Complete 10-Phase Game
 // Why managing heat flow through thermal resistance chains keeps CPUs alive
@@ -261,9 +263,8 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [cpuPower, setCpuPower] = useState(100); // Watts
   const [finCount, setFinCount] = useState(25);
   const [finHeight, setFinHeight] = useState(50); // mm
@@ -285,14 +286,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -410,7 +404,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
     const heatColor = cpuTemp < 60 ? '#22c55e' : cpuTemp < 80 ? '#f59e0b' : '#ef4444';
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Heat Sink Thermal visualization">
         <defs>
           <linearGradient id="cpuHeatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={heatColor} />
@@ -857,7 +851,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
 
             {/* Static SVG Diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 {/* CPU Die block */}
                 <rect x="20" y="80" width="70" height="40" rx="4" fill="#ef4444" opacity="0.8" />
                 <text x="55" y="95" textAnchor="middle" fill="white" fontSize="11" fontWeight="600">CPU Die</text>
@@ -1339,7 +1333,7 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGam
             </h2>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width="400" height="180" viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 {/* 25 fins visualization */}
                 <text x="100" y="25" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">25 Fins - Good Spacing</text>
                 {Array.from({ length: 8 }).map((_, i) => (

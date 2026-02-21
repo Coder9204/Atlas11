@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // LEIDENFROST RENDERER - Game 140
 // Physics: Water droplet hovering on its own vapor over hot surface
@@ -149,25 +151,14 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   const [twistDropletRadius, setTwistDropletRadius] = useState(15);
 
   const lastClickRef = useRef(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Sync external gamePhase prop with internal phase state
+  const { isMobile } = useViewport();
+// Sync external gamePhase prop with internal phase state
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -548,7 +539,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     const isAboveLeidenfrost = surfaceTemp >= LEIDENFROST_POINT;
 
     return (
-      <svg viewBox="0 0 400 280" style={{ width: '100%' }}>
+      <svg viewBox="0 0 400 280" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leidenfrost visualization">
         <defs>
           {/* Premium background gradient */}
           <linearGradient id="leidLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -956,7 +947,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     const isAboveLeidenfrost = twistTemp >= LEIDENFROST_POINT;
 
     return (
-      <svg viewBox="0 0 400 260" style={{ width: '100%' }}>
+      <svg viewBox="0 0 400 260" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           {/* Background gradient */}
           <linearGradient id="leidTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1491,7 +1482,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
   // Static predict visualization
   const renderPredictVisualization = () => (
-    <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '20px' }}>
+    <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predictBg" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#0f172a" />
@@ -1791,7 +1782,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Temperature Paradox</h2>
 
           {/* Preview visualization */}
-          <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '24px' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', marginBottom: '24px' }} preserveAspectRatio="xMidYMid meet">
             <rect width="400" height="200" fill="#0f172a" rx="8" />
             <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="bold">Droplet Lifetime vs Temperature</text>
             <line x1="60" y1="160" x2="340" y2="160" stroke="#475569" strokeWidth="2" />

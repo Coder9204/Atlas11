@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // DVFS (Dynamic Voltage/Frequency Scaling) - Complete 10-Phase Game
 // Why GPUs can't sustain boost clocks forever - thermal and power limits
@@ -261,9 +263,8 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationTime, setSimulationTime] = useState(0);
   const [powerLimit, setPowerLimit] = useState(250); // Watts
@@ -295,14 +296,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
   const simulationRef = useRef<NodeJS.Timeout | null>(null);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate GPU state based on thermal RC model
+// Calculate GPU state based on thermal RC model
   const calculateGPUState = useCallback((time: number, thermalR: number) => {
     const maxBoostClock = 2400;
     const baseClock = 1800;
@@ -512,7 +506,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
     const tlY = height - 50 - tlFrac * (height - 100);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="D V F S visualization">
         <defs>
           <linearGradient id="dvfs-vf-grad" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.success} stopOpacity="0.8" />
@@ -645,7 +639,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
             {data.length > 0 ? `${data[data.length - 1]}${unit}` : `--${unit}`}
           </span>
         </div>
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
           {[0, 0.25, 0.5, 0.75, 1].map(frac => (
             <line
               key={frac}
@@ -921,7 +915,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width={isMobile ? 320 : 400} height="150" viewBox="0 0 400 150" style={{ maxWidth: '100%' }}>
+              <svg width={isMobile ? 320 : 400} height="150" viewBox="0 0 400 150" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
                 <rect x="0" y="0" width="400" height="150" fill={colors.bgSecondary} rx="8" />
                 <rect x="30" y="40" width="80" height="60" fill={colors.bgCard} stroke={colors.clock} strokeWidth="2" rx="4" />
                 <text x="70" y="65" textAnchor="middle" fill={colors.clock} fontSize="12" fontWeight="600">GPU</text>
@@ -1235,7 +1229,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
             {/* Review SVG diagram */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 320 : 400} height="160" viewBox="0 0 400 160">
+              <svg width={isMobile ? 320 : 400} height="160" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="review-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.success} />
@@ -1336,7 +1330,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
             {/* Static comparison SVG for twist predict */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 320 : 400} height="180" viewBox="0 0 400 180">
+              <svg width={isMobile ? 320 : 400} height="180" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="tp-cool-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.clock} stopOpacity="0.3" />
@@ -1580,7 +1574,7 @@ const DVFSRenderer: React.FC<DVFSRendererProps> = ({ onGameEvent, gamePhase }) =
 
             {/* Review SVG */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 320 : 400} height="120" viewBox="0 0 400 120">
+              <svg width={isMobile ? 320 : 400} height="120" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="tr-grad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.success} />

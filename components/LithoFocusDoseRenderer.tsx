@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type LFDPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface LithoFocusDoseRendererProps {
@@ -160,15 +163,8 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
 
   // Responsive
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -405,6 +401,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
   };
 
   // Progress bar rendering
@@ -581,7 +578,7 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Litho Focus Dose visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="lfdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

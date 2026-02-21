@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // RC Delay - Complete 10-Phase Game
 // Why wires are the real bottleneck in chip design
@@ -261,9 +263,8 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [resistance, setResistance] = useState(100); // ohms
   const [capacitance, setCapacitance] = useState(10); // pF
   const [simulationTime, setSimulationTime] = useState(0);
@@ -288,14 +289,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Simulation animation
+// Simulation animation
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isSimulating) {
@@ -429,7 +423,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     const waveWidth = width - 80;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="R C Delay visualization">
         <defs>
           <linearGradient id="rcWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.signal} stopOpacity="0.9" />
@@ -594,7 +588,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
     const delay = calculateRepeaterDelay();
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="repGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
@@ -909,7 +903,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
 
             {/* SVG Graphic showing RC circuit concept */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 320 : 440} height={180} viewBox={`0 0 440 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 320 : 440} height={180} viewBox={`0 0 440 180`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predictSigGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.signal} stopOpacity="0.9" />
@@ -1332,7 +1326,7 @@ const RCDelayRenderer: React.FC<RCDelayRendererProps> = ({ onGameEvent, gamePhas
 
             {/* SVG graphic showing repeater concept */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 320 : 440} height={160} viewBox="0 0 440 160" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 320 : 440} height={160} viewBox="0 0 440 160" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistPredGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />

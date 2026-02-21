@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // INCLINED PLANE RENDERER - Complete 10-Phase Learning Game
 // Discover how ramps multiply force using gravity components
@@ -261,9 +263,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [angle, setAngle] = useState(30);
   const [hasFriction, setHasFriction] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
@@ -298,14 +299,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   const netAcceleration = Math.max(0, (gravityParallel - frictionForce) / mass);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Cleanup animation on unmount
+// Cleanup animation on unmount
   useEffect(() => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -500,7 +494,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     const vectorScale = isMobile ? 4.5 : 6;
 
     return (
-      <svg viewBox={`0 0 ${vbWidth} ${vbHeight}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${vbWidth} ${vbHeight}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Inclined Plane visualization">
         <defs>
           <linearGradient id="rampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748B" />
@@ -720,7 +714,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     const safeAreaD = `M${padL} ${padT + plotH} L${safeAreaPoints.map(pt => pt).join(' L')} L${dangerX} ${padT + plotH} Z`;
 
     return (
-      <svg viewBox={`0 0 ${graphW} ${graphH}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${graphW} ${graphH}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#10B981" />

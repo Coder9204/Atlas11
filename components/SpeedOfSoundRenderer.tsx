@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Speed of Sound - Complete 10-Phase Game
 // Measure and understand the speed of sound through interactive experiments
@@ -261,9 +263,8 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - echo method
+  const { isMobile } = useViewport();
+// Simulation state - echo method
   const [distance, setDistance] = useState(170); // meters to wall (340m round trip)
   const [soundWavePos, setSoundWavePos] = useState(-1);
   const [echoWavePos, setEchoWavePos] = useState(-1);
@@ -289,14 +290,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Speed of sound at temperature (simplified formula)
+// Speed of sound at temperature (simplified formula)
   const speedAtTemp = (temp: number) => 331 + 0.6 * temp;
 
   // Premium design colors
@@ -553,7 +547,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     const height = isMobile ? 200 : 240;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Speed Of Sound visualization">
         <defs>
           <linearGradient id="soundWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.8" />
@@ -688,7 +682,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     const refSpeed = speedAtTemp(20);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="hotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#FCA5A5" />
@@ -784,7 +778,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
     const width = isMobile ? 340 : 480;
     const height = 170;
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Title */}
         <text x={width/2} y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
           Echo Experiment Setup
@@ -1285,7 +1279,7 @@ const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent
           padding: '24px',
           marginBottom: '24px',
         }}>
-          <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block' }}>
+          <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
               Hot Air vs Cold Air
             </text>

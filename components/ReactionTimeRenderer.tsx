@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // REACTIONTIME RENDERER - RULER DROP TEST
 // Teaching: d = ½gt² → Measure reaction time using free fall physics
@@ -105,8 +107,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase());
   const [showCoachMessage, setShowCoachMessage] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
+  const { isMobile } = useViewport();
+const navigationLockRef = useRef(false);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -142,16 +144,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   // Animation ref
   const animationRef = useRef<number | null>(null);
   const dropTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync
+// Phase sync
   useEffect(() => {
     if (gamePhase && isValidPhase(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
@@ -577,7 +570,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </span>
         </div>
 
-        <svg viewBox="0 0 300 300" className="w-full h-64 md:h-80" style={{ minWidth: '300px' }}>
+        <svg viewBox="0 0 300 300" className="w-full h-64 md:h-80" style={{ minWidth: '300px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Reaction Time visualization">
           {/* Premium SVG Definitions */}
           <defs>
             {/* Lab background gradient */}
@@ -869,7 +862,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
         <div className="relative">
-          <svg viewBox="0 0 300 160" className="w-full h-40 mb-6">
+          <svg viewBox="0 0 300 160" className="w-full h-40 mb-6" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="300" height="160" fill="#1e293b" rx="10" />
 
             {/* Brain to hand pathway */}
@@ -922,7 +915,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       >
         <span className="relative z-10 flex items-center gap-3">
           Make Your Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
@@ -968,7 +961,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
         {/* Static ruler visualization */}
         <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
-          <svg viewBox="0 0 300 240" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}>
+          <svg viewBox="0 0 300 240" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictRuler" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#fbbf24" />
@@ -1338,7 +1331,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
           </div>
         </div>
 
-        <svg viewBox="0 0 300 120" className="w-full h-28 mb-4">
+        <svg viewBox="0 0 300 120" className="w-full h-28 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect x="0" y="0" width="300" height="120" fill="white" rx="10" />
 
           {/* Distance to time conversion table */}
@@ -1410,7 +1403,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
         {/* Static visualization showing distraction effect */}
         <div style={{ marginBottom: typo.sectionGap, background: colors.bgCard, borderRadius: '12px', padding: typo.cardPadding, border: `1px solid ${colors.border}` }}>
-          <svg viewBox="0 0 320 180" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }}>
+          <svg viewBox="0 0 320 180" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistBrain" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#818cf8" />
@@ -1618,7 +1611,7 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       {renderSectionHeader('Step 6 • Twist Review', 'Distraction Effects', 'Why multitasking is dangerous')}
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 120" className="w-full h-28 mb-4">
+        <svg viewBox="0 0 300 120" className="w-full h-28 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect x="0" y="0" width="300" height="120" fill="white" rx="10" />
 
           {/* Bar chart */}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // KV Cache (Key-Value Cache) - Complete 10-Phase Game
 // Why caching attention matrices accelerates LLM inference
@@ -261,9 +263,8 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [tokenCount, setTokenCount] = useState(1);
   const [kvCacheEnabled, setKvCacheEnabled] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -287,14 +288,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -304,22 +298,17 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
   // Premium design colors - text uses brightness >= 180 for contrast
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#8B5CF6', // Purple for AI/ML theme
-    accentGlow: 'rgba(139, 92, 246, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // brightness >= 180 for contrast
-    textMuted: '#cbd5e1', // brightness >= 180 for contrast
-    textDecorative: 'rgba(255, 255, 255, 0.6)', // Muted decorative text
-    border: '#2a2a3a',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    key: '#f59e0b',
+    value: '#06b6d4',
+    cache: '#8b5cf6',
+    evict: '#ef4444',
     cached: '#10B981', // Green for cached
     compute: '#EF4444', // Red for compute
     memory: '#3B82F6', // Blue for memory
+    textDecorative: 'rgba(255, 255, 255, 0.6)', // Muted decorative text
   };
 
   const typo = {
@@ -396,7 +385,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     const cellSize = Math.min(matrixWidth / (maxTokensDisplay + 2), matrixHeight / (numLayers + 1)) - 4;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="K V Cache visualization">
         {/* Title */}
         <text x={width / 2} y={20} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
           KV Cache Structure (Layers x Tokens)
@@ -498,8 +487,11 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
     const queryY = padT + chartH * 0.82;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
+          <filter id="cacheGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feFlood floodColor="#8b5cf6" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="kvGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" /><stop offset="100%" stopColor="#06b6d4" stopOpacity="0.4" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           <linearGradient id="kvCachedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10B981" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#059669" stopOpacity="0.7" />
@@ -898,7 +890,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
       const svgWidth = isMobile ? 320 : 450;
       const svgHeight = 200;
       return (
-        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
           {/* Tokens */}
           {['The', 'cat', 'sat', '...', '?'].map((token, i) => {
             const x = 40 + i * (isMobile ? 55 : 80);
@@ -1431,7 +1423,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
 
           {/* Memory growth visualization */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 320 : 450} height={180} viewBox={`0 0 ${isMobile ? 320 : 450} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 320 : 450} height={180} viewBox={`0 0 ${isMobile ? 320 : 450} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               {/* Memory bars */}
               {[1, 2, 4, 8, 16].map((mult, i) => {
                 const x = 40 + i * (isMobile ? 55 : 80);
@@ -1592,7 +1584,7 @@ const KVCacheRenderer: React.FC<KVCacheRendererProps> = ({ onGameEvent, gamePhas
               const curMem = (contextLength * numLayers * 2 * 128 * 2) / (1024 * 1024);
               const curY = pad.top + chartH * (1 - Math.min(curMem / maxMem, 1));
               return (
-                <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', marginBottom: '16px' }}>
+                <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ background: colors.bgCard, borderRadius: '12px', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <linearGradient id="kvMemGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={colors.error} stopOpacity={0.8} />

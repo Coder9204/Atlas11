@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '☀️',
@@ -83,6 +86,7 @@ interface PassivationRecombinationRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -122,6 +126,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -132,9 +137,8 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Sync phase with gamePhase prop changes (for resume functionality)
+  const { isMobile } = useViewport();
+// Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
@@ -144,16 +148,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   // Navigation refs
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -432,6 +427,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -466,7 +462,7 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Passivation Recombination visualization">
           <defs>
             {/* === PREMIUM SILICON WAFER GRADIENTS === */}
             <linearGradient id="pasrSiliconBulk" x1="0%" y1="0%" x2="0%" y2="100%">

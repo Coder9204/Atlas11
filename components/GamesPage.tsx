@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { isOnboardingComplete, getAllGameProgress, GameRecord } from '../services/GameProgressService';
+import RetentionBanner from './RetentionBanner';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GAMES LIBRARY PAGE - Browse all 340+ interactive games
@@ -918,6 +919,11 @@ const GamesPage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* ─── Retention Banner ─── */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <RetentionBanner />
+      </div>
 
       {/* ─── Games Grid ─── */}
       <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 80px' }}>

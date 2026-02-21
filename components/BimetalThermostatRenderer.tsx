@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // BIMETAL THERMOSTAT RENDERER - GAME 137
 // Physics: Two metals with different alpha bonded together -> curvature with temperature
@@ -349,9 +351,8 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [temperature, setTemperature] = useState(20);
   const [selectedPair, setSelectedPair] = useState(0);
   const [contactThreshold] = useState(30);
@@ -372,14 +373,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Initialize responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Update phase when gamePhase prop changes
+// Update phase when gamePhase prop changes
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -461,6 +455,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
       setShowExplanation(false);
     } else {
       setTestSubmitted(true);
+      onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
     }
   };
 
@@ -606,7 +601,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
     const metal1Warm = stripWarmth > 0.3 ? `rgba(255, ${Math.round(160 - stripWarmth * 80)}, ${Math.round(80 - stripWarmth * 60)}, ${stripWarmth * 0.3})` : 'none';
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }} role="img" aria-label="Bimetallic Strip Thermostat visualization">
+      <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }} role="img" aria-label="Bimetallic Strip Thermostat visualization" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="metal1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={pair.metal1.color} />
@@ -844,7 +839,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             marginBottom: '24px',
             border: `1px solid ${colors.border}`,
           }}>
-            <svg viewBox="0 0 200 120" style={{ width: '100%', height: '120px' }}>
+            <svg viewBox="0 0 200 120" style={{ width: '100%', height: '120px' }} preserveAspectRatio="xMidYMid meet">
               <g transform="translate(20, 30)">
                 <text x="0" y="-5" fill={colors.textSecondary} fontSize="12">Cold:</text>
                 <rect x="20" y="0" width="120" height="8" fill={colors.brass} rx="2" />
@@ -924,7 +919,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             marginBottom: '20px',
             border: `1px solid ${colors.border}`,
           }}>
-            <svg viewBox="0 0 200 80" style={{ width: '100%', height: '80px' }}>
+            <svg viewBox="0 0 200 80" style={{ width: '100%', height: '80px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="20" y="30" width="160" height="8" fill={colors.brass} rx="2" />
               <rect x="20" y="38" width="160" height="8" fill={colors.steel} rx="2" />
               <text x="100" y="20" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Bimetallic Strip (flat at 20C)</text>
@@ -1259,7 +1254,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({ o
             marginBottom: '20px',
             border: `1px solid ${colors.border}`,
           }}>
-            <svg viewBox="0 0 280 120" style={{ width: '100%', height: '100px' }}>
+            <svg viewBox="0 0 280 120" style={{ width: '100%', height: '100px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="0" y="0" width="280" height="120" fill="#1e293b" rx="8" />
               <line x1="40" y1="90" x2="240" y2="90" stroke="#475569" strokeWidth="2" />
               <line x1="40" y1="30" x2="40" y2="90" stroke="#475569" strokeWidth="2" />

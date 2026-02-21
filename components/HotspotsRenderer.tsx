@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface HotspotsRendererProps {
@@ -9,6 +12,7 @@ interface HotspotsRendererProps {
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
   [key: string]: unknown;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -34,17 +38,11 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   gamePhase: gamePhaseRaw,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -352,6 +350,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -490,7 +489,7 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '560px' }}
-        >
+         role="img" aria-label="Hotspots visualization">
           <defs>
             {/* Premium thermal gradient - hot to cool with 6 stops */}
             <linearGradient id="hotThermalGradient" x1="0%" y1="0%" x2="100%" y2="0%">

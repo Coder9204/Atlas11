@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // BEATS - Premium Apple/Airbnb Design System
 // ============================================================================
@@ -116,18 +118,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -555,7 +547,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
           </div>
         </div>
 
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1 }}>
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1 }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Beats visualization">
           <defs>
             {/* Premium Wave 1 gradient - Teal/Cyan with 4 stops */}
             <linearGradient id="beatsWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -720,7 +712,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
     if (app.id === 'tuning') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
+        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="beatsTuningBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -819,7 +811,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
     if (app.id === 'radar') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
+        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background */}
             <linearGradient id="beatsRadarBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -938,7 +930,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
     if (app.id === 'music') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
+        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background */}
             <linearGradient id="beatsMusicBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1063,7 +1055,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
 
     if (app.id === 'medical') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
+        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium background */}
             <linearGradient id="beatsMedicalBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1498,7 +1490,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             marginBottom: design.spacing.lg,
             boxShadow: design.shadow.glow(design.colors.accentPrimary)
           }}>
-            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }}>
+            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium wave gradient */}
                 <linearGradient id="beatsIconWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1629,7 +1621,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     const height = 180;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '180px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predictWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
@@ -1952,7 +1944,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     const height = 140;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '200px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />

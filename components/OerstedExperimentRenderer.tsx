@@ -16,6 +16,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS (matching Wave Particle Duality)
 // ============================================================
@@ -366,16 +368,8 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Viewport
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -519,7 +513,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
-        >
+         role="img" aria-label="Oersted Experiment visualization">
         <defs>
           {/* Wire gradient */}
           <linearGradient id="oerstedWireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1522,7 +1516,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
       const cy = h / 2;
       return (
         <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto 20px' }}>
-          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
+          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width={w} height={h} fill={colors.bgDark} rx="12" />
             {/* Grid lines */}
             {[1,2,3].map(i => (
@@ -2383,6 +2377,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                   setTestQuestion(testQuestion + 1);
                 } else {
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: testScore, total: testQuestions.length });
                 }
               }}
               style={{

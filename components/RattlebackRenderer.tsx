@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 113: RATTLEBACK REVERSAL
 // The mysterious spinning top that reverses direction
@@ -87,6 +89,7 @@ interface RattlebackRendererProps {
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
   gamePhase?: string;
+  onGameEvent?: (event: any) => void;
 }
 
 // All 10 phases in order
@@ -131,6 +134,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   onPhaseComplete,
   onPredictionMade,
   gamePhase,
+  onGameEvent,
 }) => {
   // Use gamePhase if provided, otherwise propPhase, default to hook
   const [internalPhase, setInternalPhase] = useState<string>('hook');
@@ -178,20 +182,10 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
   const [showQuizConfirm, setShowQuizConfirm] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
   const [answerConfirmed, setAnswerConfirmed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // SVG ref for dynamic content tracking
+  const { isMobile } = useViewport();
+// SVG ref for dynamic content tracking
   const svgContentRef = useRef<string>('');
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -470,7 +464,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
           data-testid="rattleback-svg"
           data-svg-state={`asymmetry-${asymmetry}-spin-${initialSpin}`}
-        >
+         role="img" aria-label="Rattleback visualization">
           <defs>
             <linearGradient id="stoneGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={colors.stoneHighlight} />
@@ -1744,6 +1738,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
                 onClick={() => {
                   setShowQuizConfirm(false);
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                 }}
                 style={{
                   padding: '12px 24px',
@@ -1935,6 +1930,7 @@ const RattlebackRenderer: React.FC<RattlebackRendererProps> = ({
               onClick={() => {
                 if (allAnswered) {
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
                 }
               }}
               disabled={!allAnswered}

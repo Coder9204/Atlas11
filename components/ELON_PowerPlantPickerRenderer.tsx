@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON GAME #6: POWER PLANT PICKER - Complete 10-Phase Game
 // How capital cost, fuel cost, capacity factor, and lifetime determine $/MWh
@@ -312,9 +314,8 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [gasPrice, setGasPrice] = useState(3.5);
 
   // Twist phase — carbon price
@@ -334,14 +335,7 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate LCOE for a plant type
+// Calculate LCOE for a plant type
   const calculateLCOE = (plant: PlantType, gasPriceVal: number, carbonPriceVal: number = 0) => {
     const annualMwh = plant.capacityFactor * 8760;
     const capitalPerMwh = (plant.capitalPerKw * 1000) / (annualMwh * plant.lifetimeYears);
@@ -554,7 +548,7 @@ const ELON_PowerPlantPickerRenderer: React.FC<ELON_PowerPlantPickerRendererProps
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Power Plant Picker visualization">
         <defs>
           <linearGradient id="capitalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" />

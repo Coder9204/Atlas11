@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Solar Thermal Derating - Complete 10-Phase Game
 // Why hot panels make less power: temperature coefficient and efficiency loss
@@ -261,9 +263,8 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [temperature, setTemperature] = useState(25); // °C - panel temperature
   const [irradiance, setIrradiance] = useState(1000); // W/m²
   const [airflow, setAirflow] = useState(0); // 0-100% fan speed
@@ -283,14 +284,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -556,7 +550,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}
-        style={{ background: colors.bgCard, borderRadius: '12px', overflow: 'visible' }}>
+        style={{ background: colors.bgCard, borderRadius: '12px', overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Solar Thermal Derating visualization">
         <defs>
           <linearGradient id="hotGradient" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={colors.cold} />
@@ -680,7 +674,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}
-        style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="panelGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={panelColor} stopOpacity="0.9" />
@@ -838,7 +832,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
     ];
 
     const PredictVisualization = () => (
-      <svg width="340" height="200" viewBox="0 0 340 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+      <svg width="340" height="200" viewBox="0 0 340 200" style={{ background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="coolPanelGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.cold} stopOpacity="0.8" />
@@ -1347,7 +1341,7 @@ const SolarThermalDeratingRenderer: React.FC<SolarThermalDeratingRendererProps> 
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgSecondary, borderRadius: '12px' }}>
+              <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgSecondary, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="hotPanelPred" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />

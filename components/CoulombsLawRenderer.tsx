@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // COULOMB'S LAW RENDERER - SPEC-COMPLIANT IMPLEMENTATION
 // Follows GAME_TEST_SPECIFICATION.md exactly
@@ -199,8 +201,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
     if (gamePhase && validPhases.includes(gamePhase as CLPhase)) return gamePhase as CLPhase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-  const [prediction, setPrediction] = useState<string | null>(null);
+  const { isMobile } = useViewport();
+const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [animationTime, setAnimationTime] = useState(0);
 
@@ -235,16 +237,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
       setPhase(gamePhase as CLPhase);
     }
   }, [gamePhase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System
+// Premium Design System
   const colors = {
     primary: '#ef4444',       // red-500 (positive charge)
     primaryDark: '#dc2626',   // red-600
@@ -1128,7 +1121,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           overflow: 'hidden',
           position: 'relative'
         }}>
-          <svg viewBox="0 0 400 300" style={{ width: '100%', height: '100%' }}>
+          <svg viewBox="0 0 400 300" style={{ width: '100%', height: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Coulombs Law visualization">
             {renderPremiumSVGDefs()}
 
             {/* Premium dark lab background */}
@@ -1338,7 +1331,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 170" style={{ width: '100%' }}>
+          <svg viewBox="0 0 400 170" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
             {renderPremiumSVGDefs()}
 
             {/* Premium background */}
@@ -1475,7 +1468,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 300" style={{ width: '100%', borderRadius: '8px' }}>
+          <svg viewBox="0 0 400 300" style={{ width: '100%', borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
             {renderPremiumSVGDefs()}
 
             {/* Premium lab background */}
@@ -2023,7 +2016,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 220" style={{ width: '100%' }}>
+          <svg viewBox="0 0 400 220" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
             {renderPremiumSVGDefs()}
 
             {/* Premium background */}
@@ -2133,7 +2126,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 500 320" style={{ width: '100%' }}>
+          <svg viewBox="0 0 500 320" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
             {renderPremiumSVGDefs()}
 
             {/* Premium lab background */}

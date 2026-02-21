@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🔭',
@@ -119,19 +122,9 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const [louversOpen, setLouversOpen] = useState(50); // percentage
   const [inShadow, setInShadow] = useState(false);
   const [animPhase, setAnimPhase] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const audioContextRef = useRef<AudioContext | null>(null);
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -607,7 +600,7 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     const tempPercent = Math.max(5, Math.min(95, ((tempC + 200) / 250) * 100));
 
     return (
-      <svg viewBox="0 0 600 400" className="w-full h-auto max-w-2xl">
+      <svg viewBox="0 0 600 400" className="w-full h-auto max-w-2xl" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Satellite Thermal visualization">
         <defs>
           {/* === PREMIUM SPACE BACKGROUND GRADIENT === */}
           <linearGradient id="satthSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">

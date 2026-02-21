@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // TERMINAL VELOCITY RENDERER - Complete 10-Phase Premium Physics Game
 // Understanding terminal velocity through coffee filter experiments
@@ -248,18 +250,8 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
     emitEvent('button_clicked', { action: 'drop_filter', numFilters, airDensity, isCrumpled });
     playSound('click');
   }, [resetSimulation, emitEvent, numFilters, airDensity, isCrumpled]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -519,7 +511,7 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({ onG
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '16px', maxWidth: '800px' }}
-        >
+         role="img" aria-label="Terminal Velocity visualization">
           {/* ========== PREMIUM DEFS SECTION ========== */}
           <defs>
             {/* Sky gradient with atmospheric depth - 6 color stops */}

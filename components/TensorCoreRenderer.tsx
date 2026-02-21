@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -12,6 +14,7 @@ interface TensorCoreRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -108,21 +111,15 @@ const realWorldApps = [
 ];
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#10b981',
-  accentGlow: 'rgba(16, 185, 129, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  tensor: '#22c55e',
+  matrix: '#8b5cf6',
+  compute: '#06b6d4',
   matrixA: '#8b5cf6',
   matrixB: '#3b82f6',
   matrixC: '#f59e0b',
-  compute: '#22d3ee',
 };
 
 const TEST_QUESTIONS = [
@@ -282,6 +279,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -332,18 +330,8 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
       goToPhase(phaseOrder[idx - 1]);
     }
   }, [phase, goToPhase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -569,6 +557,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -594,11 +583,14 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
       <svg
         viewBox={`0 0 ${width} ${height}`}
         style={{ width: '100%', maxWidth: '750px', borderRadius: '12px' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tensor Core visualization">
         {/* ═══════════════════════════════════════════════════════════════════════
             COMPREHENSIVE DEFS SECTION - Premium Gradients, Filters & Effects
         ═══════════════════════════════════════════════════════════════════════ */}
         <defs>
+          <filter id="tensorGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="tensorGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.4" /></linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           {/* === LINEAR GRADIENTS (4-6 color stops for depth) === */}
 
           {/* Premium chip housing gradient - dark metallic */}
@@ -1673,7 +1665,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
 
           {/* Precision comparison graphic (no sliders) */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px 8px' }}>
-            <svg viewBox="0 0 400 160" style={{ width: '100%', borderRadius: '10px' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', borderRadius: '10px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="precGradA" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#8b5cf6" />

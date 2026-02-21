@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Tool-Aware Prompting - Complete 10-Phase Game
 // How to prevent LLM hallucinations with explicit tool documentation
@@ -261,9 +264,8 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [promptMode, setPromptMode] = useState<'naive' | 'tool_aware'>('naive');
   const [showHelp, setShowHelp] = useState(false);
   const [hasClaudemd, setHasClaudemd] = useState(false);
@@ -283,14 +285,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate metrics based on settings
+// Calculate metrics based on settings
   const calculateMetrics = useCallback(() => {
     let confidenceLevel = 30;
     let hallucinationRisk = 80;
@@ -344,20 +339,11 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
 
   // Design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#F59E0B',
-    accentGlow: 'rgba(245, 158, 11, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0',
-    textMuted: '#9CA3AF',
-    border: '#2a2a3a',
-    tool: '#3B82F6',
-    confidence: '#8B5CF6',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    tool: '#06b6d4',
+    code: '#3b82f6',
   };
 
   // Secondary color for specific contrast requirements
@@ -439,7 +425,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     const gaugeX = 240, gaugeY = 270;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tool Aware Prompting visualization">
         <defs>
           <linearGradient id="tapBrainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#a855f7" />
@@ -468,6 +454,22 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="toolGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="#06b6d4" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="toolPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
+          </pattern>
         </defs>
 
         {/* Layer 1: Background elements */}

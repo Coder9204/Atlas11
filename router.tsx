@@ -1,8 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import App from './App';
+import { isOnboardingComplete } from './services/GameProgressService';
 
 // Lazy load pages for code splitting
+const LandingPage = lazy(() => import('./components/LandingPage'));
 const PricingPage = lazy(() => import('./components/PricingPage'));
 const GamesPage = lazy(() => import('./components/GamesPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
@@ -10,6 +12,16 @@ const ProgressDashboard = lazy(() => import('./components/ProgressDashboard'));
 const LearningPathPage = lazy(() => import('./components/LearningPathPage'));
 const CustomGameBuilder = lazy(() => import('./components/CustomGameBuilder'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
+
+// SEO page components (lazy loaded)
+const CategoryPage = lazy(() => import('./components/CategoryPage'));
+const SubcategoryPage = lazy(() => import('./components/SubcategoryPage'));
+const ComparisonPage = lazy(() => import('./components/ComparisonPage'));
+const HowItWorksPage = lazy(() => import('./components/HowItWorksPage'));
+const DifficultyPage = lazy(() => import('./components/DifficultyPage'));
+const BlogIndex = lazy(() => import('./components/BlogIndex'));
+const BlogPost = lazy(() => import('./components/BlogPost'));
+const AudiencePage = lazy(() => import('./components/AudiencePage'));
 
 // Lazy load GameShell and all game renderers for code splitting
 const GameShellModule = () => import('./components/GameShell');
@@ -66,10 +78,22 @@ const PageLoader = () => (
   </div>
 );
 
+// Root route: show App for returning users, LandingPage for new visitors
+const RootRoute = () => {
+  if (isOnboardingComplete()) {
+    return <App />;
+  }
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <LandingPage />
+    </Suspense>
+  );
+};
+
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <RootRoute />,
   },
   {
     path: '/pricing',
@@ -124,6 +148,71 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminPanel />
+      </Suspense>
+    ),
+  },
+  // SEO Pages
+  {
+    path: '/learn/:categoryId',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <CategoryPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/learn/:categoryId/:subcategorySlug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <SubcategoryPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/compare/:comparisonSlug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ComparisonPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/how/:conceptSlug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <HowItWorksPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/difficulty/:level',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <DifficultyPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/blog',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <BlogIndex />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/blog/:slug',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <BlogPost />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/for/:audience',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AudiencePage />
       </Suspense>
     ),
   },

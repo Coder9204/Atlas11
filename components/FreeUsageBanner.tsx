@@ -4,6 +4,7 @@ import React from 'react';
 import { theme, withOpacity } from '../lib/theme';
 import { getMonthlyPlayCount, getFreeMonthlyLimit, isSubscribed } from '../services/GameProgressService';
 import { useAuth } from '../contexts/AuthContext';
+import { trackUpgradeClicked } from '../services/AnalyticsService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FREE USAGE BANNER — Shows usage counter for free tier users
@@ -85,6 +86,7 @@ export default function FreeUsageBanner() {
       {(isWarning || isExhausted) && (
         <a
           href="/pricing"
+          onClick={() => trackUpgradeClicked('free_usage_banner')}
           style={{
             fontSize: 12,
             fontWeight: 700,

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Satellite Solar Angle - Complete 10-Phase Game
 // How solar angle affects satellite power generation
@@ -261,9 +263,8 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [orbitPosition, setOrbitPosition] = useState(0); // 0-360 degrees around orbit
   const [panelAngle, setPanelAngle] = useState(0); // -90 to 90 degrees panel tilt
   const [sunDirection, setSunDirection] = useState(0); // 0-360 degrees
@@ -287,14 +288,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -465,7 +459,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     const rayOffset = (animationFrame * 2) % 20;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Satellite Solar Angle visualization">
         {/* Space background with stars */}
         {Array.from({ length: 30 }).map((_, i) => (
           <circle
@@ -668,7 +662,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
     const opY = padding.top + plotHeight - (currentPower / 100) * plotHeight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
         {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <line
@@ -1430,7 +1424,7 @@ const SatelliteSolarAngleRenderer: React.FC<SatelliteSolarAngleRendererProps> = 
             </p>
             {/* Static beta angle diagram - no sliders */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+              <svg width="300" height="160" viewBox="0 0 300 160" style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 {/* Sun rays from left */}
                 {[40, 60, 80, 100, 120].map((y, i) => (
                   <line key={i} x1="0" y1={y} x2="60" y2={y} stroke={colors.sun} strokeWidth="1.5" opacity="0.7" />

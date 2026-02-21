@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '📱',
@@ -86,6 +89,7 @@ interface RollingShutterRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Premium color palette matching design system
@@ -117,6 +121,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase management for self-managing mode
   const [internalPhase, setInternalPhase] = useState<Phase>('hook');
@@ -147,9 +152,8 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation functions for self-managing mode
+  const { isMobile } = useViewport();
+// Navigation functions for self-managing mode
   const handleNext = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
@@ -168,16 +172,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
       setInternalPhase(prevPhase);
     }
   }, [phase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -346,6 +341,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -601,7 +597,7 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
             maxWidth: '800px',
             border: `1px solid ${colors.border}`
           }}
-        >
+         role="img" aria-label="Rolling Shutter visualization">
           {/* Premium SVG definitions */}
           {renderSVGDefs()}
 

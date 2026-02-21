@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🎭',
@@ -247,16 +250,8 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  // Navigation
+  const { isMobile } = useViewport();
+// Navigation
   const phaseOrder: ReverbPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
   const phaseLabels: Record<ReverbPhase, string> = {
     hook: 'Introduction',
@@ -656,7 +651,7 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
           viewBox={`0 0 ${width} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '450px' }}
-        >
+         role="img" aria-label="Reverberation visualization">
           <defs>
             {/* Premium room wall gradient - creates depth effect */}
             <linearGradient id="reverbWallGradient" x1="0%" y1="0%" x2="100%" y2="100%">

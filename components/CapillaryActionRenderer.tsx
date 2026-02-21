@@ -16,6 +16,8 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -344,17 +346,8 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -540,7 +533,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
           ))}
         </div>
 
-        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label="Capillary Action visualization">
           <defs>
             <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor={colors.waterDark} />
@@ -1022,7 +1015,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
             </div>
 
             <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
-              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="pureWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor={colors.waterDark} />
@@ -1128,7 +1121,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
               <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
                 {/* Comparison SVG */}
                 <div style={{ width: '100%', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, padding: '16px' }}>
-                  <svg viewBox="0 0 400 220" width="100%" style={{ display: 'block' }}>
+                  <svg viewBox="0 0 400 220" width="100%" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                     <defs>
                       <linearGradient id="twistPureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor={colors.waterDark} />

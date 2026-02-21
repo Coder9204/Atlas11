@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
     'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
@@ -240,8 +243,8 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     return 'hook';
   };
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
   const [animFrame, setAnimFrame] = useState(0);
   const [massFraction, setMassFraction] = useState(0.08);
   const [useLH2, setUseLH2] = useState(false);
@@ -307,14 +310,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
   };
 
   // Mobile detection
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => setAnimFrame(f => f + 1), 60);
     return () => clearInterval(interval);
@@ -493,7 +489,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     const totalHeight = 320 + (useLH2 ? 60 : 0);
 
     return (
-      <svg viewBox={`0 0 240 ${totalHeight}`} style={{ width: '100%', maxWidth: '280px', height: 'auto' }}>
+      <svg viewBox={`0 0 240 ${totalHeight}`} style={{ width: '100%', maxWidth: '280px', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="E L O N_ Rocket Materials visualization">
         <defs>
           <linearGradient id="rocketBody" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor={matColor} stopOpacity={0.6} />
@@ -659,7 +655,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     };
 
     return (
-      <svg viewBox="0 0 240 230" style={{ width: '100%', maxWidth: '320px', height: 'auto' }}>
+      <svg viewBox="0 0 240 230" style={{ width: '100%', maxWidth: '320px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         {/* Grid lines */}
         {[0.25, 0.5, 0.75, 1].map(scale => (
           <polygon
@@ -756,7 +752,7 @@ const ELON_RocketMaterialsRenderer: React.FC<ELON_RocketMaterialsRendererProps> 
     const cx2=pL+((cm-0.03)/0.12)*pW,cy2=pT+pH-(cdv/dvMaxRef)*pH;
     const pc=cm<0.06?"#10B981":cm<0.10?"#F97316":"#EF4444";
     return (
-      <svg viewBox={"0 0 "+cW+" "+cH} style={{width:"100%",maxWidth:"400px",height:"auto"}}>
+      <svg viewBox={"0 0 "+cW+" "+cH} style={{width:"100%",maxWidth:"400px",height:"auto"}} preserveAspectRatio="xMidYMid meet">
         <defs><linearGradient id="chartCurveGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#10B981"/><stop offset="50%" stopColor="#F97316"/><stop offset="100%" stopColor="#EF4444"/></linearGradient><filter id="ptGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="3"/></filter></defs>
         <g className="bg"><rect x={pL} y={pT} width={pW} height={pH} fill="#1a1a24" rx="4"/></g>
         <g className="grid">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // CLOUD IN A BOTTLE RENDERER - Make Weather From Pressure
 // =============================================================================
@@ -145,9 +147,8 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation states
+  const { isMobile } = useViewport();
+// Simulation states
   const [squeezePressure, setSqueezePressure] = useState(0); // 0-100 (0=released, 100=fully squeezed)
   const [hasNuclei, setHasNuclei] = useState(true); // Aerosol nuclei present
   const [cloudDensity, setCloudDensity] = useState(0); // 0-100
@@ -164,15 +165,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System
+// Premium Design System
   const colors = {
     primary: '#3b82f6',       // blue-500 (sky/cloud)
     primaryDark: '#2563eb',   // blue-600
@@ -670,7 +663,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
-        <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
+        <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: '350px', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cloud In Bottle visualization">
           <defs>
             {/* Premium glass bottle gradient with transparency effect */}
             <linearGradient id="cloudBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1108,7 +1101,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       {/* Visual card */}
       <div style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8))', borderRadius: '24px', padding: '32px', maxWidth: '500px', width: '100%', border: '1px solid rgba(71, 85, 105, 0.5)', marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-          <svg viewBox="0 0 200 120" style={{ width: '200px' }}>
+          <svg viewBox="0 0 200 120" style={{ width: '200px' }} preserveAspectRatio="xMidYMid meet">
             {/* Bottle */}
             <rect x="70" y="20" width="60" height="80" fill="rgba(148, 163, 184, 0.2)" stroke="#64748b" strokeWidth="2" rx="5" />
             <rect x="85" y="5" width="30" height="15" fill="rgba(148, 163, 184, 0.2)" stroke="#64748b" strokeWidth="2" rx="3" />
@@ -1143,7 +1136,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   );
 
   const renderPredictVisualization = () => (
-    <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+    <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="predictBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
@@ -1290,7 +1283,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     const fillD = pathD + ` L ${curvePoints[curvePoints.length - 1].x.toFixed(1)} ${chartBottom} L ${curvePoints[0].x.toFixed(1)} ${chartBottom} Z`;
 
     return (
-      <svg viewBox="0 0 420 290" style={{ width: '100%', maxWidth: '420px', height: 'auto' }}>
+      <svg viewBox="0 0 420 290" style={{ width: '100%', maxWidth: '420px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="chartCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6" />
@@ -1678,7 +1671,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   );
 
   const renderTwistPredictVisualization = () => (
-    <svg viewBox="0 0 340 180" style={{ width: '100%', maxWidth: '340px', height: 'auto' }}>
+    <svg viewBox="0 0 340 180" style={{ width: '100%', maxWidth: '340px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="twistBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />

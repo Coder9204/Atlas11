@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Infrared Emissivity - Complete 10-Phase Game
 // Why shiny objects can appear cold on thermal cameras
@@ -262,9 +264,8 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Play phase state
+  const { isMobile } = useViewport();
+// Play phase state
   const [viewMode, setViewMode] = useState<'visible' | 'infrared'>('visible');
   const [selectedObject, setSelectedObject] = useState<'hand' | 'cup_matte' | 'cup_shiny' | 'ice'>('cup_matte');
   const [objectTemp, setObjectTemp] = useState(60);
@@ -288,14 +289,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation for IR visualization
+// Animation for IR visualization
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(p => (p + 0.1) % (Math.PI * 2));
@@ -407,7 +401,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const infrared = viewMode === 'infrared';
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Infrared Emissivity visualization">
         <defs>
           <linearGradient id="irTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -663,7 +657,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const shinyApparent = 0.1 * 60 + 0.9 * ambientTemp;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#1e3a8a" />
@@ -1089,7 +1083,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
           {/* Predict SVG diagram */}
           <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="predictGlow">
                   <feGaussianBlur stdDeviation="3" result="blur" />
@@ -1500,7 +1494,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
           {/* Twist predict SVG - static, no sliders */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="460" height="220" viewBox="0 0 460 220" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistPredictGlowA">
                   <feGaussianBlur stdDeviation="4" result="blur" />

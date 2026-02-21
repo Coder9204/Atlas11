@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface CleanroomYieldRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -52,6 +56,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Self-managing navigation - always start at hook when no prop provided
   const [currentPhase, setCurrentPhase] = useState<typeof phaseOrder[number]>('hook');
@@ -91,18 +96,8 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
       goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 700, lineHeight: 1.2 },
     h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
@@ -343,6 +338,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -510,7 +506,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '750px' }}
-        >
+         role="img" aria-label="Cleanroom Yield visualization">
           <defs>
             <linearGradient id="cryCleanroomBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0a1628" />
@@ -1368,7 +1364,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Poisson Yield Model</h3>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px', marginBottom: '16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ borderRadius: '8px', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#1e293b" />
@@ -1595,7 +1591,7 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
             borderRadius: '12px',
           }}>
             <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Redundancy Strategies</h3>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '8px', marginBottom: '16px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '8px', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#1e293b" />

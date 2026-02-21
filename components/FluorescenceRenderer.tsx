@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Fluorescence Physics - Complete 10-Phase Game
 // Understanding how materials absorb UV light and emit visible light
@@ -261,9 +263,8 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [uvIntensity, setUvIntensity] = useState(50);
 
   // Twist phase - phosphorescence and quantum yield
@@ -283,14 +284,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
@@ -545,7 +539,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     const wlTicks = [350, 400, 450, 500, 550, 600, 650];
 
     return (
-      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Fluorescence emission intensity vs wavelength chart">
+      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Fluorescence emission intensity vs wavelength chart" preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -675,7 +669,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
     const wlTicks = [300, 325, 350, 375, 400, 425, 450];
 
     return (
-      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Excitation efficiency vs wavelength chart">
+      <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ maxWidth: '100%' }} role="img" aria-label="Excitation efficiency vs wavelength chart" preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -837,7 +831,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width="400" height="200" viewBox="0 0 400 200" role="img" aria-label="UV light hitting highlighter to produce green glow diagram">
+              <svg width="400" height="200" viewBox="0 0 400 200" role="img" aria-label="UV light hitting highlighter to produce green glow diagram" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="uvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#8b5cf6" />
@@ -1225,7 +1219,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               padding: '24px',
               marginBottom: '24px',
             }}>
-              <svg viewBox="0 0 300 200" style={{ width: '100%', margin: '0 auto', display: 'block' }}>
+              <svg viewBox="0 0 300 200" style={{ width: '100%', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <rect width="300" height="200" fill="#1a1a24" rx="8" />
                 {/* Ground state */}
                 <rect x="40" y="155" width="100" height="8" rx="2" fill="#4b5563" />
@@ -1329,7 +1323,7 @@ const FluorescenceRenderer: React.FC<FluorescenceRendererProps> = ({ onGameEvent
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg width="400" height="220" viewBox="0 0 400 220" role="img" aria-label="Fluorescence vs phosphorescence comparison">
+              <svg width="400" height="220" viewBox="0 0 400 220" role="img" aria-label="Fluorescence vs phosphorescence comparison" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="glow">
                     <feGaussianBlur stdDeviation="4" result="blur" />

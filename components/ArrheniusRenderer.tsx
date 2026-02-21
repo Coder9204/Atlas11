@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Arrhenius Equation - Complete 10-Phase Game
 // Understanding how temperature affects reaction rates and component reliability
@@ -262,9 +264,8 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [temperature, setTemperature] = useState(25); // °C
   const [activationEnergy, setActivationEnergy] = useState(0.7); // eV
   const [baseRate, setBaseRate] = useState(1); // arbitrary units (A factor)
@@ -288,14 +289,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
   const kB = 8.617e-5; // Boltzmann constant in eV/K
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -426,7 +420,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Arrhenius visualization">
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
           <g key={`grid-${frac}`}>
@@ -555,7 +549,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     const moleculeColors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
     return (
-      <svg width={size} height={size} viewBox="0 0 100 100">
+      <svg width={size} height={size} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="moleculeGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#EF4444" stopOpacity="0.2" />
@@ -655,7 +649,7 @@ const ArrheniusRenderer: React.FC<ArrheniusRendererProps> = ({ onGameEvent, game
     const kTBarH = Math.max(4, (kT / maxE) * plotH);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="eaCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#10B981" />

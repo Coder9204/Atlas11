@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Humidity & ESD Control - Complete 10-Phase Game
 // Why dry air makes you shock everyone and humid air saves electronics
@@ -261,9 +263,8 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Play phase
+  const { isMobile } = useViewport();
+// Simulation state - Play phase
   const [humidity, setHumidity] = useState(50);
   const [temperature, setTemperature] = useState(22);
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -288,14 +289,7 @@ const HumidityESDRenderer: React.FC<HumidityESDRendererProps> = ({ onGameEvent, 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // CARTESIAN DIVER RENDERER - BUOYANCY & PRESSURE
 // Premium 10-phase educational game with premium design
@@ -199,8 +201,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const { isMobile } = useViewport();
+const [currentQuestion, setCurrentQuestion] = useState(0);
 
   // Interactive state for simulation
   const [pressure, setPressure] = useState(1.0);
@@ -224,14 +226,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const animationRef = useRef<number>();
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System - with high contrast colors
+// Premium Design System - with high contrast colors
   const colors = {
     primary: '#3b82f6',       // blue-500 (water)
     primaryDark: '#2563eb',   // blue-600
@@ -626,7 +621,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
         height="auto"
         viewBox={`0 0 ${simWidth} ${simHeight}`}
         style={{ display: 'block', margin: '0 auto', maxWidth: `${simWidth}px` }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cartesian Diver visualization">
         <defs>
           <linearGradient id="staticWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
@@ -686,7 +681,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
     return (
       <div style={{ background: 'linear-gradient(to bottom, rgba(30,41,59,0.5), rgba(15,23,42,0.5))', borderRadius: '16px', padding: '16px', border: `1px solid ${colors.border}`, maxWidth: '450px', margin: '0 auto' }}>
-        <svg width="100%" height="auto" viewBox={`0 0 ${simWidth} ${simHeight}`} style={{ display: 'block', margin: '0 auto', maxWidth: `${simWidth}px` }}>
+        <svg width="100%" height="auto" viewBox={`0 0 ${simWidth} ${simHeight}`} style={{ display: 'block', margin: '0 auto', maxWidth: `${simWidth}px` }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="cartWaterDepth" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
@@ -877,7 +872,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
     return (
       <div style={{ background: 'linear-gradient(to bottom, rgba(30,41,59,0.5), rgba(15,23,42,0.5))', borderRadius: '16px', padding: '16px', border: `1px solid rgba(217,119,6,0.3)` }}>
-        <svg width="100%" height="auto" viewBox={`0 0 ${simWidth} ${simHeight}`} style={{ display: 'block', margin: '0 auto', maxWidth: `${simWidth}px` }}>
+        <svg width="100%" height="auto" viewBox={`0 0 ${simWidth} ${simHeight}`} style={{ display: 'block', margin: '0 auto', maxWidth: `${simWidth}px` }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="cartTwistWater" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
@@ -1269,7 +1264,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
         {/* Static visualization of three divers */}
         <div style={{ marginBottom: '24px' }}>
-          <svg width="100%" height="auto" viewBox="0 0 300 150" style={{ display: 'block', margin: '0 auto', maxWidth: '300px' }}>
+          <svg width="100%" height="auto" viewBox="0 0 300 150" style={{ display: 'block', margin: '0 auto', maxWidth: '300px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />

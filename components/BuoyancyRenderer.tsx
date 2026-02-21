@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // BUOYANCY RENDERER - Complete 10-Phase Premium Physics Game
 // Archimedes' Principle: Understanding why things float or sink
@@ -281,9 +283,8 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [objectDensity, setObjectDensity] = useState(0.8); // kg/L
   const [fluidDensity, setFluidDensity] = useState(1.0); // kg/L (water)
   const [objectVolume, setObjectVolume] = useState(10); // liters
@@ -311,14 +312,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
   const animationRef = useRef<number | null>(null);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation for dropping object
+// Animation for dropping object
   useEffect(() => {
     if (hasDropped && animationProgress < 100) {
       animationRef.current = requestAnimationFrame(() => {
@@ -469,7 +463,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     const objectColor = floats ? colors.success : colors.error;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Buoyancy visualization">
         <defs>
           <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
@@ -666,7 +660,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           cursor: isFirst ? 'not-allowed' : 'pointer',
           opacity: isFirst ? 0.4 : 1,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -699,7 +693,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           cursor: canGoNext ? 'pointer' : 'not-allowed',
           opacity: canGoNext ? 1 : 0.4,
           transition: 'all 0.3s ease',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Next →
@@ -991,7 +985,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Force comparison chart */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg viewBox="0 0 440 280" width="100%" style={{ maxWidth: '440px', background: colors.bgCard, borderRadius: '12px' }}>
+            <svg viewBox="0 0 440 280" width="100%" style={{ maxWidth: '440px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="forceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#10B981" stopOpacity="0.3" />

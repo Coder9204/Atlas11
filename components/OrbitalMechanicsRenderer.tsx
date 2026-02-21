@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Orbital Mechanics - Complete 10-Phase Game
 // Understanding how satellites orbit by perpetually falling
@@ -261,9 +263,8 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [launchSpeed, setLaunchSpeed] = useState(5); // km/s scale
   const [isLaunched, setIsLaunched] = useState(false);
   const [projectilePos, setProjectilePos] = useState({ x: 0, y: 0 });
@@ -293,14 +294,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   const EARTH_CENTER = { x: 200, y: 300 };
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ISS orbit animation
+// ISS orbit animation
   useEffect(() => {
     if (phase === 'twist_play' || phase === 'twist_review') {
       const interval = setInterval(() => {
@@ -513,7 +507,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   // Cannon Scene Visualization
   const renderCannonScene = () => {
     return (
-      <svg viewBox="0 0 400 350" style={{ width: '100%', maxHeight: '300px', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox="0 0 400 350" style={{ width: '100%', maxHeight: '300px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Orbital Mechanics visualization">
         <defs>
           <radialGradient id="earthGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#60a5fa" />
@@ -677,7 +671,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
     const issY = 200 + Math.sin(issAngle) * 40;
 
     return (
-      <svg viewBox="0 0 400 280" style={{ width: '100%', maxHeight: '240px', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox="0 0 400 280" style={{ width: '100%', maxHeight: '240px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Space background */}
         <rect width="400" height="280" fill="#020617" />
 
@@ -835,7 +829,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   // Static prediction diagram SVG
   const renderPredictDiagram = () => {
     return (
-      <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: '250px', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: '250px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Space background */}
         <rect width="400" height="300" fill="#030712" />
 
@@ -1238,7 +1232,7 @@ const OrbitalMechanicsRenderer: React.FC<OrbitalMechanicsRendererProps> = ({ onG
   // Twist predict diagram SVG
   const renderTwistPredictDiagram = () => {
     return (
-      <svg viewBox="0 0 400 250" style={{ width: '100%', maxHeight: '220px', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox="0 0 400 250" style={{ width: '100%', maxHeight: '220px', background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Space background */}
         <rect width="400" height="250" fill="#020617" />
 

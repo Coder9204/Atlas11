@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for this game
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -8,6 +10,7 @@ interface LEDAsSolarCellRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -124,6 +127,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state management
   const getInitialPhase = (): Phase => {
@@ -145,18 +149,8 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   // Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -413,6 +407,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -574,7 +569,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #020617 50%, #0a0f1a 100%)', borderRadius: '12px', maxWidth: '650px' }}
-        >
+         role="img" aria-label="L E D As Solar Cell visualization">
           <defs>
             {/* === PREMIUM GRADIENTS === */}
 

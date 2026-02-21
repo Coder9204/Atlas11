@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON SPACE COMMS - Game #23 of 36 ELON Games
 // Space communication link budget — why deep space data rates are so low.
@@ -321,9 +323,8 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - distance in km on log scale
+  const { isMobile } = useViewport();
+// Simulation state - distance in km on log scale
   const [distanceLog, setDistanceLog] = useState(5.6); // log10(km), 5.6 ~ 400,000 km ≈ Moon
   const [antennaDiameter, setAntennaDiameter] = useState(65); // meters (DSN)
   const [transmitPower, setTransmitPower] = useState(23); // watts
@@ -374,14 +375,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
   };
 
   // Mobile detection
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Sync external gamePhase
+// Sync external gamePhase
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -675,7 +669,7 @@ const ELON_SpaceCommsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =>
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ width: '100%', maxWidth: `${width}px`, height: 'auto' }}
-      >
+       role="img" aria-label="E L O N_ Space Comms visualization">
         <defs>
           {/* Space background gradient */}
           <linearGradient id="spaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">

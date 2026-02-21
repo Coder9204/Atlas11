@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // MOMENT OF INERTIA - Complete 10-Phase Game
 // How mass distribution affects rotational motion
@@ -261,9 +263,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state for play phase
+  const { isMobile } = useViewport();
+// Simulation state for play phase
   const [armExtension, setArmExtension] = useState(0.7); // 0 = tucked, 1 = extended
   const [initialL, setInitialL] = useState(15); // angular momentum (conserved)
   const [rotation, setRotation] = useState(0);
@@ -289,14 +290,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Skater spinning animation
+// Skater spinning animation
   useEffect(() => {
     if (!isSpinning) return;
     const momentOfInertia = 1 + 2 * armExtension; // I scales from 1 (tucked) to 3 (extended)
@@ -529,7 +523,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     const currentChartY = chartTop + chartH - (currentOmega / maxOmega) * chartH;
 
     return (
-      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ overflow: 'visible' }}>
+      <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Moment Of Inertia visualization">
         <title>Moment of Inertia - Angular Momentum Conservation Simulation</title>
         <defs>
           <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1276,14 +1270,14 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginBottom: '16px' }}>
               <div>
-                <svg width="60" height="60" viewBox="0 0 60 60">
+                <svg width="60" height="60" viewBox="0 0 60 60" preserveAspectRatio="xMidYMid meet">
                   <circle cx="30" cy="30" r="25" fill="#EC4899" />
                 </svg>
                 <p style={{ ...typo.small, color: colors.accent }}>Solid Disk</p>
                 <p style={{ ...typo.small, color: colors.textMuted }}>I = (1/2)MR^2</p>
               </div>
               <div>
-                <svg width="60" height="60" viewBox="0 0 60 60">
+                <svg width="60" height="60" viewBox="0 0 60 60" preserveAspectRatio="xMidYMid meet">
                   <circle cx="30" cy="30" r="25" fill="none" stroke="#06B6D4" strokeWidth="6" />
                 </svg>
                 <p style={{ ...typo.small, color: '#06B6D4' }}>Ring/Hoop</p>

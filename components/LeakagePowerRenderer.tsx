@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Game event interface for AI coach integration
 interface GameEvent {
   type: 'phase_change' | 'prediction' | 'interaction' | 'completion';
@@ -87,9 +89,8 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Internal phase state management
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation debouncing
+  const { isMobile } = useViewport();
+// Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
@@ -101,14 +102,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -430,6 +424,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    emitGameEvent('game_completed', { score: score, total: testQuestions.length });
     playSound(score >= 7 ? 'success' : 'error');
     emitGameEvent('completion', { score, total: 10 });
   };
@@ -621,7 +616,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
     }));
 
     return (
-      <svg width="100%" height={isMobile ? '380' : '420'} viewBox="0 0 500 420" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height={isMobile ? '380' : '420'} viewBox="0 0 500 420" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Leakage Power visualization">
         <defs>
           <linearGradient id="lp-dynamicGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.dynamic} />
@@ -1043,7 +1038,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
   // Static SVG for predict phase - shows idle phone concept
   const renderPredictVisualization = () => (
-    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }}>
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ display: 'block', margin: '0 auto 24px' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="phoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#334155" />
@@ -1253,7 +1248,7 @@ const LeakagePowerRenderer: React.FC<LeakagePowerRendererProps> = ({
 
           {/* Static SVG showing power-saving techniques comparison */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="100%" height="200" viewBox="0 0 460 200" style={{ maxWidth: '460px' }}>
+            <svg width="100%" height="200" viewBox="0 0 460 200" style={{ maxWidth: '460px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="tp-glow">
                   <feGaussianBlur stdDeviation="2" result="coloredBlur" />

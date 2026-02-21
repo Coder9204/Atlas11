@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOKE'S LAW RENDERER - PREMIUM PHYSICS GAME
 // ═══════════════════════════════════════════════════════════════════════════
@@ -238,15 +240,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
   const [showForceArrows, setShowForceArrows] = useState(true);
 
   // Mobile detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -398,7 +393,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
 
     return (
       <div className="relative">
-        <svg viewBox="0 0 400 350" className="w-full max-h-[350px]">
+        <svg viewBox="0 0 400 350" className="w-full max-h-[350px]" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Hookes Law visualization">
           <defs>
             {/* ═══════════════════════════════════════════════════════════════════ */}
             {/* PREMIUM GRADIENTS                                                   */}
@@ -882,7 +877,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 Start Learning
-                <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </span>
@@ -939,7 +934,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
 
             {/* Static Spring Diagram for Predict Phase */}
             <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '16px', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', maxHeight: '200px' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predictSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#059669" />
@@ -1279,7 +1274,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
 
             {/* Static Spring Diagram showing extreme stretch */}
             <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(15, 23, 42, 0.8)', borderRadius: '16px', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
-              <svg viewBox="0 0 400 180" style={{ width: '100%', maxHeight: '180px' }}>
+              <svg viewBox="0 0 400 180" style={{ width: '100%', maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#f59e0b" />
@@ -1383,7 +1378,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
             </div>
 
             {/* Stress-Strain Curve */}
-            <svg viewBox="0 0 400 250" className="w-full max-h-[250px] mb-6">
+            <svg viewBox="0 0 400 250" className="w-full max-h-[250px] mb-6" preserveAspectRatio="xMidYMid meet">
               <rect width="400" height="250" fill="#0f172a" />
               <line x1="50" y1="200" x2="380" y2="200" stroke="#334155" strokeWidth="2" />
               <line x1="50" y1="200" x2="50" y2="30" stroke="#334155" strokeWidth="2" />
@@ -1848,7 +1843,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
                   </button>
                 ) : (
                   <button
-                    onClick={() => setTestSubmitted(true)}
+                    onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }}
                     style={{ zIndex: 10, padding: '12px 24px', borderRadius: '12px', fontWeight: 600, background: 'linear-gradient(to right, #10b981, #14b8a6)', color: 'white', border: 'none', cursor: 'pointer' }}
                   >
                     See Results

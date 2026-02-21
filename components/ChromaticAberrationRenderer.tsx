@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // CHROMATIC ABERRATION RENDERER - WHY EDGES GET COLOR FRINGES
 // =============================================================================
@@ -52,7 +54,7 @@ const defined = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
     sizes: {
       xs: '0.75rem',
       sm: '0.875rem',
@@ -342,9 +344,8 @@ export default function ChromaticAberrationRenderer({
   const [score, setScore] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState<{questionIndex: number; answerIndex: number; correct: boolean}[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Interactive simulation state
+  const { isMobile } = useViewport();
+// Interactive simulation state
   const [lensCurvature, setLensCurvature] = useState(50);
   const [showAllWavelengths, setShowAllWavelengths] = useState(true);
   const [selectedWavelength, setSelectedWavelength] = useState(3);
@@ -382,16 +383,7 @@ export default function ChromaticAberrationRenderer({
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not available */ }
   }, []);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -491,6 +483,7 @@ export default function ChromaticAberrationRenderer({
       setShowResult(false);
     } else {
       setTestSubmitted(true);
+      onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
     }
   }, [currentQuestion]);
 
@@ -552,7 +545,7 @@ export default function ChromaticAberrationRenderer({
           <span style={{ color: '#e2e8f0', fontSize: typo.small }}>Focal Region</span>
         </div>
 
-        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible', maxWidth: `${width}px` }}>
+        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible', maxWidth: `${width}px` }} role="img" aria-label="Chromatic Aberration visualization">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="chromBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // RESONANCE - Premium Apple/Airbnb Design System
 // ============================================================================
@@ -198,19 +200,9 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   const [testIndex, setTestIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [showResult, setShowResult] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const animationRef = useRef<number>();
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const animationRef = useRef<number>();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -601,7 +593,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   // Static resonance SVG for predict phases
   const renderStaticResonanceSVG = () => {
     return (
-      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Resonance visualization">
         <defs>
           <linearGradient id="springGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#c084fc" />
@@ -653,7 +645,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
-        <svg viewBox="0 0 500 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+        <svg viewBox="0 0 500 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Premium spring gradient - 5 stops */}
             <linearGradient id="resSpringGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">

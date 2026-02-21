@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // DAMPED OSCILLATIONS - Complete 10-Phase Learning Experience
 // Physics: m(d²x/dt²) + c(dx/dt) + kx = 0
@@ -286,9 +288,8 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [dampingRatio, setDampingRatio] = useState(0.2);
   const [isSimulating, setIsSimulating] = useState(false);
   const [simTime, setSimTime] = useState(0);
@@ -318,14 +319,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -526,7 +520,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
     const massY = 100 + (disp * 0.5);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Damped Oscillations visualization">
         <defs>
           <linearGradient id={`massGrad-${color}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={color} />
@@ -629,7 +623,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
     const dampInfo = getDampingLabel(dampingRatio);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="responseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={dampInfo.color} />
@@ -880,7 +874,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
         marginBottom: '32px',
         border: `1px solid ${colors.border}`,
       }}>
-        <svg width={isMobile ? 280 : 380} height={isMobile ? 180 : 220} viewBox={`0 0 ${isMobile ? 280 : 380} ${isMobile ? 180 : 220}`}>
+        <svg width={isMobile ? 280 : 380} height={isMobile ? 180 : 220} viewBox={`0 0 ${isMobile ? 280 : 380} ${isMobile ? 180 : 220}`} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="roadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#374151" />
@@ -983,7 +977,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           marginBottom: '24px',
           border: `1px solid ${colors.border}`,
         }}>
-          <svg width={isMobile ? 280 : 360} height={140} viewBox={`0 0 ${isMobile ? 280 : 360} 140`}>
+          <svg width={isMobile ? 280 : 360} height={140} viewBox={`0 0 ${isMobile ? 280 : 360} 140`} preserveAspectRatio="xMidYMid meet">
             {/* Decaying wave pattern */}
             <defs>
               <linearGradient id="predictWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1480,7 +1474,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           marginBottom: '24px',
           border: `1px solid ${colors.warning}40`,
         }}>
-          <svg width={isMobile ? 320 : 400} height={220} viewBox={`0 0 ${isMobile ? 320 : 400} 220`}>
+          <svg width={isMobile ? 320 : 400} height={220} viewBox={`0 0 ${isMobile ? 320 : 400} 220`} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistPredGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.warning} />
@@ -1640,7 +1634,7 @@ const DampedOscillationsRenderer: React.FC<DampedOscillationsRendererProps> = ({
           marginBottom: '24px',
           border: `1px solid ${colors.border}`,
         }}>
-          <svg width={isMobile ? 340 : 440} height={260} viewBox={`0 0 ${isMobile ? 340 : 440} 260`}>
+          <svg width={isMobile ? 340 : 440} height={260} viewBox={`0 0 ${isMobile ? 340 : 440} 260`} preserveAspectRatio="xMidYMid meet">
             <defs>
               <filter id="twistMarkerGlow">
                 <feGaussianBlur stdDeviation="3" result="blur" />

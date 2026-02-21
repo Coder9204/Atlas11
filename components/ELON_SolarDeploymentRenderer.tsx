@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // SOLAR DEPLOYMENT - Complete 10-Phase Game (Game #13 of 36 ELON Games)
 // Solar farm design — tilt angle, row spacing, tracking, ground coverage ratio
@@ -262,9 +264,8 @@ const ELON_SolarDeploymentRenderer: React.FC<SolarDeploymentRendererProps> = ({ 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — Ground Coverage Ratio
+  const { isMobile } = useViewport();
+// Simulation state — Ground Coverage Ratio
   const [gcr, setGcr] = useState(0.40);
   const [tiltAngle, setTiltAngle] = useState(30);
   const [sunPosition, setSunPosition] = useState(50); // 0-100 representing dawn to dusk
@@ -288,14 +289,7 @@ const ELON_SolarDeploymentRenderer: React.FC<SolarDeploymentRendererProps> = ({ 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sun arc animation for play phase
+// Sun arc animation for play phase
   useEffect(() => {
     if (phase === 'play' || phase === 'twist_play') {
       let pos = sunPosition;
@@ -538,7 +532,7 @@ const ELON_SolarDeploymentRenderer: React.FC<SolarDeploymentRendererProps> = ({ 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Solar Deployment visualization">
         <defs>
           {/* Sky gradient */}
           <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">

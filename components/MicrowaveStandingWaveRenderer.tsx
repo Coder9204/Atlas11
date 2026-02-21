@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Microwave Standing Wave - Complete 10-Phase Game
 // Why microwaves create hot spots and cold spots
@@ -261,9 +263,8 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Play phase
+  const { isMobile } = useViewport();
+// Simulation state - Play phase
   const [frequency, setFrequency] = useState(2.45); // GHz
   const [cavityLength, setCavityLength] = useState(30); // cm
   const [powerLevel, setPowerLevel] = useState(100); // percentage
@@ -297,14 +298,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate wavelength from frequency
+// Calculate wavelength from frequency
   const wavelength = (3e8 / (frequency * 1e9)) * 100; // in cm
 
   // Standing wave intensity calculation
@@ -680,7 +674,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         style={{ width: '100%', height: 'auto' }}
         preserveAspectRatio="xMidYMid meet"
-      >
+       role="img" aria-label="Microwave Standing Wave visualization">
         <defs>
           <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.accent} />
@@ -1463,7 +1457,7 @@ const MicrowaveStandingWaveRenderer: React.FC<MicrowaveStandingWaveRendererProps
             textAlign: 'center',
           }}>
             {/* SVG showing fixed standing wave pattern with rotating food */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="tpBg" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#1a1a2e" /><stop offset="100%" stopColor="#0f0f1a" />

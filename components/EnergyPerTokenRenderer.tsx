@@ -1,12 +1,16 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type EnergyPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface EnergyPerTokenRendererProps {
   gamePhase?: EnergyPhase;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const phaseOrder: EnergyPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -31,10 +35,20 @@ const sliderStyle: React.CSSProperties = {
   accentColor: '#3b82f6',
 };
 
+const colors = {
+  ...theme.colors,
+  bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgDark: 'rgba(15, 23, 42, 0.95)',
+  energy: '#f59e0b',
+  compute: '#8b5cf6',
+  efficient: '#22c55e',
+};
+
 const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   const getInitialPhase = (): EnergyPhase => {
     if (gamePhase && phaseOrder.includes(gamePhase)) {
@@ -149,16 +163,8 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
       prefillTime, decodeTime,
     };
   }, [promptTokens, outputTokens, modelSize, gpuPower, numGPUs, throughput]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const predictions = [
+  const { isMobile } = useViewport();
+const predictions = [
     { id: 'free', label: 'Longer prompts are basically free once the model is loaded' },
     { id: 'linear', label: 'Energy scales linearly with tokens - more words, more joules' },
     { id: 'negligible', label: 'AI energy use is negligible compared to training' },
@@ -317,6 +323,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -473,8 +480,11 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
     return (
       <div>
-        <svg width="100%" height="480" viewBox="0 0 500 480" style={{ maxWidth: '600px' }}>
+        <svg width="100%" height="480" viewBox="0 0 500 480" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Energy Per Token visualization">
           <defs>
+            <filter id="energyGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feFlood floodColor="#f59e0b" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <linearGradient id="energyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.5" /><stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" /></linearGradient>
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
             <linearGradient id="eptEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#ef4444" />
               <stop offset="20%" stopColor="#f97316" />
@@ -736,7 +746,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   const renderTwistVisualization = () => {
     const metrics = calculateMetrics();
     return (
-      <svg width="100%" height="300" viewBox="0 0 500 300" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="300" viewBox="0 0 500 300" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="eptTwistGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -825,7 +835,7 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
   // Static visualization for predict phase
   const renderStaticVisualization = () => (
     <div style={{ maxWidth: '600px', margin: '0 auto 24px auto' }}>
-      <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="280" viewBox="0 0 500 280" style={{ maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="eptStaticEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#ef4444" />

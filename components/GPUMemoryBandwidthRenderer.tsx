@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -12,6 +14,7 @@ interface GPUMemoryBandwidthRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -288,17 +291,11 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -439,6 +436,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -593,7 +591,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           style={{ borderRadius: '12px', maxWidth: '500px' }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="G P U Memory Bandwidth visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="gpumbLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1494,7 +1492,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* Visual diagram SVG for review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="160" viewBox="0 0 400 160" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="160" viewBox="0 0 400 160" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewBusGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#06b6d4" />
@@ -1586,7 +1584,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* HBM vs GDDR comparison SVG visualization */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }} preserveAspectRatio="xMidYMid meet">
               {/* GDDR side */}
               <text x={100} y={25} fill="#e2e8f0" fontSize="14" fontWeight="bold" textAnchor="middle">GDDR6</text>
               <rect x={50} y={40} width={100} height={60} rx={4} fill="#3b82f6" stroke="#60a5fa" strokeWidth="1" />
@@ -1789,7 +1787,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
           {/* Visual diagram SVG for twist review */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ borderRadius: '12px', background: 'rgba(15, 23, 42, 0.8)' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistHbmGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                   <stop offset="0%" stopColor="#0d9488" />

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // NEWTON'S THIRD LAW RENDERER - Premium 10-Phase Learning Experience
 // ============================================================================
@@ -284,9 +286,8 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -330,14 +331,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync with external phase
+// Sync with external phase
   useEffect(() => {
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
@@ -757,7 +751,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
           {/* Predict SVG visualization */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="160" viewBox="0 0 600 160" style={{ display: 'block' }}>
+            <svg width="100%" height="160" viewBox="0 0 600 160" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Newtons Third Law visualization">
               <defs>
                 <radialGradient id="predBalloon" cx="40%" cy="40%" r="60%">
                   <stop offset="0%" stopColor="#fca5a5" />
@@ -872,7 +866,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 borderRadius: '16px',
                 padding: '24px',
               }}>
-                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
+                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <radialGradient id="balloonGrad" cx="35%" cy="35%" r="65%">
                       <stop offset="0%" stopColor="#fca5a5" />
@@ -1203,7 +1197,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
           {/* Twist predict SVG */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-            <svg width="100%" height="140" viewBox="0 0 600 140" style={{ display: 'block' }}>
+            <svg width="100%" height="140" viewBox="0 0 600 140" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="twpSmall" cx="40%" cy="40%" r="60%">
                   <stop offset="0%" stopColor="#93c5fd" />
@@ -1310,7 +1304,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 borderRadius: '16px',
                 padding: '24px',
               }}>
-                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }}>
+                <svg width="100%" height="200" viewBox="0 0 700 200" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                   <rect width="700" height="200" fill="#030712" />
 
                   {/* Lane labels */}
@@ -1906,6 +1900,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
+                  emitEvent('game_completed', { score: score, total: testQuestions.length });
                 }}
                 style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
                   background: `linear-gradient(135deg, ${colors.success}, #059669)`, color: 'white',

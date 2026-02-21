@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // SPARSITY IN NEURAL NETWORKS - Complete 10-Phase Game
 // How zeros enable efficient AI computation
@@ -261,9 +263,8 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [sparsityLevel, setSparsityLevel] = useState(50); // Percentage of zeros
   const [matrixSize, setMatrixSize] = useState(8); // NxN matrix size
   const [showComputation, setShowComputation] = useState(true);
@@ -338,14 +339,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
   }, [generateSparseMatrix]);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -355,18 +349,12 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#8B5CF6', // Purple for AI/neural networks
-    accentGlow: 'rgba(139, 92, 246, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#e2e8f0', // Improved contrast (was #9CA3AF)
-    textMuted: '#e2e8f0', // Improved contrast (was #6B7280)
-    border: '#2a2a3a',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    sparse: '#22c55e',
+    dense: '#8b5cf6',
+    pruned: '#ef4444',
     zero: '#475569', // Gray for zeros (skipped/inactive)
     nonZero: '#8B5CF6', // Purple for active computations
   };
@@ -473,7 +461,7 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
             maxWidth: `${size}px`,
           }}
           preserveAspectRatio="xMidYMid meet"
-        >
+         role="img" aria-label="Sparsity visualization">
           {/* SVG filter for glow effect */}
           <defs>
             <filter id="glow">
@@ -487,6 +475,9 @@ const SparsityRenderer: React.FC<SparsityRendererProps> = ({ onGameEvent, gamePh
               <stop offset="0%" stopColor={colors.zero} />
               <stop offset="100%" stopColor={colors.nonZero} />
             </linearGradient>
+            <filter id="sparseGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <linearGradient id="sparseGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3" /></linearGradient>
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
           </defs>
 
           {/* Axis labels */}

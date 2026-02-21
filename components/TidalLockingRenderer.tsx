@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Tidal Locking - Complete 10-Phase Game
 // Why the Moon always shows us the same face
@@ -262,9 +264,8 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Animation states
+  const { isMobile } = useViewport();
+// Animation states
   const [orbitalAngle, setOrbitalAngle] = useState(0);
   const [moonRotation, setMoonRotation] = useState(0);
   const [isTidallyLocked, setIsTidallyLocked] = useState(true);
@@ -293,14 +294,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Orbital animation
+// Orbital animation
   useEffect(() => {
     if (!isAnimating) return;
 
@@ -411,7 +405,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
     const nearSideVisible = Math.cos((moonFacingAngle - effectiveAngle) * Math.PI / 180);
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tidal Locking visualization">
         <defs>
           <radialGradient id="tidlEarthSurface" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93c5fd" />
@@ -1257,7 +1251,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
               The Moon raises ~1 meter bulges in Earth's oceans. As Earth rotates, these bulges crash against continents and the ocean floor...
             </p>
             {/* SVG visualization of tidal bulges on Earth */}
-            <svg width="280" height="140" viewBox="0 0 280 140" style={{ display: 'block', margin: '0 auto 12px' }}>
+            <svg width="280" height="140" viewBox="0 0 280 140" style={{ display: 'block', margin: '0 auto 12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="tpEarth" cx="40%" cy="35%" r="65%">
                   <stop offset="0%" stopColor="#93c5fd" />
@@ -1423,7 +1417,7 @@ const TidalLockingRenderer: React.FC<TidalLockingRendererProps> = ({ onGameEvent
                   </div>
 
                   {/* SVG visualization that changes with sliders */}
-                  <svg width="100%" height="160" viewBox="0 0 400 160" style={{ display: 'block', marginBottom: '16px' }}>
+                  <svg width="100%" height="160" viewBox="0 0 400 160" style={{ display: 'block', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
                     <defs>
                       <radialGradient id="twistPlanetGrad" cx="40%" cy="35%" r="65%">
                         <stop offset="0%" stopColor="#93c5fd" />

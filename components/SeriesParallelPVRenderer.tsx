@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Series vs Parallel PV Wiring - Complete 10-Phase Game
 // Why wiring configuration matters for solar array performance
@@ -261,9 +263,8 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [wiringMode, setWiringMode] = useState<'series' | 'parallel'>('series');
   const [numPanels, setNumPanels] = useState(2);
   const [shadedPanel, setShadedPanel] = useState<number | null>(null);
@@ -289,14 +290,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -423,7 +417,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       const startY = (height - panelH) / 2;
 
       return (
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Series Parallel P V visualization">
           {/* Filter definitions for glow effects */}
           <defs>
             <filter id="glow">
@@ -563,7 +557,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
       const miniH = panelH / 2;
 
       return (
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
           {/* Left rail (positive) */}
           <line
             x1={startX - 30}
@@ -900,7 +894,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
     const height = 180;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {/* Series row */}
         <text x={width / 2} y={20} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">Series vs Parallel Wiring</text>
 
@@ -1400,7 +1394,7 @@ const SeriesParallelPVRenderer: React.FC<SeriesParallelPVRendererProps> = ({ onG
             textAlign: 'center',
           }}>
             {/* Static SVG diagram showing shading scenario */}
-            <svg width="320" height="120" viewBox="0 0 320 120" style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '12px' }}>
+            <svg width="320" height="120" viewBox="0 0 320 120" style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '12px' }} preserveAspectRatio="xMidYMid meet">
               {/* Series string with shaded panel */}
               <text x="160" y="15" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="600">Series vs Parallel: Shading Effect</text>
               {/* 4 panels in series */}

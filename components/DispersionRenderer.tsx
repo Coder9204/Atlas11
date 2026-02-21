@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // DISPERSION RENDERER - THE CD RAINBOW
 // =============================================================================
@@ -332,16 +334,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  useEffect(() => {
+  const { isMobile } = useViewport();
+useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
     }
@@ -554,7 +548,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const gridLinesX = [450, 500, 550, 600, 650];
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Dispersion visualization">
         <defs>
           <linearGradient id="dispCurvGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.spectrum.violet} />
@@ -588,7 +582,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {gridLinesY.map(n => (
           <g key={n}>
             <line x1={padL} y1={toY(n)} x2={width - padR} y2={toY(n)} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-            <text x={padL - 8} y={toY(n) + 4} fill={colors.textMuted} fontSize="11" textAnchor="end" fontFamily="sans-serif">{n.toFixed(3)}</text>
+            <text x={padL - 8} y={toY(n) + 4} fill={colors.textMuted} fontSize="11" textAnchor="end" fontFamily={theme.fontFamily}>{n.toFixed(3)}</text>
           </g>
         ))}
 
@@ -596,7 +590,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {gridLinesX.map(wl => (
           <g key={wl}>
             <line x1={toX(wl)} y1={padT} x2={toX(wl)} y2={height - padB} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-            <text x={toX(wl)} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{wl.toFixed(0)}</text>
+            <text x={toX(wl)} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>{wl.toFixed(0)}</text>
           </g>
         ))}
 
@@ -605,8 +599,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         <line x1={padL} y1={height - padB} x2={width - padR} y2={height - padB} stroke={colors.textMuted} strokeWidth="1.5" />
 
         {/* Axis labels */}
-        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">Wavelength (nm)</text>
-        <text x={15} y={height / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily="sans-serif" fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>Refractive Index n</text>
+        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="600">Wavelength (nm)</text>
+        <text x={15} y={height / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>Refractive Index n</text>
 
         {/* Color spectrum bar along X axis */}
         {WAVELENGTHS.map((c, i) => (
@@ -623,7 +617,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
           return (
             <g key={c.key}>
               <circle cx={px.toFixed(1)} cy={py.toFixed(1)} r={5} fill={c.color} stroke="rgba(255,255,255,0.5)" strokeWidth={1} />
-              <text x={px.toFixed(1)} y={(py - 10).toFixed(1)} fill={c.color} fontSize="11" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">{c.name}</text>
+              <text x={px.toFixed(1)} y={(py - 10).toFixed(1)} fill={c.color} fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="600">{c.name}</text>
             </g>
           );
         })}
@@ -637,15 +631,15 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         )}
 
         {/* Title */}
-        <text x={width / 2} y={padT - 10} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="700">
+        <text x={width / 2} y={padT - 10} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="700">
           {PRISM_MATERIALS[prismMaterial]?.name || 'Crown Glass'} Dispersion Curve
         </text>
 
         {/* Legend */}
         <g transform={`translate(${width - padR - 120}, ${padT + 10})`}>
           <rect x={0} y={0} width={110} height={36} rx={6} fill="rgba(30,41,59,0.9)" stroke="rgba(255,255,255,0.1)" />
-          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily="sans-serif">Dispersion: {dispersionFactor.toFixed(1)}×</text>
-          <text x={10} y={30} fill={colors.warning} fontSize="11" fontFamily="sans-serif" fontWeight="600">Spread: {totalSpread.toFixed(1)}°</text>
+          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily={theme.fontFamily}>Dispersion: {dispersionFactor.toFixed(1)}×</text>
+          <text x={10} y={30} fill={colors.warning} fontSize="11" fontFamily={theme.fontFamily} fontWeight="600">Spread: {totalSpread.toFixed(1)}°</text>
         </g>
       </svg>
     );
@@ -681,7 +675,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
     const iy = padT + plotH - (currentTheta / 90) * plotH;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="cdBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -710,7 +704,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         {[0.5, 1.0, 1.5, 2.0, 2.5].map(m => (
           <g key={m}>
             <line x1={padL + (m / 3) * plotW} y1={padT} x2={padL + (m / 3) * plotW} y2={height - padB} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-            <text x={padL + (m / 3) * plotW} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily="sans-serif">{m.toFixed(1)}</text>
+            <text x={padL + (m / 3) * plotW} y={height - padB + 18} fill={colors.textMuted} fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>{m.toFixed(1)}</text>
           </g>
         ))}
         {[15, 30, 45, 60].map(angle => {
@@ -718,7 +712,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
           return (
             <g key={angle}>
               <line x1={padL} y1={yy} x2={width - padR} y2={yy} stroke={colors.border} strokeDasharray="4 4" opacity={0.3} />
-              <text x={padL - 8} y={yy + 4} fill={colors.textMuted} fontSize="11" textAnchor="end" fontFamily="sans-serif">{angle}°</text>
+              <text x={padL - 8} y={yy + 4} fill={colors.textMuted} fontSize="11" textAnchor="end" fontFamily={theme.fontFamily}>{angle}°</text>
             </g>
           );
         })}
@@ -728,8 +722,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         <line x1={padL} y1={height - padB} x2={width - padR} y2={height - padB} stroke={colors.textMuted} strokeWidth="1.5" />
 
         {/* Labels */}
-        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">Diffraction Order m</text>
-        <text x={15} y={height / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily="sans-serif" fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>Angle (degrees)</text>
+        <text x={width / 2} y={height - 5} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="600">Diffraction Order m</text>
+        <text x={15} y={height / 2} fill={colors.textSecondary} fontSize="13" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="600" transform={`rotate(-90, 15, ${height / 2})`}>Angle (degrees)</text>
 
         {/* Curve */}
         <path d={pathD} fill="none" stroke="url(#cdCurveGrad)" strokeWidth="3" strokeLinecap="round" />
@@ -742,7 +736,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
           return (
             <g key={c.key}>
               <circle cx={xx.toFixed(1)} cy={yy.toFixed(1)} r={4} fill={c.color} />
-              <text x={(xx + 8).toFixed(1)} y={(yy + 4).toFixed(1)} fill={c.color} fontSize="11" fontFamily="sans-serif">{c.name}</text>
+              <text x={(xx + 8).toFixed(1)} y={(yy + 4).toFixed(1)} fill={c.color} fontSize="11" fontFamily={theme.fontFamily}>{c.name}</text>
             </g>
           );
         })}
@@ -751,14 +745,14 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
         <circle cx={ix.toFixed(1)} cy={iy.toFixed(1)} r={16} fill="url(#cdGlow)" />
         <circle cx={ix.toFixed(1)} cy={iy.toFixed(1)} r={8} fill={colors.warning} filter="url(#cdGlowFilter)" stroke="#fff" strokeWidth={2} />
 
-        <text x={width / 2} y={padT - 10} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="700">
+        <text x={width / 2} y={padT - 10} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="700">
           CD Diffraction: d = {gratingSpacing.toFixed(1)}μm
         </text>
 
         <g transform={`translate(${width - padR - 130}, ${padT + 10})`}>
           <rect x={0} y={0} width={120} height={36} rx={6} fill="rgba(30,41,59,0.9)" stroke="rgba(255,255,255,0.1)" />
-          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily="sans-serif">d·sin(θ) = mλ</text>
-          <text x={10} y={30} fill={colors.warning} fontSize="11" fontFamily="sans-serif" fontWeight="600">Spacing: {gratingSpacing.toFixed(1)}μm</text>
+          <text x={10} y={16} fill={colors.textSecondary} fontSize="11" fontFamily={theme.fontFamily}>d·sin(θ) = mλ</text>
+          <text x={10} y={30} fill={colors.warning} fontSize="11" fontFamily={theme.fontFamily} fontWeight="600">Spacing: {gratingSpacing.toFixed(1)}μm</text>
         </g>
       </svg>
     );
@@ -1093,7 +1087,7 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
 
             {/* CD illustration SVG */}
             <div style={{ width: '100%', maxWidth: '700px', margin: '0 auto 20px auto', background: colors.bgCard, borderRadius: '16px', border: `1px solid ${colors.border}`, overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
-              <svg width={isMobile ? 300 : 400} height={isMobile ? 220 : 260} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 220 : 260}`}>
+              <svg width={isMobile ? 300 : 400} height={isMobile ? 220 : 260} viewBox={`0 0 ${isMobile ? 300 : 400} ${isMobile ? 220 : 260}`} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistBg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#0f172a" />
@@ -1127,8 +1121,8 @@ const DispersionRenderer: React.FC<DispersionRendererProps> = ({
                   <circle cx="50%" cy="50%" r="12" fill="#0a0f1a" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
                   <circle cx="50%" cy="50%" r="80" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
                 </g>
-                <text x="50%" y="20" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="700">CD Rainbow Pattern</text>
-                <text x="50%" y={isMobile ? 210 : 250} fill={colors.textMuted} fontSize="12" textAnchor="middle" fontFamily="sans-serif">Flat surface creates diffraction colors</text>
+                <text x="50%" y="20" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontFamily={theme.fontFamily} fontWeight="700">CD Rainbow Pattern</text>
+                <text x="50%" y={isMobile ? 210 : 250} fill={colors.textMuted} fontSize="12" textAnchor="middle" fontFamily={theme.fontFamily}>Flat surface creates diffraction colors</text>
               </svg>
             </div>
 

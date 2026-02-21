@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface BrewsterAngleRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -43,6 +47,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase management
   const [internalPhase, setInternalPhase] = useState<typeof PHASES[number]>('hook');
@@ -61,18 +66,8 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   const phase = PHASES.includes(activePhase as typeof PHASES[number]) ? activePhase : 'hook';
 
   const currentPhaseIndex = PHASES.indexOf(phase as typeof PHASES[number]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -301,6 +296,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -371,7 +367,7 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '16px', maxWidth: '550px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-        >
+         role="img" aria-label="Brewster Angle visualization">
           {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
             {/* Premium sky/air gradient with atmospheric depth */}

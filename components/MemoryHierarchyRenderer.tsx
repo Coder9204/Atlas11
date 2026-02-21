@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Memory Hierarchy Latency - Complete 10-Phase Game
 // Why is there L1, L2, L3 cache AND main memory?
@@ -229,6 +231,7 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 
 interface MemoryHierarchyRendererProps {
   gamePhase?: Phase;
+  onGameEvent?: (event: any) => void;
 }
 
 // Memory hierarchy specs
@@ -243,7 +246,9 @@ const MEMORY_SPECS = {
 // -----------------------------------------------------------------------------
 // MAIN COMPONENT
 // -----------------------------------------------------------------------------
-const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gamePhase }) => {
+const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gamePhase,
+  onGameEvent,
+}) => {
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const getInitialPhase = (): Phase => {
@@ -256,9 +261,8 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [workingSetSize, setWorkingSetSize] = useState(0.01); // GB
   const [accessPattern, setAccessPattern] = useState<'sequential' | 'random' | 'strided'>('sequential');
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -279,14 +283,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 100);
@@ -522,7 +519,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
     const levels = Object.entries(MEMORY_SPECS);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Memory Hierarchy visualization">
         <defs>
           <linearGradient id="memL1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -2098,6 +2095,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({ gameP
                     }, 0);
                     setTestScore(score);
                     setTestSubmitted(true);
+                    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                     playSound(score >= 7 ? 'complete' : 'failure');
                   }}
                   style={{

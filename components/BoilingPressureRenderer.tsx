@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Game event interface for AI coach integration
 interface GameEvent {
   type: string;
@@ -220,15 +222,8 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
   const bubbleIdRef = useRef(0);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Color palette with proper contrast - textSecondary must be #e2e8f0 for brightness >= 180
+  const { isMobile } = useViewport();
+// Color palette with proper contrast - textSecondary must be #e2e8f0 for brightness >= 180
   const colors = {
     primary: '#06b6d4',       // cyan-500
     primaryDark: '#0891b2',   // cyan-600
@@ -564,7 +559,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
     return (
       <div>
-        <svg viewBox="0 0 400 280" style={{ width: '100%', height: '224px' }}>
+        <svg viewBox="0 0 400 280" style={{ width: '100%', height: '224px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Boiling Pressure visualization">
           <defs>
             {/* Premium water gradient - deep blue with depth */}
             <linearGradient id="boilWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -885,7 +880,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
         {/* SVG visualization */}
         <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '20px' }}>
-          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="mountainGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="#1e293b" />
@@ -961,7 +956,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
         {/* SVG visualization for predict phase */}
         <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             <rect width="400" height="200" fill="#0f172a" />
             {/* Pressure arrows */}
             <text x="200" y="30" textAnchor="middle" fill={colors.textSecondary} fontSize="14">High Pressure</text>
@@ -1118,7 +1113,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
     const baselineLabelY = isNearBaseline ? refY + 18 : refY - 8;
 
     return (
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="chartCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6" />
@@ -1408,7 +1403,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
         {/* SVG visualization */}
         <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             <rect width="400" height="200" fill="#0f172a" />
             {/* Pasta */}
             <rect x="150" y="100" width="100" height="60" fill="#475569" rx="8" />
@@ -1559,7 +1554,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
     const vGridVals = [1000, 2000, 3000, 4000, 5000];
 
     return (
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
 
         {/* Horizontal grid */}
@@ -2303,7 +2298,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
           {allAnswered && (
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
               <button
-                onClick={() => setTestSubmitted(true)}
+                onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: 10 }); }}
                 style={{
                   padding: '14px 32px',
                   minHeight: '44px',

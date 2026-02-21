@@ -3,6 +3,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🏛️',
@@ -144,17 +147,8 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
   // UI state
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -690,7 +684,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
               Yet with a simple tube, you can make water flow <span style={{ color: colors.water }}>UP and over</span> an obstacle!
             </p>
 
-            <svg width="320" height="200" viewBox="0 0 320 200" style={{ margin: '0 auto', display: 'block' }}>
+            <svg width="320" height="200" viewBox="0 0 320 200" style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Siphon visualization">
               <defs>
                 {/* Premium water gradient with depth */}
                 <linearGradient id="siphWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -916,7 +910,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           A siphon is flowing steadily. You raise the outlet end so it's now <span style={{ color: colors.accent }}>higher than the water surface</span> in the source tank.
         </p>
 
-        <svg width="100%" height="150" viewBox="0 0 400 150" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="150" viewBox="0 0 400 150" style={{ marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Reuse gradient IDs with predict prefix */}
             <linearGradient id="siphPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1120,7 +1114,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Siphon visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-            <svg width="100%" height="220" viewBox="0 0 400 220">
+            <svg width="100%" height="220" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium water gradient with depth */}
                 <linearGradient id="siphPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1400,7 +1394,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
 
           {/* Color-coded flow indicator */}
           <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: heightDiff > 0 && siphonPrimed ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}>
+            <svg width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }} preserveAspectRatio="xMidYMid meet">
               <circle cx="6" cy="6" r="5" fill={heightDiff > 0 && siphonPrimed ? '#10B981' : '#EF4444'} />
             </svg>
             <span style={{ color: colors.text, fontSize: '13px', fontWeight: 600 }}>
@@ -1556,7 +1550,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           background: colors.background,
           borderRadius: '12px'
         }}>
-          <svg width="100%" height="100" viewBox="0 0 400 100">
+          <svg width="100%" height="100" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet">
             <defs>
               {/* Siphon tube gradient */}
               <linearGradient id="siphReviewTube" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1675,7 +1669,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           You want to siphon water over a very tall wall. If the apex of the siphon tube gets too high...
         </p>
 
-        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ marginBottom: '20px' }}>
+        <svg width="100%" height="140" viewBox="0 0 400 140" style={{ marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             {/* Wall gradient */}
             <linearGradient id="siphTwistWall" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1886,7 +1880,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           {/* Visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200">
+            <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Water gradient */}
                 <linearGradient id="siphTwistPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -2237,7 +2231,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ gamePhase, phase: phase
           marginBottom: '20px'
         }}>
           <h3 style={{ color: colors.text, fontSize: '16px', fontWeight: '600', margin: '0 0 12px 0' }}>Atmospheric Pressure Limit</h3>
-          <svg width="100%" height="280" viewBox="0 0 400 280" style={{ display: 'block' }}>
+          <svg width="100%" height="280" viewBox="0 0 400 280" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistReviewWater" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />

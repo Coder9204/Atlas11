@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 116: METRONOME SYNCHRONIZATION
 // Multiple metronomes on a movable platform spontaneously synchronize
@@ -13,6 +15,7 @@ interface MetronomeSyncRendererProps {
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
   onBack?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -51,6 +54,7 @@ const metronomeColors = [colors.metronome1, colors.metronome2, colors.metronome3
 
 const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
   phase: phaseProp, gamePhase, onPhaseComplete, onPredictionMade, onBack,
+  onGameEvent,
 }) => {
   const externalPhase = gamePhase ?? phaseProp;
   const [internalPhase, setInternalPhase] = useState('hook');
@@ -143,16 +147,8 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     phases.forEach(p => { sumCos += Math.cos(p); sumSin += Math.sin(p); });
     return Math.sqrt(sumCos * sumCos + sumSin * sumSin) / phases.length;
   }, [metronomes, numMetronomes]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const startSimulation = () => {
+  const { isMobile } = useViewport();
+const startSimulation = () => {
     setMetronomes(prev => prev.map(m => ({ ...m, phase: Math.random() * 2 * Math.PI })));
     setIsRunning(true);
   };
@@ -203,7 +199,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }} data-coupling={couplingStrength} data-metronomes={numMetronomes}>
-        <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', borderRadius: '12px' }}>
+        <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Metronome Sync visualization">
           <defs>
             <linearGradient id="msyncWoodGrain" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#8B4513" /><stop offset="40%" stopColor="#A0522D" />
@@ -1125,7 +1121,7 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
               Back
             </button>
             {allAnswered && (
-              <button onClick={() => setTestSubmitted(true)}
+              <button onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
                 style={{ flex: 1, padding: '12px', minHeight: '44px', background: 'linear-gradient(135deg,#a855f7,#7c3aed)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontWeight: '700', cursor: 'pointer', fontSize: '15px', transition: 'opacity 0.15s' }}>
                 Submit Test ✓
               </button>

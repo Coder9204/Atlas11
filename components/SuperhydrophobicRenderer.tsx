@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface SuperhydrophobicRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: string;
@@ -131,25 +134,15 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook');
+  const { isMobile } = useViewport();
+const [internalPhase, setInternalPhase] = useState(gamePhase || phase || 'hook');
 
   // Scroll to top on phase change
   useEffect(() => {
     window.scrollTo(0, 0);
     document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
   }, [phase]);
-
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync internal phase with external props
+// Sync internal phase with external props
   useEffect(() => {
     if (gamePhase) setInternalPhase(gamePhase);
     else if (phase) setInternalPhase(phase);
@@ -388,6 +381,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -891,7 +885,7 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             maxWidth: '500px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
           }}
-        >
+         role="img" aria-label="Superhydrophobic visualization">
           {/* Premium SVG Definitions */}
           {renderSVGDefs()}
 

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
@@ -253,8 +255,8 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
 }) => {
   // State
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const { isMobile } = useViewport();
+const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
@@ -270,16 +272,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
 
   const lastClickRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Responsive check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -508,7 +501,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         }}
       >
         {/* Animated gyroscope SVG */}
-        <svg viewBox="0 0 300 200" className="w-full h-48 mb-4">
+        <svg viewBox="0 0 300 200" className="w-full h-48 mb-4" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gyroscope Stability visualization">
           <defs>
             <linearGradient id="gyroRing" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={colors.primaryLight} />
@@ -590,7 +583,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         }}
       >
         Find Out Why
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
@@ -619,7 +612,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         </p>
 
         {/* Visualization */}
-        <svg viewBox="0 0 300 150" className="w-full h-32 mb-4">
+        <svg viewBox="0 0 300 150" className="w-full h-32 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect width="300" height="150" fill={colors.background} rx="8" />
 
           {/* Hands holding wheel */}
@@ -729,7 +722,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
             border: `1px solid ${colors.border}`
           }}
         >
-          <svg viewBox="0 0 400 280" style={{ width: '100%', height: '256px' }}>
+          <svg viewBox="0 0 400 280" style={{ width: '100%', height: '256px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="playDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={colors.primaryLight} />
@@ -1039,7 +1032,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         </p>
 
         {/* Visualization */}
-        <svg viewBox="0 0 300 150" className="w-full h-32 mb-4">
+        <svg viewBox="0 0 300 150" className="w-full h-32 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect width="300" height="150" fill={colors.background} rx="8" />
 
           {/* Gyroscope base */}
@@ -1151,7 +1144,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
           className="rounded-2xl p-4 mb-6 w-full"
           style={{ backgroundColor: colors.cardBg }}
         >
-          <svg viewBox="0 0 400 280" className="w-full h-64">
+          <svg viewBox="0 0 400 280" className="w-full h-64" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={colors.primaryLight} />

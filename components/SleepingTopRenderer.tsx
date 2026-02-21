@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🛰️',
@@ -85,6 +88,7 @@ interface SleepingTopRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -119,6 +123,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase management - self-managing game
   const getInitialPhase = (): Phase => {
@@ -183,17 +188,8 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -420,6 +416,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -460,7 +457,7 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #030712 0%, #0f172a 50%, #030712 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="Sleeping Top visualization">
           <defs>
             <linearGradient id="slptBodyMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fcd34d" />

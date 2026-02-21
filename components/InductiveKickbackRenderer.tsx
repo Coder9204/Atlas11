@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { playSound } from '../lib/audio';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────
@@ -38,6 +40,7 @@ interface InductiveKickbackRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -242,9 +245,8 @@ export default function InductiveKickbackRenderer({
     }
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction states
+  const { isMobile } = useViewport();
+// Prediction states
   const [prediction, setPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -281,16 +283,7 @@ export default function InductiveKickbackRenderer({
   // ──────────────────────────────────────────────────────────────────────────
   // EFFECTS
   // ──────────────────────────────────────────────────────────────────────────
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Kickback voltage decay animation
+// Kickback voltage decay animation
   useEffect(() => {
     if (kickbackVoltage > 0) {
       animationRef.current = requestAnimationFrame(() => {
@@ -413,6 +406,7 @@ export default function InductiveKickbackRenderer({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7) {
       playSound('complete');
       if (onCorrectAnswer) onCorrectAnswer();
@@ -472,7 +466,7 @@ export default function InductiveKickbackRenderer({
   const renderRelayCircuit = () => (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
       <h3 className="text-sm font-semibold text-slate-300 mb-2">Relay Circuit Diagram</h3>
-      <svg viewBox="0 0 400 240" className="w-full h-60">
+      <svg viewBox="0 0 400 240" className="w-full h-60" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Inductive Kickback visualization">
         <defs>
           <linearGradient id="batteryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4B5563" />
@@ -697,7 +691,7 @@ export default function InductiveKickbackRenderer({
   const renderBoostConverter = () => (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
       <h3 className="text-sm font-semibold text-slate-300 mb-2">Boost Converter Circuit</h3>
-      <svg viewBox="0 0 400 220" className="w-full h-56">
+      <svg viewBox="0 0 400 220" className="w-full h-56" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="boostBattGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#4B5563" />
@@ -930,7 +924,7 @@ export default function InductiveKickbackRenderer({
       >
         <span className="relative z-10 flex items-center gap-3">
           Investigate the Spike
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
@@ -958,7 +952,7 @@ export default function InductiveKickbackRenderer({
 
       {/* Static circuit preview SVG */}
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px' }}>
-        <svg viewBox="0 0 400 150" className="w-full h-36">
+        <svg viewBox="0 0 400 150" className="w-full h-36" preserveAspectRatio="xMidYMid meet">
           {/* Battery */}
           <rect x="30" y="50" width="40" height="50" fill="#374151" rx="4" />
           <text x="50" y="80" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="bold">12V</text>
@@ -1260,7 +1254,7 @@ export default function InductiveKickbackRenderer({
 
       {/* Simple illustration SVG - spans full height for visual clarity */}
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
-        <svg viewBox="0 0 400 200" className="w-full h-48">
+        <svg viewBox="0 0 400 200" className="w-full h-48" preserveAspectRatio="xMidYMid meet">
           {/* Title */}
           <text x="200" y="18" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="bold">Inductive Kickback: Problem vs Solution</text>
 

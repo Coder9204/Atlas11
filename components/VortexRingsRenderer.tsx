@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -234,18 +237,8 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
 
     return () => clearInterval(interval);
   }, [isAnimating, airViscosity, rings.length]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -408,6 +401,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (onGameEvent) {
       onGameEvent({ type: 'test_completed', data: { score, total: testQuestions.length } });
     }
@@ -750,7 +744,7 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="Vortex Rings visualization">
           <title>Vortex Ring Visualization</title>
           {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>

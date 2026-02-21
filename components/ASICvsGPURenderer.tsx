@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // ASIC vs GPU - Complete 10-Phase Game
 // Understanding computing hardware tradeoffs: specialization vs flexibility
@@ -61,7 +63,7 @@ const HardwareVisualization: React.FC<HardwareVisualizationProps> = ({
       viewBox="0 0 500 350"
       style={{ width: '100%', maxWidth: '500px', height: 'auto' }}
       preserveAspectRatio="xMidYMid meet"
-    >
+     role="img" aria-label="A S I Cvs G P U visualization">
       <defs>
         <linearGradient id="asicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#10B981" />
@@ -462,9 +464,8 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [workloadVolume, setWorkloadVolume] = useState(30); // Production volume (thousands)
   const [algorithmStability, setAlgorithmStability] = useState(70); // Years until change (0-100 scale)
   const [powerBudget, setPowerBudget] = useState(40); // Power constraint strictness
@@ -485,14 +486,7 @@ const ASICvsGPURenderer: React.FC<ASICvsGPURendererProps> = ({ onGameEvent, game
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);

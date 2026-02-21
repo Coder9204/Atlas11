@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // PROJECTILE INDEPENDENCE - Premium Design (Inline Styles Only)
 // 10-Phase Learning Structure
@@ -315,10 +317,8 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   const [thrownX, setThrownX] = useState(100);
   const [thrownY, setThrownY] = useState(50);
   const [airResistance, setAirResistance] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => { const c = () => setIsMobile(window.innerWidth < 768); c(); window.addEventListener("resize", c); return () => window.removeEventListener("resize", c); }, []);
-
-  const animationRef = useRef<number | null>(null);
+  const { isMobile } = useViewport();
+const animationRef = useRef<number | null>(null);
 
   // Design system
   const colors = {
@@ -549,7 +549,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%', maxWidth: '420px' }}>
-        <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+        <svg width="100%" height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} preserveAspectRatio="xMidYMid meet" style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }} role="img" aria-label="Projectile Independence visualization">
           <defs>
             <linearGradient id="projBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -773,7 +773,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
       {/* SVG visualization for predict phase */}
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="200" viewBox="0 0 360 200">
+        <svg width="360" height="200" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="predProjBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -1032,7 +1032,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
       {/* SVG visualization for twist predict phase */}
       <div style={{ marginBottom: '24px' }}>
-        <svg width="360" height="180" viewBox="0 0 360 180">
+        <svg width="360" height="180" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistProjBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -1572,7 +1572,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           )}
           {isConfirmed && currentQuestion === 9 && (
             <button
-              onClick={() => setTestSubmitted(true)}
+              onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }}
               style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
             >
               Submit Test

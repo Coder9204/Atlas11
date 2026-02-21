@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -144,15 +146,8 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   const soundSpeed = 343; // m/s
 
   // --- RESPONSIVE ---
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Typography responsive system
+  const { isMobile } = useViewport();
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -659,7 +654,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1, maxHeight: 'calc(100% - 60px)' }}>
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1, maxHeight: 'calc(100% - 60px)' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Doppler Effect visualization">
         <defs>
           {/* === PREMIUM BACKGROUND GRADIENTS === */}
           <linearGradient id="doppBg" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1115,7 +1110,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     switch (appId) {
       case 'radar':
         return (
-          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }}>
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="0.8" />
@@ -1154,7 +1149,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
       case 'cosmos':
         return (
-          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }}>
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <radialGradient id="galaxyGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#fef3c7" />
@@ -1191,7 +1186,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
       case 'biosonar':
         return (
-          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }}>
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <radialGradient id="sonarGrad" cx="0%" cy="50%" r="100%">
                 <stop offset="0%" stopColor={design.colors.accentSecondary} stopOpacity="0.6" />
@@ -1235,7 +1230,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
       case 'medical':
         return (
-          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }}>
+          <svg viewBox="0 0 200 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="bloodFlow" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#ef4444" />
@@ -1331,7 +1326,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     const observerXPos = 350;
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 300 }} data-testid="doppler-preview">
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 300 }} data-testid="doppler-preview" preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="staticRoad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#2d3748" />
@@ -1892,7 +1887,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               marginBottom: design.spacing.lg,
               border: `1px solid ${design.colors.bgGlow}`,
             }}>
-              <svg viewBox="0 0 400 150" style={{ width: '100%', maxHeight: 150 }}>
+              <svg viewBox="0 0 400 150" style={{ width: '100%', maxHeight: 150 }} preserveAspectRatio="xMidYMid meet">
                 {/* Background */}
                 <rect width="400" height="150" fill="#0f0a08" />
                 <rect x="0" y="100" width="400" height="50" fill="#4a5568" />
@@ -2614,6 +2609,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
             renderButton('Submit Test', () => {
               if (testAnswers.every(a => a !== null)) {
                 setTestSubmitted(true);
+                emitEvent('game_completed', { score: testScore, total: testQuestions.length });
                 emitEvent('test_answered', {
                   score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
                   total: testQuestions.length

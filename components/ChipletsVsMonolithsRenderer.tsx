@@ -1,12 +1,16 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface ChipletsVsMonolithsRendererProps {
   phase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASES = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -66,9 +70,10 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [internalPhase, setInternalPhase] = useState<Phase>('hook');
+  const { isMobile } = useViewport();
+const [internalPhase, setInternalPhase] = useState<Phase>('hook');
 
   // Scroll to top on phase change
   useEffect(() => {
@@ -95,16 +100,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
       onPhaseComplete?.();
     }
   }, [phase, onPhaseComplete]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -370,6 +366,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -402,7 +399,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           data-testid="main-svg"
           data-state={svgKey}
           aria-label="Chiplets vs Monolithic visualization"
-        >
+         role="img" aria-label="Chiplets Vs Monoliths visualization">
           {/* Premium Defs Section */}
           <defs>
             {/* Background gradient - clean room environment */}
@@ -1648,7 +1645,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
 
           {/* Review SVG diagram */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewYieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={colors.success} />
@@ -1850,7 +1847,7 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
 
           {/* Twist review SVG diagram */}
           <div style={{ padding: '16px', textAlign: 'center' }}>
-            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="150" viewBox="0 0 400 150" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="20" y="20" width="360" height="110" fill="rgba(30, 41, 59, 0.8)" rx="8" />
               <text x="200" y="45" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">Advanced Packaging Trade-off</text>
               <rect x="50" y="60" width="80" height="50" fill={colors.chiplet} rx="4" opacity="0.7" />

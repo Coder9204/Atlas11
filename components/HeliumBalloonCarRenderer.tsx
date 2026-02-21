@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // HELIUM BALLOON CAR RENDERER - PREMIUM PHYSICS GAME
 // Acceleration Fields & Buoyancy: Why helium balloons move forward in cars
@@ -271,15 +273,8 @@ export default function HeliumBalloonCarRenderer({
   const navigationLockRef = useRef(false);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // ============================================================================
+  const { isMobile } = useViewport();
+// ============================================================================
   // DESIGN SYSTEM
   // ============================================================================
   const colors = {
@@ -704,7 +699,7 @@ export default function HeliumBalloonCarRenderer({
 
       {/* Visual */}
       <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl mb-10">
-        <svg viewBox="0 0 400 180" style={{ width: '100%' }}>
+        <svg viewBox="0 0 400 180" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Helium Balloon Car visualization">
           {renderSvgDefs()}
 
           {/* Road */}
@@ -762,7 +757,7 @@ export default function HeliumBalloonCarRenderer({
       >
         <span className="relative z-10 flex items-center gap-3">
           Start — Make Your Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
@@ -798,7 +793,7 @@ export default function HeliumBalloonCarRenderer({
 
           {/* Static Preview Image */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6" style={{ marginBottom: '16px' }}>
-            <svg viewBox="0 0 400 140" style={{ width: '100%' }}>
+            <svg viewBox="0 0 400 140" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
               {/* Road */}
               <rect x="0" y="110" width="400" height="30" fill="url(#hbcRoadSurface)" />
@@ -954,7 +949,7 @@ export default function HeliumBalloonCarRenderer({
           {/* Visualization */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4" style={{ borderRadius: '12px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(51,65,85,0.5)', transition: 'all 0.3s ease-out' }}>
             <h3 className="text-sm font-semibold text-white mb-2 text-center" style={{ fontWeight: 700 }}>Acceleration Buoyancy Visualization</h3>
-            <svg viewBox="0 0 450 250" style={{ width: '100%' }}>
+            <svg viewBox="0 0 450 250" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
 
               {/* Grid lines */}
@@ -1272,7 +1267,7 @@ export default function HeliumBalloonCarRenderer({
 
           {/* Review SVG Diagram */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-            <svg viewBox="0 0 400 160" style={{ width: '100%' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
               {/* Grid */}
               <g opacity="0.3">
@@ -1362,7 +1357,7 @@ export default function HeliumBalloonCarRenderer({
 
           {/* Static SVG showing bubble in water bottle */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-            <svg viewBox="0 0 400 150" style={{ width: '100%' }}>
+            <svg viewBox="0 0 400 150" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
               {/* Grid */}
               <g opacity="0.3">
@@ -1483,7 +1478,7 @@ export default function HeliumBalloonCarRenderer({
           {/* Visualization */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4">
             <h3 className="text-sm font-semibold text-white mb-2 text-center">Multi-Scenario Comparison</h3>
-            <svg viewBox="0 0 450 200" style={{ width: '100%' }}>
+            <svg viewBox="0 0 450 200" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
 
               {/* Grid lines */}
@@ -1724,7 +1719,7 @@ export default function HeliumBalloonCarRenderer({
 
           {/* Twist Review SVG Diagram */}
           <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-            <svg viewBox="0 0 400 130" style={{ width: '100%' }}>
+            <svg viewBox="0 0 400 130" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet">
               {renderSvgDefs()}
               {/* Grid */}
               <g opacity="0.3">
@@ -2185,6 +2180,7 @@ export default function HeliumBalloonCarRenderer({
                 <button
                   onClick={() => {
                     setTestSubmitted(true);
+                    emitEvent('game_completed', { score: testScore, total: testQuestions.length });
                     emitEvent('test_completed', { score: totalCorrect });
                   }}
                   style={{ zIndex: 10, minHeight: '44px' }}

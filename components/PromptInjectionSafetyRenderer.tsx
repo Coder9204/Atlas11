@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Prompt Injection Safety - Complete 10-Phase Game
 // Understanding and defending against AI agent manipulation attacks
@@ -261,9 +264,8 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [hasSafeFolder, setHasSafeFolder] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [attackTriggered, setAttackTriggered] = useState(false);
@@ -289,14 +291,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // File system for simulation
+// File system for simulation
   const fileSystem = [
     { path: '/work/project/main.py', type: 'safe', label: 'main.py', content: 'print("Hello")' },
     { path: '/work/project/README.md', type: 'safe', label: 'README.md', content: 'Documentation' },
@@ -324,18 +319,15 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#EF4444', // Red for security theme
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    shield: '#22c55e',
+    attack: '#ef4444',
+    defense: '#3b82f6',
+    code: '#8b5cf6',
+    accent: '#EF4444',
     accentGlow: 'rgba(239, 68, 68, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
-    border: '#2a2a3a',
     safe: '#10B981',
     danger: '#EF4444',
     restricted: '#F59E0B',
@@ -397,7 +389,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const outcome = calculateOutcome();
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Prompt Injection Safety visualization">
         <defs>
           <linearGradient id="shieldGradSafe" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10B981" />
@@ -426,6 +418,32 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="shieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="attackGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="#ef4444" floodOpacity="0.5" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <radialGradient id="shieldGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="70%" stopColor="#22c55e" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </radialGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
+          </pattern>
         </defs>
 
         {/* Interactive position indicator - moves with fileIndex slider; color changes with defense state */}
@@ -680,7 +698,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const defenseScore = permissionLevel * 30 + (contentTainting ? 40 : 0);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Defense Configuration
         </text>
@@ -1496,7 +1514,7 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               /work/* = ALLOWED | /home/* = BLOCKED | /tmp/* = BLOCKED
             </div>
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-              <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgSecondary, borderRadius: '8px' }}>
+              <svg width="320" height="160" viewBox="0 0 320 160" style={{ background: colors.bgSecondary, borderRadius: '8px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="predictGlow">
                     <feGaussianBlur stdDeviation="2" result="blur" />

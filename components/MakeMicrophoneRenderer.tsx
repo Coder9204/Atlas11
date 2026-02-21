@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ────────────────────────────────────────────────────────────────────────────
 // REAL-WORLD APPLICATIONS DATA
 // ────────────────────────────────────────────────────────────────────────────
@@ -210,6 +212,7 @@ interface MakeMicrophoneRendererProps {
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
   gamePhase?: string;
+  onGameEvent?: (event: any) => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -240,10 +243,8 @@ export default function MakeMicrophoneRenderer({
     }
     return 'hook';
   });
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Prediction states
+  const { isMobile } = useViewport();
+// Prediction states
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
@@ -283,16 +284,7 @@ export default function MakeMicrophoneRenderer({
       setCurrentPhase(gamePhase as Phase);
     }
   }, [gamePhase, currentPhase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation for sound waves
+// Animation for sound waves
   useEffect(() => {
     if (currentPhase === 'play' || currentPhase === 'twist_play') {
       const animate = () => {
@@ -540,7 +532,7 @@ export default function MakeMicrophoneRenderer({
     const freqIndicatorX = Math.round(120 + (waveFreq - 1) / 3 * 70);
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', transition: 'all 0.15s ease' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', transition: 'all 0.15s ease' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Make Microphone visualization">
         <defs>
           <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={voltageColor} stopOpacity="0.6" />
@@ -983,7 +975,7 @@ export default function MakeMicrophoneRenderer({
 
             {/* SVG diagram */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width="480" height="200" viewBox="0 0 480 200" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="predictGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#0D9488" stopOpacity="0.8" />
@@ -1437,7 +1429,7 @@ export default function MakeMicrophoneRenderer({
 
           {/* SVG diagram showing speaker parts */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width="480" height="180" viewBox="0 0 480 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width="480" height="180" viewBox="0 0 480 180" style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="speakerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.7" />
@@ -2093,6 +2085,7 @@ export default function MakeMicrophoneRenderer({
                     }, 0);
                     setTestScore(score);
                     setTestSubmitted(true);
+                    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                     if (score >= 7) {
                       playSound('complete');
                       onCorrectAnswer?.();
@@ -2177,6 +2170,7 @@ export default function MakeMicrophoneRenderer({
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                   if (score >= 7) {
                     playSound('complete');
                     onCorrectAnswer?.();

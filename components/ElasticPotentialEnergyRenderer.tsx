@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ═══════════════════════════════════════════════════════════════════════════
 // GOLD STANDARD: GAME EVENT TYPE AND INTERFACE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -155,8 +157,8 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { isMobile } = useViewport();
+const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Simulation state
   const [springConstant, setSpringConstant] = useState(100); // N/m
@@ -169,14 +171,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
   const animationRef = useRef<number | null>(null);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -574,7 +569,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
     return (
     <div className="relative" style={{ width, height: height + 60 }}>
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Elastic Potential Energy visualization">
         <defs>
           {/* Premium metallic spring gradient with 6 color stops */}
           <linearGradient id="epeSpringMetal" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -987,7 +982,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         style={{ zIndex: 10 }}
       >
         Discover the Formula
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
@@ -1022,7 +1017,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     }
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="staticSpringMetal" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#059669" />
@@ -1392,7 +1387,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
 
       {/* Static SVG visualization for twist concept */}
       <div className="mb-4">
-        <svg width={isMobile ? 280 : 320} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 280 : 320} ${isMobile ? 160 : 180}`} style={{ display: 'block' }}>
+        <svg width={isMobile ? 280 : 320} height={isMobile ? 160 : 180} viewBox={`0 0 ${isMobile ? 280 : 320} ${isMobile ? 160 : 180}`} style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="twistSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#a855f7" />
@@ -1527,7 +1522,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
         <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
           <div className="bg-slate-800/50 rounded-2xl p-4">
             <h3 className="text-lg font-semibold text-cyan-400 mb-3">Force vs. Displacement</h3>
-            <svg viewBox="0 0 200 150" className="w-full">
+            <svg viewBox="0 0 200 150" className="w-full" preserveAspectRatio="xMidYMid meet">
               <rect width="200" height="150" fill="#0f172a" rx="8" />
               {/* Axes */}
               <line x1="30" y1="120" x2="180" y2="120" stroke="#64748b" strokeWidth="2" />

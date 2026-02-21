@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Electromigration in Chips - Complete 10-Phase Game
 // Why metal atoms migrate under current flow and how chips fail over time
@@ -261,9 +263,8 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [currentDensity, setCurrentDensity] = useState(5); // MA/cm^2
   const [temperature, setTemperature] = useState(85); // Celsius
   const [wireWidth, setWireWidth] = useState(100); // nm
@@ -286,14 +287,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -426,7 +420,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
     const atomDisplacement = isSimulating ? Math.sin(animationFrame * 0.1) * (currentDensity * 0.3) : 0;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electromigration visualization">
         <defs>
           {/* Copper gradient */}
           <linearGradient id="copperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -915,7 +909,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             textAlign: 'center',
           }}>
             {/* SVG static visualization */}
-            <svg width={isMobile ? 300 : 400} height={140} viewBox={`0 0 ${isMobile ? 300 : 400} 140`} style={{ marginBottom: '16px' }}>
+            <svg width={isMobile ? 300 : 400} height={140} viewBox={`0 0 ${isMobile ? 300 : 400} 140`} style={{ marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="copperGradPredict" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#CD7F32" />
@@ -1108,7 +1102,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
               const safeY = yForMTTF(10);
               const warnY = yForMTTF(5);
               return (
-                <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '16px' }}>
+                <svg width={chartW} height={chartH} viewBox={`0 0 ${chartW} ${chartH}`} style={{ background: colors.bgSecondary, borderRadius: '8px', marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <filter id="chartGlow">
                       <feGaussianBlur stdDeviation="2" result="blur" />
@@ -1529,7 +1523,7 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width={isMobile ? 280 : 360} height={100} viewBox={`0 0 ${isMobile ? 280 : 360} 100`}>
+            <svg width={isMobile ? 280 : 360} height={100} viewBox={`0 0 ${isMobile ? 280 : 360} 100`} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="tempGradTwist" x1="0%" y1="100%" x2="0%" y2="0%">
                   <stop offset="0%" stopColor="#22C55E" />

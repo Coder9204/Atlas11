@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // TWOBALLCOLLISION RENDERER - ENERGY VS MOMENTUM CONSERVATION
 // Teaching: Momentum is ALWAYS conserved; Energy is only conserved in elastic collisions
@@ -102,8 +104,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase());
   const [showCoachMessage, setShowCoachMessage] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
+  const { isMobile } = useViewport();
+const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Game state
@@ -145,16 +147,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
   // Animation ref
   const animationRef = useRef<number | null>(null);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Phase sync
+// Phase sync
   useEffect(() => {
     if (gamePhase && isValidPhase(gamePhase) && gamePhase !== phase) {
       setPhase(gamePhase);
@@ -519,7 +512,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
     return (
       <div>
-        <svg viewBox="0 0 400 200" className="w-full h-48 md:h-56">
+        <svg viewBox="0 0 400 200" className="w-full h-48 md:h-56" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Two Ball Collision visualization">
           <defs>
             {/* Premium background gradient */}
             <linearGradient id="tbcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -913,7 +906,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
         <div className="relative">
-          <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
+          <svg viewBox="0 0 300 180" className="w-full h-44 mb-4" preserveAspectRatio="xMidYMid meet">
             <rect x="0" y="0" width="300" height="180" fill="transparent" rx="10" />
 
             {/* Elastic scenario (top) */}
@@ -966,7 +959,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       >
         <span className="relative z-10 flex items-center gap-3">
           Make Your Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
@@ -1010,7 +1003,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           background: colors.bgCard,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 120" style={{ width: '100%', height: isMobile ? '90px' : '110px' }}>
+          <svg viewBox="0 0 400 120" style={{ width: '100%', height: isMobile ? '90px' : '110px' }} preserveAspectRatio="xMidYMid meet">
             {/* Background */}
             <rect x="0" y="0" width="400" height="120" fill={colors.bgDark} rx="8" />
 
@@ -1409,7 +1402,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       </div>
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 200" className="w-full h-44 mb-4">
+        <svg viewBox="0 0 300 200" className="w-full h-44 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect x="0" y="0" width="300" height="200" fill="white" rx="10" />
 
           {/* Momentum bar (always conserved) */}
@@ -1493,7 +1486,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           background: colors.bgCard,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 100" style={{ width: '100%', height: isMobile ? '80px' : '95px' }}>
+          <svg viewBox="0 0 400 100" style={{ width: '100%', height: isMobile ? '80px' : '95px' }} preserveAspectRatio="xMidYMid meet">
             {/* Background */}
             <rect x="0" y="0" width="400" height="100" fill={colors.bgDark} rx="8" />
 
@@ -1678,7 +1671,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       {renderSectionHeader('Step 6 • Twist Review', 'Mass Effects Explained', 'How mass ratio changes outcomes')}
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 180" className="w-full h-40 mb-4">
+        <svg viewBox="0 0 300 180" className="w-full h-40 mb-4" preserveAspectRatio="xMidYMid meet">
           <rect x="0" y="0" width="300" height="180" fill="white" rx="10" />
 
           {/* Equal masses */}

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // BUCKLING RENDERER - COLUMN COLLAPSE & EULER'S FORMULA
 // Teaching: Slender columns fail by buckling, not crushing. Length² matters!
@@ -83,17 +85,8 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 }) => {
   // Support both 'phase' and 'gamePhase' props for compatibility with test framework
   const initialPhase = propPhase || gamePhase || 'hook';
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -599,7 +592,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     const stressFilter = getStressFilter(stressRatio, buckled);
 
     return (
-      <svg viewBox="0 0 200 280" className="w-full h-56 md:h-64">
+      <svg viewBox="0 0 200 280" className="w-full h-56 md:h-64" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Buckling visualization">
         {renderPremiumDefs()}
 
         {/* Premium lab background */}
@@ -781,7 +774,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
         <div className="relative">
-          <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
+          <svg viewBox="0 0 300 180" className="w-full h-44 mb-4" preserveAspectRatio="xMidYMid meet">
             {renderPremiumDefs()}
 
             {/* Premium lab background */}
@@ -874,7 +867,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       >
         <span className="relative z-10 flex items-center gap-3">
           Make Your Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" preserveAspectRatio="xMidYMid meet">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
@@ -913,7 +906,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             width: '100%'
           }}
         >
-          <svg viewBox="0 0 300 200" className="w-full" style={{ height: '180px' }}>
+          <svg viewBox="0 0 300 200" className="w-full" style={{ height: '180px' }} preserveAspectRatio="xMidYMid meet">
             {renderPremiumDefs()}
 
             {/* Background */}
@@ -1065,7 +1058,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       const stressFilter = getStressFilter(loadRatio, isBuckled);
 
       return (
-        <svg viewBox="0 0 300 320" className="w-full h-72 md:h-80">
+        <svg viewBox="0 0 300 320" className="w-full h-72 md:h-80" preserveAspectRatio="xMidYMid meet">
           {renderPremiumDefs()}
 
           {/* Premium lab background with grid */}
@@ -1448,7 +1441,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           </div>
         </div>
 
-        <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
+        <svg viewBox="0 0 300 140" className="w-full h-32 mb-4" preserveAspectRatio="xMidYMid meet">
           {renderPremiumDefs()}
 
           {/* Premium background */}
@@ -1566,7 +1559,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         <div className="flex justify-center gap-6 mb-6">
           {/* Solid cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="60" height="60" viewBox="0 0 60 60">
+            <svg width="60" height="60" viewBox="0 0 60 60" preserveAspectRatio="xMidYMid meet">
               {renderPremiumDefs()}
               {/* Background */}
               <circle cx="30" cy="30" r="28" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
@@ -1579,7 +1572,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           </div>
           {/* Hollow cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="60" height="60" viewBox="0 0 60 60">
+            <svg width="60" height="60" viewBox="0 0 60 60" preserveAspectRatio="xMidYMid meet">
               {renderPremiumDefs()}
               {/* Background */}
               <circle cx="30" cy="30" r="28" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
@@ -1594,7 +1587,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           </div>
           {/* I-Beam cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="60" height="60" viewBox="0 0 60 60">
+            <svg width="60" height="60" viewBox="0 0 60 60" preserveAspectRatio="xMidYMid meet">
               {renderPremiumDefs()}
               {/* Background */}
               <rect x="2" y="2" width="56" height="56" rx="5" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
@@ -1720,7 +1713,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       };
 
       return (
-        <svg viewBox="0 0 340 350" className="w-full h-80 md:h-96">
+        <svg viewBox="0 0 340 350" className="w-full h-80 md:h-96" preserveAspectRatio="xMidYMid meet">
           {/* Background */}
           <rect x="0" y="0" width="340" height="350" fill="#1e293b" rx="12" />
 
@@ -2039,7 +2032,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       <h2 className="text-2xl font-bold text-purple-400 mb-6">Shape Optimization</h2>
 
       <div className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-2xl p-6 max-w-xl mb-6">
-        <svg viewBox="0 0 300 130" className="w-full h-32 mb-4">
+        <svg viewBox="0 0 300 130" className="w-full h-32 mb-4" preserveAspectRatio="xMidYMid meet">
           {renderPremiumDefs()}
 
           {/* Premium background with grid */}
@@ -2545,7 +2538,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     <div
       className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden"
       style={{
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif',
+        fontFamily: theme.fontFamily,
         lineHeight: '1.6',
         display: 'flex',
         flexDirection: 'column',

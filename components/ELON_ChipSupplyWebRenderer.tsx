@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON CHIP SUPPLY WEB - Complete 10-Phase Game (Game #19 of 36)
 // Semiconductor supply chain mapping - the complex global web of suppliers
@@ -312,9 +314,8 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [techNode, setTechNode] = useState(28);
   const [disruptedNode, setDisruptedNode] = useState<string | null>(null);
 
@@ -332,14 +333,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate supply chain concentration based on tech node
+// Calculate supply chain concentration based on tech node
   const getConcentration = (node: number): { fabCount: number; label: string; risk: string; color: string } => {
     if (node <= 3) return { fabCount: 1, label: 'TSMC only', risk: 'EXTREME', color: '#EF4444' };
     if (node <= 5) return { fabCount: 2, label: 'TSMC + Samsung', risk: 'VERY HIGH', color: '#F97316' };
@@ -550,7 +544,7 @@ const ELON_ChipSupplyWebRenderer: React.FC<ChipSupplyWebRendererProps> = ({ onGa
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Chip Supply Web visualization">
         <defs>
           <linearGradient id="chainGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" />

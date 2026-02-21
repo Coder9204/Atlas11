@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { SvgDefs } from '../lib/svg';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Test-First Prompting - Complete 10-Phase Game
 // Writing tests before code makes LLM output converge faster to correct behavior
@@ -261,9 +265,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [testMode, setTestMode] = useState<'test_first' | 'code_first'>('test_first');
   const [iteration, setIteration] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -287,32 +290,15 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium design colors
+// Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#10B981', // Green for testing/success
-    accentGlow: 'rgba(16, 185, 129, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#CBD5E1',
-    textMuted: 'rgba(203, 213, 225, 0.7)',
-    border: '#2a2a3a',
-    testPass: '#10B981',
-    testFail: '#EF4444',
-    testPending: '#6B7280',
-    code: '#3B82F6',
-    coverage: '#8B5CF6',
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    testPass: '#22c55e',
+    testFail: '#ef4444',
+    testPending: '#f59e0b',
+    code: '#3b82f6',
   };
 
   const typo = {
@@ -462,7 +448,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     const bugsCircY = 440;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Test First Prompting visualization">
         <defs>
           <linearGradient id="passGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={colors.testPass} stopOpacity="0.8" />
@@ -479,6 +465,22 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="testGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="testPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
+          </pattern>
         </defs>
 
         {/* Title */}

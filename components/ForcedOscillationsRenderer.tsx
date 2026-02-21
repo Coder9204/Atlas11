@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // FORCED OSCILLATIONS & RESONANCE - GOLD STANDARD IMPLEMENTATION
 // Physics: m(d²x/dt²) + c(dx/dt) + kx = F₀cos(ωt)
@@ -318,8 +320,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   onPhaseComplete
 }) => {
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-  const [prediction, setPrediction] = useState<string | null>(null);
+  const { isMobile } = useViewport();
+const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
@@ -349,16 +351,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
-
-  // Responsive check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography system
+// Responsive typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -862,7 +855,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.lg
       }}>
-        <svg width="100%" height={isMobile ? '180' : '220'} viewBox="0 0 400 220" role="img" aria-label="Opera singer breaking wine glass illustration">
+        <svg width="100%" height={isMobile ? '180' : '220'} viewBox="0 0 400 220" role="img" aria-label="Opera singer breaking wine glass illustration" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.6"/>
@@ -989,7 +982,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           marginBottom: space.lg,
           border: `1px solid ${colors.border}`
         }}>
-          <svg width="100%" height="180" viewBox="0 0 400 180" role="img" aria-label="Swing illustration for prediction">
+          <svg width="100%" height="180" viewBox="0 0 400 180" role="img" aria-label="Swing illustration for prediction" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="swingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={colors.accent}/>
@@ -1133,7 +1126,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           marginBottom: space.lg
         }}>
           {/* Simulation visualization */}
-          <svg width="100%" height="280" viewBox="0 0 500 280" style={{ borderRadius: radius.md }} role="img" aria-label="Forced oscillation simulation showing spring-mass system">
+          <svg width="100%" height="280" viewBox="0 0 500 280" style={{ borderRadius: radius.md }} role="img" aria-label="Forced oscillation simulation showing spring-mass system" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="springGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent}/>
@@ -1592,7 +1585,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         {/* SVG diagram of bridge and wind vortices - no sliders */}
         <div style={{ background: colors.bgSecondary, borderRadius: radius.md, padding: space.lg, marginBottom: space.lg, border: `1px solid ${colors.border}` }}>
           <p style={{ fontSize: typo.label, color: colors.textTertiary, margin: `0 0 ${space.sm} 0`, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observe the phenomenon</p>
-          <svg viewBox="0 0 300 140" style={{ width: '100%', height: '140px' }}>
+          <svg viewBox="0 0 300 140" style={{ width: '100%', height: '140px' }} preserveAspectRatio="xMidYMid meet">
             {/* Grid lines */}
             <line x1="0" y1="70" x2="300" y2="70" stroke={colors.border} strokeDasharray="4 4" opacity="0.3"/>
             {/* Wind arrows */}
@@ -1723,7 +1716,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             <h3 style={{ fontSize: typo.body, color: colors.accent, marginBottom: space.md, fontWeight: 700, textAlign: 'center' }}>
               Vortex Shedding
             </h3>
-            <svg width="100%" height="120" viewBox="0 0 200 120">
+            <svg width="100%" height="120" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
               {/* Wind arrows - speed depends on windVelocity */}
               {[0, 1, 2].map(i => {
                 const arrowLen = 10 + (windVelocity / 60) * 20;
@@ -1767,7 +1760,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             <h3 style={{ fontSize: typo.body, color: colors.primary, marginBottom: space.md, fontWeight: 700, textAlign: 'center' }}>
               Resonance Buildup
             </h3>
-            <svg width="100%" height="120" viewBox="0 0 200 120">
+            <svg width="100%" height="120" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
               {/* Growing oscillation */}
               <path
                 d="M20 60 Q40 30, 60 60 Q80 90, 100 60 Q120 20, 140 60 Q160 100, 180 60"
@@ -2819,7 +2812,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       overflow: 'hidden',
       background: colors.bgPrimary,
       color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: theme.fontFamily
     }}>
       {renderPhase()}
     </div>

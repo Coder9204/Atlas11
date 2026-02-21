@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Swing Pumping - Complete 10-Phase Game
 // The physics of how you pump a swing higher without being pushed
@@ -261,9 +263,8 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Swing simulation state
+  const { isMobile } = useViewport();
+// Swing simulation state
   const [swingAngle, setSwingAngle] = useState(0.3);
   const [swingVelocity, setSwingVelocity] = useState(0);
   const [swingLength, setSwingLength] = useState(1.5);
@@ -294,14 +295,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
   const pumpAmount = 0.2;
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Physics simulation
+// Physics simulation
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -473,7 +467,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
           style={{ background: colors.bgCard, borderRadius: '12px', maxHeight: '380px' }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="Swing Pumping visualization">
           <defs>
             <linearGradient id="swingSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c1929" />
@@ -1313,7 +1307,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <svg viewBox="0 0 400 200" width="100%" style={{ maxHeight: '200px' }}>
+              <svg viewBox="0 0 400 200" width="100%" style={{ maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
                 <rect width="400" height="200" fill="#0f172a" rx="8" />
                 <text x="200" y="30" textAnchor="middle" fill="#F59E0B" fontSize="14" fontWeight="bold">
                   Correct vs Wrong Timing

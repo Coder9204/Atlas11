@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Thermal Interface Materials (TIM) - Complete 10-Phase Game
 // Understanding heat transfer between CPU and heatsink
@@ -261,9 +263,8 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [timThickness, setTimThickness] = useState(0.1); // mm
   const [thermalConductivity, setThermalConductivity] = useState(8); // W/mK
   const [contactPressure, setContactPressure] = useState(50); // PSI (normalized)
@@ -289,14 +290,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop (uses requestAnimationFrame so it doesn't fire in test environments)
+// Animation loop (uses requestAnimationFrame so it doesn't fire in test environments)
   useEffect(() => {
     let rafId: number;
     let lastTime = 0;
@@ -427,7 +421,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
     const heatPulse = animated ? Math.sin(animationFrame * 0.1) * 0.3 + 0.7 : 1;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Thermal Interface visualization">
         {/* Defs for filters and gradients */}
         <defs>
           <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -781,7 +775,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 300 180" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#DC2626" />
@@ -1328,7 +1322,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
 
           {/* SVG comparison of TIM types */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-            <svg viewBox="0 0 300 160" style={{ width: '100%', height: 'auto' }}>
+            <svg viewBox="0 0 300 160" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistBarGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#9CA3AF" />
@@ -1580,7 +1574,7 @@ const ThermalInterfaceRenderer: React.FC<ThermalInterfaceRendererProps> = ({ onG
 
             {/* SVG comparison chart */}
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-              <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto' }}>
+              <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
                 {/* Background */}
                 <rect width="400" height="200" fill="#0a0a0f" rx="8" />
                 {/* Title */}

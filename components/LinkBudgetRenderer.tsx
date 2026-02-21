@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 197: LINK BUDGET CALCULATION
 // Physics: Link Budget = P_tx + G_tx - FSPL + G_rx - System Losses
@@ -284,9 +286,8 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
 
   // State management
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation debouncing
+  const { isMobile } = useViewport();
+// Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
@@ -316,14 +317,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation
+// Animation
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimPhase(p => (p + 1) % 360);
@@ -441,6 +435,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     });
     setTestScore(score);
     setTestSubmitted(true);
+    emitGameEvent('game_completed', { score: score, total: testQuestions.length });
     playSound(score >= 7 ? 'success' : 'error');
     emitGameEvent('completion', { score, total: 10 });
   };
@@ -651,7 +646,7 @@ const LinkBudgetRenderer: React.FC<LinkBudgetRendererProps> = ({ onGameEvent, ga
     const signalStrength = Math.max(0, Math.min(100, (marginValue + 30) * 2));
 
     return (
-      <svg viewBox="0 0 520 480" style={{ width: '100%', maxWidth: '600px', height: 'auto', transition: 'all 0.3s ease' }}>
+      <svg viewBox="0 0 520 480" style={{ width: '100%', maxWidth: '600px', height: 'auto', transition: 'all 0.3s ease' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Link Budget visualization">
         <defs>
           <linearGradient id="lnkbSpaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#020617" />

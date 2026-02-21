@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // BROWNIAN MOTION RENDERER - Complete 10-Phase Learning Game
 // Discover how random molecular collisions create observable motion
@@ -97,18 +99,9 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const isNavigating = useRef(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+const isNavigating = useRef(false);
+// Simulation state
   const [temperature, setTemperature] = useState(50);
   const [isAnimating, setIsAnimating] = useState(true);
   const [showPath, setShowPath] = useState(true);
@@ -693,7 +686,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '500px' }}
-        >
+         role="img" aria-label="Brownian Motion visualization">
           {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
             {/* Premium lab background gradient */}
@@ -1508,7 +1501,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
           {/* Review diagram SVG */}
           <div style={{ textAlign: 'center', margin: '16px', background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
-            <svg width="360" height="180" viewBox="0 0 360 180" style={{ maxWidth: '100%' }}>
+            <svg width="360" height="180" viewBox="0 0 360 180" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <radialGradient id="reviewParticle" cx="30%" cy="30%" r="70%">
                   <stop offset="0%" stopColor="#fca5a5" />
@@ -1789,7 +1782,7 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
 
           {/* Review diagram for temperature effect */}
           <div style={{ textAlign: 'center', margin: '16px', background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
-            <svg width="360" height="160" viewBox="0 0 360 160" style={{ maxWidth: '100%' }}>
+            <svg width="360" height="160" viewBox="0 0 360 160" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
               <rect width="360" height="160" fill="#0f172a" rx="8" />
               <text x="180" y="20" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">Temperature vs. Motion Intensity</text>
               {/* Cold side */}

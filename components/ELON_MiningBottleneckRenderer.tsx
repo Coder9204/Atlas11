@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON MINING BOTTLENECK - Complete 10-Phase Game (#16 of 36)
 // Mine development timeline — 15-20 year timelines create supply crunches
@@ -279,9 +281,8 @@ const ELON_MiningBottleneckRenderer: React.FC<ELON_MiningBottleneckRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [permittingSpeed, setPermittingSpeed] = useState(5); // years, 5 = slow, 1 = fast
   const [showCashFlow, setShowCashFlow] = useState(true);
 
@@ -304,14 +305,7 @@ const ELON_MiningBottleneckRenderer: React.FC<ELON_MiningBottleneckRendererProps
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate total timeline
+// Calculate total timeline
   const calculateTimeline = (permitYears: number, extraYears: number = 0) => {
     const exploration = 4; // midpoint
     const resourceEst = 1.5;
@@ -556,7 +550,7 @@ const ELON_MiningBottleneckRenderer: React.FC<ELON_MiningBottleneckRendererProps
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Mining Bottleneck visualization">
         <defs>
           <linearGradient id="ganttExploreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3B82F6" />

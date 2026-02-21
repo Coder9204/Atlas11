@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // TORQUE - Premium 10-Phase Educational Game
 // ============================================================================
@@ -286,9 +288,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [pushPosition, setPushPosition] = useState(0.8);
   const [hasFriction, setHasFriction] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
@@ -319,16 +320,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   const requiredTorque = hasFriction ? 30 : 15;
   const leverArm = Math.max(0.1, pushPosition);
   const requiredForce = requiredTorque / leverArm;
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Cleanup animation
+// Cleanup animation
   useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
@@ -573,7 +565,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
     return (
       <div>
-        <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} style={{ display: 'block', margin: '0 auto' }}>
+        <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Torque visualization">
           <defs>
             <linearGradient id="torqDoorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#d4a574" />
@@ -743,7 +735,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
     return (
       <div>
-        <svg width="100%" height={180} viewBox={`0 0 ${svgWidth} 180`} style={{ display: 'block', margin: '0 auto' }}>
+        <svg width="100%" height={180} viewBox={`0 0 ${svgWidth} 180`} style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="torqSeesawBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#a3765c" />
@@ -936,7 +928,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" viewBox="0 0 300 200" style={{ display: 'block', margin: '0 auto' }}>
+            <svg width="100%" viewBox="0 0 300 200" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <rect width="300" height="200" fill="#08050c" />
               {/* Wall */}
               <rect x="10" y="20" width="30" height="160" fill="#3f3f46" rx="2" />
@@ -1525,7 +1517,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 padding: '24px',
               }}>
                 {/* Interactive seesaw SVG */}
-                <svg width="100%" height={180} viewBox="0 0 360 180" style={{ display: 'block', margin: '0 auto' }}>
+                <svg width="100%" height={180} viewBox="0 0 360 180" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <linearGradient id="twistBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#a3765c" />
@@ -2289,6 +2281,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
+                  emitEvent('game_completed', { score: score, total: testQuestions.length });
                   playSound(score >= 7 ? 'complete' : 'failure');
                 }}
                 disabled={testAnswers.some(a => a === null)}

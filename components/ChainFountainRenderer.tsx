@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 112: CHAIN FOUNTAIN (MOULD EFFECT)
 // The mysterious rising chain pulled from a beaker
@@ -12,6 +14,7 @@ interface ChainFountainRendererProps {
   gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Color palette with proper contrast (brightness >= 180)
@@ -52,6 +55,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
   gamePhase,
   onPhaseComplete,
   onPredictionMade,
+  onGameEvent,
 }) => {
   // Phase order for navigation
   const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -90,15 +94,8 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography system
+  const { isMobile } = useViewport();
+// Typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -312,7 +309,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
           viewBox="0 0 400 360"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
-        >
+         role="img" aria-label="Chain Fountain visualization">
           <defs>
             {/* Premium chain link metallic gradient */}
             <linearGradient id="chainLinkMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1527,7 +1524,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }}>
+            <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               {/* Simple diagram showing the kick mechanism */}
               <rect width="300" height="200" fill={colors.bgDark} rx="8" />
 
@@ -1808,7 +1805,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             padding: '16px',
             borderRadius: '12px',
           }}>
-            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }}>
+            <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <rect width="300" height="180" fill={colors.bgDark} rx="8" />
 
               {/* Link rotation diagram */}
@@ -2019,6 +2016,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
     const handleNextQuestion = () => {
       if (isLastQuestion) {
         setTestSubmitted(true);
+        onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } });
       } else {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);

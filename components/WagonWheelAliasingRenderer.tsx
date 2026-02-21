@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🎬',
@@ -82,6 +85,7 @@ interface WagonWheelAliasingRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -110,6 +114,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Self-managing phase state
   const resolveInitialPhase = (): Phase => {
@@ -374,19 +379,12 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Derived values (memoized)
+  const { isMobile } = useViewport();
+// Derived values (memoized)
   const apparentSpeed = getApparentSpeed;
   const apparentAngle = useMemo(() => {
     return sampledAngles.length > 0 ? sampledAngles[sampledAngles.length - 1] : 0;
@@ -418,7 +416,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '700px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
-        >
+         role="img" aria-label="Wagon Wheel Aliasing visualization">
           <defs>
             <linearGradient id="wwaWheelRim" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
@@ -784,7 +782,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontFamily: theme.fontFamily,
                 boxShadow: isPlaying ? '0 4px 16px rgba(239, 68, 68, 0.4)' : '0 4px 16px rgba(16, 185, 129, 0.4)',
                 transition: 'all 0.2s ease',
               }}
@@ -802,7 +800,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontFamily: theme.fontFamily,
                 transition: 'all 0.2s ease',
               }}
             >
@@ -817,7 +815,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '700px', margin: '0 auto' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: theme.fontFamily }}>
           True Rotation Speed: <span style={{ color: colors.accent }}>{rotationSpeed.toFixed(1)}</span> rotations/sec
         </label>
         <input
@@ -835,7 +833,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '600', fontFamily: theme.fontFamily }}>
           Camera Frame Rate: <span style={{ color: colors.accent }}>{frameRate}</span> fps
         </label>
         <input
@@ -858,7 +856,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
       }}>
-        <div style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '4px', fontWeight: '600', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <div style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '4px', fontWeight: '600', fontFamily: theme.fontFamily }}>
           Apparent speed: <span style={{ color: colors.accent }}>{apparentSpeed.toFixed(2)}</span> rot/s
         </div>
         <div style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: '1.5' }}>
@@ -899,7 +897,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           color: currentPhaseIndex === 0 ? 'rgba(148,163,184,0.4)' : colors.textPrimary,
           cursor: currentPhaseIndex === 0 ? 'not-allowed' : 'pointer',
           fontSize: '14px',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: theme.fontFamily,
           transition: 'all 0.2s ease',
         }}
       >
@@ -955,7 +953,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           color: 'white',
           cursor: 'pointer',
           fontSize: '14px',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: theme.fontFamily,
           fontWeight: 'bold',
           transition: 'all 0.2s ease',
           boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
@@ -1027,7 +1025,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             fontWeight: 'bold',
             cursor: effectiveDisabled ? 'not-allowed' : 'pointer',
             fontSize: '16px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontFamily: theme.fontFamily,
             opacity: effectiveDisabled ? 0.5 : 1,
             transition: 'all 0.2s ease',
             boxShadow: canProceed && !effectiveDisabled ? '0 4px 16px rgba(245,158,11,0.3)' : 'none',
@@ -1047,7 +1045,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
     overflow: 'hidden',
     background: colors.bgPrimary,
     paddingTop: '56px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+    fontFamily: theme.fontFamily,
   };
 
   const scrollStyle: React.CSSProperties = {
@@ -1072,7 +1070,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         {renderProgressBar()}
         <div style={scrollStyle}>
           <div style={{ ...maxWidthStyle, padding: '24px 16px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '800', lineHeight: '1.3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: '800', lineHeight: '1.3', fontFamily: theme.fontFamily }}>
               🎬 The Backward Wheel
             </h1>
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '16px', lineHeight: '1.6', fontWeight: '400' }}>
@@ -1114,7 +1112,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   fontSize: '18px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontFamily: theme.fontFamily,
                   boxShadow: '0 4px 20px rgba(245, 158, 11, 0.4)',
                   transition: 'all 0.2s ease',
                 }}
@@ -1162,7 +1160,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontFamily: theme.fontFamily,
                     lineHeight: '1.5',
                     transition: 'all 0.15s ease',
                     boxShadow: prediction === p.id ? '0 2px 8px rgba(245,158,11,0.2)' : 'none',
@@ -1187,7 +1185,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         {renderProgressBar()}
         <div style={scrollStyle}>
           <div style={{ ...maxWidthStyle, padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '22px', fontWeight: '700', lineHeight: '1.4', fontFamily: theme.fontFamily }}>
               Explore Temporal Aliasing
             </h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
@@ -1416,7 +1414,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontFamily: theme.fontFamily,
                     lineHeight: '1.5',
                     transition: 'all 0.15s ease',
                   }}
@@ -1653,7 +1651,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                       color: colors.accent,
                       cursor: 'pointer',
                       fontSize: '13px',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      fontFamily: theme.fontFamily,
                       transition: 'all 0.15s ease',
                     }}
                   >
@@ -1783,7 +1781,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               style={{
                 padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`,
                 background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '14px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontFamily: theme.fontFamily,
                 fontWeight: 'bold', transition: 'all 0.2s ease',
               }}
             >
@@ -1796,7 +1794,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 background: testScore >= 8 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'rgba(255,255,255,0.1)',
                 color: testScore >= 8 ? 'white' : colors.textMuted,
                 cursor: testScore >= 8 ? 'pointer' : 'not-allowed',
-                fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontSize: '14px', fontFamily: theme.fontFamily,
                 fontWeight: 'bold', transition: 'all 0.2s ease',
               }}
             >
@@ -1848,7 +1846,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                     border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.15)',
                     background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30,41,59,0.5)',
                     color: colors.textPrimary, fontSize: '14px', lineHeight: '1.5',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontFamily: theme.fontFamily,
                     transition: 'all 0.15s ease',
                     boxShadow: testAnswers[currentTestQuestion] === oIndex ? '0 2px 8px rgba(245,158,11,0.2)' : 'none',
                   }}>
@@ -1865,7 +1863,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   padding: '10px 24px', borderRadius: '8px', border: 'none',
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   color: 'white', cursor: 'pointer', fontSize: '14px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontFamily: theme.fontFamily,
                   fontWeight: 'bold', transition: 'all 0.2s ease',
                   boxShadow: '0 2px 8px rgba(16,185,129,0.3)',
                 }}>
@@ -1907,7 +1905,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                     padding: '10px 24px', borderRadius: '8px', border: 'none',
                     background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                     color: 'white', cursor: 'pointer', fontSize: '14px',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontFamily: theme.fontFamily,
                     fontWeight: 'bold', transition: 'all 0.2s ease',
                   }}>
                   {currentTestQuestion < testQuestions.length - 1 ? 'Next Question →' : 'Submit Test ✓'}
@@ -1923,7 +1921,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                 border: `1px solid ${colors.textMuted}`, background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                fontSize: '14px', fontFamily: theme.fontFamily,
                 fontWeight: '600', transition: 'all 0.2s ease',
               }}>
               ← Back
@@ -1934,7 +1932,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                   padding: '10px 20px', borderRadius: '8px', border: 'none',
                   background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                   color: 'white', cursor: 'pointer', fontSize: '14px',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontFamily: theme.fontFamily,
                   fontWeight: 'bold', transition: 'all 0.2s ease',
                   boxShadow: '0 2px 8px rgba(245,158,11,0.3)',
                 }}>
@@ -1949,7 +1947,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
                     ? 'rgba(255,255,255,0.1)'
                     : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  fontSize: '14px', fontFamily: theme.fontFamily,
                   fontWeight: 'bold', transition: 'all 0.2s ease',
                   opacity: testAnswers.includes(null) ? 0.5 : 1,
                 }}>
@@ -1970,7 +1968,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
               padding: '12px 32px', minHeight: '44px', borderRadius: '8px', border: 'none',
               background: 'rgba(255,255,255,0.1)', color: 'rgba(148,163,184,0.7)',
               fontWeight: 'bold', cursor: 'not-allowed', fontSize: '16px',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontFamily: theme.fontFamily,
               opacity: 0.4,
             }}
           >
@@ -1990,7 +1988,7 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
         <div style={scrollStyle}>
           <div style={{ ...maxWidthStyle, padding: '24px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px', fontWeight: '800', lineHeight: '1.3', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: '28px', fontWeight: '800', lineHeight: '1.3', fontFamily: theme.fontFamily }}>
               Mastery Achieved!
             </h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: '16px', lineHeight: '1.6', fontWeight: '400' }}>

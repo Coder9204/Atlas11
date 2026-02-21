@@ -3,6 +3,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────
@@ -37,6 +39,7 @@ interface CableSizingRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase labels for progress bar
@@ -269,15 +272,8 @@ export default function CableSizingRenderer({
   const lastClickRef = useRef(0);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Wire gauge to resistance (ohms per 1000 feet)
+  const { isMobile } = useViewport();
+// Wire gauge to resistance (ohms per 1000 feet)
   const gaugeResistance: Record<number, number> = {
     14: 2.525,
     12: 1.588,
@@ -364,6 +360,7 @@ export default function CableSizingRenderer({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: 10 } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
@@ -529,7 +526,7 @@ export default function CableSizingRenderer({
     const gridYs = [0, 0.25, 0.5, 0.75, 1.0];
 
     return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Cable Sizing visualization">
         <defs>
           <linearGradient id="cableCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
@@ -718,7 +715,7 @@ export default function CableSizingRenderer({
     const gridYs = [0, 0.25, 0.5, 0.75, 1.0];
 
     return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twistBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -844,7 +841,7 @@ export default function CableSizingRenderer({
     const mark200y = padT + cH - 1.0 * cH;
 
     return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="predBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
@@ -1263,7 +1260,7 @@ export default function CableSizingRenderer({
       const bar3x = padL + gap + 2 * (barW + gap);
 
       return (
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="tpBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />

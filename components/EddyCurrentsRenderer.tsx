@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -69,7 +72,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -93,9 +96,8 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -260,14 +262,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
   };
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -761,7 +756,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
         {/* Static prediction graphic */}
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <svg viewBox="0 0 200 180" style={{ width: '100%', maxWidth: '280px', height: 'auto' }}>
+          <svg viewBox="0 0 200 180" style={{ width: '100%', maxWidth: '280px', height: 'auto' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Eddy Currents visualization">
             {/* Background */}
             <rect width="200" height="180" fill="#0f172a" />
 
@@ -864,7 +859,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: 350 }}>
+            <svg viewBox="0 0 400 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium lab background gradient */}
                 <linearGradient id="eddyLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1503,7 +1498,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
 
         {/* Static prediction graphic */}
         <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 300 200" style={{ width: '100%', height: 'auto' }} preserveAspectRatio="xMidYMid meet">
             <rect width="300" height="200" fill="#0f172a" />
             {/* Grid lines */}
             <line x1="0" y1="100" x2="300" y2="100" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity="0.4" />
@@ -1616,7 +1611,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 280 250" style={{ width: '100%', maxHeight: 280 }}>
+            <svg viewBox="0 0 280 250" style={{ width: '100%', maxHeight: 280 }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Pendulum lab background */}
                 <linearGradient id="eddyPendulumBg" x1="0%" y1="0%" x2="100%" y2="100%">

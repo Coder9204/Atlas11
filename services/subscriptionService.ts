@@ -4,11 +4,13 @@
 
 import { getFunctionsInstance } from './firebase';
 import { httpsCallable } from 'firebase/functions';
+import { trackCheckoutStarted } from './AnalyticsService';
 
 /**
  * Create a Stripe Checkout session and redirect to it.
  */
 export async function createCheckout(priceId: string): Promise<void> {
+  trackCheckoutStarted(priceId);
   const functions = getFunctionsInstance();
   if (!functions) {
     throw new Error('Firebase Functions not available.');

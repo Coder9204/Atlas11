@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON INTERCONNECT QUEUE - Complete 10-Phase Game (#5 of 36)
 // The interconnection queue bottleneck — why 2,600GW of projects wait
@@ -262,9 +264,8 @@ const ELON_InterconnectQueueRenderer: React.FC<ELON_InterconnectQueueRendererPro
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [approvalRate, setApprovalRate] = useState(24); // months average (2 years)
   const [queueInflow] = useState(300); // GW per year entering queue
   const [withdrawalRate] = useState(80); // percent that withdraw
@@ -287,14 +288,7 @@ const ELON_InterconnectQueueRenderer: React.FC<ELON_InterconnectQueueRendererPro
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate queue throughput
+// Calculate queue throughput
   const calculateThroughput = (approvalMonths: number) => {
     // At 42-month average, ~25GW/yr gets through
     // At 6-month fast-track, ~175GW/yr could get through
@@ -500,7 +494,7 @@ const ELON_InterconnectQueueRenderer: React.FC<ELON_InterconnectQueueRendererPro
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Interconnect Queue visualization">
         <defs>
           {/* Solar gradient */}
           <linearGradient id="solarGrad" x1="0%" y1="0%" x2="100%" y2="0%">

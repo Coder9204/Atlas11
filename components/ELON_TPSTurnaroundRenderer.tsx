@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ELON TPS TURNAROUND - Complete 10-Phase Game (#29 of 36)
 // Reusability turnaround: inspection, refurbishment, and testing between flights
@@ -302,9 +304,8 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [inspectionDepth, setInspectionDepth] = useState(40);
   const [anomalyDetected, setAnomalyDetected] = useState(false);
 
@@ -322,14 +323,7 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate turnaround based on inspection depth (0-100)
+// Calculate turnaround based on inspection depth (0-100)
   const getScaledTasks = useCallback(() => {
     const depthFactor = 0.5 + (inspectionDepth / 100) * 1.5;
     return baseTasks.map(task => ({
@@ -550,7 +544,7 @@ const ELON_TPSTurnaroundRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ T P S Turnaround visualization">
         <defs>
           {/* Gradient 1: Recovery blue */}
           <linearGradient id="ganttRecovery" x1="0%" y1="0%" x2="100%" y2="0%">

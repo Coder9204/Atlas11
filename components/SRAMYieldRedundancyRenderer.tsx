@@ -4,6 +4,9 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface GameEvent {
   type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';
   phase?: string;
@@ -151,8 +154,8 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   };
 
   const [phase, setPhase] = useState<SRAMPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationRef = useRef<boolean>(false);
+  const { isMobile } = useViewport();
+const navigationRef = useRef<boolean>(false);
 
   // Sync with external gamePhase prop changes
   useEffect(() => {
@@ -162,14 +165,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -488,6 +484,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -592,7 +589,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           viewBox={`0 0 ${width} ${height - 50}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="S R A M Yield Redundancy visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="sramyLabBg" x1="0%" y1="0%" x2="100%" y2="100%">

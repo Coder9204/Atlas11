@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─── GameEvent Interface ───────────────────────────────────────────────────────
 export interface GameEvent {
   eventType:
@@ -393,9 +395,8 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation values
+  const { isMobile } = useViewport();
+// Simulation values
   const [perStepErrorPct, setPerStepErrorPct] = useState(5); // integer 1-1000
   const [numSteps, setNumSteps] = useState(10);
   const perStepError = 1 + perStepErrorPct / 100;
@@ -447,14 +448,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
   };
 
   // ── Mobile Detection ───────────────────────────────────────────────────────
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // ── Sync external gamePhase ────────────────────────────────────────────────
+// ── Sync external gamePhase ────────────────────────────────────────────────
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -730,7 +724,7 @@ const ELON_PrecisionBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase 
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ width: '100%', maxWidth: `${width}px`, height: 'auto' }}
-      >
+       role="img" aria-label="E L O N_ Precision Budget visualization">
         <defs>
           <linearGradient id="errorGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={colors.success} />

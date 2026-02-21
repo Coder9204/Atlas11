@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Spectral Mismatch - Complete 10-Phase Game
 // Why two equally bright lights can produce very different solar panel power
@@ -261,9 +263,8 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [lightSource, setLightSource] = useState<'incandescent' | 'led' | 'sunlight'>('sunlight');
   const [hasUVFilter, setHasUVFilter] = useState(false);
   const [hasIRFilter, setHasIRFilter] = useState(false);
@@ -283,14 +284,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Light source spectra (simplified model)
+// Light source spectra (simplified model)
   const lightSources = {
     incandescent: {
       name: 'Incandescent (2700K)',
@@ -507,7 +501,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const bgX = graphLeft + (1127 - 300) * graphWidth / 900;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Spectral Mismatch visualization">
         <defs>
           <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#7c3aed" />
@@ -909,7 +903,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
     const height = 200;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="spectrumGradPredict" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#7c3aed" />
@@ -1302,7 +1296,7 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({ onG
 
             {/* Static filter visualization SVG - no sliders needed */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width={isMobile ? 340 : 480} height="180" viewBox={`0 0 ${isMobile ? 340 : 480} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <svg width={isMobile ? 340 : 480} height="180" viewBox={`0 0 ${isMobile ? 340 : 480} 180`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="filterSpecGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#7c3aed" />

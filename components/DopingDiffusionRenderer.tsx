@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Phase type for internal state management
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -8,6 +10,7 @@ interface DopingDiffusionRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -47,17 +50,11 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -310,6 +307,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -330,7 +328,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '520px' }}
-        >
+         role="img" aria-label="Doping Diffusion visualization">
           <defs>
             {/* Premium lab background gradient */}
             <linearGradient id="dopeLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1367,7 +1365,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="reviewDiffGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.accent} />
@@ -1555,7 +1553,7 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ margin: '16px auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistRevGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor={colors.warning} />

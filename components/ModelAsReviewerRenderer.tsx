@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { SvgDefs, Legend, Annotation } from '../lib/svg';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Model as Reviewer - Complete 10-Phase Game
 // How independent critique catches bugs that generation misses
@@ -268,9 +271,8 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - sliders
+  const { isMobile } = useViewport();
+// Simulation state - sliders
   const [reviewStrength, setReviewStrength] = useState(50);
   const [crossCheckStrength, setCrossCheckStrength] = useState(30);
 
@@ -297,14 +299,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sample code with hidden bugs
+// Sample code with hidden bugs
   const codeSample = {
     bugs: [
       { line: 3, type: 'units', description: 'Missing 1/2 factor: KE = (1/2)mv\u00B2' },
@@ -334,24 +329,10 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
 
   // Premium design colors
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
-    accent: '#F59E0B',
-    accentGlow: 'rgba(245, 158, 11, 0.3)',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
-    border: '#2a2a3a',
-    review: {
-      pass: '#22c55e',
-      fail: '#ef4444',
-      warning: '#f59e0b',
-      info: '#3b82f6'
-    }
+    ...theme.colors,
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgDark: 'rgba(15, 23, 42, 0.95)',
+    code: '#3b82f6',
   };
 
   const typo = {
@@ -505,7 +486,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
             opacity: nextDisabled ? 0.4 : 1,
             fontWeight: 700,
             fontSize: '15px',
-            boxShadow: nextDisabled ? 'none' : `0 4px 20px ${colors.accentGlow}`
+            boxShadow: nextDisabled ? 'none' : `0 4px 20px ${withOpacity(colors.accent, 0.3)}`
           }}
         >
           {nextLabel}
@@ -524,7 +505,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
     fontSize: isMobile ? '16px' : '18px',
     fontWeight: 700,
     cursor: 'pointer',
-    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    boxShadow: `0 4px 20px ${withOpacity(colors.accent, 0.3)}`,
     transition: 'all 0.2s ease'
   };
 
@@ -582,22 +563,49 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '750px' }}
-      >
+       role="img" aria-label="Model As Reviewer visualization">
         <defs>
           <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#0f172a" />
             <stop offset="100%" stopColor="#1e293b" />
           </linearGradient>
-          <filter id="glowMarker">
+          <filter id="glowMarker" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="3" result="blur" />
+            <feFlood floodColor="#06b6d4" floodOpacity="0.4" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="colorBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="bugGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feFlood floodColor="#ef4444" floodOpacity="0.5" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+            <feMerge>
+              <feMergeNode in="colorBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="codePanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+          <linearGradient id="checkerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(30,58,95,0.6)" />
+            <stop offset="100%" stopColor="rgba(14,116,144,0.2)" />
+          </linearGradient>
+          <linearGradient id="successBar" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#22c55e" />
+          </linearGradient>
+          <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
+          </pattern>
         </defs>
 
         <rect width="100%" height="100%" fill="url(#reviewBg)" rx="12" />
+        <rect width="100%" height="100%" fill="url(#gridDots)" rx="12" />
 
         {/* Title */}
         <text x={width / 2} y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="600">
@@ -610,7 +618,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         <line x1="20" y1="400" x2="680" y2="400" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" opacity="0.4" />
 
         {/* Code panel background */}
-        <rect x={codeX} y={codeY} width={codeW} height={codeH} rx="8" fill="#0f172a" stroke="#334155" />
+        <rect x={codeX} y={codeY} width={codeW} height={codeH} rx="8" fill="url(#codePanelBg)" stroke="#334155" />
         <rect x={codeX} y={codeY} width={codeW} height="24" rx="8" fill="#1e293b" />
         <circle cx={codeX + 12} cy={codeY + 12} r="4" fill="#ef4444" />
         <circle cx={codeX + 26} cy={codeY + 12} r="4" fill="#f59e0b" />
@@ -673,7 +681,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         </g>
 
         {/* Checklist panel - absolute coords */}
-        <rect x={checkerX} y={checkerY} width="180" height="220" rx="8" fill="rgba(30,58,95,0.5)" stroke="#0e7490" />
+        <rect x={checkerX} y={checkerY} width="180" height="220" rx="8" fill="url(#checkerBg)" stroke="#0e7490" />
         <text x={checkerX + 90} y={checkerY + 20} textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">
           Review Checklist
         </text>
@@ -1093,13 +1101,13 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         </div>
 
         <div style={{
-          background: `${colors.review.info}22`,
-          border: `1px solid ${colors.review.info}`,
+          background: `${colors.info}22`,
+          border: `1px solid ${colors.info}`,
           borderRadius: '12px',
           padding: '20px',
           marginBottom: '24px'
         }}>
-          <h3 style={{ ...typo.h3, color: colors.review.info, marginBottom: '12px' }}>
+          <h3 style={{ ...typo.h3, color: colors.info, marginBottom: '12px' }}>
             The Bugs Found
           </h3>
           <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
@@ -1305,7 +1313,7 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
           {[
             { level: 1, title: 'Same-Model Review', desc: 'Review with checklist (units, conservation, edge cases)', color: colors.success },
-            { level: 2, title: 'Cross-Model Review', desc: 'Different LLM reviews (Claude + GPT, for example)', color: colors.review.info },
+            { level: 2, title: 'Cross-Model Review', desc: 'Different LLM reviews (Claude + GPT, for example)', color: colors.info },
             { level: 3, title: 'Static Analysis', desc: 'Linters, type checkers, dimensional analysis tools', color: colors.warning },
             { level: 4, title: 'Property Testing', desc: 'Automated verification of invariants', color: '#8b5cf6' }
           ].map(item => (
@@ -1755,8 +1763,8 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
         {/* Explanation after confirm */}
         {confirmedAnswer && (
           <div style={{
-            background: `${colors.review.info}11`,
-            border: `1px solid ${colors.review.info}33`,
+            background: `${colors.info}11`,
+            border: `1px solid ${colors.info}33`,
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '16px'

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for Moire patterns
 const realWorldApps = [
   {
@@ -83,6 +85,7 @@ interface MoirePatternsRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const PHASE_ORDER = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'] as const;
@@ -112,6 +115,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state for self-managing mode
   const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
@@ -144,18 +148,8 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -353,6 +347,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -534,7 +529,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
             border: '1px solid rgba(139, 92, 246, 0.3)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(139, 92, 246, 0.1)'
           }}
-        >
+         role="img" aria-label="Moire Patterns visualization">
           {/* Comprehensive Premium Defs Section */}
           <defs>
             {/* === LINEAR GRADIENTS WITH 4-6 COLOR STOPS FOR DEPTH === */}
@@ -1286,7 +1281,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
           {/* SVG diagram for review */}
           <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
@@ -1533,7 +1528,7 @@ const MoirePatternsRenderer: React.FC<MoirePatternsRendererProps> = ({
 
           {/* SVG diagram for twist review */}
           <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
               <rect x="10" y="10" width="180" height="100" rx="8" fill="rgba(30,41,59,0.8)" stroke="#f59e0b" strokeWidth="2" />
               <text x="100" y="35" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">Rotational Moire</text>
               <text x="100" y="55" textAnchor="middle" fill="#e2e8f0" fontSize="11">Angle differences</text>

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Pascal's Law - Complete 10-Phase Game
 // Force multiplication through pressure transmission in hydraulic systems
@@ -263,9 +265,8 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Hydraulic system
+  const { isMobile } = useViewport();
+// Simulation state - Hydraulic system
   const [inputForce, setInputForce] = useState(100); // Newtons
   const [smallPistonArea, setSmallPistonArea] = useState(2); // cm^2
   const [largePistonArea, setLargePistonArea] = useState(20); // cm^2
@@ -296,14 +297,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
   const outputDistance = inputDistance * (smallPistonArea / largePistonArea);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isAnimating) {
@@ -522,7 +516,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     const largePistonY = 80 - progress * (40 / ratio);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Pascal Law visualization">
         <defs>
           <linearGradient id="fluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
@@ -691,7 +685,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
     const brakeForce = brakePedalForce > 0 ? (brakePedalForce * caliperArea / masterArea) : 0;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="brakeFluidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -895,7 +889,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }}>
+            <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', maxHeight: '200px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictFluid" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
@@ -1393,7 +1387,7 @@ const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 420 220" style={{ width: '100%', height: 'auto', maxHeight: '220px' }}>
+            <svg viewBox="0 0 420 220" style={{ width: '100%', height: 'auto', maxHeight: '220px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistFluid" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />

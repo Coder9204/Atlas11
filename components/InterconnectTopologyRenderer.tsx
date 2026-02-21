@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -10,6 +12,7 @@ interface InterconnectTopologyRendererProps {
   gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -276,18 +279,10 @@ const testQuestions = [
 
 const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> = ({
   gamePhase,
+  onGameEvent,
 }) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800 as const, lineHeight: 1.2 },
     h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700 as const, lineHeight: 1.3 },
@@ -470,7 +465,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         height={height}
         viewBox={`0 0 ${width} ${height}`}
         style={{ borderRadius: '16px' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interconnect Topology visualization">
         <defs>
           <linearGradient id="itopLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#030712" />
@@ -969,7 +964,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         style={{ borderRadius: '12px' }}
         role="img"
         aria-label="8 GPUs needing to share gradient data"
-      >
+       preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="staticDieGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
@@ -1408,7 +1403,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ marginBottom: '16px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ marginBottom: '16px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor={colors.success} />
@@ -2115,6 +2110,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
+                  onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
                   playSound(score >= 7 ? 'complete' : 'failure');
                 }}
                 disabled={testAnswers.some(a => a === null)}

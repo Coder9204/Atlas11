@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -204,15 +206,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
 
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -730,7 +725,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Ion Implantation visualization">
           <defs>
             <linearGradient id="siliconGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#374151" />
@@ -1305,7 +1300,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // Review phase SVG diagram
   const renderReviewDiagram = () => (
-    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ margin: '0 auto', display: 'block' }}>
+    <svg width="100%" height="200" viewBox="0 0 400 200" style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="reviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor={colors.dopant} />
@@ -1515,7 +1510,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
   // Twist review SVG diagram
   const renderTwistReviewDiagram = () => (
-    <svg width="100%" height="180" viewBox="0 0 400 180" style={{ margin: '0 auto', display: 'block' }}>
+    <svg width="100%" height="180" viewBox="0 0 400 180" style={{ margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="channelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor={colors.warning} />

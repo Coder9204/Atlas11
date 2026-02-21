@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '📺',
@@ -99,6 +102,7 @@ interface PolarizationRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -125,6 +129,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Phase state (self-managing)
   const [phase, setPhase] = useState<Phase>(() => {
@@ -169,17 +174,8 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -363,6 +359,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -497,7 +494,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '550px', transition: 'background 0.3s' }}
-        >
+         role="img" aria-label="Polarization visualization">
           <defs>
             {/* === PREMIUM GRADIENT DEFINITIONS === */}
 
@@ -949,7 +946,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontWeight: 400 }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: theme.fontFamily, fontWeight: 400 }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
@@ -1491,7 +1488,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
 
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: theme.fontFamily }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1536,11 +1533,12 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
         });
         setTestScore(score);
         setTestSubmitted(true);
+        onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
       }
     };
 
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: theme.fontFamily }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
           <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1649,7 +1647,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
 
   // Default: show hook
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, fontFamily: theme.fontFamily }}>
       <p style={{ color: colors.textPrimary, padding: '24px' }}>Loading...</p>
     </div>
   );

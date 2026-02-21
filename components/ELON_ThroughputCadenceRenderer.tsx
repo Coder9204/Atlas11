@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // THROUGHPUT CADENCE - Complete 10-Phase Game
 // Manufacturing throughput — cycle time, yield, capacity utilization determine
@@ -262,9 +264,8 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state — factory flow
+  const { isMobile } = useViewport();
+// Simulation state — factory flow
   const [bottleneckSpeed, setBottleneckSpeed] = useState(50);
   const [stationSpeeds] = useState([100, 100, 50, 100, 100]); // Station 3 is bottleneck
   const [simTime, setSimTime] = useState(0);
@@ -290,14 +291,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Factory simulation engine
+// Factory simulation engine
   useEffect(() => {
     if (phase === 'play') {
       const effectiveSpeeds = stationSpeeds.map((s, i) => i === 2 ? bottleneckSpeed : s);
@@ -527,7 +521,7 @@ const ELON_ThroughputCadenceRenderer: React.FC<ELON_ThroughputCadenceRendererPro
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="E L O N_ Throughput Cadence visualization">
         <defs>
           {/* Station gradients */}
           <linearGradient id="stationNormal" x1="0%" y1="0%" x2="0%" y2="100%">

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Lift Force - Complete 10-Phase Game
 // Understanding how wings generate lift through pressure differences
@@ -261,9 +263,8 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Lift simulation state
+  const { isMobile } = useViewport();
+// Lift simulation state
   const [airspeed, setAirspeed] = useState(150); // km/h
   const [angleOfAttack, setAngleOfAttack] = useState(5); // degrees
   const [wingArea, setWingArea] = useState(20); // m^2
@@ -290,14 +291,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(prev => (prev + 1) % 100);
@@ -473,7 +467,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, game
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Lift Force visualization">
         <defs>
           <linearGradient id="airfoilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#94a3b8" />

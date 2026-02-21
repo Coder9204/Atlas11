@@ -14,6 +14,7 @@ import {
 } from '../services/firebase';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { useFreeTimer, clearFreeTimer } from '../hooks/useFreeTimer';
+import { trackAuthModalShown, trackAuthModalDismissed, trackSignupCompleted } from '../services/AnalyticsService';
 
 export interface Subscription {
   tier: 'free' | 'student' | 'pro' | 'family' | 'lifetime';
@@ -126,12 +127,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isExpired, user, authModalState.open]);
 
   const showAuthModal = useCallback((reason = 'manual') => {
+    trackAuthModalShown(reason);
     setAuthModalState({ open: true, reason });
   }, []);
 
   const hideAuthModal = useCallback(() => {
+    trackAuthModalDismissed(authModalState.reason);
     setAuthModalState({ open: false, reason: '' });
-  }, []);
+  }, [authModalState.reason]);
 
   const handleSignInWithEmail = useCallback(async (email: string, password: string) => {
     await firebaseSignInWithEmail(email, password);
@@ -139,21 +142,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [hideAuthModal]);
 
   const handleSignUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
+    const wasAnonymous = !!user?.isAnonymous;
     if (user?.isAnonymous) {
       await linkAnonymousToEmail(email, password, name);
     } else {
       await firebaseSignUpWithEmail(email, password, name);
     }
+    trackSignupCompleted('email', wasAnonymous);
     clearFreeTimer();
     hideAuthModal();
   }, [user, hideAuthModal]);
 
   const handleSignInWithGoogle = useCallback(async () => {
+    const wasAnonymous = !!user?.isAnonymous;
     if (user?.isAnonymous) {
       await linkAnonymousToGoogle();
     } else {
       await firebaseSignInWithGoogle();
     }
+    trackSignupCompleted('google', wasAnonymous);
     clearFreeTimer();
     hideAuthModal();
   }, [user, hideAuthModal]);

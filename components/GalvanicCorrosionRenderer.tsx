@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Galvanic Corrosion - Complete 10-Phase Game
 // Electrochemical corrosion between dissimilar metals in an electrolyte
@@ -261,9 +263,8 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [anodeMetal, setAnodeMetal] = useState<'zinc' | 'aluminum' | 'magnesium'>('zinc');
   const [cathodeMetal, setCathodeMetal] = useState<'copper' | 'steel' | 'gold'>('copper');
   const [electrolyteStrength, setElectrolyteStrength] = useState(50);
@@ -291,14 +292,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Metal potentials for corrosion calculation
+// Metal potentials for corrosion calculation
   const metalPotentials: Record<string, number> = {
     magnesium: -2.37,
     zinc: -0.76,
@@ -570,7 +564,7 @@ const GalvanicCorrosionRenderer: React.FC<GalvanicCorrosionRendererProps> = ({ o
     const markerPy = Math.max(plotY0, plotY0 + plotH - (markerRate / 0.65) * plotH);
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: width, background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Galvanic Corrosion visualization">
         <defs>
           <linearGradient id="electrolyteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor={colors.electrolyte} stopOpacity="0.1" />

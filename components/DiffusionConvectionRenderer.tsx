@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // DIFFUSION VS CONVECTION RENDERER - Premium 10-Phase Learning Experience
 // ============================================================================
@@ -75,7 +77,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -118,9 +120,8 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -369,14 +370,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   ];
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Typography responsive system
+// Typography responsive system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -903,7 +897,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
         {/* Static visualization for predict phase */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }}>
+          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Diffusion Convection visualization">
             <defs>
               <linearGradient id="predictCold" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
@@ -1044,7 +1038,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Premium beaker glass gradient */}
                 <linearGradient id="diffBeakerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1557,7 +1551,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
         {/* Static visualization for twist predict phase */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: premiumDesign.spacing.lg }}>
-          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }}>
+          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }} preserveAspectRatio="xMidYMid meet">
             {/* Bottom heat container */}
             <rect x="20" y="30" width="120" height="100" rx="4" fill="rgba(30,41,59,0.6)" stroke="#64748b" strokeWidth="2" />
             <rect x="20" y="115" width="120" height="15" rx="2" fill="#ef4444" opacity="0.8" />
@@ -1666,7 +1660,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
-            >
+             preserveAspectRatio="xMidYMid meet">
               <defs>
                 {/* Container glass gradient */}
                 <linearGradient id="diffConvContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">

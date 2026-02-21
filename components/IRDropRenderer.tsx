@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // IR Drop (Voltage Drop) - Complete 10-Phase Game
 // Why power distribution design matters for chip reliability
@@ -276,9 +278,8 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [currentDraw, setCurrentDraw] = useState(50); // mA per cell
   const [metalThickness, setMetalThickness] = useState(2); // um
   const [gridDensity, setGridDensity] = useState(5); // stripes per 100um
@@ -300,14 +301,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -465,7 +459,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
     const markerY = padding + gridH / 2;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="I R Drop visualization">
         <defs>
           <filter id="irdrop-glow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -674,7 +668,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}
-        style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }}>
+        style={{ background: colors.bgCard, borderRadius: '12px', display: 'block' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="temp-glow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -998,7 +992,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
             {/* SVG diagram */}
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
-              <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }}>
+              <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="pred-glow">
                     <feGaussianBlur stdDeviation="2" result="blur" />
@@ -1346,7 +1340,7 @@ const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase 
 
             {/* Static preview graphic */}
             <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
-              <svg width="320" height="160" viewBox="0 0 320 160">
+              <svg width="320" height="160" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <filter id="tp-glow">
                     <feGaussianBlur stdDeviation="2" result="blur" />

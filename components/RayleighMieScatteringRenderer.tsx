@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // RAYLEIGH VS MIE SCATTERING RENDERER - PREMIUM PHYSICS GAME
 // Why is the sky blue but clouds white?
@@ -148,7 +150,7 @@ const colors = {
 };
 
 const typography = {
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+  fontFamily: theme.fontFamily,
   hero: { fontSize: 40, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 },
   h1: { fontSize: 28, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 },
   h2: { fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 },
@@ -370,15 +372,8 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
   const rayIdRef = useRef(0);
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -763,7 +758,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
             background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)',
             borderRadius: radius.md,
           }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="Rayleigh Mie Scattering visualization">
           {/* ============== COMPREHENSIVE DEFS SECTION ============== */}
           <defs>
             {/* === LIGHT SOURCE GRADIENTS === */}
@@ -1402,7 +1397,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Static Preview SVG */}
-            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }}>
+            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="predictBeam" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
@@ -1960,7 +1955,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         }}>
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
             {/* Static Sunset Path SVG */}
-            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }}>
+            <svg viewBox="0 0 300 200" style={{ width: '100%', height: 200, marginBottom: spacing.xl, background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)', borderRadius: radius.md }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistBeam" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
@@ -2831,7 +2826,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
                 testIndex < testQuestions.length - 1 ? (
                   <Button onClick={() => setTestIndex(testIndex + 1)}>Next Question →</Button>
                 ) : (
-                  <Button onClick={() => setTestSubmitted(true)} variant="success">See Results →</Button>
+                  <Button onClick={() => { setTestSubmitted(true); emitEvent('game_completed', { score: testScore, total: testQuestions.length }); }} variant="success">See Results →</Button>
                 )
               )}
             </div>

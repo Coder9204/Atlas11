@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // =============================================================================
 // REFLECTION RENDERER - Complete 10-Phase Educational Game
 // Understanding how light bounces off surfaces
@@ -277,9 +279,8 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
 
   // State management
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation debouncing
+  const { isMobile } = useViewport();
+// Navigation debouncing
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
@@ -333,14 +334,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
   }, [gamePhase]);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -460,6 +454,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    emitGameEvent('game_completed', { score: score, total: testQuestions.length });
     playSound(score >= 7 ? 'complete' : 'failure');
     emitGameEvent('completion', { score, total: 10 });
   };
@@ -602,7 +597,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
       background: colors.bgPrimary,
       color: colors.textPrimary,
       fontWeight: 400,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontFamily: theme.fontFamily,
       height: '100dvh',
       overflow: 'hidden',
     }}>
@@ -644,7 +639,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
     };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Reflection visualization">
         <defs>
           <linearGradient id="mirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#88c0d0" />
@@ -811,7 +806,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
     const rayEnd = { x: 60, y: hit2.y };
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="cornerMirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#88c0d0" />
@@ -1086,7 +1081,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictMirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#88c0d0" />
@@ -1358,7 +1353,7 @@ const ReflectionRenderer: React.FC<ReflectionRendererProps> = ({
             </p>
           </div>
 
-          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistMirrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#88c0d0" />

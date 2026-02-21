@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { flushSync } from 'react-dom';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // WIRELESS CHARGING ALIGNMENT GAME
 // Core Concept: Inductive coupling depends on coil overlap and distance
@@ -133,9 +135,8 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const [phase, setPhase] = useState<Phase>((gamePhase as Phase) || 'hook');
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Handle gamePhase prop changes (for testing)
+  const { isMobile } = useViewport();
+// Handle gamePhase prop changes (for testing)
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -234,16 +235,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
   const [showExplanation, setShowExplanation] = useState(false);
 
   const isNavigating = useRef(false);
-
-  // Responsive check
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -686,7 +678,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
         height="100%"
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         style={{ maxHeight: isMobile ? '320px' : '400px' }}
-      >
+       preserveAspectRatio="xMidYMid meet" role="img" aria-label="Wireless Charging visualization">
         {/* === DEFINITIONS === */}
         <defs>
           {/* Charging pad surface gradient (premium matte finish) */}
@@ -2487,7 +2479,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
     const ApplicationDiagram = () => {
       const diagrams: Record<number, JSX.Element> = {
         0: ( // EV Charging
-          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }}>
+          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
             {/* Ground/road */}
             <rect x="0" y="140" width="300" height="40" fill={colors.bgElevated} />
 
@@ -2519,7 +2511,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           </svg>
         ),
         1: ( // Medical
-          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }}>
+          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
             {/* Skin layer */}
             <rect x="100" y="60" width="100" height="80" fill="#fcd5b5" rx="10" />
             <text x="150" y="155" fontSize="11" fill={colors.textMuted} textAnchor="middle">Skin/Tissue</text>
@@ -2545,7 +2537,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           </svg>
         ),
         2: ( // Industrial
-          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }}>
+          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
             {/* Floor */}
             <rect x="0" y="140" width="300" height="40" fill={colors.bgElevated} />
 
@@ -2576,7 +2568,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           </svg>
         ),
         3: ( // Furniture
-          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }}>
+          <svg viewBox="0 0 300 180" width="100%" height="auto" style={{ maxHeight: '180px' }} preserveAspectRatio="xMidYMid meet">
             {/* Desk surface */}
             <rect x="50" y="100" width="200" height="15" fill="#8b7355" rx="2" />
             <rect x="45" y="115" width="10" height="50" fill="#6b5344" />
@@ -3239,7 +3231,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           opacity: isFirstPhase ? 0.4 : 1,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         ← Back
@@ -3287,7 +3279,7 @@ const WirelessChargingRenderer: React.FC<WirelessChargingRendererProps> = ({ onG
           opacity: canAdvance ? 1 : 0.4,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Next →

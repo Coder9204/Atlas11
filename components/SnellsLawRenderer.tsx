@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // SNELL'S LAW - Premium Apple/Airbnb Design System
 // ============================================================================
@@ -299,18 +301,8 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -593,7 +585,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
           </span>
         </div>
 
-        <svg width="400" height="300" viewBox="0 0 400 300" style={{ maxWidth: '100%' }}>
+        <svg width="400" height="300" viewBox="0 0 400 300" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Snells Law visualization">
           <defs>
             <linearGradient id="snellBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a"/>
@@ -1150,7 +1142,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <svg width="400" height="200" viewBox="0 0 400 200" style={{ maxWidth: '100%' }}>
+              <svg width="400" height="200" viewBox="0 0 400 200" style={{ maxWidth: '100%' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="twistWaterFill" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor={design.colors.waterDark} stopOpacity="0.2"/>

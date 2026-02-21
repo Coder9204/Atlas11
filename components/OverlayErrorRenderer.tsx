@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 type OEPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface OverlayErrorRendererProps {
@@ -95,16 +98,8 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -353,6 +348,7 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
   };
 
   // Navigation dots
@@ -527,7 +523,7 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="Overlay Error visualization">
           <defs>
             <linearGradient id="metalGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
@@ -700,7 +696,7 @@ const OverlayErrorRenderer: React.FC<OverlayErrorRendererProps> = ({
 
     return (
       <div style={{ padding: '8px' }}>
-        <svg width="100%" height={220} viewBox="0 0 500 220" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px', display: 'block', margin: '0 auto' }}>
+        <svg width="100%" height={220} viewBox="0 0 500 220" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px', display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <filter id="twistGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="2" result="blur" />

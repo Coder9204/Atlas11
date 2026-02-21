@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // P-WAVES VS S-WAVES RENDERER - Premium Apple/Airbnb Design
 // Gold Standard: Sequential transfer navigation with completedApps tracking
@@ -176,8 +178,8 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const [hasExperimented, setHasExperimented] = useState(false);
    const [hasSentSWaveInLiquid, setHasSentSWaveInLiquid] = useState(false);
    const [guidedMode, setGuidedMode] = useState(true);
-   const [isMobile, setIsMobile] = useState(false);
-   // Slider state for wave frequency control
+  const { isMobile } = useViewport();
+// Slider state for wave frequency control
    const [waveFrequency, setWaveFrequency] = useState(25);
 
    // Test state
@@ -195,14 +197,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    const timeRef = useRef(0);
 
    // Mobile detection
-   useEffect(() => {
-      const checkMobile = () => setIsMobile(window.innerWidth < 768);
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-      return () => window.removeEventListener('resize', checkMobile);
-   }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -621,7 +616,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             }}>
                Wave Propagation Through {medium === 'solid' ? 'Solid Rock' : 'Liquid Medium'}
             </h3>
-            <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }} preserveAspectRatio="xMidYMid meet">
+            <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="P Waves S Waves visualization">
                <title>Wave Propagation Through {medium === 'solid' ? 'Solid Rock' : 'Liquid Medium'}</title>
                <defs>
                   {/* ========== PREMIUM GRADIENT DEFINITIONS ========== */}
@@ -1358,7 +1353,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
                {/* Static SVG diagram showing the seismic wave scenario */}
                <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', background: design.colors.bgSecondary, border: `1px solid ${design.colors.border}`, maxWidth: '520px' }}>
-                  <svg viewBox="0 0 520 160" width="100%" style={{ display: 'block' }}>
+                  <svg viewBox="0 0 520 160" width="100%" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                      <defs>
                         <linearGradient id="predictSolidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                            <stop offset="0%" stopColor="#52525b" />
@@ -1916,7 +1911,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
                {/* Static SVG: Earth cross-section showing S-wave shadow zone */}
                <div style={{ marginBottom: '24px', borderRadius: '12px', overflow: 'hidden', background: design.colors.bgSecondary, border: `1px solid ${design.colors.border}`, maxWidth: '520px' }}>
-                  <svg viewBox="0 0 520 170" width="100%" style={{ display: 'block' }}>
+                  <svg viewBox="0 0 520 170" width="100%" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
                      <defs>
                         <radialGradient id="earthGrad" cx="50%" cy="50%" r="50%">
                            <stop offset="0%" stopColor="#78350f" />

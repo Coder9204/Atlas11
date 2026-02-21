@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // LC RESONANCE TUNING GAME
 // Core Concept: LC circuits resonate at specific frequencies, selecting signals
@@ -258,9 +260,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Game state
+  const { isMobile } = useViewport();
+// Game state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [capacitance, setCapacitance] = useState(100); // pF (10-500)
@@ -289,16 +290,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
   const [testSubmitted, setTestSubmitted] = useState(false);
 
   const isNavigating = useRef(false);
-
-  // Responsive check
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -675,7 +667,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
           height="100%"
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           style={{ display: 'block' }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="L C Resonance visualization">
           {/* Definitions */}
           <defs>
             <linearGradient id="lcrCapacitorPlate" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1042,7 +1034,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
             height="150"
             viewBox="0 0 400 150"
             style={{ display: 'block' }}
-          >
+           preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#93c5fd" />
@@ -1319,7 +1311,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
 
         {/* Static SVG diagram showing capacitor doubling concept */}
         <div style={{ backgroundColor: colors.bgSurface, borderRadius: '12px', padding: '12px', marginBottom: '20px' }}>
-          <svg width="100%" height="130" viewBox="0 0 400 130" style={{ display: 'block' }}>
+          <svg width="100%" height="130" viewBox="0 0 400 130" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
             <rect width="400" height="130" fill="#0f172a" rx="8" />
             {/* Original C */}
             <g>
@@ -1909,6 +1901,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
+                  emitGameEvent('game_completed', { score: score, total: testQuestions.length });
                   playSound(score >= 7 ? 'complete' : 'failure');
                 }}
                 disabled={testAnswers.some(a => a === null)}
@@ -2092,7 +2085,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, 
       flexDirection: 'column',
       backgroundColor: colors.bgDeep,
       color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: theme.fontFamily
     }}>
       {/* Fixed navigation bar */}
       {renderNavBar()}

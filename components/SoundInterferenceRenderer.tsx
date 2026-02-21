@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '🎧',
@@ -158,17 +161,8 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -359,6 +353,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -504,7 +499,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
           onPointerUp={interactive ? handleVisualizationPointerUp : undefined}
           onPointerMove={interactive ? handleVisualizationPointerMove : undefined}
           onPointerLeave={interactive ? handleVisualizationPointerUp : undefined}
-        >
+         role="img" aria-label="Sound Interference visualization">
           {/* === PREMIUM DEFS SECTION === */}
           <defs>
             {/* Premium speaker housing gradient - metallic finish */}
@@ -1096,7 +1091,7 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = (pro
 
   // Review phase visualization - a simple SVG diagram of interference concept
   const renderReviewDiagram = () => (
-    <svg width="100%" height="160" viewBox="0 0 400 160" style={{ maxWidth: '450px', margin: '0 auto', display: 'block' }}>
+    <svg width="100%" height="160" viewBox="0 0 400 160" style={{ maxWidth: '450px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="sintfReviewGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#10b981" />

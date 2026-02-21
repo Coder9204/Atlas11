@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // EDDY-CURRENT PENDULUM GAME - Complete 10-Phase Learning Experience
 // Core Concept: Eddy currents create magnetic braking via Lenz's Law
@@ -315,16 +317,8 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     magnet: '#dc2626',
     magnetBlue: '#3b82f6',
   };
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     h1: { fontSize: '36px', fontWeight: 800 as const, lineHeight: 1.2 },
     h2: { fontSize: '28px', fontWeight: 700 as const, lineHeight: 1.3 },
     h3: { fontSize: '22px', fontWeight: 600 as const, lineHeight: 1.4 },
@@ -587,7 +581,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const curveColor = dampingPct > 60 ? '#EF4444' : dampingPct > 30 ? '#F59E0B' : '#3B82F6';
 
     return (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Eddy Current Pendulum visualization">
         <defs>
           <linearGradient id="curveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={curveColor} stopOpacity="1" />
@@ -670,7 +664,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const magnetY = pivotY + pendulumLen - 20;
 
     return (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -746,7 +740,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     const W = 400;
     const H = 250;
     return (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="glow">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -1324,7 +1318,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
       const slottedD = slottedPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
       return (
-        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <filter id="glow">
               <feGaussianBlur stdDeviation="4" result="blur" />

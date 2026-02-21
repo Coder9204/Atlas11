@@ -1,25 +1,23 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 interface SpecFirstPromptingRendererProps {
   gamePhase?: string;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
   vague: '#ef4444',
   structured: '#10b981',
   code: '#3b82f6',
@@ -30,6 +28,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Phase management
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -94,17 +93,8 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -316,6 +306,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -334,7 +325,7 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '720px' }}
-        >
+         role="img" aria-label="Spec First Prompting visualization">
           <defs>
             {/* === PREMIUM LINEAR GRADIENTS === */}
             {/* Lab background gradient with depth */}
@@ -513,6 +504,29 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             {/* Subtle grid pattern */}
             <pattern id="sfpGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Glow filter for spec elements */}
+            <filter id="specGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#8b5cf6" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Flow gradient */}
+            <linearGradient id="specFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Dot grid pattern */}
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
             </pattern>
           </defs>
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 109: BOTTLE TORNADO (VORTEX)
 // The water vortex when draining a spinning bottle
@@ -12,6 +14,7 @@ interface BottleTornadoRendererProps {
   gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Color palette with proper contrast
@@ -59,6 +62,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   gamePhase,
   onPhaseComplete,
   onPredictionMade,
+  onGameEvent,
 }) => {
   // Internal phase management - default to 'hook'
   const [internalPhase, setInternalPhase] = useState('hook');
@@ -73,17 +77,8 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
   // Determine effective phase: prop takes precedence, then internal state
   const effectivePhase = phaseProp || gamePhase || internalPhase;
   const phase = PHASE_SEQUENCE.includes(effectivePhase) ? effectivePhase : 'hook';
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -209,7 +204,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           data-neck-width={neckWidth}
           data-bottle-angle={bottleAngle}
           data-vortex-strength={vortexStrength.toFixed(2)}
-        >
+         role="img" aria-label="Bottle Tornado visualization">
           <defs>
             {/* Water gradient */}
             <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1763,7 +1758,7 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
           zIndex: 1000,
         }}>
           <button
-            onClick={() => setTestSubmitted(true)}
+            onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
             style={{
               width: '100%',
               minHeight: '44px',

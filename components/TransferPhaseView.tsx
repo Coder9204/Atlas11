@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ============================================================================
 // TRANSFER PHASE VIEW - Shared component for all 340 game renderers
@@ -86,6 +86,12 @@ export function TransferPhaseView({
   // Merge provided colors/typo with defaults
   const c = { ...defaultColors, ...colorsProp };
   const t = { ...defaultTypo, ...typoProp };
+
+  // Scroll to top when switching between applications
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelectorAll('div').forEach(el => { if (el.scrollTop > 0) el.scrollTop = 0; });
+  }, [activeTab]);
 
   const totalApps = applications.length;
   const allCompleted = completedSet.size >= totalApps;

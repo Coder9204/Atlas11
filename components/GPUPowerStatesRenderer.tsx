@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -12,6 +14,7 @@ interface GPUPowerStatesRendererProps {
   gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Phase order and labels for navigation
@@ -285,17 +288,11 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -493,6 +490,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: 10 } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer(); // 70% threshold (7/10)
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -529,7 +527,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           style={{ maxWidth: '520px' }}
-        >
+         preserveAspectRatio="xMidYMid meet" role="img" aria-label="G P U Power States visualization">
           <defs>
             {/* === BACKGROUND GRADIENTS === */}
             <linearGradient id="gpupsLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1536,7 +1534,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
 
           {/* SVG Diagram for DVFS concept */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="reviewDvfsGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                   <stop offset="0%" stopColor="#22c55e" />
@@ -1621,7 +1619,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
 
           {/* SVG visualization for twist_predict */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#8b5cf6" />
@@ -1844,7 +1842,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
 
           {/* SVG Diagram for limit comparison */}
           <div style={{ display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }}>
+            <svg width="100%" height="180" viewBox="0 0 400 180" style={{ maxWidth: '400px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistReviewPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#8b5cf6" />

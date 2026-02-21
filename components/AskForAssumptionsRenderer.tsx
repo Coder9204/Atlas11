@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Game event interface for AI coach integration
 export interface GameEvent {
   type: 'phase_change' | 'prediction' | 'interaction' | 'answer' | 'completion';
@@ -37,17 +40,14 @@ const phaseLabels: Record<AFAPhase, string> = {
 };
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  accentGlow: 'rgba(245, 158, 11, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  assumption: '#f97316',
+  verified: '#22c55e',
+  unverified: '#ef4444',
+  question: '#8b5cf6',
+  code: '#3b82f6',
   confidence: {
     high: '#22c55e',
     medium: '#f59e0b',
@@ -90,9 +90,8 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<AFAPhase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation state to prevent double-clicks
+  const { isMobile } = useViewport();
+// Navigation state to prevent double-clicks
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
 
@@ -104,14 +103,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
   }, [gamePhase]);
 
   // Check for mobile viewport
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Emit game events for AI coach integration
+// Emit game events for AI coach integration
   const emitGameEvent = useCallback((type: GameEvent['type'], data?: Record<string, unknown>) => {
     if (onGameEvent) {
       onGameEvent({
@@ -372,6 +364,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    emitGameEvent('game_completed', { score: score, total: testQuestions.length });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
@@ -397,7 +390,7 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '720px' }}
-        >
+         role="img" aria-label="Ask For Assumptions visualization">
           {/* ===================== PREMIUM DEFS SECTION ===================== */}
           <defs>
             {/* Premium background gradient with depth */}
@@ -587,6 +580,28 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
             {/* Grid pattern for background */}
             <pattern id="afaGridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
               <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Glow filter for assumption nodes */}
+            <filter id="assumptionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#f97316" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Branch gradient */}
+            <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Dot grid pattern */}
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
             </pattern>
           </defs>
 

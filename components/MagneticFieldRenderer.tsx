@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ════════════════════════════════════════════════════════════════════════════
 // MAGNETIC FIELDS - Field Lines, Forces, and Current Sources
 // ════════════════════════════════════════════════════════════════════════════
@@ -247,9 +249,8 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [wireCurrent, setWireCurrent] = useState(5); // Amperes
   const [wireDistance, setWireDistance] = useState(0.05); // meters
   const [fieldAngle, setFieldAngle] = useState(90); // degrees from velocity
@@ -270,14 +271,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const MU_0 = 4 * Math.PI * 1e-7; // Permeability of free space
 
   // Check for mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -655,7 +649,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
     return (
       <>
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="mx-auto">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="mx-auto" role="img" aria-label="Magnetic Field visualization">
           <defs>
             {/* Premium copper wire gradient with metallic sheen */}
             <linearGradient id="magfWireCopper" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1415,7 +1409,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
 
       {/* SVG diagram of wire with compass */}
-      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }}>
+      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="predictWireGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
@@ -1439,20 +1433,20 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <circle cx="160" cy="100" r="20" fill="url(#predictWireGlow)" />
         {/* Current direction arrow */}
         <polygon points="160,30 155,45 165,45" fill="#fbbf24" />
-        <text x="175" y="40" fill="#fbbf24" fontSize="11" fontFamily="sans-serif">I (up)</text>
+        <text x="175" y="40" fill="#fbbf24" fontSize="11" fontFamily={theme.fontFamily}>I (up)</text>
         {/* Question marks for field pattern */}
-        <text x="120" y="80" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
-        <text x="195" y="115" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
-        <text x="130" y="140" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
-        <text x="185" y="75" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
+        <text x="120" y="80" fill="#60a5fa" fontSize="16" fontFamily={theme.fontFamily} opacity="0.7">?</text>
+        <text x="195" y="115" fill="#60a5fa" fontSize="16" fontFamily={theme.fontFamily} opacity="0.7">?</text>
+        <text x="130" y="140" fill="#60a5fa" fontSize="16" fontFamily={theme.fontFamily} opacity="0.7">?</text>
+        <text x="185" y="75" fill="#60a5fa" fontSize="16" fontFamily={theme.fontFamily} opacity="0.7">?</text>
         {/* Compass nearby */}
         <circle cx="230" cy="100" r="18" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
         <line x1="230" y1="88" x2="225" y2="108" stroke="#ef4444" strokeWidth="2" />
         <line x1="230" y1="88" x2="235" y2="108" stroke="#94a3b8" strokeWidth="2" />
-        <text x="222" y="84" fill="#94a3b8" fontSize="11" fontFamily="sans-serif">N</text>
+        <text x="222" y="84" fill="#94a3b8" fontSize="11" fontFamily={theme.fontFamily}>N</text>
         <circle cx="230" cy="100" r="2" fill="#e2e8f0" />
         {/* Label */}
-        <text x="160" y="195" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily="sans-serif">Wire carrying current with nearby compass</text>
+        <text x="160" y="195" fill="#94a3b8" fontSize="11" textAnchor="middle" fontFamily={theme.fontFamily}>Wire carrying current with nearby compass</text>
       </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1760,7 +1754,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Electromagnet Challenge</h2>
 
       {/* SVG diagram of electromagnet */}
-      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }}>
+      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="twpIronCore" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#64748b" />
@@ -1779,7 +1773,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <rect width="320" height="200" rx="12" fill="#0f172a" />
         {/* Iron core */}
         <rect x="80" y="85" width="160" height="30" rx="4" fill="url(#twpIronCore)" stroke="#475569" strokeWidth="1" />
-        <text x="160" y="105" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold" fontFamily="sans-serif">Iron Core</text>
+        <text x="160" y="105" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold" fontFamily={theme.fontFamily}>Iron Core</text>
         {/* Coil windings */}
         {[0,1,2,3,4,5,6,7].map(i => (
           <g key={i}>
@@ -1792,19 +1786,19 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <path d="M 60,100 C 60,35 260,35 260,100" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4,3" opacity="0.4" />
         <path d="M 60,100 C 60,165 260,165 260,100" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4,3" opacity="0.4" />
         {/* N and S poles */}
-        <text x="260" y="105" fill="#ef4444" fontSize="14" fontWeight="bold" fontFamily="sans-serif">N</text>
-        <text x="55" y="105" fill="#3b82f6" fontSize="14" fontWeight="bold" fontFamily="sans-serif">S</text>
+        <text x="260" y="105" fill="#ef4444" fontSize="14" fontWeight="bold" fontFamily={theme.fontFamily}>N</text>
+        <text x="55" y="105" fill="#3b82f6" fontSize="14" fontWeight="bold" fontFamily={theme.fontFamily}>S</text>
         {/* Battery / power source */}
         <line x1="95" y1="122" x2="95" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <line x1="240" y1="122" x2="240" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <line x1="95" y1="160" x2="150" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <line x1="185" y1="160" x2="240" y2="160" stroke="#fbbf24" strokeWidth="2" />
         <rect x="150" y="152" width="35" height="16" rx="3" fill="#1e293b" stroke="#fbbf24" strokeWidth="1.5" />
-        <text x="167" y="163" textAnchor="middle" fill="#fbbf24" fontSize="11" fontFamily="sans-serif">Battery</text>
+        <text x="167" y="163" textAnchor="middle" fill="#fbbf24" fontSize="11" fontFamily={theme.fontFamily}>Battery</text>
         {/* Current arrow */}
         <polygon points="130,157 135,153 135,161" fill="#fbbf24" />
         {/* Title */}
-        <text x="160" y="25" textAnchor="middle" fill="#c4b5fd" fontSize="12" fontFamily="sans-serif">Electromagnet: Wire coiled around iron core</text>
+        <text x="160" y="25" textAnchor="middle" fill="#c4b5fd" fontSize="12" fontFamily={theme.fontFamily}>Electromagnet: Wire coiled around iron core</text>
       </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -2220,7 +2214,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const canNext = !isLastP && (!isTestP || testSubmitted);
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100dvh' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: theme.fontFamily, minHeight: '100dvh' }}>
       {/* Top bar */}
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
         <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Magnetic Fields</span>

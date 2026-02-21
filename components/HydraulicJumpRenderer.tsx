@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 107: HYDRAULIC JUMP
 // The circular ring phenomenon when faucet water hits a flat surface
@@ -12,6 +14,7 @@ interface HydraulicJumpRendererProps {
   gamePhase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 // Color palette with proper contrast
@@ -55,6 +58,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   gamePhase,
   onPhaseComplete,
   onPredictionMade,
+  onGameEvent,
 }) => {
   // ==================== SELF-MANAGED PHASE NAVIGATION ====================
   const phaseNames = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -93,15 +97,8 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
   };
 
   // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -248,7 +245,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
           viewBox="0 0 400 320"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
-        >
+         role="img" aria-label="Hydraulic Jump visualization">
           <defs>
             {/* Supercritical (fast) water gradient */}
             <radialGradient id="hjumpFastWater" cx="50%" cy="50%" r="50%">
@@ -1726,7 +1723,7 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
                     </button>
                   ) : (
                     <button
-                      onClick={() => setTestSubmitted(true)}
+                      onClick={() => { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); }}
                       style={{
                         width: '100%',
                         padding: '12px',

@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Real-world applications for network latency physics
 const realWorldApps = [
   {
@@ -85,22 +87,17 @@ interface NetworkLatencyRendererProps {
   onBack?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: 'rgba(148, 163, 184, 0.7)',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#8b5cf6',
-  accentGlow: 'rgba(139, 92, 246, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  packet: '#06b6d4',
+  latency: '#ef4444',
+  bandwidth: '#22c55e',
   fiber: '#22d3ee',
-  packet: '#a78bfa',
   server: '#64748b',
 };
 
@@ -141,6 +138,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   onBack,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase state for self-navigation (when no external wrapper)
   const [internalPhaseIndex, setInternalPhaseIndex] = useState(0);
@@ -181,18 +179,8 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -383,6 +371,7 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, testQuestions, onCorrectAnswer, onIncorrectAnswer]);
@@ -433,8 +422,11 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '16px', maxWidth: '750px' }}
-        >
+         role="img" aria-label="Network Latency visualization">
           <defs>
+            <filter id="packetGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feFlood floodColor="#06b6d4" floodOpacity="0.4" result="color" /><feComposite in="color" in2="blur" operator="in" result="colorBlur" /><feMerge><feMergeNode in="colorBlur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+            <linearGradient id="networkGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#06b6d4" stopOpacity="0.5" /><stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" /></linearGradient>
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" /></pattern>
             {/* Premium background gradient */}
             <linearGradient id="netlBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />

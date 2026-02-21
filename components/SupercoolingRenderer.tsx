@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // SUPERCOOLING RENDERER - Game 139
 // Physics: Water below freezing that stays liquid without nucleation sites
@@ -156,19 +158,9 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   const [twistState, setTwistState] = useState<'solution' | 'triggered' | 'crystallized'>('solution');
   const [twistTemp, setTwistTemp] = useState(25);
   const [twistCrystalProgress, setTwistCrystalProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  const lastClickRef = useRef(0);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+const lastClickRef = useRef(0);
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -554,7 +546,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     const tempX = (temperature + 50) / 150 * 220 + 50; // Map -50 to 100C to x position
 
     return (
-      <svg viewBox="0 0 320 220" style={{ width: '100%', maxWidth: '320px' }}>
+      <svg viewBox="0 0 320 220" style={{ width: '100%', maxWidth: '320px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Supercooling visualization">
         <defs>
           {/* Premium diagram background */}
           <linearGradient id="scoolDiagramBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -755,7 +747,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render water container with premium SVG graphics
   const renderWaterContainer = () => {
     return (
-      <svg viewBox="0 0 340 280" style={{ width: '100%', maxWidth: '340px' }}>
+      <svg viewBox="0 0 340 280" style={{ width: '100%', maxWidth: '340px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           {/* Premium lab background gradient */}
           <linearGradient id="scoolLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1218,7 +1210,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   // Render sodium acetate hand warmer for twist with premium SVG graphics
   const renderSodiumAcetateWarmer = () => {
     return (
-      <svg viewBox="0 0 340 220" style={{ width: '100%', maxWidth: '340px' }}>
+      <svg viewBox="0 0 340 220" style={{ width: '100%', maxWidth: '340px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           {/* Premium background gradient */}
           <linearGradient id="scoolWarmerBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1815,7 +1807,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
 
           {/* Static visualization */}
-          <svg viewBox="0 0 320 240" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }}>
+          <svg viewBox="0 0 320 240" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="predictWater" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
@@ -2093,7 +2085,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>The Hand Warmer Twist</h2>
 
           {/* Static hand warmer visualization */}
-          <svg viewBox="0 0 320 200" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }}>
+          <svg viewBox="0 0 320 200" style={{ width: '100%', maxWidth: '320px', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="twistSolution" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />

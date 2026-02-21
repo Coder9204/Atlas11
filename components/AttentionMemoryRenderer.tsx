@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ─────────────────────────────────────────────────────────────────────────────
 // Attention Memory Scaling - Complete 10-Phase Game
 // Why transformer memory grows quadratically with sequence length
@@ -261,9 +263,8 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [sequenceLength, setSequenceLength] = useState(512);
   const [numHeads, setNumHeads] = useState(8);
   const [embeddingDim, setEmbeddingDim] = useState(512);
@@ -284,14 +285,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -558,7 +552,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     const markerCy = padding.top + (1 - currentPoint.quadratic) * plotHeight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Attention Memory visualization">
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.error} stopOpacity="0.3" />
@@ -723,7 +717,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     )) * plotHeight;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="multiGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={colors.warning} stopOpacity="0.2" />
@@ -889,7 +883,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
     ];
 
     const PredictionGraphic = () => (
-      <svg width="280" height="120" viewBox="0 0 280 120" style={{ background: 'transparent' }}>
+      <svg width="280" height="120" viewBox="0 0 280 120" style={{ background: 'transparent' }} preserveAspectRatio="xMidYMid meet">
         <rect x="10" y="30" width="80" height="60" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
         <text x="50" y="55" fill={colors.textPrimary} fontSize="12" textAnchor="middle">1,000</text>
         <text x="50" y="72" fill={colors.textSecondary} fontSize="11" textAnchor="middle">tokens</text>
@@ -1222,7 +1216,7 @@ const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="350" height="200" viewBox="0 0 350 200" style={{ background: 'transparent' }}>
+            <svg width="350" height="200" viewBox="0 0 350 200" style={{ background: 'transparent' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="twistPredGrad" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor={colors.warning} />

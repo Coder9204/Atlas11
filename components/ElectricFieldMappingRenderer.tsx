@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // Premium Design System
 const premiumDesign = {
   colors: {
@@ -35,7 +37,7 @@ const premiumDesign = {
     },
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: theme.fontFamily,
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
   radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
@@ -107,9 +109,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Hook phase
+  const { isMobile } = useViewport();
+// Hook phase
   const [hookStep, setHookStep] = useState(0);
 
   // Predict phase
@@ -264,14 +265,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   const [testComplete, setTestComplete] = useState(false);
 
   // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -613,7 +607,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     const equipotentials = generateEquipotentialLines();
 
     return (
-      <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
+      <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electric Field Mapping visualization">
         <defs>
           {/* Premium background gradient */}
           <linearGradient id="efmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1240,7 +1234,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   // Static predict phase SVG showing a charge without field lines
   function renderPredictSVG() {
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }}>
+      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="efmPredictCharge" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#fca5a5" />
@@ -1280,7 +1274,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   // Static twist predict phase SVG showing dipole setup
   function renderTwistPredictSVG() {
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }}>
+      <svg viewBox="0 0 300 200" style={{ width: '100%', maxHeight: 200, marginBottom: premiumDesign.spacing.lg }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="efmTwistPosCharge" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#fca5a5" />

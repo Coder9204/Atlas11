@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme, withOpacity } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -33,26 +35,15 @@ interface PatchDisciplineRendererProps {
 }
 
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: 'rgba(148,163,184,0.7)',
-  bgPrimary: '#0f172a',
+  ...theme.colors,
   bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgCardLight: '#1e293b',
   bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
+  diff: '#22c55e',
+  diffRemove: '#ef4444',
+  patch: '#8b5cf6',
+  code: '#3b82f6',
+  bgCardLight: '#1e293b',
   accentGlow: 'rgba(245, 158, 11, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  primary: '#06b6d4',
-  border: '#334155',
-  diff: {
-    added: '#22c55e',
-    removed: '#ef4444',
-    context: '#64748b',
-    highlight: '#3b82f6',
-  },
 };
 
 type PDPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -108,16 +99,8 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const typo = {
+  const { isMobile } = useViewport();
+const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
     bodyLarge: isMobile ? '16px' : '18px',
@@ -579,7 +562,7 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ borderRadius: '12px', maxWidth: '750px' }}
-        >
+         role="img" aria-label="Patch Discipline visualization">
           <defs>
             <linearGradient id="ptchLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#030712" />
@@ -624,6 +607,22 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
             </filter>
             <pattern id="ptchGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+            <filter id="diffGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient id="diffPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+            <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="0.5" fill="rgba(148,163,184,0.15)" />
             </pattern>
           </defs>
 

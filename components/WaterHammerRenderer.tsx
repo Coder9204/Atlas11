@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Water Hammer Renderer - Complete 10-Phase Game
 // Why pipes bang when valves close suddenly
@@ -261,9 +263,8 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [valveOpen, setValveOpen] = useState(true);
   const [flowVelocity, setFlowVelocity] = useState(3); // m/s
   const [pipeLength, setPipeLength] = useState(100); // meters
@@ -298,14 +299,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
   const soundSpeed = 1400; // m/s in water
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Joukowsky equation: ΔP = ρ × c × Δv
+// Joukowsky equation: ΔP = ρ × c × Δv
   const calculatePressureRise = (velocity: number) => {
     return waterDensity * soundSpeed * velocity; // Pascals
   };
@@ -714,7 +708,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg viewBox="0 0 400 120" style={{ width: '100%' }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Water Hammer visualization">
               {/* Pipe */}
               <rect x="40" y="40" width="260" height="40" rx="4" fill="#475569" />
               <rect x="45" y="45" width="250" height="30" fill="#3b82f6" opacity="0.6" />
@@ -857,7 +851,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '16px',
           }}>
-            <svg viewBox="0 0 500 280" style={{ width: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 500 280" style={{ width: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor="#64748b" />
@@ -1351,7 +1345,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <svg viewBox="0 0 400 160" style={{ width: '100%', margin: '0 auto', display: 'block' }}>
+            <svg viewBox="0 0 400 160" style={{ width: '100%', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
               {/* Fast closure - left side */}
               <text x="95" y="16" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="bold">FAST Closure</text>
               <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
@@ -1489,7 +1483,7 @@ const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, 
             padding: '24px',
           }}>
             {/* Pressure graph */}
-            <svg viewBox="0 0 400 180" style={{ width: '100%', marginBottom: '20px' }}>
+            <svg viewBox="0 0 400 180" style={{ width: '100%', marginBottom: '20px' }} preserveAspectRatio="xMidYMid meet">
               <rect x="50" y="20" width="330" height="130" fill="#1e293b" stroke="#334155" />
 
               {/* Grid lines */}

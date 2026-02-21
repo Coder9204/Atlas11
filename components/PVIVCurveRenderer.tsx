@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
    {
       icon: '🔋',
@@ -198,15 +201,8 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
   const [testScore, setTestScore] = useState(0);
 
   // --- RESPONSIVE DESIGN ---
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -653,7 +649,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '550px' }}
-        >
+         role="img" aria-label="P V I V Curve visualization">
           <defs>
             {/* === PREMIUM GRADIENTS FOR SOLAR VISUALIZATION === */}
 

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
+
 const realWorldApps = [
   {
     icon: '\u26A1',
@@ -82,6 +85,7 @@ interface PowerLossRendererProps {
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: any) => void;
 }
 
 const colors = {
@@ -125,6 +129,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
+  onGameEvent,
 }) => {
   // Internal phase management - start at hook
   const [internalPhase, setInternalPhase] = useState<typeof PHASE_ORDER[number]>('hook');
@@ -163,17 +168,8 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+  const { isMobile } = useViewport();
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -354,6 +350,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
+    onGameEvent?.({ type: 'game_completed', details: { score: score, total: testQuestions.length } });
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
@@ -398,7 +395,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ maxWidth: '700px' }}
-        >
+         role="img" aria-label="Power Loss visualization">
           {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
             {/* Premium battery gradient with metallic depth */}
@@ -1223,7 +1220,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
 
         {/* SVG diagram for review */}
         <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }}>
+          <svg width="100%" height="120" viewBox="0 0 400 120" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="reviewWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#b87333" />
@@ -1424,7 +1421,7 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
 
         {/* SVG diagram for twist review */}
         <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-          <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto' }}>
+          <svg width="100%" height="140" viewBox="0 0 400 140" style={{ display: 'block', margin: '0 auto' }} preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="coilGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#b87333" />

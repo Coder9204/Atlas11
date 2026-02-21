@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // ECC Memory (Error Correcting Code) - Complete 10-Phase Game
 // How computers detect and correct bit errors using Hamming codes
@@ -261,9 +263,8 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // ECC Visualization state
+  const { isMobile } = useViewport();
+// ECC Visualization state
   const [dataBits, setDataBits] = useState<number[]>([1, 0, 1, 1]); // 4 data bits (D1, D2, D3, D4)
   const [errorPosition, setErrorPosition] = useState<number | null>(null);
   const [showSyndrome, setShowSyndrome] = useState(false);
@@ -290,14 +291,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
@@ -799,7 +793,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <svg width="100%" height="300" viewBox="0 0 500 300" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+            <svg width="100%" height="300" viewBox="0 0 500 300" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="E C C Memory visualization">
               <defs>
                 <linearGradient id="errorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor={colors.error} stopOpacity="0.8" />
@@ -997,7 +991,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               <h3 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Error Detection Flow
               </h3>
-              <svg width="100%" height="280" viewBox="0 0 600 280" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
+              <svg width="100%" height="280" viewBox="0 0 600 280" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="eccBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor={colors.bgSecondary} stopOpacity="1" />
@@ -1473,7 +1467,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
 
           {/* SVG double-error visualization */}
           <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-            <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }}>
+            <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '500px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="tpBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor={colors.bgSecondary} stopOpacity="1" />
@@ -1659,7 +1653,7 @@ const ECCMemoryRenderer: React.FC<ECCMemoryRendererProps> = ({ onGameEvent, game
               <h3 style={{ ...typo.small, color: colors.warning, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Double Error Detection Limit
               </h3>
-              <svg width="100%" height="180" viewBox="0 0 600 180" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }}>
+              <svg width="100%" height="180" viewBox="0 0 600 180" style={{ maxWidth: '600px', margin: '0 auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
                 {/* Background */}
                 <rect x="0" y="0" width="600" height="180" fill={colors.bgSecondary} rx="8" />
 

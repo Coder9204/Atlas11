@@ -1,0 +1,223 @@
+# Atlas Coach — Complete Game Catalog
+# https://atlascoach-5e3af.web.app
+# 340+ interactive physics, engineering, and AI simulation games
+
+## Classical Mechanics
+
+### Forces & Motion
+- Newton's Third Law (/games/newtons-third-law) — Explore action-reaction force pairs through interactive simulations
+- Drag Force (/games/drag-force) — Understand how air resistance affects motion at different speeds
+- Centripetal Force (/games/centripetal-force) — Discover the force that keeps objects moving in circles
+- Torque (/games/torque) — Learn about rotational force and mechanical advantage
+- Hooke's Law (/games/hookes-law) — Explore spring forces and elastic behavior
+- Static & Kinetic Friction (/games/static-kinetic-friction) — Compare friction types and their effects on motion
+- Inclined Plane (/games/inclined-plane) — Analyze forces on objects sliding down slopes
+- Inertia (/games/inertia) — Discover Newton's First Law through hands-on experiments
+
+### Momentum & Collisions
+- Momentum Conservation (/games/momentum-conservation) — See how momentum transfers between objects
+- Two Ball Collision (/games/two-ball-collision) — Simulate elastic and inelastic collisions
+- Inelastic Collisions (/games/inelastic-collisions) — Explore energy loss in sticky collisions
+- Ballistic Pendulum (/games/ballistic-pendulum) — Measure projectile speed using conservation laws
+- Egg Drop (/games/egg-drop) — Design protection using impulse-momentum theorem
+
+### Energy
+- Energy Conservation (/games/energy-conservation) — Track energy transformations in dynamic systems
+- Work & Power (/games/work-power) — Calculate work done and power output
+- Elastic Potential Energy (/games/elastic-potential-energy) — Store and release energy in springs
+- Kinetic Theory of Gases (/games/kinetic-theory-gases) — Simulate molecular motion and gas behavior
+
+### Rotational Motion
+- Angular Momentum (/games/angular-momentum) — Explore conservation of angular momentum
+- Angular Momentum Transfer (/games/angular-momentum-transfer) — See how spinning objects exchange rotation
+- Moment of Inertia (/games/moment-of-inertia) — Compare rotational resistance of different shapes
+- Gyroscope Stability (/games/gyroscope-stability) — Understand why spinning objects resist tilting
+- Gyroscopic Precession (/games/gyroscopic-precession) — Watch gyroscopes defy gravity
+- Precession & Nutation (/games/precession-nutation) — Advanced gyroscopic motion analysis
+- Rattleback (/games/rattleback) — Discover the physics of spin-reversal toys
+- Sleeping Top (/games/sleeping-top) — Explore spinning top dynamics
+
+### Projectiles & Kinematics
+- Projectile Independence (/games/projectile-independence) — Horizontal and vertical motion are independent
+- Brachistochrone (/games/brachistochrone) — Find the fastest path between two points
+- Cycloid Motion (/games/cycloid-motion) — Explore the geometry of rolling curves
+- Terminal Velocity (/games/terminal-velocity) — Balance gravity and drag forces
+
+### Center of Mass
+- Center of Mass (/games/center-of-mass) — Find balance points of complex shapes
+- Tipping Point (/games/tipping-point) — Determine when objects topple over
+- Rolling Race (/games/rolling-race) — Compare rolling speeds of different shapes
+- Rolling vs Sliding (/games/rolling-vs-sliding) — Friction's role in rolling motion
+
+## Oscillations & Waves
+
+### Pendulums
+- Pendulum Period (/games/pendulum-period) — Explore what affects swing timing
+- Coupled Pendulums (/games/coupled-pendulums) — Watch energy transfer between connected pendulums
+- Eddy Current Pendulum (/games/eddy-current-pendulum) — Magnetic braking without contact
+- Swing Pumping (/games/swing-pumping) — How to pump a swing using physics
+
+### Oscillations
+- Damped Oscillations (/games/damped-oscillations) — Watch oscillations decay over time
+- Forced Oscillations (/games/forced-oscillations) — Drive oscillators at different frequencies
+- Damping (/games/damping) — Compare underdamped, critically damped, and overdamped
+- LC Resonance (/games/l-c-resonance) — Electronic oscillators with inductors and capacitors
+- Resonance (/games/resonance) — Amplify motion by matching natural frequency
+
+### Sound Waves
+- Beats (/games/beats) — Hear interference patterns between similar frequencies
+- Sound Interference (/games/sound-interference) — Constructive and destructive sound patterns
+- Speed of Sound (/games/speed-of-sound) — Measure sound speed in different media
+- Reverberation (/games/reverberation) — Room acoustics and echo patterns
+- Doppler Effect (/games/doppler-effect) — Frequency shifts from moving sources
+- Straw Instrument (/games/straw-instrument) — Build instruments from everyday materials
+
+### Wave Physics
+- Standing Waves (/games/standing-waves) — Create stationary wave patterns
+- Wave Interference (/games/wave-interference) — Combine waves constructively and destructively
+- Wave Speed & Tension (/games/wave-speed-tension) — How tension affects wave propagation
+- Microwave Standing Wave (/games/microwave-standing-wave) — Measure wavelength with a microwave oven
+- Chladni Patterns (/games/chladni-patterns) — Visualize vibration modes on plates
+
+### Vibration Damping
+- Tuned Mass Damper (/games/tuned-mass-damper) — Protect buildings from earthquakes
+- Metronome Sync (/games/metronome-sync) — Watch coupled oscillators synchronize
+
+## Fluid Mechanics
+
+### Flow Types
+- Laminar Flow (/games/laminar-flow) — Smooth, orderly fluid motion
+- Laminar vs Turbulent (/games/laminar-turbulent) — Reynolds number and flow transitions
+- Karman Vortex (/games/karman-vortex) — Vortex shedding behind obstacles
+- Vortex Rings (/games/vortex-rings) — Toroidal fluid structures
+- Cavitation (/games/cavitation) — Bubble formation in fast-moving fluids
+
+### Pressure
+- Bernoulli's Principle (/games/bernoulli) — Fast fluid = low pressure
+- Venturi Effect (/games/venturi-effect) — Pressure changes in constricted flow
+- Hydrostatic Pressure (/games/hydrostatic-pressure) — Pressure increases with depth
+- Pascal's Law (/games/pascal-law) — Pressure transmitted equally in fluids
+- Pressure Drop (/games/pressure-drop) — Friction losses in pipe flow
+
+### Buoyancy
+- Buoyancy (/games/buoyancy) — Archimedes' principle of floating
+- Cartesian Diver (/games/cartesian-diver) — Control buoyancy with pressure
+- Floating Paperclip (/games/floating-paperclip) — Surface tension supporting weight
+- Helium Balloon in Car (/games/helium-balloon-car) — Counter-intuitive balloon behavior
+
+### Surface Effects
+- Capillary Action (/games/capillary-action) — Liquids climbing narrow tubes
+- Soap Boat (/games/soap-boat) — Surface tension propulsion
+- Marangoni Tears (/games/marangoni-tears) — Wine tears and surface tension gradients
+- Minimal Surfaces (/games/minimal-surfaces) — Soap films and geometry
+- Superhydrophobic (/games/superhydrophobic) — Water-repelling surfaces
+
+## Thermodynamics & Heat
+
+### Heat Transfer
+- Convection (/games/convection) — Heat transfer through fluid motion
+- Convection Currents (/games/convection-currents) — Circular flow patterns from heating
+- Newton's Cooling (/games/newton-cooling) — Exponential temperature decay
+- Thermal Contact (/games/thermal-contact) — Heat flow between touching objects
+- Heat Transfer Capacity (/games/heat-transfer-capacity) — Specific heat and thermal mass
+
+### Phase Changes
+- Latent Heat (/games/latent-heat) — Energy absorbed/released during phase changes
+- Phase Change Energy (/games/phase-change-energy) — Energy budgets for melting and boiling
+- Boiling & Pressure (/games/boiling-pressure) — How pressure affects boiling point
+- Evaporative Cooling (/games/evaporative-cooling) — Cooling through evaporation
+- Supercooling (/games/supercooling) — Liquids below freezing point
+- Leidenfrost Effect (/games/leidenfrost) — Water droplets dancing on hot surfaces
+
+## Electricity & Magnetism
+
+### Electric Fields
+- Electric Field (/games/electric-field) — Visualize force fields around charges
+- Electric Field Mapping (/games/electric-field-mapping) — Map field lines experimentally
+- Electric Potential (/games/electric-potential) — Voltage landscapes around charges
+- Coulomb's Law (/games/coulombs-law) — Force between point charges
+- Static Electricity (/games/static-electricity) — Charge transfer and sparks
+
+### Circuits
+- Circuits (/games/circuits) — Build and analyze electric circuits
+- Kirchhoff's Laws (/games/kirchhoffs-laws) — Current and voltage rules for circuits
+- RC Time Constant (/games/r-c-time-constant) — Charging and discharging capacitors
+- Power Factor (/games/power-factor) — Real vs reactive power in AC circuits
+
+### Magnetism
+- Magnetic Field (/games/magnetic-field) — Visualize magnetic field patterns
+- Magnetic Mapping (/games/magnetic-mapping) — Map magnetic fields experimentally
+- Electromagnet (/games/electromagnet) — Build magnets with electric current
+- Oersted Experiment (/games/oersted-experiment) — Current creates magnetic fields
+- Homopolar Motor (/games/homopolar-motor) — Simplest electric motor
+
+## Optics & Light
+
+### Reflection & Refraction
+- Reflection (/games/reflection) — Mirror physics and image formation
+- Law of Reflection (/games/law-of-reflection) — Angle of incidence equals angle of reflection
+- Refraction (/games/refraction) — Light bending at material boundaries
+- Snell's Law (/games/snells-law) — Calculate refraction angles
+- Total Internal Reflection (/games/total-internal-reflection) — Light trapped inside materials
+- Brewster Angle (/games/brewster-angle) — Perfect polarization by reflection
+
+### Lenses & Imaging
+- Lens Focusing (/games/lens-focusing) — How lenses form images
+- Chromatic Aberration (/games/chromatic-aberration) — Color fringing in lenses
+- Depth of Field (/games/depth-of-field) — Sharp focus range in photography
+- Camera Obscura (/games/camera-obscura) — Pinhole camera physics
+
+## AI & Computing
+
+### AI Inference
+- AI Inference Latency (/games/a-i-inference-latency) — Understand GPU computation timing
+- Energy Per Token (/games/energy-per-token) — Power consumption of language models
+- Batching & Latency (/games/batching-latency) — Throughput vs latency tradeoffs
+- Quantization Precision (/games/quantization-precision) — Reduce model size vs accuracy
+- Sparsity (/games/sparsity) — Skip zero computations for speed
+
+### GPU Architecture
+- GPU Occupancy (/games/g-p-u-occupancy) — Maximize GPU utilization
+- GPU Memory Bandwidth (/games/g-p-u-memory-bandwidth) — Memory as the bottleneck
+- GPU Power States (/games/g-p-u-power-states) — Dynamic voltage and frequency
+- Tensor Core (/games/tensor-core) — Matrix multiply accelerators
+- Systolic Array (/games/systolic-array) — TPU-style computation
+
+### Compute Comparison
+- ASIC vs GPU (/games/a-s-i-cvs-g-p-u) — Fixed vs flexible silicon
+- TPU vs GPU (/games/t-p-uvs-g-p-u) — Google's TPU architecture comparison
+
+## Solar & Energy
+
+### Solar Cell Physics
+- Solar Cell (/games/solar-cell) — Photovoltaic fundamentals
+- PV IV Curve (/games/p-v-i-v-curve) — Current-voltage characteristics
+- Fill Factor (/games/fill-factor) — Solar cell efficiency metric
+- Spectral Mismatch (/games/spectral-mismatch) — Sunlight vs cell response
+
+### Power Electronics
+- DC-DC Converter (/games/d-c-d-c-converter) — Voltage conversion circuits
+- Inverter Sine Wave (/games/inverter-sine-wave) — DC to AC conversion
+- MPPT (/games/m-p-p-t) — Maximum power point tracking
+
+## Space & Orbital Mechanics
+- Orbital Mechanics (/games/orbital-mechanics) — Kepler's laws and orbit dynamics
+- Tidal Forces (/games/tidal-forces) — Moon's gravitational effects
+- Tidal Locking (/games/tidal-locking) — Why the Moon shows one face
+- Satellite Doppler (/games/satellite-doppler) — Frequency shifts from orbiting satellites
+- Coriolis Effect (/games/coriolis-effect) — Rotating reference frame effects
+
+## RF & Communications
+- Antenna Gain (/games/antenna-gain) — Directional signal strength
+- Link Budget (/games/link-budget) — End-to-end signal power calculation
+- Fresnel Zones (/games/fresnel-zones) — Radio wave clearance zones
+
+## Fun Experiments
+- Cartesian Diver (/games/cartesian-diver) — Pressure-controlled buoyancy
+- Chain Fountain (/games/chain-fountain) — Self-siphoning chain phenomenon
+- Rattleback (/games/rattleback) — Spin-reversal toy physics
+- Stable Levitation (/games/stable-levitation) — Magnetic and acoustic levitation
+- Reaction Time (/games/reaction-time) — Measure your neural response speed
+
+---
+For the complete interactive experience, visit: https://atlascoach-5e3af.web.app/games

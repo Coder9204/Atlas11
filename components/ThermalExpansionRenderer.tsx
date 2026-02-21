@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // THERMAL EXPANSION - Complete 10-Phase Game
 // Why bridges grow, rails buckle, and precision demands temperature control
@@ -278,9 +280,8 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state
+  const { isMobile } = useViewport();
+// Simulation state
   const [temperature, setTemperature] = useState(20);
   const [baseTemperature] = useState(20);
   const [selectedMaterial, setSelectedMaterial] = useState(1);
@@ -305,14 +306,7 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
   const isNavigating = useRef(false);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Calculate expansion: ΔL = αL₀ΔT
+// Calculate expansion: ΔL = αL₀ΔT
   const calculateExpansion = (tempC: number, alphaE6: number, lengthMm: number) => {
     const deltaT = tempC - baseTemperature;
     const alpha = alphaE6 * 1e-6;
@@ -505,7 +499,7 @@ const ThermalExpansionRenderer: React.FC<ThermalExpansionRendererProps> = ({ onG
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: width }}
-      >
+       role="img" aria-label="Thermal Expansion visualization">
         <defs>
           <linearGradient id="coldBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3B82F6" />

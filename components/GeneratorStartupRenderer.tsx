@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // -----------------------------------------------------------------------------
 // Generator Startup - Complete 10-Phase Game
 // Why diesel generators take 10+ seconds to provide backup power
@@ -261,9 +263,8 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Simulation state - Play phase
+  const { isMobile } = useViewport();
+// Simulation state - Play phase
   const [generatorState, setGeneratorState] = useState<'stopped' | 'cranking' | 'warmup' | 'sync' | 'online'>('stopped');
   const [rpm, setRpm] = useState(0);
   const [frequency, setFrequency] = useState(0);
@@ -291,14 +292,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
   const startupIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Responsive design
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Animation loop
+// Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -431,7 +425,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     const engineRunning = showControls ? rpm > 100 : false;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Generator Startup visualization">
         <defs>
           <linearGradient id="engineBlock" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#4b5563" />
@@ -595,7 +589,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
     const governorResponse = isLoadApplied ? Math.min(100, loadPercentage * 1.2) : 0;
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="freqGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor={colors.error} />
@@ -1381,7 +1375,7 @@ const GeneratorStartupRenderer: React.FC<GeneratorStartupRendererProps> = ({ onG
 
           {/* Prediction SVG - no sliders */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <svg width={isMobile ? 340 : 480} height={isMobile ? 220 : 260} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 220 : 260}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+            <svg width={isMobile ? 340 : 480} height={isMobile ? 220 : 260} viewBox={`0 0 ${isMobile ? 340 : 480} ${isMobile ? 220 : 260}`} style={{ background: colors.bgCard, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="twistGlow">
                   <feGaussianBlur stdDeviation="3" result="blur" />

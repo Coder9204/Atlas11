@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // ELECTRIC POTENTIAL (VOLTAGE) - GOLD STANDARD RENDERER
 // ============================================================================
@@ -176,8 +178,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [testScore, setTestScore] = useState(0);
+  const { isMobile } = useViewport();
+const [testScore, setTestScore] = useState(0);
   const [testIndex, setTestIndex] = useState(0);
   const [showTestExplanation, setShowTestExplanation] = useState(false);
 
@@ -198,14 +200,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const svgRef = useRef<SVGSVGElement>(null);
 
   // ==================== EFFECTS ====================
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Sync phase with gamePhase prop
+// Sync phase with gamePhase prop
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
       setPhase(gamePhase as Phase);
@@ -783,7 +778,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       {/* Title */}
-      <h1 style={{ fontSize: isMobile ? '30px' : '36px', fontWeight: 800, lineHeight: 1.2, color: '#f59e0b', marginBottom: '12px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      <h1 style={{ fontSize: isMobile ? '30px' : '36px', fontWeight: 800, lineHeight: 1.2, color: '#f59e0b', marginBottom: '12px', fontFamily: theme.fontFamily }}>
         Electric Potential
       </h1>
 
@@ -794,7 +789,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       {/* Premium Card */}
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '24px', padding: isMobile ? '24px' : '32px', maxWidth: '700px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-        <svg viewBox="0 0 400 300" style={{ width: '100%', margin: '0 auto 24px', display: 'block' }}>
+        <svg viewBox="0 0 400 300" style={{ width: '100%', margin: '0 auto 24px', display: 'block' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Electric Potential visualization">
           <defs>
             {/* Premium background gradient showing potential field */}
             <radialGradient id="epotHookBg" cx="25%" cy="50%" r="80%">
@@ -928,7 +923,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           boxShadow: '0 4px 20px rgba(217, 119, 6, 0.3)',
           transition: 'all 0.3s ease',
           marginTop: '32px',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
         }}
       >
         Explore Electric Potential
@@ -949,7 +944,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <p className="text-lg text-slate-300 mb-4">
           A positive test charge is released from rest at point A (high potential) and moves freely to point B (low potential).
         </p>
-        <svg viewBox="0 0 300 150" className="w-full max-w-sm mx-auto">
+        <svg viewBox="0 0 300 150" className="w-full max-w-sm mx-auto" preserveAspectRatio="xMidYMid meet">
           <rect x="0" y="0" width="300" height="150" fill="#1e293b" rx="10" />
           {/* Potential gradient background */}
           <linearGradient id="vGrad">
@@ -1086,7 +1081,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
     return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '16px', fontFamily: theme.fontFamily }}>
         Electric Potential Lab
       </h2>
 
@@ -1112,7 +1107,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       {/* Main SVG Graph */}
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', width: '100%' }}>
-        <svg viewBox="0 0 420 400" style={{ width: '100%', display: 'block' }}>
+        <svg viewBox="0 0 420 400" style={{ width: '100%', display: 'block' }} preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="epotCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#f59e0b" />
@@ -1328,7 +1323,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
   const renderReview = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '24px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, lineHeight: 1.3, color: '#ffffff', marginBottom: '24px', fontFamily: theme.fontFamily }}>
         Understanding Electric Potential
       </h2>
 
@@ -1428,7 +1423,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <p className="text-lg text-slate-300 mb-4">
           A 9V battery is connected to a circuit. You measure the potential at various points.
         </p>
-        <svg viewBox="0 0 300 200" className="w-full max-w-sm mx-auto mb-4">
+        <svg viewBox="0 0 300 200" className="w-full max-w-sm mx-auto mb-4" preserveAspectRatio="xMidYMid meet">
           {/* Battery symbol */}
           <rect x="50" y="60" width="10" height="80" fill="#ef4444" />
           <rect x="70" y="75" width="10" height="50" fill="#3b82f6" />
@@ -1529,7 +1524,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       }}>
       <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
+        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto" preserveAspectRatio="xMidYMid meet">
           {/* Background */}
           <rect x="0" y="0" width="400" height="300" fill="#1e293b" rx="15" />
 
@@ -2199,7 +2194,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           opacity: isFirstPhase ? 0.4 : 1,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
           fontSize: '14px',
         }}
       >
@@ -2248,7 +2243,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           opacity: canAdvance ? 1 : 0.4,
           transition: 'all 0.3s ease',
           fontWeight: 600,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+          fontFamily: theme.fontFamily,
           fontSize: '14px',
         }}
         disabled={!canAdvance}
@@ -2265,7 +2260,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+      fontFamily: theme.fontFamily,
       position: 'relative',
       overflow: 'hidden',
     }}>

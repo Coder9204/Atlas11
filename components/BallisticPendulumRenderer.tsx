@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================================
 // GAME 115: BALLISTIC PENDULUM
 // Classic experiment to measure projectile velocity using momentum conservation
@@ -12,6 +14,7 @@ interface BallisticPendulumRendererProps {
   phase?: string;
   onPhaseComplete?: () => void;
   onPredictionMade?: (prediction: string) => void;
+  onGameEvent?: (event: any) => void;
 }
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -53,6 +56,7 @@ const colors = {
 
 const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   gamePhase, phase: phaseProp, onPhaseComplete, onPredictionMade,
+  onGameEvent,
 }) => {
   // Internal phase management - defaults to 'hook' when no prop provided
   const getInitialPhase = (): Phase => {
@@ -64,25 +68,15 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Sync with external phase changes
+  const { isMobile } = useViewport();
+// Sync with external phase changes
   useEffect(() => {
     const externalPhase = gamePhase || phaseProp;
     if (externalPhase && PHASE_ORDER.includes(externalPhase as Phase) && externalPhase !== phase) {
       setPhase(externalPhase as Phase);
     }
   }, [gamePhase, phaseProp, phase]);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
+// Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -231,7 +225,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
+        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Ballistic Pendulum visualization">
           {/* ========== PREMIUM DEFS SECTION ========== */}
           <defs>
             {/* Premium metallic gun gradient with depth */}
@@ -1177,7 +1171,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             {/* Left: Energy comparison SVG */}
             <div style={{ flex: isMobile ? 'none' : 1, width: '100%', minWidth: 0 }}>
               <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-                <svg viewBox="0 0 400 280" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
+                <svg viewBox="0 0 400 280" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                   <defs>
                     <linearGradient id="twistLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#030712" />
@@ -1490,7 +1484,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               </button>
             ) : (
               <button
-                onClick={() => allAnswered && setTestSubmitted(true)}
+                onClick={() => { if (allAnswered) { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); } }}
                 disabled={!allAnswered}
                 style={{
                   flex: 1,

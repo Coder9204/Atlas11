@@ -14,6 +14,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import TransferPhaseView from './TransferPhaseView';
 
+import { theme } from '../lib/theme';
+import { useViewport } from '../hooks/useViewport';
 // ============================================================
 // THEME COLORS
 // ============================================================
@@ -341,16 +343,8 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
   const [viewedApps, setViewedApps] = useState<Set<number>>(new Set([0]));
   const [flowVelocity, setFlowVelocity] = useState(50);
   const [dampingLevel, setDampingLevel] = useState(50);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-
-  // Emit game events
+  const { isMobile } = useViewport();
+// Emit game events
   const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
     if (onGameEvent) {
       onGameEvent({
@@ -611,7 +605,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     const refPath = computePressureCurve(20);
 
     return (
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Fluid Inertia visualization">
         {renderSvgDefs()}
 
         {/* Title */}
@@ -713,7 +707,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
     const peakY = padT + plotH * (1 - peakYNorm);
 
     return (
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
         {renderSvgDefs()}
 
         {/* Title */}
@@ -778,7 +772,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
   // Render predict phase SVG (static preview)
   const renderPredictSVG = () => (
-    <svg viewBox="0 0 450 250" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+    <svg viewBox="0 0 450 250" style={{ width: '100%', maxWidth: '450px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
       {renderSvgDefs()}
 
       {/* Title */}
@@ -1107,7 +1101,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
               {/* SVG diagram for review */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                <svg viewBox="0 0 400 200" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                   {renderSvgDefs()}
 
                   {/* Title */}
@@ -1216,7 +1210,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
               {/* SVG visualization of shock absorber */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                <svg viewBox="0 0 300 220" style={{ width: '100%', maxWidth: '300px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                <svg viewBox="0 0 300 220" style={{ width: '100%', maxWidth: '300px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                   {renderSvgDefs()}
 
                   {/* Shock absorber body */}
@@ -1418,7 +1412,7 @@ export default function FluidInertiaRenderer({ onGameEvent, gamePhase }: FluidIn
 
               {/* SVG diagram for twist review */}
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                <svg viewBox="0 0 350 210" style={{ width: '100%', maxWidth: '350px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
+                <svg viewBox="0 0 350 210" style={{ width: '100%', maxWidth: '350px', height: 'auto', background: colors.bgDark, borderRadius: '12px' }} preserveAspectRatio="xMidYMid meet">
                   {renderSvgDefs()}
 
                   {/* Title */}
