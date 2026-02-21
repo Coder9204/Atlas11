@@ -263,7 +263,7 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
       data-game-shell
       data-slug={slug}
       data-difficulty={learnerLevel.current}
-      style={{ width: '100%', minHeight: '100vh' }}
+      style={{ width: '100%', minHeight: '100vh', background: '#0f172a', color: '#f8fafc', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
     >
       {showTutorial && <GameTutorialOverlay onDismiss={() => setShowTutorial(false)} />}
       <FreeUsageBanner />
