@@ -17,7 +17,7 @@ import { useFreeTimer, clearFreeTimer } from '../hooks/useFreeTimer';
 import { trackAuthModalShown, trackAuthModalDismissed, trackSignupCompleted } from '../services/AnalyticsService';
 
 export interface Subscription {
-  tier: 'free' | 'student' | 'pro' | 'family' | 'lifetime';
+  tier: 'free' | 'plus' | 'pro';
   status: string;
 }
 

@@ -12,6 +12,7 @@ const ProgressDashboard = lazy(() => import('./components/ProgressDashboard'));
 const LearningPathPage = lazy(() => import('./components/LearningPathPage'));
 const CustomGameBuilder = lazy(() => import('./components/CustomGameBuilder'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const AboutPage = lazy(() => import('./components/AboutPage'));
 
 // SEO page components (lazy loaded)
 const CategoryPage = lazy(() => import('./components/CategoryPage'));
@@ -145,6 +146,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <CustomGameBuilder />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/about',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <AboutPage />
       </Suspense>
     ),
   },

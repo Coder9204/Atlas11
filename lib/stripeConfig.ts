@@ -7,20 +7,15 @@ export interface PriceMapping {
   annual: string;
 }
 
-export const stripePrices: Record<string, PriceMapping | string> = {
-  student: {
-    monthly: import.meta.env.VITE_STRIPE_PRICE_STUDENT_MONTHLY || '',
-    annual: import.meta.env.VITE_STRIPE_PRICE_STUDENT_ANNUAL || '',
+export const stripePrices: Record<string, PriceMapping> = {
+  plus: {
+    monthly: import.meta.env.VITE_STRIPE_PRICE_PLUS_MONTHLY || '',
+    annual: import.meta.env.VITE_STRIPE_PRICE_PLUS_ANNUAL || '',
   },
   pro: {
     monthly: import.meta.env.VITE_STRIPE_PRICE_PRO_MONTHLY || '',
     annual: import.meta.env.VITE_STRIPE_PRICE_PRO_ANNUAL || '',
   },
-  family: {
-    monthly: import.meta.env.VITE_STRIPE_PRICE_FAMILY_MONTHLY || '',
-    annual: import.meta.env.VITE_STRIPE_PRICE_FAMILY_ANNUAL || '',
-  },
-  lifetime: import.meta.env.VITE_STRIPE_PRICE_LIFETIME || '',
 };
 
 /**
@@ -29,6 +24,5 @@ export const stripePrices: Record<string, PriceMapping | string> = {
 export function getPriceId(tier: string, billingCycle: 'monthly' | 'annual'): string {
   const price = stripePrices[tier];
   if (!price) return '';
-  if (typeof price === 'string') return price; // lifetime
   return price[billingCycle] || '';
 }

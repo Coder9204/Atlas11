@@ -3,10 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { theme, withOpacity } from '../lib/theme';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LANDING PAGE — Conversion-focused entry point for new visitors
-// ─────────────────────────────────────────────────────────────────────────────
-
 const categories = [
   { name: 'Mechanics', icon: '\u2699\uFE0F', color: '#3B82F6', count: 55 },
   { name: 'Thermo', icon: '\uD83D\uDD25', color: '#EF4444', count: 23 },
@@ -49,7 +45,7 @@ const testimonials = [
     role: 'AP Physics Student',
   },
   {
-    quote: 'I use this with my kids every evening. They beg to play "one more game" — and they\'re learning real physics.',
+    quote: 'I use this with my kids every evening. They beg to play "one more game" \u2014 and they\'re learning real physics.',
     author: 'David M.',
     role: 'Parent & Engineer',
   },
@@ -58,6 +54,19 @@ const testimonials = [
     author: 'Priya R.',
     role: 'EE Undergrad',
   },
+];
+
+const howItWorksSteps = [
+  { step: '1', title: 'Pick a Game', description: 'Choose from 340+ interactive physics simulations across 11 categories.', icon: '\uD83C\uDFAF' },
+  { step: '2', title: 'Predict', description: 'Make a prediction about what will happen before running the experiment.', icon: '\uD83E\uDD14' },
+  { step: '3', title: 'Experiment', description: 'Drag sliders, tweak variables, and watch the physics unfold in real time.', icon: '\uD83E\uDDEA' },
+  { step: '4', title: 'Master', description: 'Review your results, get AI coaching, and build lasting understanding.', icon: '\uD83C\uDFC6' },
+];
+
+const pricingPreview = [
+  { name: 'Free', price: '$0', period: '', description: '5 games/day, basic tracking', color: theme.colors.textMuted },
+  { name: 'Plus', price: '$4.17', period: '/mo', description: 'All games, AI coach, analytics', color: theme.colors.success, popular: true },
+  { name: 'Pro', price: '$8.33', period: '/mo', description: 'Plus + offline, certs, priority', color: theme.colors.info },
 ];
 
 const LandingPage: React.FC = () => {
@@ -97,22 +106,10 @@ const LandingPage: React.FC = () => {
           <span style={{ fontSize: 28 }}>{'\u269B\uFE0F'}</span>
           <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px' }}>Atlas</span>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={() => navigate('/pricing')}
-            style={{
-              background: 'transparent',
-              border: `1px solid ${theme.colors.border}`,
-              color: theme.colors.textSecondary,
-              padding: '8px 18px',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontFamily: theme.fontFamily,
-              fontSize: 14,
-            }}
-          >
-            Pricing
-          </button>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <a href="/games" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>
+          <a href="/pricing" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
+          <a href="/about" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>About</a>
           <button
             onClick={() => navigate('/onboarding')}
             style={{
@@ -247,7 +244,6 @@ const LandingPage: React.FC = () => {
                 </feMerge>
               </filter>
             </defs>
-            {/* Wave animation */}
             {[0, 1, 2].map(i => {
               const points = [];
               for (let x = 0; x <= 800; x += 4) {
@@ -267,7 +263,6 @@ const LandingPage: React.FC = () => {
                 />
               );
             })}
-            {/* Floating particle dots */}
             {[120, 300, 500, 680].map((cx, i) => (
               <circle
                 key={i}
@@ -307,7 +302,7 @@ const LandingPage: React.FC = () => {
         ))}
       </section>
 
-      {/* Features Section */}
+      {/* How It Works Section */}
       <section style={{
         padding: '80px 24px',
         maxWidth: 1100,
@@ -320,7 +315,74 @@ const LandingPage: React.FC = () => {
           marginBottom: 12,
           letterSpacing: '-0.5px',
         }}>
-          How Atlas Works
+          How It Works
+        </h2>
+        <p style={{
+          textAlign: 'center',
+          color: theme.colors.textMuted,
+          fontSize: 16,
+          maxWidth: 500,
+          margin: '0 auto 48px',
+        }}>
+          Four steps to mastering any physics concept
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 24,
+        }}>
+          {howItWorksSteps.map((s, i) => (
+            <div key={i} style={{
+              background: theme.colors.bgCard,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: 16,
+              padding: 28,
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              <div style={{
+                fontSize: 36,
+                marginBottom: 14,
+              }}>
+                {s.icon}
+              </div>
+              <div style={{
+                position: 'absolute',
+                top: 12,
+                left: 16,
+                fontSize: 12,
+                fontWeight: 700,
+                color: theme.colors.info,
+                background: withOpacity(theme.colors.info, 0.1),
+                borderRadius: 6,
+                padding: '2px 8px',
+              }}>
+                Step {s.step}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{s.title}</h3>
+              <p style={{ color: theme.colors.textMuted, fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                {s.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section style={{
+        padding: '60px 24px 80px',
+        maxWidth: 1100,
+        margin: '0 auto',
+      }}>
+        <h2 style={{
+          textAlign: 'center',
+          fontSize: 'clamp(24px, 4vw, 36px)',
+          fontWeight: 700,
+          marginBottom: 12,
+          letterSpacing: '-0.5px',
+        }}>
+          Why Atlas Works
         </h2>
         <p style={{
           textAlign: 'center',
@@ -389,7 +451,7 @@ const LandingPage: React.FC = () => {
           maxWidth: 500,
           margin: '0 auto 40px',
         }}>
-          From mechanics to quantum computing — every concept is a game
+          From mechanics to quantum computing {'\u2014'} every concept is a game
         </p>
 
         <div style={{
@@ -459,7 +521,7 @@ const LandingPage: React.FC = () => {
                   fontStyle: 'italic',
                   margin: '0 0 18px',
                 }}>
-                  "{t.quote}"
+                  &ldquo;{t.quote}&rdquo;
                 </p>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{t.author}</div>
@@ -468,6 +530,89 @@ const LandingPage: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Preview */}
+      <section style={{
+        padding: '80px 24px',
+        maxWidth: 900,
+        margin: '0 auto',
+      }}>
+        <h2 style={{
+          textAlign: 'center',
+          fontSize: 'clamp(24px, 4vw, 36px)',
+          fontWeight: 700,
+          marginBottom: 12,
+          letterSpacing: '-0.5px',
+        }}>
+          Simple Pricing
+        </h2>
+        <p style={{
+          textAlign: 'center',
+          color: theme.colors.textMuted,
+          fontSize: 16,
+          maxWidth: 500,
+          margin: '0 auto 40px',
+        }}>
+          Start free, upgrade when you're ready
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: 20,
+        }}>
+          {pricingPreview.map((tier, i) => (
+            <div key={i} style={{
+              background: theme.colors.bgCard,
+              border: `1px solid ${tier.popular ? theme.colors.success : theme.colors.border}`,
+              borderRadius: 16,
+              padding: '28px 24px',
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              {tier.popular && (
+                <div style={{
+                  position: 'absolute',
+                  top: -10,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: theme.colors.success,
+                  color: '#fff',
+                  padding: '4px 12px',
+                  borderRadius: 100,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}>
+                  Most Popular
+                </div>
+              )}
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: tier.color, marginBottom: 8 }}>{tier.name}</h3>
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 36, fontWeight: 800 }}>{tier.price}</span>
+                {tier.period && <span style={{ color: theme.colors.textMuted, fontSize: 14 }}>{tier.period}</span>}
+              </div>
+              <p style={{ color: theme.colors.textMuted, fontSize: 13, margin: 0 }}>
+                {tier.description}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
+          <a
+            href="/pricing"
+            style={{
+              color: theme.colors.info,
+              fontSize: 15,
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
+          >
+            See full pricing {'\u2192'}
+          </a>
         </div>
       </section>
 
@@ -532,7 +677,7 @@ const LandingPage: React.FC = () => {
           {[
             { label: 'Games', href: '/games' },
             { label: 'Pricing', href: '/pricing' },
-            { label: 'Progress', href: '/progress' },
+            { label: 'About', href: '/about' },
           ].map((link, i) => (
             <a
               key={i}

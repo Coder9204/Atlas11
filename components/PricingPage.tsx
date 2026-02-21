@@ -5,10 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { getPriceId } from '../lib/stripeConfig';
 import { createCheckout, openCustomerPortal } from '../services/subscriptionService';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PRICING PAGE - Conversion-Optimized Design
-// ─────────────────────────────────────────────────────────────────────────────
-
 const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
@@ -23,7 +19,6 @@ const PricingPage: React.FC = () => {
       return;
     }
 
-    // Must be authenticated to checkout
     if (!auth?.isAuthenticated) {
       auth?.showAuthModal('pricing_cta');
       return;
@@ -41,24 +36,6 @@ const PricingPage: React.FC = () => {
     }
   };
 
-  const handleLifetimeCTA = async () => {
-    if (!auth?.isAuthenticated) {
-      auth?.showAuthModal('pricing_cta');
-      return;
-    }
-
-    const priceId = getPriceId('lifetime', 'monthly');
-    if (!priceId) return;
-
-    setCheckoutLoading('lifetime');
-    try {
-      await createCheckout(priceId);
-    } catch (err) {
-      console.error('Checkout failed:', err);
-      setCheckoutLoading(null);
-    }
-  };
-
   const handleManageSubscription = async () => {
     try {
       await openCustomerPortal();
@@ -67,12 +44,10 @@ const PricingPage: React.FC = () => {
     }
   };
 
-  // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    bgCardHover: '#22222e',
     accent: '#3B82F6',
     accentGlow: 'rgba(59, 130, 246, 0.3)',
     success: '#10B981',
@@ -81,7 +56,6 @@ const PricingPage: React.FC = () => {
     textSecondary: '#9CA3AF',
     textMuted: '#6B7280',
     border: '#2a2a3a',
-    gold: '#FFD700',
   };
 
   const pricingTiers = [
@@ -93,12 +67,12 @@ const PricingPage: React.FC = () => {
       annualPrice: 0,
       color: colors.textSecondary,
       features: [
-        { text: '5 games per month', included: true },
-        { text: 'Basic AI hints', included: true },
-        { text: 'Progress tracking', included: true },
-        { text: 'Ads between games', included: true, note: 'ad-supported' },
+        { text: '5 games per day', included: true },
+        { text: 'Basic progress tracking', included: true },
+        { text: 'Community access', included: true },
         { text: 'Full game library', included: false },
-        { text: 'Advanced AI coaching', included: false },
+        { text: 'AI voice coach', included: false },
+        { text: 'Progress analytics', included: false },
         { text: 'Certificates', included: false },
         { text: 'Offline mode', included: false },
       ],
@@ -106,83 +80,47 @@ const PricingPage: React.FC = () => {
       popular: false,
     },
     {
-      id: 'student',
-      name: 'Student',
-      tagline: 'For learners on a budget',
-      monthlyPrice: 4.99,
-      annualPrice: 29.99,
+      id: 'plus',
+      name: 'Plus',
+      tagline: 'For dedicated learners',
+      monthlyPrice: 5.99,
+      annualPrice: 49.99,
       color: colors.success,
-      badge: '82% cheaper than competitors',
       features: [
-        { text: 'All 260+ games unlimited', included: true },
-        { text: 'Full AI coaching', included: true },
-        { text: 'No ads ever', included: true },
+        { text: 'All 340+ games unlimited', included: true },
+        { text: 'AI voice coach', included: true },
         { text: 'Progress analytics', included: true },
+        { text: 'No ads', included: true },
         { text: 'Mobile & desktop sync', included: true },
-        { text: 'Requires .edu email', included: true, note: 'verification' },
+        { text: 'Offline mode', included: false },
         { text: 'Completion certificates', included: false },
         { text: 'Priority support', included: false },
       ],
-      cta: 'Start Learning',
-      popular: false,
-      requiresVerification: true,
+      cta: 'Get Plus',
+      popular: true,
     },
     {
       id: 'pro',
       name: 'Pro',
-      tagline: 'Most popular choice',
-      monthlyPrice: 9.99,
-      annualPrice: 59.99,
+      tagline: 'The complete experience',
+      monthlyPrice: 11.99,
+      annualPrice: 99.99,
       color: colors.accent,
       features: [
-        { text: 'All 260+ games unlimited', included: true },
-        { text: 'Full AI coaching', included: true },
-        { text: 'No ads ever', included: true },
-        { text: 'Advanced analytics dashboard', included: true },
-        { text: 'Shareable certificates', included: true },
+        { text: 'Everything in Plus', included: true },
         { text: 'Offline mode', included: true },
+        { text: 'Shareable certificates', included: true },
         { text: 'Priority support', included: true },
         { text: 'Early access to new games', included: true },
+        { text: 'Advanced analytics dashboard', included: true },
+        { text: 'Custom learning paths', included: true },
+        { text: 'API access', included: true },
       ],
       cta: 'Start 7-Day Free Trial',
-      popular: true,
-      trial: true,
-    },
-    {
-      id: 'family',
-      name: 'Family',
-      tagline: 'Learn together',
-      monthlyPrice: 14.99,
-      annualPrice: 99.99,
-      color: colors.warning,
-      features: [
-        { text: 'Up to 5 family members', included: true },
-        { text: 'All Pro features per user', included: true },
-        { text: 'Parent dashboard', included: true },
-        { text: 'Weekly progress reports', included: true },
-        { text: 'Shared achievements', included: true },
-        { text: 'Individual progress tracking', included: true },
-        { text: 'Family challenges', included: true },
-        { text: 'Priority family support', included: true },
-      ],
-      cta: 'Start Family Trial',
       popular: false,
       trial: true,
     },
   ];
-
-  const lifetimeOffer = {
-    price: 199,
-    originalPrice: 499,
-    savings: 300,
-    features: [
-      'All Pro features forever',
-      'All future updates included',
-      'Lifetime priority support',
-      'Early adopter badge',
-      'No recurring payments',
-    ],
-  };
 
   const testimonials = [
     {
@@ -206,7 +144,7 @@ const PricingPage: React.FC = () => {
   ];
 
   const stats = [
-    { value: '260+', label: 'Interactive Games' },
+    { value: '340+', label: 'Interactive Games' },
     { value: '50K+', label: 'Active Learners' },
     { value: '4.9', label: 'App Store Rating' },
     { value: '95%', label: 'Pass Rate Improvement' },
@@ -249,19 +187,16 @@ const PricingPage: React.FC = () => {
             justifyContent: 'center',
             fontSize: '20px',
           }}>
-            🎓
+            {'\uD83C\uDF93'}
           </div>
           <span style={{ fontSize: '20px', fontWeight: 700, color: colors.textPrimary }}>
             Atlas Coach
           </span>
         </a>
         <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>
-            Home
-          </a>
-          <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>
-            Games
-          </a>
+          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
+          <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Games</a>
+          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>About</a>
           {auth?.isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {auth.subscription && auth.subscription.tier !== 'free' && (
@@ -311,27 +246,14 @@ const PricingPage: React.FC = () => {
         maxWidth: '800px',
         margin: '0 auto',
       }}>
-        <div style={{
-          display: 'inline-block',
-          background: 'rgba(59, 130, 246, 0.1)',
-          border: `1px solid ${colors.accent}`,
-          borderRadius: '100px',
-          padding: '8px 16px',
-          marginBottom: '24px',
-        }}>
-          <span style={{ color: colors.accent, fontSize: '14px', fontWeight: 500 }}>
-            🎉 Limited Time: 40% off annual plans
-          </span>
-        </div>
         <h1 style={{
           fontSize: 'clamp(32px, 5vw, 48px)',
           fontWeight: 800,
           marginBottom: '16px',
           lineHeight: 1.2,
         }}>
-          Master Physics & Engineering
-          <br />
-          <span style={{ color: colors.accent }}>Through Play</span>
+          Simple, Transparent{' '}
+          <span style={{ color: colors.accent }}>Pricing</span>
         </h1>
         <p style={{
           fontSize: '18px',
@@ -340,8 +262,8 @@ const PricingPage: React.FC = () => {
           margin: '0 auto 32px',
           lineHeight: 1.6,
         }}>
-          260+ interactive games with AI coaching. Learn complex concepts
-          through hands-on simulations that make physics click.
+          340+ interactive physics games with AI coaching.
+          Start free, upgrade when you're ready.
         </p>
 
         {/* Stats */}
@@ -354,12 +276,8 @@ const PricingPage: React.FC = () => {
         }}>
           {stats.map((stat) => (
             <div key={stat.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: colors.accent }}>
-                {stat.value}
-              </div>
-              <div style={{ fontSize: '13px', color: colors.textMuted }}>
-                {stat.label}
-              </div>
+              <div style={{ fontSize: '28px', fontWeight: 700, color: colors.accent }}>{stat.value}</div>
+              <div style={{ fontSize: '13px', color: colors.textMuted }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -420,7 +338,7 @@ const PricingPage: React.FC = () => {
               fontSize: '11px',
               fontWeight: 700,
             }}>
-              Save 50%
+              Save 30%
             </span>
           </button>
         </div>
@@ -431,7 +349,7 @@ const PricingPage: React.FC = () => {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '24px',
-        maxWidth: '1200px',
+        maxWidth: '960px',
         margin: '0 auto',
         padding: '0 24px 60px',
       }}>
@@ -450,18 +368,18 @@ const PricingPage: React.FC = () => {
               onMouseLeave={() => setHoveredTier(null)}
               style={{
                 background: tier.popular
-                  ? `linear-gradient(180deg, ${colors.bgCard} 0%, rgba(59, 130, 246, 0.1) 100%)`
+                  ? `linear-gradient(180deg, ${colors.bgCard} 0%, rgba(16, 185, 129, 0.08) 100%)`
                   : colors.bgCard,
                 borderRadius: '16px',
                 padding: '32px 24px',
                 border: tier.popular
-                  ? `2px solid ${colors.accent}`
+                  ? `2px solid ${colors.success}`
                   : `1px solid ${isHovered ? colors.border : 'transparent'}`,
                 position: 'relative',
                 transition: 'all 0.3s ease',
                 transform: isHovered ? 'translateY(-4px)' : 'none',
                 boxShadow: tier.popular
-                  ? `0 0 40px ${colors.accentGlow}`
+                  ? '0 0 40px rgba(16, 185, 129, 0.2)'
                   : isHovered
                     ? '0 10px 40px rgba(0,0,0,0.3)'
                     : 'none',
@@ -474,7 +392,7 @@ const PricingPage: React.FC = () => {
                   top: '-12px',
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  background: colors.accent,
+                  background: colors.success,
                   color: 'white',
                   padding: '6px 16px',
                   borderRadius: '100px',
@@ -484,22 +402,6 @@ const PricingPage: React.FC = () => {
                   letterSpacing: '0.5px',
                 }}>
                   Most Popular
-                </div>
-              )}
-
-              {/* Savings Badge */}
-              {tier.badge && (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  border: `1px solid ${colors.success}`,
-                  borderRadius: '6px',
-                  padding: '6px 10px',
-                  marginBottom: '16px',
-                  display: 'inline-block',
-                }}>
-                  <span style={{ color: colors.success, fontSize: '12px', fontWeight: 600 }}>
-                    {tier.badge}
-                  </span>
                 </div>
               )}
 
@@ -570,9 +472,11 @@ const PricingPage: React.FC = () => {
                   borderRadius: '10px',
                   border: tier.popular ? 'none' : `1px solid ${colors.border}`,
                   background: tier.popular
-                    ? `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`
-                    : 'transparent',
-                  color: tier.popular ? 'white' : colors.textPrimary,
+                    ? `linear-gradient(135deg, ${colors.success}, #059669)`
+                    : tier.id === 'pro'
+                      ? `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`
+                      : 'transparent',
+                  color: tier.popular || tier.id === 'pro' ? 'white' : colors.textPrimary,
                   fontWeight: 600,
                   fontSize: '15px',
                   cursor: checkoutLoading === tier.id ? 'wait' : 'pointer',
@@ -582,7 +486,7 @@ const PricingPage: React.FC = () => {
                 }}
               >
                 {checkoutLoading === tier.id ? 'Redirecting...' : tier.cta}
-                {tier.trial && checkoutLoading !== tier.id && <span style={{ opacity: 0.8, marginLeft: '4px' }}>→</span>}
+                {tier.trial && checkoutLoading !== tier.id && <span style={{ opacity: 0.8, marginLeft: '4px' }}>{'\u2192'}</span>}
               </button>
 
               {/* Features */}
@@ -601,25 +505,13 @@ const PricingPage: React.FC = () => {
                       fontSize: '16px',
                       lineHeight: 1,
                     }}>
-                      {feature.included ? '✓' : '−'}
+                      {feature.included ? '\u2713' : '\u2212'}
                     </span>
                     <span style={{
                       textDecoration: feature.included ? 'none' : 'line-through',
                       opacity: feature.included ? 1 : 0.5,
                     }}>
                       {feature.text}
-                      {feature.note && (
-                        <span style={{
-                          marginLeft: '6px',
-                          fontSize: '11px',
-                          color: colors.textMuted,
-                          background: colors.bgSecondary,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                        }}>
-                          {feature.note}
-                        </span>
-                      )}
                     </span>
                   </li>
                 ))}
@@ -627,142 +519,6 @@ const PricingPage: React.FC = () => {
             </div>
           );
         })}
-      </section>
-
-      {/* Lifetime Deal */}
-      <section style={{
-        maxWidth: '900px',
-        margin: '0 auto 80px',
-        padding: '0 24px',
-      }}>
-        <div style={{
-          background: `linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)`,
-          border: `2px solid ${colors.gold}`,
-          borderRadius: '20px',
-          padding: '40px',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/* Decorative elements */}
-          <div style={{
-            position: 'absolute',
-            top: '-50px',
-            right: '-50px',
-            width: '150px',
-            height: '150px',
-            background: `radial-gradient(circle, ${colors.gold}22 0%, transparent 70%)`,
-            borderRadius: '50%',
-          }} />
-
-          <div style={{
-            display: 'inline-block',
-            background: colors.gold,
-            color: '#000',
-            padding: '6px 16px',
-            borderRadius: '100px',
-            fontSize: '12px',
-            fontWeight: 700,
-            marginBottom: '20px',
-          }}>
-            ⚡ LIMITED TIME OFFER
-          </div>
-
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: 800,
-            marginBottom: '8px',
-          }}>
-            Lifetime Access
-          </h2>
-          <p style={{
-            color: colors.textSecondary,
-            marginBottom: '24px',
-            fontSize: '16px',
-          }}>
-            One payment. Learn forever. No subscriptions.
-          </p>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '16px',
-            marginBottom: '24px',
-          }}>
-            <span style={{
-              fontSize: '24px',
-              color: colors.textMuted,
-              textDecoration: 'line-through',
-            }}>
-              ${lifetimeOffer.originalPrice}
-            </span>
-            <span style={{
-              fontSize: '56px',
-              fontWeight: 800,
-              color: colors.gold,
-            }}>
-              ${lifetimeOffer.price}
-            </span>
-            <span style={{
-              background: 'rgba(16, 185, 129, 0.2)',
-              color: colors.success,
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontWeight: 700,
-            }}>
-              Save ${lifetimeOffer.savings}
-            </span>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '16px',
-            marginBottom: '32px',
-          }}>
-            {lifetimeOffer.features.map((feature) => (
-              <span key={feature} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: colors.textSecondary,
-                fontSize: '14px',
-              }}>
-                <span style={{ color: colors.gold }}>✓</span>
-                {feature}
-              </span>
-            ))}
-          </div>
-
-          <button
-            onClick={handleLifetimeCTA}
-            disabled={checkoutLoading === 'lifetime'}
-            style={{
-              background: `linear-gradient(135deg, ${colors.gold}, #FFA500)`,
-              color: '#000',
-              border: 'none',
-              padding: '16px 48px',
-              borderRadius: '12px',
-              fontSize: '18px',
-              fontWeight: 700,
-              cursor: checkoutLoading === 'lifetime' ? 'wait' : 'pointer',
-              boxShadow: `0 4px 20px ${colors.gold}44`,
-              opacity: checkoutLoading === 'lifetime' ? 0.7 : 1,
-            }}
-          >
-            {checkoutLoading === 'lifetime' ? 'Redirecting...' : 'Get Lifetime Access →'}
-          </button>
-
-          <p style={{
-            marginTop: '16px',
-            fontSize: '13px',
-            color: colors.textMuted,
-          }}>
-            🔒 30-day money-back guarantee • One-time payment
-          </p>
-        </div>
       </section>
 
       {/* Testimonials */}
@@ -792,7 +548,7 @@ const PricingPage: React.FC = () => {
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ marginBottom: '16px' }}>
-                {'⭐'.repeat(t.rating)}
+                {'\u2B50'.repeat(t.rating)}
               </div>
               <p style={{
                 fontSize: '15px',
@@ -800,7 +556,7 @@ const PricingPage: React.FC = () => {
                 lineHeight: 1.6,
                 marginBottom: '16px',
               }}>
-                "{t.quote}"
+                &ldquo;{t.quote}&rdquo;
               </p>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '14px' }}>{t.author}</div>
@@ -828,11 +584,11 @@ const PricingPage: React.FC = () => {
         {[
           {
             q: 'Can I try before I buy?',
-            a: 'Yes! The Free tier gives you access to 15 games per month forever. Pro and Family plans include a 7-day free trial with full access.',
+            a: 'Yes! The Free tier gives you 5 games per day forever. Pro includes a 7-day free trial with full access to everything.',
           },
           {
-            q: 'How does the Student discount work?',
-            a: 'Students get 50% off with a valid .edu email or student ID verification. The discount applies to both monthly and annual plans.',
+            q: 'What\'s the difference between Plus and Pro?',
+            a: 'Plus unlocks all 340+ games, AI coaching, and analytics. Pro adds offline mode, shareable certificates, priority support, and early access to new games.',
           },
           {
             q: 'Can I switch plans later?',
@@ -840,7 +596,7 @@ const PricingPage: React.FC = () => {
           },
           {
             q: 'Is there a money-back guarantee?',
-            a: 'Yes! All paid plans come with a 30-day money-back guarantee. If you\'re not satisfied, we\'ll refund you—no questions asked.',
+            a: 'Yes! All paid plans come with a 30-day money-back guarantee. If you\'re not satisfied, we\'ll refund you — no questions asked.',
           },
           {
             q: 'Do you offer school or team pricing?',
@@ -874,7 +630,7 @@ const PricingPage: React.FC = () => {
           Ready to master physics?
         </h2>
         <p style={{ color: colors.textSecondary, marginBottom: '32px', fontSize: '18px' }}>
-          Join 50,000+ learners. Start with 15 free games today.
+          Join 50,000+ learners. Start with 5 free games every day.
         </p>
         <button
           onClick={() => { window.location.href = '/games'; }}
@@ -890,7 +646,7 @@ const PricingPage: React.FC = () => {
             boxShadow: `0 4px 20px ${colors.accentGlow}`,
           }}
         >
-          Start Learning Free →
+          Start Learning Free {'\u2192'}
         </button>
       </section>
 
@@ -901,9 +657,10 @@ const PricingPage: React.FC = () => {
         textAlign: 'center',
       }}>
         <div style={{ color: colors.textMuted, fontSize: '14px' }}>
-          © 2025 Atlas Coach. All rights reserved.
+          {'\u00A9'} 2026 Atlas Coach. All rights reserved.
         </div>
         <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
+          <a href="/about" style={{ color: colors.textMuted, fontSize: '13px', textDecoration: 'none' }}>About</a>
           <a href="/privacy" style={{ color: colors.textMuted, fontSize: '13px', textDecoration: 'none' }}>Privacy</a>
           <a href="/terms" style={{ color: colors.textMuted, fontSize: '13px', textDecoration: 'none' }}>Terms</a>
           <a href="/contact" style={{ color: colors.textMuted, fontSize: '13px', textDecoration: 'none' }}>Contact</a>

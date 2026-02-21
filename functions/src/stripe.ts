@@ -18,13 +18,10 @@ function getStripe(): Stripe {
 function getPriceConfig(): Record<string, string> {
   const prices = functions.config().stripe?.prices || {};
   return {
-    student_monthly: prices.student_monthly || '',
-    student_annual: prices.student_annual || '',
+    plus_monthly: prices.plus_monthly || '',
+    plus_annual: prices.plus_annual || '',
     pro_monthly: prices.pro_monthly || '',
     pro_annual: prices.pro_annual || '',
-    family_monthly: prices.family_monthly || '',
-    family_annual: prices.family_annual || '',
-    lifetime: prices.lifetime || '',
   };
 }
 
@@ -61,8 +58,6 @@ export const createCheckoutSession = functions.https.onCall(async (data, context
     await userRef.set({ stripeCustomerId: customerId }, { merge: true });
   }
 
-  // Determine if this is a lifetime (one-time) or subscription
-  const isLifetime = priceId === priceConfig.lifetime;
   const tier = mapPriceIdToTier(priceId, priceConfig);
 
   // Build session params
@@ -70,14 +65,14 @@ export const createCheckoutSession = functions.https.onCall(async (data, context
     customer: customerId,
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
-    mode: isLifetime ? 'payment' : 'subscription',
+    mode: 'subscription',
     success_url: `${data.successUrl || 'https://atlascoach.com/games'}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: data.cancelUrl || 'https://atlascoach.com/pricing',
     metadata: { firebaseUID: uid, tier },
   };
 
-  // Add trial for Pro/Family subscriptions
-  if (!isLifetime && (tier === 'pro' || tier === 'family')) {
+  // Add trial for Pro subscriptions
+  if (tier === 'pro') {
     sessionParams.subscription_data = {
       trial_period_days: 7,
       metadata: { firebaseUID: uid, tier },
@@ -120,19 +115,7 @@ export const handleStripeWebhook = functions.https.onRequest(async (req, res) =>
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const uid = session.metadata?.firebaseUID;
-        if (!uid) break;
-
-        if (session.mode === 'payment') {
-          // Lifetime purchase
-          await syncSubscriptionToFirestore(uid, {
-            tier: 'lifetime',
-            status: 'active',
-          });
-          await triggerEmail(uid, 'subscription_confirmed').catch(console.error);
-        }
-        // For subscription mode, the subscription.updated event handles it
+        // For subscription mode, the subscription.created/updated events handle syncing
         break;
       }
 

@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 
 export interface SubscriptionData {
-  tier: 'free' | 'student' | 'pro' | 'family' | 'lifetime';
+  tier: 'free' | 'plus' | 'pro';
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
   stripeSubscriptionId?: string;
   currentPeriodEnd?: number;
@@ -15,13 +15,10 @@ export interface SubscriptionData {
  */
 export function mapPriceIdToTier(priceId: string, config: Record<string, string>): string {
   const mapping: Record<string, string> = {
-    [config.student_monthly || '']: 'student',
-    [config.student_annual || '']: 'student',
+    [config.plus_monthly || '']: 'plus',
+    [config.plus_annual || '']: 'plus',
     [config.pro_monthly || '']: 'pro',
     [config.pro_annual || '']: 'pro',
-    [config.family_monthly || '']: 'family',
-    [config.family_annual || '']: 'family',
-    [config.lifetime || '']: 'lifetime',
   };
   return mapping[priceId] || 'free';
 }
@@ -63,7 +60,7 @@ export async function verifySubscriptionAccess(userId: string): Promise<boolean>
   if (!data?.subscription) return false;
 
   const sub = data.subscription;
-  const activeTiers = ['student', 'pro', 'family', 'lifetime'];
+  const activeTiers = ['plus', 'pro'];
   const activeStatuses = ['active', 'trialing'];
 
   return activeTiers.includes(sub.tier) && activeStatuses.includes(sub.status);

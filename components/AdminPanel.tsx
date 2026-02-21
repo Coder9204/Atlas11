@@ -954,7 +954,7 @@ export default function AdminPanel() {
                       .map(([tier, count]) => ({
                         label: tier.charAt(0).toUpperCase() + tier.slice(1),
                         value: count,
-                        color: tier === 'lifetime' ? theme.success : tier === 'pro' ? theme.accent : theme.warning,
+                        color: tier === 'plus' ? theme.success : tier === 'pro' ? theme.accent : theme.warning,
                       }))}
                   />
                 </div>
