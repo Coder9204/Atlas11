@@ -691,61 +691,61 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
   ];
 
   const testQuestions = [
-    { id: 1, question: 'Why can\'t we use energy conservation during the collision?', options: [
+    { id: 1, question: 'Why can\'t we use energy conservation during the collision?', explanation: 'In an inelastic collision the bullet deforms and heats the block, so kinetic energy is NOT conserved. Only momentum is conserved during the collision itself.', options: [
       { id: 'a', text: 'Energy is created' },
       { id: 'b', text: 'It\'s an inelastic collision - kinetic energy is lost to heat/deformation', correct: true },
       { id: 'c', text: 'The pendulum is too heavy' },
       { id: 'd', text: 'We actually can use it' },
     ]},
-    { id: 2, question: 'What IS conserved during the bullet-block collision?', options: [
+    { id: 2, question: 'What IS conserved during the bullet-block collision?', explanation: 'Momentum (p = mv) is always conserved in collisions when no external forces act. The bullet\'s momentum transfers to the bullet+block system.', options: [
       { id: 'a', text: 'Kinetic energy' },
       { id: 'b', text: 'Potential energy' },
       { id: 'c', text: 'Momentum', correct: true },
       { id: 'd', text: 'Nothing' },
     ]},
-    { id: 3, question: 'What conservation law applies during the swing?', options: [
+    { id: 3, question: 'What conservation law applies during the swing?', explanation: 'After the collision, the block+bullet swings upward with no energy lost. Kinetic energy converts to gravitational potential energy: ½(m+M)V² = (m+M)gh.', options: [
       { id: 'a', text: 'Momentum' },
       { id: 'b', text: 'Mechanical energy (KE ↔ PE)', correct: true },
       { id: 'c', text: 'Neither' },
       { id: 'd', text: 'Mass' },
     ]},
-    { id: 4, question: 'If you double the bullet mass (same velocity), swing height:', options: [
+    { id: 4, question: 'If you double the bullet mass (same velocity), swing height:', explanation: 'Height depends on V² = (mv/(m+M))². Doubling m doesn\'t double V because (m+M) also increases. The relationship is nonlinear due to the mass ratio.', options: [
       { id: 'a', text: 'Doubles' },
       { id: 'b', text: 'Quadruples' },
       { id: 'c', text: 'Less than doubles (depends on ratio m/(m+M))', correct: true },
       { id: 'd', text: 'Stays the same' },
     ]},
-    { id: 5, question: 'The ballistic pendulum was historically used for:', options: [
+    { id: 5, question: 'The ballistic pendulum was historically used for:', explanation: 'Invented by Benjamin Robins in 1742, the ballistic pendulum was the first reliable method to measure bullet velocities before electronic chronographs existed.', options: [
       { id: 'a', text: 'Entertainment' },
       { id: 'b', text: 'Measuring bullet velocities', correct: true },
       { id: 'c', text: 'Timekeeping' },
       { id: 'd', text: 'Measuring gravity' },
     ]},
-    { id: 6, question: 'What type of collision is bullet embedding in the block?', options: [
+    { id: 6, question: 'What type of collision is bullet embedding in the block?', explanation: 'When objects stick together after collision, it\'s perfectly inelastic. Maximum kinetic energy is lost (converted to heat and deformation), but momentum is still conserved.', options: [
       { id: 'a', text: 'Perfectly elastic' },
       { id: 'b', text: 'Perfectly inelastic', correct: true },
       { id: 'c', text: 'Partially elastic' },
       { id: 'd', text: 'Explosive' },
     ]},
-    { id: 7, question: 'A heavier pendulum block means:', options: [
+    { id: 7, question: 'A heavier pendulum block means:', explanation: 'With more mass to share the momentum, the combined velocity V = mv/(m+M) decreases, which means less kinetic energy and a lower swing height.', options: [
       { id: 'a', text: 'Higher swing (more energy absorbed)' },
       { id: 'b', text: 'Lower swing (momentum shared with more mass)', correct: true },
       { id: 'c', text: 'Same swing height' },
       { id: 'd', text: 'The bullet bounces off' },
     ]},
-    { id: 8, question: 'What percentage of KE is typically lost in the collision?', options: [
+    { id: 8, question: 'What percentage of KE is typically lost in the collision?', explanation: 'The fraction of KE retained is m/(m+M). For a 10g bullet and 2000g block, only 0.5% of KE survives - over 99% is lost to heat and deformation.', options: [
       { id: 'a', text: 'About 1%' },
       { id: 'b', text: 'About 50%' },
       { id: 'c', text: 'Over 99% (when M >> m)', correct: true },
       { id: 'd', text: '0%' },
     ]},
-    { id: 9, question: 'Forensic ballistics uses similar principles to:', options: [
+    { id: 9, question: 'Forensic ballistics uses similar principles to:', explanation: 'By analyzing impact evidence (penetration depth, deformation), forensic scientists apply momentum conservation to reconstruct bullet velocities and shooting scenarios.', options: [
       { id: 'a', text: 'Identify bullet types from wounds', correct: true },
       { id: 'b', text: 'Make bullets travel faster' },
       { id: 'c', text: 'Design pendulum clocks' },
       { id: 'd', text: 'Measure gravity' },
     ]},
-    { id: 10, question: 'The combined momentum before and after collision is:', options: [
+    { id: 10, question: 'The combined momentum before and after collision is:', explanation: 'Newton\'s third law guarantees that internal forces cancel, so total momentum is unchanged: m×v(before) = (m+M)×V(after). This is the foundation of collision analysis.', options: [
       { id: 'a', text: 'Greater after' },
       { id: 'b', text: 'Less after' },
       { id: 'c', text: 'Equal (momentum is conserved)', correct: true },
@@ -1346,26 +1346,42 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </div>
             {/* Answer review */}
             <div style={{ padding: '16px' }}>
-              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Review:</h3>
+              <h3 style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '16px' }}>Answer Key:</h3>
               {testQuestions.map((q, idx) => {
                 const userAnswer = testAnswers[q.id];
-                const correctAnswer = q.options.find(o => o.correct)?.id;
+                const correctOption = q.options.find(o => o.correct);
+                const correctAnswer = correctOption?.id;
+                const userOption = q.options.find(o => o.id === userAnswer);
                 const isCorrect = userAnswer === correctAnswer;
                 return (
                   <div key={q.id} style={{
                     background: colors.bgCard,
-                    margin: '8px 0',
-                    padding: '12px 16px',
+                    margin: '12px 0',
+                    padding: '16px',
                     borderRadius: '10px',
                     borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '18px', flexShrink: 0 }}>
                         {isCorrect ? '✓' : '✗'}
                       </span>
-                      <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                        Q{idx + 1}: {isCorrect ? 'Correct' : 'Incorrect'}
+                      <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 600 }}>
+                        Q{idx + 1}. {q.question}
                       </span>
+                    </div>
+                    {!isCorrect && (
+                      <div style={{ marginLeft: '26px', marginBottom: '6px' }}>
+                        <span style={{ color: colors.error, fontSize: '13px' }}>Your answer: </span>
+                        <span style={{ color: colors.textMuted, fontSize: '13px' }}>{userOption?.text}</span>
+                      </div>
+                    )}
+                    <div style={{ marginLeft: '26px', marginBottom: '8px' }}>
+                      <span style={{ color: colors.success, fontSize: '13px' }}>Correct answer: </span>
+                      <span style={{ color: colors.textSecondary, fontSize: '13px' }}>{correctOption?.text}</span>
+                    </div>
+                    <div style={{ marginLeft: '26px', background: 'rgba(245, 158, 11, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                      <span style={{ color: colors.accent, fontSize: '12px', fontWeight: 600 }}>Why? </span>
+                      <span style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: '1.5' }}>{q.explanation}</span>
                     </div>
                   </div>
                 );
@@ -1484,7 +1500,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
               </button>
             ) : (
               <button
-                onClick={() => { if (allAnswered) { setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score: testScore, total: testQuestions.length } }); } }}
+                onClick={() => { if (allAnswered) { const score = testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length; setTestSubmitted(true); onGameEvent?.({ type: 'game_completed', details: { score, total: testQuestions.length } }); } }}
                 disabled={!allAnswered}
                 style={{
                   flex: 1,
@@ -1526,7 +1542,12 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(true, true, 'Complete Game →')}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
+          <button onClick={() => { onGameEvent?.({ type: 'mastery_achieved', details: { score: testQuestions.filter(q => testAnswers[q.id] === q.options.find(o => o.correct)?.id).length, total: testQuestions.length } }); window.location.href = '/games'; }}
+            style={{ width: '100%', minHeight: '52px', padding: '14px 24px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', borderRadius: '12px', color: colors.textPrimary, fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            Complete Game →
+          </button>
+        </div>
       </div>
     );
   }
