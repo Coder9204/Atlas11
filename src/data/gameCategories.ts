@@ -421,6 +421,50 @@ export const gameCategories: Category[] = [
         games: ['HDDPhysics', 'CapacitiveTouch']
       }
     ]
+  },
+  {
+    id: 'electronics',
+    name: 'Electronics Engineering',
+    icon: '🔧',
+    description: 'Analog design, power electronics, motor control, sensors, and PCB design',
+    subcategories: [
+      {
+        name: 'Measurement & Instruments',
+        games: ['OscilloscopeTriggerer', 'WheatstoneBalance', 'ThermalNoise']
+      },
+      {
+        name: 'Analog Design',
+        games: ['VoltageDividerDesign', 'CurrentMirrorMatching', 'OpAmpStability', 'ImpedanceMatching', 'FilterDesign']
+      },
+      {
+        name: 'Data Converters',
+        games: ['ADCQuantizationNoise', 'DACSettlingTime']
+      },
+      {
+        name: 'Clocking & PLLs',
+        games: ['PLLLockDynamics', 'ClockRecovery']
+      },
+      {
+        name: 'Signal Integrity',
+        games: ['SignalIntegrityEyeDiagram', 'SwitchBounce', 'PowerSupplyDecouplingLayout']
+      },
+      {
+        name: 'Power Electronics',
+        games: ['BuckConverterRipple', 'BoostConverter', 'FlybackConverter', 'GateDriver']
+      },
+      {
+        name: 'Motor Control',
+        games: ['MotorBackEMF', 'HBridgeDrive', 'StepperMotor', 'ServoControl']
+      },
+      {
+        name: 'Sensors',
+        games: ['StrainGaugeSensor', 'ThermocoupleNonlinearity']
+      },
+      {
+        name: 'EMC & Reliability',
+        games: ['EMCCompliance', 'SolderReflow']
+      }
+    ]
   }
 ];
 

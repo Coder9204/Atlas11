@@ -673,6 +673,334 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
       { question: 'What happens when a power plant trips?', answer: 'Frequency drops as demand exceeds supply. Spinning reserves ramp up in seconds (primary response), then scheduled reserves activate within minutes (secondary response).' },
     ],
   },
+
+  // ================================================================
+  // ELECTRONICS & INSTRUMENTATION (New Batch)
+  // ================================================================
+
+  'oscilloscope-triggering': {
+    metaTitle: 'Oscilloscope Triggering — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Master oscilloscope triggering modes interactively. Adjust edge type, trigger level, and holdoff to stabilize periodic and aperiodic waveforms on screen.',
+    concepts: ['oscilloscope', 'edge triggering', 'holdoff', 'waveform capture', 'signal measurement'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is oscilloscope triggering?', answer: 'Triggering tells the oscilloscope when to start capturing a waveform. By setting a voltage level and edge direction, the scope synchronizes its sweep so repetitive signals appear stable on screen.' },
+      { question: 'What is trigger holdoff and when is it used?', answer: 'Holdoff is a time delay after each trigger during which the scope ignores new trigger events. It is essential for stabilizing complex waveforms like pulse bursts where multiple edges could falsely trigger the sweep.' },
+    ],
+  },
+
+  'power-supply-decoupling-layout': {
+    metaTitle: 'Power Supply Decoupling Layout — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design effective power supply decoupling networks. Place bypass capacitors, evaluate trace inductance, and minimize high-frequency noise on PCB power rails interactively.',
+    concepts: ['decoupling capacitor', 'bypass capacitor', 'PCB layout', 'power integrity', 'parasitic inductance'],
+    difficulty: 'advanced',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'Why are decoupling capacitors needed?', answer: 'ICs draw transient current spikes during switching. Decoupling capacitors placed close to the IC provide local charge reservoirs, preventing voltage droops on the power rail that cause noise and logic errors.' },
+      { question: 'Does capacitor placement on the PCB matter?', answer: 'Yes. The trace between the capacitor and IC pin adds parasitic inductance. Shorter traces mean lower inductance, allowing the capacitor to supply current faster and filter higher frequencies effectively.' },
+    ],
+  },
+
+  'voltage-divider-design': {
+    metaTitle: 'Voltage Divider Design — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design and analyze voltage dividers interactively. Choose resistor values, observe loading effects, and compute Thevenin equivalent output for real-world circuit applications.',
+    concepts: ['voltage divider', 'resistor ratio', 'loading effect', 'Thevenin equivalent', 'circuit design'],
+    difficulty: 'beginner',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'How does a voltage divider work?', answer: 'Two resistors in series split the input voltage proportionally. The output voltage equals Vin × R2 / (R1 + R2). It is one of the most fundamental circuits in electronics.' },
+      { question: 'What is the loading effect on a voltage divider?', answer: 'When a load is connected to the output, it draws current and effectively parallels R2, reducing the output voltage. The divider works best when the load impedance is much larger than R2.' },
+    ],
+  },
+
+  'current-mirror-matching': {
+    metaTitle: 'Current Mirror Matching — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore transistor current mirror matching interactively. Adjust device parameters, observe mismatch effects, and learn how layout techniques improve current copying accuracy.',
+    concepts: ['current mirror', 'transistor matching', 'analog IC design', 'systematic offset', 'cascode mirror'],
+    difficulty: 'advanced',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'What is a current mirror?', answer: 'A current mirror copies a reference current from one transistor branch to another by matching gate-source (or base-emitter) voltages. It is a fundamental building block in analog integrated circuits.' },
+      { question: 'Why does transistor mismatch matter in current mirrors?', answer: 'Threshold voltage and geometry mismatches cause the copied current to deviate from the reference. In precision analog circuits, even 1% mismatch can introduce unacceptable offset or gain errors.' },
+    ],
+  },
+
+  'op-amp-stability': {
+    metaTitle: 'Op-Amp Stability — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Analyze op-amp stability with Bode plots and phase margin interactively. Add compensation networks, adjust feedback, and prevent oscillation in closed-loop amplifier circuits.',
+    concepts: ['op-amp stability', 'phase margin', 'gain margin', 'frequency compensation', 'Bode plot'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'Why do op-amp circuits oscillate?', answer: 'Oscillation occurs when the loop gain magnitude is ≥ 1 at a frequency where phase shift reaches -180°. Insufficient phase margin means the feedback becomes positive, sustaining unwanted oscillations.' },
+      { question: 'What is phase margin and how much is enough?', answer: 'Phase margin is 180° plus the open-loop phase at the unity-gain crossover frequency. A phase margin of 45° or more is generally needed for stable, well-damped transient response.' },
+    ],
+  },
+
+  'adc-quantization-noise': {
+    metaTitle: 'ADC Quantization Noise — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize ADC quantization noise and its effect on signal quality. Adjust bit depth, sampling rate, and input amplitude to see how resolution limits introduce quantization error.',
+    concepts: ['ADC', 'quantization noise', 'signal-to-noise ratio', 'bit depth', 'sampling'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is quantization noise?', answer: 'Quantization noise is the error introduced when a continuous analog signal is rounded to discrete digital levels. Each additional bit of resolution halves the step size and reduces quantization noise by about 6 dB.' },
+      { question: 'How does bit depth affect ADC performance?', answer: 'More bits provide finer resolution and a higher signal-to-noise ratio. A 12-bit ADC has 4096 levels with about 74 dB theoretical SNR, while a 16-bit ADC offers 65536 levels and about 98 dB SNR.' },
+    ],
+  },
+
+  'dac-settling-time': {
+    metaTitle: 'DAC Settling Time — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore DAC settling time behavior interactively. Step through code transitions, observe glitch energy and slew-rate effects, and understand how settling limits update rate.',
+    concepts: ['DAC', 'settling time', 'glitch energy', 'slew rate', 'digital-to-analog conversion'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is DAC settling time?', answer: 'Settling time is the duration after a digital code change for the analog output to reach and remain within a specified error band (e.g., ±0.5 LSB) of the final value. It limits the maximum output update rate.' },
+      { question: 'What causes glitches in DAC output?', answer: 'Glitches occur when internal switches turn off and on at slightly different times during a code transition. The momentary incorrect code produces a voltage spike, especially at major-carry transitions like mid-scale.' },
+    ],
+  },
+
+  'pll-lock-dynamics': {
+    metaTitle: 'PLL Lock Dynamics — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate phase-locked loop lock-in dynamics. Adjust loop bandwidth, damping factor, and reference frequency to observe capture range, lock time, and phase noise performance.',
+    concepts: ['phase-locked loop', 'PLL', 'loop bandwidth', 'lock time', 'phase noise'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'How does a PLL lock onto a frequency?', answer: 'The phase detector compares the reference and VCO output phases. The loop filter smooths the error signal, which tunes the VCO until its frequency and phase match the reference, achieving lock.' },
+      { question: 'What determines PLL lock time?', answer: 'Lock time depends on loop bandwidth and damping factor. Wider bandwidth locks faster but passes more reference noise. Optimal damping near 0.707 balances speed and overshoot for most applications.' },
+    ],
+  },
+
+  'clock-recovery': {
+    metaTitle: 'Clock Recovery — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore clock and data recovery (CDR) circuits interactively. Adjust data patterns, jitter levels, and loop parameters to see how embedded clocks are extracted from serial data streams.',
+    concepts: ['clock recovery', 'CDR', 'jitter', 'serial data', 'bit synchronization'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'Why is clock recovery needed?', answer: 'High-speed serial links transmit data without a separate clock signal. The receiver must extract timing from data transitions to sample each bit correctly, a process called clock and data recovery.' },
+      { question: 'How does jitter affect clock recovery?', answer: 'Jitter causes data transitions to shift from their ideal positions. The CDR loop must track this jitter; excessive jitter beyond the loop bandwidth causes bit errors as sampling occurs at wrong times.' },
+    ],
+  },
+
+  'signal-integrity-eye-diagram': {
+    metaTitle: 'Signal Integrity Eye Diagram — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Analyze signal integrity through eye diagrams interactively. Adjust data rate, channel loss, and equalization to see how signal degradation closes the eye opening.',
+    concepts: ['eye diagram', 'signal integrity', 'inter-symbol interference', 'channel equalization', 'bit error rate'],
+    difficulty: 'advanced',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'What does an eye diagram show?', answer: 'An eye diagram overlays many bit periods on the same time axis. The vertical opening indicates noise margin, the horizontal opening shows timing margin, and a wide-open eye means reliable data transmission.' },
+      { question: 'Why does the eye close at higher data rates?', answer: 'Higher data rates mean shorter bit periods, making the signal more susceptible to channel loss, reflections, and inter-symbol interference. These effects smear transitions and reduce both voltage and timing margins.' },
+    ],
+  },
+
+  'thermal-noise': {
+    metaTitle: 'Thermal Noise (Johnson-Nyquist) — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Visualize Johnson-Nyquist thermal noise in resistors. Adjust temperature, resistance, and bandwidth to compute noise voltage and understand fundamental limits of electronic measurements.',
+    concepts: ['thermal noise', 'Johnson-Nyquist noise', 'noise voltage', 'noise floor', 'Boltzmann constant'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What causes thermal noise in resistors?', answer: 'Random thermal motion of electrons in a conductor generates small fluctuating voltages. This noise is unavoidable and proportional to the square root of temperature, resistance, and bandwidth.' },
+      { question: 'Can thermal noise be eliminated?', answer: 'No, it is a fundamental physical phenomenon. It can only be reduced by lowering temperature, narrowing measurement bandwidth, or using lower-value resistors. It sets the ultimate noise floor for electronic circuits.' },
+    ],
+  },
+
+  'switch-bounce': {
+    metaTitle: 'Switch Bounce & Debouncing — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Observe mechanical switch bounce and learn debouncing techniques. Compare hardware RC filters and software debounce algorithms to achieve clean digital switching signals.',
+    concepts: ['switch bounce', 'debouncing', 'RC filter', 'digital input', 'mechanical contacts'],
+    difficulty: 'beginner',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is switch bounce?', answer: 'When a mechanical switch closes, the contacts physically bounce several times before settling, producing rapid on-off transitions over a few milliseconds. Digital circuits may interpret each bounce as a separate press.' },
+      { question: 'How do you debounce a switch?', answer: 'Hardware debouncing uses an RC filter and Schmitt trigger to smooth transitions. Software debouncing ignores state changes for a set delay (typically 10-50 ms) after the first detected transition.' },
+    ],
+  },
+
+  'motor-back-emf': {
+    metaTitle: 'Motor Back-EMF — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore motor back-EMF and its effect on current and speed. Adjust load, supply voltage, and motor constants to see how counter-electromotive force regulates DC motor behavior.',
+    concepts: ['back-EMF', 'DC motor', 'counter-electromotive force', 'motor speed regulation', 'armature current'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What is back-EMF in a motor?', answer: 'As a motor spins, its rotating coils cut through magnetic field lines, generating a voltage that opposes the supply. This back-EMF increases with speed and naturally limits the motor current.' },
+      { question: 'Why does a motor draw more current at startup?', answer: 'At rest, back-EMF is zero so the full supply voltage drives current through the low winding resistance, creating a large inrush. As the motor accelerates, rising back-EMF reduces the net voltage and current.' },
+    ],
+  },
+
+  'h-bridge-drive': {
+    metaTitle: 'H-Bridge Motor Drive — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Control DC motors with H-bridge circuits interactively. Toggle switches for forward, reverse, and braking modes while observing current paths and PWM speed regulation.',
+    concepts: ['H-bridge', 'motor driver', 'PWM speed control', 'bidirectional drive', 'shoot-through protection'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'How does an H-bridge work?', answer: 'Four switches arranged in an H shape surround the motor. Activating diagonal pairs drives current in one direction for forward, the other pair for reverse. PWM on the active switches controls speed.' },
+      { question: 'What is shoot-through in an H-bridge?', answer: 'Shoot-through occurs when both switches in the same leg are on simultaneously, creating a short circuit from supply to ground. Dead-time insertion between switching transitions prevents this destructive condition.' },
+    ],
+  },
+
+  'buck-converter-ripple': {
+    metaTitle: 'Buck Converter Ripple — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Analyze buck converter output ripple interactively. Adjust switching frequency, inductance, and output capacitance to minimize voltage ripple and understand continuous vs. discontinuous conduction.',
+    concepts: ['buck converter', 'voltage ripple', 'inductor current', 'switching frequency', 'continuous conduction mode'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'What causes output ripple in a buck converter?', answer: 'The inductor current has a triangular AC component due to switching. This ripple current flows through the output capacitor ESR and capacitance, creating a small AC voltage on top of the DC output.' },
+      { question: 'How do you reduce buck converter ripple?', answer: 'Increase switching frequency (smaller inductor current swing), use larger inductance (lower peak-to-peak ripple current), or increase output capacitance. Lower-ESR capacitors also reduce resistive ripple.' },
+    ],
+  },
+
+  'boost-converter': {
+    metaTitle: 'Boost Converter — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate boost converter operation interactively. Adjust duty cycle and load to see how energy stored in an inductor is used to step up voltage above the input supply level.',
+    concepts: ['boost converter', 'step-up converter', 'duty cycle', 'inductor energy storage', 'DC-DC conversion'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'How does a boost converter step up voltage?', answer: 'When the switch is on, current builds in the inductor storing energy. When the switch opens, the inductor forces current through the diode to the output, adding its voltage to the supply to achieve a higher output.' },
+      { question: 'What limits the maximum boost ratio?', answer: 'Ideally Vout = Vin / (1 - D), but parasitic resistances in the inductor, switch, and diode cause efficiency to drop at high duty cycles. Practical boost converters rarely exceed 4-5x voltage gain.' },
+    ],
+  },
+
+  'flyback-converter': {
+    metaTitle: 'Flyback Converter — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore flyback converter operation with transformer isolation. Adjust turns ratio, duty cycle, and snubber circuits to understand energy transfer and voltage clamping in isolated power supplies.',
+    concepts: ['flyback converter', 'transformer isolation', 'turns ratio', 'snubber circuit', 'isolated power supply'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'How is a flyback different from a forward converter?', answer: 'In a flyback, energy is stored in the transformer core during the switch-on phase and delivered to the output during switch-off. In a forward converter, energy transfers directly through the transformer while the switch is on.' },
+      { question: 'Why does a flyback need a snubber?', answer: 'Leakage inductance in the transformer causes a high-voltage spike when the switch turns off. A snubber (RC or RCD clamp) absorbs this energy, protecting the switch from exceeding its voltage rating.' },
+    ],
+  },
+
+  'gate-driver': {
+    metaTitle: 'Gate Driver Design — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design MOSFET gate driver circuits interactively. Analyze gate charge, drive current, switching speed trade-offs, and bootstrap techniques for high-side switch control.',
+    concepts: ['gate driver', 'MOSFET switching', 'gate charge', 'bootstrap circuit', 'switching loss'],
+    difficulty: 'advanced',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'Why are dedicated gate drivers needed?', answer: 'MOSFETs have significant gate capacitance. Microcontroller outputs lack the current capability to charge and discharge the gate quickly, resulting in slow switching, excessive losses, and potential shoot-through.' },
+      { question: 'What is a bootstrap gate driver?', answer: 'A bootstrap circuit uses a capacitor charged during the low-side on-time to provide a floating supply above the switching node. This enables driving the high-side MOSFET gate above the bus voltage.' },
+    ],
+  },
+
+  'stepper-motor': {
+    metaTitle: 'Stepper Motor Control — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Control stepper motors step by step interactively. Explore full-step, half-step, and microstepping drive modes while observing torque, speed, and resonance behavior.',
+    concepts: ['stepper motor', 'microstepping', 'holding torque', 'step angle', 'motor resonance'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'How does a stepper motor work?', answer: 'A stepper motor divides a full rotation into discrete steps by energizing coil phases in sequence. Each pulse moves the rotor by a fixed angle (e.g., 1.8° for a 200-step motor), enabling precise open-loop positioning.' },
+      { question: 'What is microstepping and why use it?', answer: 'Microstepping drives coil currents in a sine-cosine pattern instead of full on/off, subdividing each step into smaller increments. It provides smoother motion, lower vibration, and finer positioning resolution.' },
+    ],
+  },
+
+  'servo-control': {
+    metaTitle: 'Servo Control Loop (PID) — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Tune PID servo control loops interactively. Adjust proportional, integral, and derivative gains to minimize overshoot, settling time, and steady-state error in closed-loop positioning systems.',
+    concepts: ['PID control', 'servo loop', 'proportional gain', 'integral windup', 'derivative damping'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'What do P, I, and D each contribute?', answer: 'Proportional reacts to current error (strength), Integral eliminates accumulated steady-state error (precision), and Derivative opposes rapid changes to reduce overshoot (damping). Together they form a versatile controller.' },
+      { question: 'What is integral windup?', answer: 'If the actuator saturates while integral accumulates, the stored integral term becomes very large. When the error reverses, the controller overshoots badly. Anti-windup techniques clamp or reset the integrator to prevent this.' },
+    ],
+  },
+
+  'wheatstone-balance': {
+    metaTitle: 'Wheatstone Bridge Balance — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Balance a Wheatstone bridge interactively to measure unknown resistance. Adjust bridge arms and observe null-detection sensitivity for precision measurement applications.',
+    concepts: ['Wheatstone bridge', 'bridge balance', 'null detection', 'resistance measurement', 'bridge sensitivity'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'How does a Wheatstone bridge measure resistance?', answer: 'Four resistors form a diamond with a galvanometer across the middle. When the ratio of resistors in each arm is equal (R1/R2 = R3/R4), no current flows through the detector and the bridge is balanced.' },
+      { question: 'Why is a bridge more accurate than a simple ohmmeter?', answer: 'The bridge is a null measurement that detects zero current, making it independent of source voltage accuracy. It compares an unknown to known standards, achieving much higher precision than direct voltage-current methods.' },
+    ],
+  },
+
+  'strain-gauge-sensor': {
+    metaTitle: 'Strain Gauge & Load Cell — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore strain gauge sensors and load cells interactively. Apply forces, observe resistance changes, and see how Wheatstone bridge configurations convert mechanical strain into electrical signals.',
+    concepts: ['strain gauge', 'load cell', 'gauge factor', 'Wheatstone bridge', 'force measurement'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'How does a strain gauge work?', answer: 'A strain gauge is a thin resistive element bonded to a structure. When the structure deforms, the gauge stretches or compresses, changing its resistance proportionally to the strain via the gauge factor.' },
+      { question: 'Why use a full Wheatstone bridge with strain gauges?', answer: 'A full bridge with four active gauges doubles sensitivity compared to a half bridge and provides automatic temperature compensation. Thermal resistance changes cancel out, isolating the true strain signal.' },
+    ],
+  },
+
+  'thermocouple-nonlinearity': {
+    metaTitle: 'Thermocouple Nonlinearity — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Explore thermocouple nonlinearity and cold junction compensation. Compare thermocouple types, observe Seebeck voltage curves, and apply linearization for accurate temperature measurement.',
+    concepts: ['thermocouple', 'Seebeck effect', 'cold junction compensation', 'linearization', 'temperature measurement'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'Why are thermocouples nonlinear?', answer: 'The Seebeck coefficient varies with temperature, so the voltage-temperature relationship is not a straight line. The sensitivity (µV/°C) changes across the measurement range, requiring polynomial or lookup table correction.' },
+      { question: 'What is cold junction compensation?', answer: 'A thermocouple measures the temperature difference between its hot and cold junctions. Since the cold junction is rarely at 0°C, its actual temperature must be measured separately and added to the reading for an accurate result.' },
+    ],
+  },
+
+  'impedance-matching': {
+    metaTitle: 'Impedance Matching — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design impedance matching networks interactively. Use L-networks, Smith charts, and stub tuners to maximize power transfer and minimize reflections in RF and transmission line systems.',
+    concepts: ['impedance matching', 'Smith chart', 'reflection coefficient', 'VSWR', 'maximum power transfer'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'Why is impedance matching important?', answer: 'Mismatched impedances cause signal reflections, reducing power delivered to the load and potentially damaging transmitters. Matching ensures maximum power transfer and minimizes standing wave ratio (VSWR) on transmission lines.' },
+      { question: 'How does a Smith chart help with matching?', answer: 'The Smith chart maps complex impedances to a circle, making it visual to design matching networks. Adding series or shunt reactive elements traces a path from the load impedance to the center (matched condition).' },
+    ],
+  },
+
+  'filter-design': {
+    metaTitle: 'Active Filter Design — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design active filters interactively with op-amps. Compare Butterworth, Chebyshev, and Bessel responses, adjust cutoff frequency and order, and view Bode plots in real time.',
+    concepts: ['active filter', 'Butterworth response', 'Chebyshev response', 'cutoff frequency', 'filter order'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 20,
+    faqItems: [
+      { question: 'Why use active filters instead of passive ones?', answer: 'Active filters using op-amps provide gain, do not require bulky inductors, offer low output impedance, and allow precise tuning. They are the standard choice for audio and instrumentation frequency filtering.' },
+      { question: 'What is the difference between Butterworth and Chebyshev filters?', answer: 'Butterworth filters have maximally flat passband response but a gradual roll-off. Chebyshev filters allow passband ripple in exchange for a steeper transition slope, reaching the stopband attenuation faster.' },
+    ],
+  },
+
+  'emc-compliance': {
+    metaTitle: 'EMC Compliance — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Simulate electromagnetic compatibility testing interactively. Identify emission sources, apply filtering and shielding strategies, and evaluate designs against regulatory EMC limits.',
+    concepts: ['EMC', 'electromagnetic interference', 'conducted emissions', 'radiated emissions', 'shielding effectiveness'],
+    difficulty: 'advanced',
+    estimatedMinutes: 25,
+    faqItems: [
+      { question: 'What is EMC compliance?', answer: 'EMC compliance ensures that electronic devices neither emit excessive electromagnetic interference nor are unduly susceptible to external interference. Products must meet regulatory standards (e.g., FCC, CISPR) before sale.' },
+      { question: 'What are the main strategies to reduce EMI?', answer: 'Key strategies include proper PCB grounding, filtering power and signal lines, shielding sensitive circuits with metal enclosures, reducing loop areas, and using spread-spectrum clocking to lower peak emissions.' },
+    ],
+  },
+
+  'solder-reflow': {
+    metaTitle: 'Solder Reflow Profile — Interactive Simulator | Atlas Coach',
+    metaDescription: 'Design solder reflow profiles interactively. Adjust preheat, soak, reflow, and cooling zones to achieve reliable solder joints while avoiding thermal shock and tombstoning defects.',
+    concepts: ['solder reflow', 'reflow profile', 'thermal profile', 'surface mount technology', 'solder paste'],
+    difficulty: 'intermediate',
+    estimatedMinutes: 15,
+    faqItems: [
+      { question: 'What are the zones of a reflow profile?', answer: 'A typical profile has four zones: preheat (gradual ramp to activate flux), soak (equalize board temperature), reflow (exceed solder melting point to form joints), and cooling (controlled ramp-down to solidify joints).' },
+      { question: 'What causes tombstoning during reflow?', answer: 'Tombstoning occurs when one end of a small component melts before the other, and surface tension pulls the part upright. Balanced pad sizes, proper paste deposition, and even thermal profiles prevent it.' },
+    ],
+  },
 };
 
 // ============================================================
