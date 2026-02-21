@@ -1,20 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { theme, withOpacity } from '../lib/theme';
+import { searchGames, gameCategories } from '../lib/gameData';
+import type { GameCategoryKey } from '../lib/gameData';
+import AICoachPanel from './AICoachPanel';
 
-const categories = [
-  { name: 'Mechanics', icon: '\u2699\uFE0F', color: '#3B82F6', count: 55 },
-  { name: 'Thermo', icon: '\uD83D\uDD25', color: '#EF4444', count: 23 },
-  { name: 'E&M', icon: '\u26A1', color: '#F59E0B', count: 24 },
-  { name: 'Waves & Optics', icon: '\uD83C\uDF0A', color: '#8B5CF6', count: 43 },
-  { name: 'Fluids', icon: '\uD83D\uDCA7', color: '#06B6D4', count: 27 },
-  { name: 'Modern', icon: '\u269B\uFE0F', color: '#EC4899', count: 3 },
-  { name: 'Engineering', icon: '\uD83D\uDD27', color: '#10B981', count: 42 },
-  { name: 'Computing & AI', icon: '\uD83D\uDCBB', color: '#6366F1', count: 33 },
-  { name: 'Semiconductor', icon: '\uD83D\uDD2C', color: '#14B8A6', count: 29 },
-  { name: 'Solar & PV', icon: '\u2600\uFE0F', color: '#FBBF24', count: 18 },
-  { name: 'ELON', icon: '\uD83D\uDE80', color: '#F97316', count: 38 },
+// Map category keys to their data for the landing page cards
+const categoryCards: { key: GameCategoryKey; name: string; icon: string; color: string; count: number }[] = [
+  { key: 'mechanics', name: 'Mechanics', icon: '\u2699\uFE0F', color: '#3B82F6', count: 55 },
+  { key: 'thermodynamics', name: 'Thermo', icon: '\uD83D\uDD25', color: '#EF4444', count: 23 },
+  { key: 'electromagnetism', name: 'E&M', icon: '\u26A1', color: '#F59E0B', count: 24 },
+  { key: 'waves', name: 'Waves & Optics', icon: '\uD83C\uDF0A', color: '#8B5CF6', count: 43 },
+  { key: 'fluids', name: 'Fluids', icon: '\uD83D\uDCA7', color: '#06B6D4', count: 27 },
+  { key: 'modern', name: 'Modern', icon: '\u269B\uFE0F', color: '#EC4899', count: 3 },
+  { key: 'engineering', name: 'Engineering', icon: '\uD83D\uDD27', color: '#10B981', count: 42 },
+  { key: 'computing', name: 'Computing & AI', icon: '\uD83D\uDCBB', color: '#6366F1', count: 33 },
+  { key: 'semiconductor', name: 'Semiconductor', icon: '\uD83D\uDD2C', color: '#14B8A6', count: 29 },
+  { key: 'solar', name: 'Solar & PV', icon: '\u2600\uFE0F', color: '#FBBF24', count: 18 },
+  { key: 'elon', name: 'ELON', icon: '\uD83D\uDE80', color: '#F97316', count: 38 },
 ];
 
 const features = [
@@ -72,6 +76,11 @@ const pricingPreview = [
 const LandingPage: React.FC = () => {
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
   const [animOffset, setAnimOffset] = useState(0);
+  const [heroSearch, setHeroSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<{ name: string; slug: string; category: string; difficulty: string }[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const id = requestAnimationFrame(function tick() {
@@ -79,6 +88,32 @@ const LandingPage: React.FC = () => {
       requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  // Live search
+  useEffect(() => {
+    if (heroSearch.trim().length > 0) {
+      const results = searchGames(heroSearch, 8);
+      setSearchResults(results);
+      setShowDropdown(true);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  }, [heroSearch]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        searchRef.current && !searchRef.current.contains(e.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
   const navigate = (path: string) => {
@@ -111,7 +146,7 @@ const LandingPage: React.FC = () => {
           <a href="/pricing" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
           <a href="/about" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>About</a>
           <button
-            onClick={() => navigate('/onboarding')}
+            onClick={() => navigate('/games/pendulum-period')}
             style={{
               background: theme.colors.info,
               border: 'none',
@@ -124,7 +159,7 @@ const LandingPage: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            Get Started
+            Play Now
           </button>
         </div>
       </nav>
@@ -132,7 +167,7 @@ const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section style={{
         textAlign: 'center',
-        padding: '80px 24px 60px',
+        padding: '60px 24px 40px',
         maxWidth: 900,
         margin: '0 auto',
         position: 'relative',
@@ -173,7 +208,7 @@ const LandingPage: React.FC = () => {
           fontSize: 'clamp(16px, 2.5vw, 20px)',
           color: theme.colors.textMuted,
           maxWidth: 600,
-          margin: '0 auto 36px',
+          margin: '0 auto 28px',
           lineHeight: 1.6,
           position: 'relative',
           zIndex: 1,
@@ -182,6 +217,121 @@ const LandingPage: React.FC = () => {
           Predict, experiment, and master physics one game at a time.
         </p>
 
+        {/* Search Bar */}
+        <div style={{
+          position: 'relative',
+          maxWidth: 560,
+          margin: '0 auto 24px',
+          zIndex: 10,
+        }}>
+          <div style={{
+            position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+            color: theme.colors.textMuted, fontSize: 18, pointerEvents: 'none',
+          }}>
+            {'\uD83D\uDD0D'}
+          </div>
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Search 340+ games... (e.g. pendulum, wave, GPU)"
+            value={heroSearch}
+            onChange={(e) => setHeroSearch(e.target.value)}
+            onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchResults.length > 0) {
+                navigate(`/games/${searchResults[0].slug}`);
+              }
+              if (e.key === 'Escape') {
+                setHeroSearch('');
+                setShowDropdown(false);
+                searchRef.current?.blur();
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '14px 14px 14px 44px',
+              borderRadius: 14,
+              border: `2px solid ${heroSearch ? theme.colors.info : theme.colors.border}`,
+              background: theme.colors.bgCard,
+              color: theme.colors.textPrimary,
+              fontSize: 16,
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box',
+              fontFamily: theme.fontFamily,
+            }}
+          />
+
+          {/* Search Results Dropdown */}
+          {showDropdown && searchResults.length > 0 && (
+            <div
+              ref={dropdownRef}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: 6,
+                background: theme.colors.bgCard,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: 12,
+                overflow: 'hidden',
+                boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                zIndex: 100,
+              }}
+            >
+              {searchResults.map((game, i) => {
+                const cat = gameCategories[game.category as GameCategoryKey];
+                return (
+                  <a
+                    key={game.slug}
+                    href={`/games/${game.slug}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 16px',
+                      textDecoration: 'none',
+                      color: theme.colors.textPrimary,
+                      borderBottom: i < searchResults.length - 1 ? `1px solid ${theme.colors.border}` : 'none',
+                      transition: 'background 0.1s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = withOpacity(theme.colors.info, 0.1); }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{cat?.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {game.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: theme.colors.textMuted }}>
+                        {cat?.name} &middot; {game.difficulty}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 12, color: theme.colors.textMuted, flexShrink: 0 }}>{'\u2192'}</span>
+                  </a>
+                );
+              })}
+              <a
+                href={`/games?q=${encodeURIComponent(heroSearch)}`}
+                style={{
+                  display: 'block',
+                  padding: '10px 16px',
+                  textAlign: 'center',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: theme.colors.info,
+                  textDecoration: 'none',
+                  borderTop: `1px solid ${theme.colors.border}`,
+                }}
+              >
+                See all results {'\u2192'}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* CTA Buttons */}
         <div style={{
           display: 'flex',
           gap: 14,
@@ -191,7 +341,7 @@ const LandingPage: React.FC = () => {
           zIndex: 1,
         }}>
           <button
-            onClick={() => navigate('/onboarding')}
+            onClick={() => navigate('/games/pendulum-period')}
             style={{
               background: `linear-gradient(135deg, ${theme.colors.info}, ${theme.colors.accent})`,
               border: 'none',
@@ -205,13 +355,10 @@ const LandingPage: React.FC = () => {
               boxShadow: `0 4px 20px ${withOpacity(theme.colors.info, 0.4)}`,
             }}
           >
-            Start Learning Free {'\u2192'}
+            Play Now {'\u2192'}
           </button>
           <button
-            onClick={() => {
-              const el = document.getElementById('categories');
-              el?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => navigate('/games')}
             style={{
               background: withOpacity(theme.colors.textPrimary, 0.06),
               border: `1px solid ${theme.colors.border}`,
@@ -223,7 +370,7 @@ const LandingPage: React.FC = () => {
               fontFamily: theme.fontFamily,
             }}
           >
-            Browse Games
+            Browse All Games
           </button>
         </div>
 
@@ -459,9 +606,10 @@ const LandingPage: React.FC = () => {
           gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
           gap: 14,
         }}>
-          {categories.map((cat, i) => (
-            <div
-              key={i}
+          {categoryCards.map((cat, i) => (
+            <a
+              key={cat.key}
+              href={`/games?category=${cat.key}`}
               onMouseEnter={() => setHoveredCategory(i)}
               onMouseLeave={() => setHoveredCategory(null)}
               style={{
@@ -474,13 +622,15 @@ const LandingPage: React.FC = () => {
                 textAlign: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'block',
               }}
-              onClick={() => navigate('/onboarding')}
             >
               <div style={{ fontSize: 28, marginBottom: 8 }}>{cat.icon}</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{cat.name}</div>
               <div style={{ fontSize: 12, color: cat.color }}>{cat.count} games</div>
-            </div>
+            </a>
           ))}
         </div>
       </section>
@@ -640,7 +790,7 @@ const LandingPage: React.FC = () => {
           Join 50,000+ learners mastering physics through interactive play. Free to start, no credit card required.
         </p>
         <button
-          onClick={() => navigate('/onboarding')}
+          onClick={() => navigate('/games/pendulum-period')}
           style={{
             background: `linear-gradient(135deg, ${theme.colors.info}, ${theme.colors.accent})`,
             border: 'none',
@@ -654,7 +804,7 @@ const LandingPage: React.FC = () => {
             boxShadow: `0 4px 24px ${withOpacity(theme.colors.info, 0.4)}`,
           }}
         >
-          Start Learning Free {'\u2192'}
+          Play Now {'\u2192'}
         </button>
       </section>
 
@@ -693,6 +843,9 @@ const LandingPage: React.FC = () => {
           ))}
         </div>
       </footer>
+
+      {/* AI Coach Panel — floating bottom-right */}
+      <AICoachPanel />
     </div>
   );
 };
