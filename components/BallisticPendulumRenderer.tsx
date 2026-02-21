@@ -1184,13 +1184,13 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
                   {/* KE Before bar */}
                   <text x="30" y="60" fill={colors.textSecondary} fontSize="11">KE Before</text>
-                  <rect x="120" y="46" width={Math.min(240, twistKEBefore / 2)} height="20" rx="3" fill={colors.momentum} />
-                  <text x={130 + Math.min(240, twistKEBefore / 2)} y="60" fill={colors.textPrimary} fontSize="11">{twistKEBefore.toFixed(1)} J</text>
+                  <rect x="120" y="46" width={Math.min(200, twistKEBefore / 10)} height="20" rx="3" fill={colors.momentum} />
+                  <text x={130 + Math.min(200, twistKEBefore / 10)} y="60" fill={colors.textPrimary} fontSize="11">{Math.round(twistKEBefore)} J</text>
 
                   {/* KE After bar */}
                   <text x="30" y="95" fill={colors.textSecondary} fontSize="11">KE After</text>
-                  <rect x="120" y="81" width={Math.max(2, Math.min(240, twistKEAfter / 2))} height="20" rx="3" fill={colors.energy} />
-                  <text x={130 + Math.max(2, Math.min(240, twistKEAfter / 2))} y="95" fill={colors.textPrimary} fontSize="11">{twistKEAfter.toFixed(2)} J</text>
+                  <rect x="120" y="81" width={Math.max(2, Math.min(200, twistKEAfter / 10))} height="20" rx="3" fill={colors.energy} />
+                  <text x={130 + Math.max(2, Math.min(200, twistKEAfter / 10))} y="95" fill={colors.textPrimary} fontSize="11">{Math.round(twistKEAfter)} J</text>
 
                   {/* Energy lost label */}
                   <text x="200" y="130" textAnchor="middle" fill={colors.error} fontSize="13" fontWeight="bold">
@@ -1199,7 +1199,7 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
                   {/* Swing height */}
                   <text x="30" y="165" fill={colors.textSecondary} fontSize="11">Swing height</text>
-                  <text x="200" y="165" fill={colors.energy} fontSize="13" fontWeight="bold">h = {(twistH * 100).toFixed(2)} cm</text>
+                  <text x="200" y="165" fill={colors.energy} fontSize="13" fontWeight="bold">h = {Math.round(twistH * 100)} cm</text>
 
                   {/* Parameters display */}
                   <text x="30" y="200" fill={colors.textSecondary} fontSize="11">Bullet: {twistBulletMass}g</text>
