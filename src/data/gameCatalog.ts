@@ -107,6 +107,15 @@ const subcategoryConcepts: Record<string, string[]> = {
   'Strange Physics': ['chain fountain', 'Leidenfrost', 'levitation'],
   'Human Senses': ['reaction time', 'perception', 'human factors'],
   'Storage Physics': ['magnetic storage', 'capacitive sensing', 'read/write head'],
+  'Measurement & Instruments': ['oscilloscope', 'measurement', 'bridge circuit'],
+  'Analog Design': ['op-amp', 'voltage divider', 'current mirror', 'impedance', 'filter'],
+  'Data Converters': ['ADC', 'DAC', 'quantization', 'settling time'],
+  'Clocking & PLLs': ['PLL', 'clock recovery', 'phase-locked loop', 'jitter'],
+  'Signal Integrity': ['eye diagram', 'signal integrity', 'switch bounce', 'decoupling'],
+  'Power Electronics': ['buck converter', 'boost converter', 'flyback', 'gate driver'],
+  'Motor Control': ['back EMF', 'H-bridge', 'stepper motor', 'servo control'],
+  'Sensors': ['strain gauge', 'thermocouple', 'Wheatstone bridge', 'sensor linearization'],
+  'EMC & Reliability': ['EMC', 'electromagnetic compatibility', 'solder reflow', 'reliability'],
 };
 
 // ============================================================
@@ -128,6 +137,7 @@ const categoryTags: Record<string, string[]> = {
   rf: ['antenna', 'signal', 'RF', 'wireless', 'fiber'],
   experiments: ['experiment', 'demo', 'hands-on', 'fun'],
   storage: ['storage', 'HDD', 'memory', 'capacitive'],
+  electronics: ['electronics', 'analog', 'power', 'motor', 'sensor', 'PCB', 'EMC'],
 };
 
 // ============================================================
@@ -281,6 +291,17 @@ const gameDifficultyMap: Record<string, 'beginner' | 'intermediate' | 'advanced'
   HDDPhysics: 'intermediate', FiberSignalLoss: 'intermediate',
   AntennaGain: 'intermediate', AntennaPolarization: 'intermediate', DirectionFinding: 'intermediate',
   LinkBudget: 'intermediate', StringSizing2: 'intermediate',
+  // Electronics Engineering
+  OscilloscopeTriggerer: 'intermediate', WheatstoneBalance: 'intermediate', ThermalNoise: 'advanced',
+  VoltageDividerDesign: 'beginner', CurrentMirrorMatching: 'advanced', OpAmpStability: 'advanced',
+  ImpedanceMatching: 'intermediate', FilterDesign: 'intermediate',
+  ADCQuantizationNoise: 'advanced', DACSettlingTime: 'advanced',
+  PLLLockDynamics: 'advanced', ClockRecovery: 'advanced',
+  SignalIntegrityEyeDiagram: 'advanced', SwitchBounce: 'intermediate', PowerSupplyDecouplingLayout: 'intermediate',
+  BuckConverterRipple: 'intermediate', BoostConverter: 'intermediate', FlybackConverter: 'advanced', GateDriver: 'intermediate',
+  MotorBackEMF: 'intermediate', HBridgeDrive: 'intermediate', StepperMotor: 'intermediate', ServoControl: 'intermediate',
+  StrainGaugeSensor: 'intermediate', ThermocoupleNonlinearity: 'intermediate',
+  EMCCompliance: 'advanced', SolderReflow: 'intermediate',
 };
 
 // ============================================================

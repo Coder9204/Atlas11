@@ -313,7 +313,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "A bit flip in memory caused by a high-energy particle", correct: true },
         { text: "An electrical short circuit", correct: false },
         { text: "A software bug", correct: false }
-      ]
+      ],
+      explanation: "A single high-energy particle (proton or heavy ion) can deposit enough charge in a transistor to flip a stored bit from 0 to 1 or vice versa — a soft error that corrupts data without physically damaging the chip."
     },
     {
       question: "Why do space-grade chips cost so much more than commercial chips?",
@@ -322,7 +323,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "They are rad-hardened with special design and manufacturing", correct: true },
         { text: "They are hand-made by astronauts", correct: false },
         { text: "Space agencies overcharge for them", correct: false }
-      ]
+      ],
+      explanation: "Rad-hardened chips use specialized fabrication processes (e.g., SOI substrates, guard rings, redundant logic) and extensive radiation testing, all of which add significant cost compared to standard commercial production."
     },
     {
       question: "What are the Van Allen belts?",
@@ -331,7 +333,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "Regions of trapped energetic particles around Earth", correct: true },
         { text: "Radio interference zones", correct: false },
         { text: "Magnetic field lines visible from space", correct: false }
-      ]
+      ],
+      explanation: "Earth's magnetic field traps charged particles (protons and electrons) from the solar wind into two donut-shaped regions — the inner belt (~1,000–6,000 km) and the outer belt (~13,000–60,000 km) — creating zones of intense radiation."
     },
     {
       question: "Total Ionizing Dose (TID) causes damage by:",
@@ -340,7 +343,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "Accumulating charge in oxide layers, degrading transistor performance", correct: true },
         { text: "Changing the chip's color", correct: false },
         { text: "Making the chip radioactive", correct: false }
-      ]
+      ],
+      explanation: "Ionizing radiation creates electron-hole pairs in gate oxides. Holes get trapped at the Si/SiO2 interface, gradually shifting transistor threshold voltages and increasing leakage current until the chip eventually fails."
     },
     {
       question: "What is latchup in electronics?",
@@ -349,7 +353,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "When the satellite latches onto a space station", correct: false },
         { text: "A type of memory storage", correct: false },
         { text: "Normal chip operation", correct: false }
-      ]
+      ],
+      explanation: "A radiation strike can trigger parasitic thyristor structures (PNPN paths) in CMOS chips, creating a low-resistance path from power to ground. The resulting high current can destroy the chip if power isn't cut quickly."
     },
     {
       question: "Which orbit altitude is typically MOST hazardous for radiation?",
@@ -358,7 +363,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "MEO passing through Van Allen belts (1000-30000 km)", correct: true },
         { text: "GEO at 36000 km (above outer belt)", correct: false },
         { text: "All orbits have identical radiation", correct: false }
-      ]
+      ],
+      explanation: "MEO orbits pass directly through the Van Allen belts where trapped particle flux is highest. LEO sits below the belts and GEO sits above the outer belt, so both experience significantly less radiation."
     },
     {
       question: "How does shielding help protect electronics?",
@@ -367,7 +373,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "It absorbs or deflects incoming particles, reducing dose", correct: true },
         { text: "It creates a magnetic field", correct: false },
         { text: "It has no effect on space radiation", correct: false }
-      ]
+      ],
+      explanation: "Dense materials like aluminum or tantalum stop lower-energy particles and reduce the flux reaching electronics. However, very high-energy particles can penetrate any practical thickness, so shielding is combined with circuit-level hardening."
     },
     {
       question: "During a solar storm, radiation levels can:",
@@ -376,7 +383,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "Increase by 10-1000x for hours to days", correct: true },
         { text: "Drop to zero", correct: false },
         { text: "Only affect the Sun", correct: false }
-      ]
+      ],
+      explanation: "Solar particle events (coronal mass ejections and flares) eject massive bursts of high-energy protons and ions that reach Earth within hours, temporarily increasing radiation levels by orders of magnitude across all orbits."
     },
     {
       question: "Triple Modular Redundancy (TMR) protects against SEUs by:",
@@ -385,7 +393,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "Making the chip three times thicker", correct: false },
         { text: "Running the chip three times faster", correct: false },
         { text: "It does not protect against SEUs at all", correct: false }
-      ]
+      ],
+      explanation: "TMR replicates each logic block three times and uses a majority voter. If one copy gets a bit flip from radiation, the other two still agree on the correct value, masking the error transparently."
     },
     {
       question: "Why do GPS satellites in MEO require more radiation hardening than ISS?",
@@ -394,12 +403,14 @@ const audioContextRef = useRef<AudioContext | null>(null);
         { text: "GPS orbits pass through the Van Allen belts", correct: true },
         { text: "ISS has astronauts who can fix things", correct: false },
         { text: "GPS satellites are smaller", correct: false }
-      ]
+      ],
+      explanation: "GPS satellites orbit at ~20,200 km, right in the heart of the Van Allen belts. The ISS orbits at ~400 km in LEO, well below the belts, where Earth's magnetic field provides much more protection."
     }
   ];
 
   // ============================================================
   // SVG VISUALIZATION - Radiation profile with interactive marker
+  // Two curves: raw environment (grey) + effective dose after shielding/hardening (colored)
   // ============================================================
   const renderVisualization = () => {
     const rad = calculateRadiation();
@@ -412,58 +423,58 @@ const audioContextRef = useRef<AudioContext | null>(null);
     const plotW = plotRight - plotLeft;
     const plotH = plotBottom - plotTop;
 
+    const solarMult = solarActivity === 'quiet' ? 1 : solarActivity === 'moderate' ? 3 : 10;
+    const shieldFact = Math.exp(-shielding / 5);
+    const hardFact = chipType === 'commercial' ? 1 : chipType === 'rad-tolerant' ? 0.1 : 0.01;
+
     // Generate radiation flux curve data points (altitude vs flux)
-    const dataPoints: { x: number; y: number; alt: number; flux: number }[] = [];
     const altSteps = [200, 500, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 15000, 17000, 19000, 21000, 23000, 25000, 27000, 30000, 33000, 36000, 40000];
-    const maxFlux = 100;
+
+    // Max flux scales with solar activity so the chart uses full vertical range
+    const rawMax = 100 * solarMult;
+    const rawPoints: { x: number; y: number }[] = [];
+    const effectivePoints: { x: number; y: number }[] = [];
     for (const alt of altSteps) {
       let flux = 0.5;
-      if (alt < 1000) {
-        flux = 0.5 + alt / 2000;
-      } else if (alt >= 1000 && alt <= 6000) {
-        flux = 10 + 90 * Math.sin((alt - 1000) / 5000 * Math.PI);
-      } else if (alt > 6000 && alt < 13000) {
-        flux = 10 - 8 * ((alt - 6000) / 7000);
-      } else if (alt >= 13000 && alt <= 30000) {
-        flux = 2 + 50 * Math.sin((alt - 13000) / 17000 * Math.PI);
-      } else {
-        flux = 5;
-      }
-      const xNorm = alt / 40000;
-      const yNorm = Math.min(flux / maxFlux, 1);
-      dataPoints.push({
-        x: plotLeft + xNorm * plotW,
-        y: plotBottom - yNorm * plotH,
-        alt,
-        flux,
-      });
+      if (alt < 1000) flux = 0.5 + alt / 2000;
+      else if (alt <= 6000) flux = 10 + 90 * Math.sin((alt - 1000) / 5000 * Math.PI);
+      else if (alt < 13000) flux = 10 - 8 * ((alt - 6000) / 7000);
+      else if (alt <= 30000) flux = 2 + 50 * Math.sin((alt - 13000) / 17000 * Math.PI);
+      else flux = 5;
+      const rawFlux = flux * solarMult;
+      const effectiveFlux = rawFlux * shieldFact * hardFact;
+      const xPos = plotLeft + (alt / 40000) * plotW;
+      rawPoints.push({ x: xPos, y: plotBottom - Math.min(rawFlux / rawMax, 1) * plotH });
+      effectivePoints.push({ x: xPos, y: plotBottom - Math.min(effectiveFlux / rawMax, 1) * plotH });
     }
 
-    // Build SVG path with L commands
-    const pathD = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const rawPathD = rawPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+    const effPathD = effectivePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
-    // Current marker position
-    const curFlux = parseFloat(rad.fluxFactor);
+    // Current marker positions
+    const curFluxRaw = parseFloat(rad.fluxFactor) * solarMult;
+    const curFluxEff = curFluxRaw * shieldFact * hardFact;
     const markerX = plotLeft + (altitude / 40000) * plotW;
-    const markerY = plotBottom - (Math.min(curFlux / maxFlux, 1)) * plotH;
+    const rawMarkerY = plotBottom - Math.min(curFluxRaw / rawMax, 1) * plotH;
+    const effMarkerY = plotBottom - Math.min(curFluxEff / rawMax, 1) * plotH;
 
     // Grid lines
     const gridYValues = [0, 25, 50, 75, 100];
     const gridXAlts = [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000];
 
+    // Reduction percentage
+    const reductionPct = curFluxRaw > 0 ? Math.round((1 - curFluxEff / curFluxRaw) * 100) : 0;
+
     return (
       <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', maxWidth: '600px' }} preserveAspectRatio="xMidYMid meet" role="img" aria-label="Radiation Effects visualization">
         <defs>
-          <linearGradient id="radCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="25%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="75%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
           <linearGradient id="radFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
             <stop offset="100%" stopColor="#ef4444" stopOpacity="0.02" />
+          </linearGradient>
+          <linearGradient id="effFillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.02" />
           </linearGradient>
           <radialGradient id="radMarkerGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#fde047" stopOpacity="0.8" />
@@ -471,10 +482,7 @@ const audioContextRef = useRef<AudioContext | null>(null);
           </radialGradient>
           <filter id="radGlow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
 
@@ -482,15 +490,15 @@ const audioContextRef = useRef<AudioContext | null>(null);
         <rect width={svgW} height={svgH} fill="#0f172a" rx="8" />
 
         {/* Title */}
-        <text x={svgW / 2} y="22" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="700" fontFamily="system-ui, sans-serif">Radiation Flux vs Altitude</text>
+        <text x={svgW / 2} y="22" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="700" fontFamily="system-ui, sans-serif">Radiation Dose: Environment vs After Protection</text>
 
         {/* Grid lines */}
         {gridYValues.map(val => {
-          const y = plotBottom - (val / maxFlux) * plotH;
+          const y = plotBottom - (val / 100) * plotH;
           return (
             <g key={`gy-${val}`}>
               <line x1={plotLeft} y1={y} x2={plotRight} y2={y} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.6} />
-              <text x={plotLeft - 8} y={y + 4} textAnchor="end" fill="#94a3b8" fontSize="11" fontFamily="system-ui, sans-serif">{val}</text>
+              <text x={plotLeft - 8} y={y + 4} textAnchor="end" fill="#94a3b8" fontSize="10" fontFamily="system-ui, sans-serif">{val}%</text>
             </g>
           );
         })}
@@ -499,14 +507,14 @@ const audioContextRef = useRef<AudioContext | null>(null);
           return (
             <g key={`gx-${alt}`}>
               <line x1={x} y1={plotTop} x2={x} y2={plotBottom} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 4" opacity={0.5} />
-              <text x={x} y={plotBottom + 16} textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="system-ui, sans-serif">{alt >= 1000 ? `${alt / 1000}k` : alt}</text>
+              <text x={x} y={plotBottom + 16} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, sans-serif">{alt >= 1000 ? `${alt / 1000}k` : alt}</text>
             </g>
           );
         })}
 
         {/* Axis labels */}
         <text x={svgW / 2} y={plotBottom + 35} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Altitude (km)</text>
-        <text x="14" y="14" textAnchor="start" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Intensity</text>
+        <text x="14" y="14" textAnchor="start" fill="#cbd5e1" fontSize="11" fontFamily="system-ui, sans-serif">Relative Dose</text>
 
         {/* Belt region shading */}
         <rect x={plotLeft + (1000 / 40000) * plotW} y={plotTop} width={(5000 / 40000) * plotW} height={plotH} fill="#ef4444" opacity={0.08} />
@@ -516,27 +524,46 @@ const audioContextRef = useRef<AudioContext | null>(null);
         <text x={plotLeft + (3500 / 40000) * plotW} y={plotTop - 2} textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="600" fontFamily="system-ui, sans-serif" filter="url(#radGlow)">Inner Belt</text>
         <text x={plotLeft + (21500 / 40000) * plotW} y={plotTop - 2} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600" fontFamily="system-ui, sans-serif" filter="url(#radGlow)">Outer Belt</text>
 
-        {/* Fill under curve */}
-        <path d={`${pathD} L ${dataPoints[dataPoints.length - 1].x.toFixed(1)} ${plotBottom} L ${dataPoints[0].x.toFixed(1)} ${plotBottom} Z`} fill="url(#radFillGrad)" />
+        {/* Fill under raw curve (red) */}
+        <path d={`${rawPathD} L ${rawPoints[rawPoints.length - 1].x.toFixed(1)} ${plotBottom} L ${rawPoints[0].x.toFixed(1)} ${plotBottom} Z`} fill="url(#radFillGrad)" />
 
-        {/* Main curve */}
-        <path d={pathD} fill="none" stroke="url(#radCurveGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Fill under effective curve (green) */}
+        <path d={`${effPathD} L ${effectivePoints[effectivePoints.length - 1].x.toFixed(1)} ${plotBottom} L ${effectivePoints[0].x.toFixed(1)} ${plotBottom} Z`} fill="url(#effFillGrad)" />
+
+        {/* Raw environment curve (dashed red/orange) */}
+        <path d={rawPathD} fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6 3" opacity={0.7} />
+
+        {/* Effective dose curve (solid green) */}
+        <path d={effPathD} fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
         {/* Axes */}
         <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke="#475569" strokeWidth="1" />
         <line x1={plotLeft} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke="#475569" strokeWidth="1" />
 
-        {/* Interactive marker */}
-        <circle cx={markerX} cy={markerY} r="12" fill="url(#radMarkerGlow)" />
-        <circle cx={markerX} cy={markerY} r="6" fill="#fde047" stroke="#ffffff" strokeWidth="2" />
-        <circle cx={markerX} cy={markerY} r="3" fill="#ffffff" />
+        {/* Connecting line between raw and effective markers */}
+        {reductionPct > 1 && (
+          <line x1={markerX} y1={rawMarkerY} x2={markerX} y2={effMarkerY} stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3 2" opacity={0.6} />
+        )}
 
-        {/* Marker value label */}
-        <rect x={markerX - 35} y={markerY - 28} width="70" height="18" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
-        <text x={markerX} y={markerY - 15} textAnchor="middle" fill="#fde047" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">{altitude} km</text>
+        {/* Raw marker (small, hollow) */}
+        <circle cx={markerX} cy={rawMarkerY} r="5" fill="none" stroke="#ef4444" strokeWidth="2" />
 
-        {/* Belt region label near marker */}
-        <text x={markerX} y={markerY + 20} textAnchor="middle" fill={rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'} fontSize="10" fontWeight="600" fontFamily="system-ui, sans-serif">{rad.beltRegion}</text>
+        {/* Effective marker (larger, solid green) */}
+        <circle cx={markerX} cy={effMarkerY} r="12" fill="url(#radMarkerGlow)" />
+        <circle cx={markerX} cy={effMarkerY} r="6" fill="#22c55e" stroke="#ffffff" strokeWidth="2" />
+        <circle cx={markerX} cy={effMarkerY} r="3" fill="#ffffff" />
+
+        {/* Marker label showing altitude + reduction */}
+        <rect x={markerX - 45} y={Math.min(rawMarkerY, effMarkerY) - 30} width="90" height="20" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+        <text x={markerX} y={Math.min(rawMarkerY, effMarkerY) - 16} textAnchor="middle" fill="#fde047" fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">
+          {altitude >= 1000 ? `${(altitude / 1000).toFixed(1)}k` : altitude} km {reductionPct > 0 ? `(-${reductionPct}%)` : ''}
+        </text>
+
+        {/* Legend */}
+        <line x1={plotRight - 130} y1={plotBottom - 12} x2={plotRight - 110} y2={plotBottom - 12} stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" />
+        <text x={plotRight - 106} y={plotBottom - 8} fill="#ef4444" fontSize="9" fontFamily="system-ui, sans-serif">Raw environment</text>
+        <line x1={plotRight - 130} y1={plotBottom - 24} x2={plotRight - 110} y2={plotBottom - 24} stroke="#22c55e" strokeWidth="2.5" />
+        <text x={plotRight - 106} y={plotBottom - 20} fill="#22c55e" fontSize="9" fontFamily="system-ui, sans-serif">After protection</text>
       </svg>
     );
   };
@@ -824,8 +851,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ef4444', marginBottom: '8px', lineHeight: '1.3' }}>Radiation Environment Simulator</h2>
 
-        <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '16px', textAlign: 'center', maxWidth: '500px', lineHeight: '1.5' }}>
-          This visualization shows the radiation flux factor across different orbital altitudes. Notice how the curve peaks at the Van Allen belts where trapped particles create intense radiation zones. Try adjusting altitude and observe how SEU rate, TID dose, and latchup risk change in real time.
+        <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: '16px', textAlign: 'center', maxWidth: '560px', lineHeight: '1.6' }}>
+          The <strong style={{ color: '#ef4444' }}>dashed red curve</strong> shows raw radiation at each altitude. The <strong style={{ color: '#22c55e' }}>solid green curve</strong> shows what your electronics actually receive after shielding and hardening. Adjust all four controls to see the gap change — that gap is your protection margin.
         </p>
 
         {/* Side-by-side layout */}
@@ -842,10 +869,10 @@ const audioContextRef = useRef<AudioContext | null>(null);
               {renderVisualization()}
             </div>
 
-            {/* Educational: concise key terms */}
-            <div style={{ ...cardStyle(), width: '100%', padding: '12px 16px' }}>
-          <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
-            <strong style={{ color: '#a855f7' }}>SEU</strong> = bit flip from particle strike &nbsp;|&nbsp; <strong style={{ color: '#f59e0b' }}>TID</strong> = cumulative radiation dose &nbsp;|&nbsp; <strong style={{ color: '#ef4444' }}>Latchup</strong> = destructive high-current state. Higher altitude enters Van Allen belts where radiation spikes dramatically.
+            {/* Educational: concise key terms + legend */}
+            <div style={{ ...cardStyle(), width: '100%', padding: '10px 16px' }}>
+          <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5', margin: 0 }}>
+            <strong style={{ color: '#a855f7' }}>SEU</strong> = bit flip from particle &nbsp;|&nbsp; <strong style={{ color: '#f59e0b' }}>TID</strong> = cumulative dose &nbsp;|&nbsp; <strong style={{ color: '#ef4444' }}>Latchup</strong> = destructive current &nbsp;|&nbsp; <span style={{ color: '#ef4444' }}>- - -</span> raw environment &nbsp;|&nbsp; <span style={{ color: '#22c55e' }}>&mdash;</span> after your protection
           </p>
         </div>
           </div>
@@ -881,30 +908,51 @@ const audioContextRef = useRef<AudioContext | null>(null);
           </div>
         </div>
 
-        {/* Data readout */}
+        {/* Data readout — prominent cards */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', maxWidth: '700px', width: '100%', marginTop: '12px' }}>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#a855f7' }}>{rad.seuRate}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>SEU/day</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px 8px', borderTop: `3px solid #a855f7` }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#a855f7' }}>{rad.seuRate}</div>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>SEU / day</div>
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>bit flips</div>
           </div>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#f59e0b' }}>{rad.tidRate}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>rad/day TID</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px 8px', borderTop: `3px solid #f59e0b` }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#f59e0b' }}>{rad.tidRate}</div>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>rad / day</div>
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>total dose</div>
           </div>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e' }}>{rad.latchupRisk}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Latchup Risk</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px 8px', borderTop: `3px solid ${rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e'}` }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e' }}>{rad.latchupRisk}</div>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>Latchup Risk</div>
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>destructive</div>
           </div>
-          <div style={{ ...cardStyle(), textAlign: 'center', padding: '10px 8px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 800, color: rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e' }}>{rad.beltRegion}</div>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>Region</div>
+          <div style={{ ...cardStyle(), textAlign: 'center', padding: '12px 8px', borderTop: `3px solid ${rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'}` }}>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e' }}>{rad.beltRegion}</div>
+            <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600 }}>Region</div>
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>{altitude.toLocaleString()} km</div>
           </div>
+        </div>
+
+        {/* Dynamic insight — the key takeaway that changes with settings */}
+        <div style={{ ...cardStyle(true), maxWidth: '700px', width: '100%', marginTop: '12px', padding: '12px 16px' }}>
+          <p style={{ fontSize: '13px', color: '#fde047', lineHeight: '1.6', fontWeight: 600, margin: 0 }}>
+            {(() => {
+              const seuNum = parseFloat(rad.seuRate);
+              const tidNum = parseFloat(rad.tidRate);
+              if (seuNum < 0.01 && tidNum < 1) return `At ${altitude.toLocaleString()} km with ${shielding} mm Al shielding and ${chipType === 'rad-hard' ? 'rad-hardened' : chipType === 'rad-tolerant' ? 'rad-tolerant' : 'commercial'} chips: electronics are well-protected. This is why LEO satellites with good shielding can use near-commercial hardware.`;
+              if (seuNum > 5) return `DANGER: ${seuNum.toFixed(1)} bit flips per day! At this altitude${solarActivity === 'storm' ? ' during a solar storm' : ''}, ${chipType === 'commercial' ? 'commercial chips would fail within hours — rad-hardened chips are essential' : chipType === 'rad-tolerant' ? 'even rad-tolerant chips struggle — consider rad-hard or more shielding' : 'even rad-hard chips need maximum shielding and TMR redundancy'}.`;
+              if (rad.latchupRisk === 'HIGH') return `HIGH latchup risk — a single particle could permanently destroy the chip by triggering a parasitic current path. ${chipType === 'commercial' ? 'Switch to rad-hardened chips to reduce risk by 99%.' : 'Increase shielding to attenuate incoming particles.'}`;
+              if (solarActivity === 'storm' && seuNum > 1) return `Solar storm multiplies radiation 10x! The ${shielding} mm Al shielding reduces dose by ${Math.round((1 - Math.exp(-shielding / 5)) * 100)}%, but ${chipType === 'commercial' ? 'commercial chips still see dangerous SEU rates — hardening is critical during storms' : 'your chip hardening provides additional protection'}.`;
+              if (rad.beltRegion.includes('INNER')) return `You're in the inner Van Allen belt — peak proton flux zone. Shielding blocks ${Math.round((1 - Math.exp(-shielding / 5)) * 100)}% of radiation. ${chipType === 'commercial' ? 'Commercial chips receive full dose — try switching to rad-hard to cut SEU rate by 99%.' : `Your ${chipType} chip reduces effective SEU rate significantly.`}`;
+              if (rad.beltRegion.includes('OUTER')) return `Outer Van Allen belt — intense trapped electrons. ${shielding >= 10 ? 'Your thick shielding helps significantly' : 'Try increasing shielding to see the green curve drop'}. ${chipType === 'commercial' ? 'Switching from commercial to rad-hard chips would cut SEU rate by 100x.' : ''}`;
+              return `At ${altitude.toLocaleString()} km: shielding blocks ${Math.round((1 - Math.exp(-shielding / 5)) * 100)}% of dose. ${chipType !== 'commercial' ? `Your ${chipType} chip further reduces SEU sensitivity by ${chipType === 'rad-hard' ? '99' : '90'}%.` : 'Try switching chip type to see the green curve drop dramatically.'} ${solarActivity !== 'quiet' ? `Solar activity (${solarActivity}) is amplifying radiation ${solarActivity === 'storm' ? '10' : '3'}x.` : ''}`;
+            })()}
+          </p>
         </div>
 
         {/* Discovery message */}
         {discoveryMessage && (
-          <div style={{ ...cardStyle(true), maxWidth: '600px', width: '100%', marginTop: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#fde047', lineHeight: '1.5', fontWeight: 600 }}>
+          <div style={{ ...cardStyle(), maxWidth: '700px', width: '100%', marginTop: '8px' }}>
+            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.5', margin: 0 }}>
               {discoveryMessage}
             </p>
           </div>
@@ -1388,7 +1436,8 @@ const audioContextRef = useRef<AudioContext | null>(null);
                   onClick={() => {
                     setShowTestResults(true);
                     playSound('complete');
-                    onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
+                    const s = calculateTestScore();
+                    onGameEvent?.({ type: 'game_completed', details: { score: s, total: testQuestions.length } });
                   }}
                   style={{
                     padding: '10px 24px',
@@ -1412,28 +1461,43 @@ const audioContextRef = useRef<AudioContext | null>(null);
           </>
         ) : (
           <>
-            {/* Results */}
-            <div style={{ fontSize: '48px', fontWeight: 800, color: calculateTestScore() >= 7 ? '#22c55e' : '#f59e0b', marginBottom: '8px' }}>
+            {/* Score */}
+            <div style={{ fontSize: '48px', fontWeight: 800, color: calculateTestScore() >= 7 ? '#22c55e' : '#f59e0b', marginBottom: '4px' }}>
               {calculateTestScore()} / {testQuestions.length}
             </div>
-            <p style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '20px' }}>
-              Score: {calculateTestScore() >= 7 ? 'Excellent! You have mastered radiation effects.' : 'Good effort! Review the material and try again.'}
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '4px' }}>
+              {calculateTestScore() >= 9 ? 'Outstanding!' : calculateTestScore() >= 7 ? 'Great work!' : calculateTestScore() >= 5 ? 'Good effort — review the explanations below.' : 'Keep studying — review the explanations below.'}
+            </p>
+            <p style={{ fontSize: '22px', fontWeight: 700, color: calculateTestScore() >= 7 ? '#22c55e' : '#f59e0b', marginBottom: '16px' }}>
+              Grade: {calculateTestScore() >= 9 ? 'A' : calculateTestScore() >= 8 ? 'B' : calculateTestScore() >= 7 ? 'C' : calculateTestScore() >= 6 ? 'D' : 'F'}
             </p>
 
-            {/* Answer review */}
+            {/* Rich Answer Key */}
+            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '12px', textAlign: 'left', width: '100%', maxWidth: '600px' }}>Answer Key</h3>
             <div style={{ maxWidth: '600px', width: '100%', maxHeight: '50vh', overflowY: 'auto' as const }}>
               {testQuestions.map((tq, qIndex) => {
                 const userAnswer = testAnswers[qIndex];
                 const isCorrect = userAnswer !== -1 && tq.options[userAnswer].correct;
+                const correctOption = tq.options.find(o => o.correct);
                 return (
-                  <div key={qIndex} style={{ ...cardStyle(), marginBottom: '8px', borderLeft: `3px solid ${isCorrect ? '#22c55e' : '#ef4444'}` }}>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '4px' }}>
-                      {isCorrect ? '\u2713' : '\u2717'} {qIndex + 1}. {tq.question}
+                  <div key={qIndex} style={{ marginBottom: '12px', padding: '14px', borderRadius: '10px', background: 'rgba(30,41,59,0.7)', borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}` }}>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px', lineHeight: '1.4' }}>
+                      <span style={{ fontSize: '16px', marginRight: '6px' }}>{isCorrect ? '\u2705' : '\u274C'}</span>
+                      {qIndex + 1}. {tq.question}
                     </p>
-                    <p style={{ fontSize: '12px', color: isCorrect ? '#86efac' : '#fca5a5' }}>
-                      {userAnswer !== -1 ? tq.options[userAnswer].text : 'No answer'}
-                      {!isCorrect && ` (Correct: ${tq.options.find(o => o.correct)?.text})`}
+                    {!isCorrect && userAnswer !== -1 && (
+                      <p style={{ fontSize: '13px', color: '#fca5a5', marginBottom: '6px', padding: '6px 10px', borderRadius: '6px', background: 'rgba(239,68,68,0.15)' }}>
+                        Your answer: {tq.options[userAnswer].text}
+                      </p>
+                    )}
+                    <p style={{ fontSize: '13px', color: '#86efac', marginBottom: '8px', padding: '6px 10px', borderRadius: '6px', background: 'rgba(34,197,94,0.15)' }}>
+                      Correct: {correctOption?.text}
                     </p>
+                    {tq.explanation && (
+                      <p style={{ fontSize: '12px', color: '#fbbf24', padding: '8px 10px', borderRadius: '6px', background: 'rgba(245,158,11,0.12)', lineHeight: '1.5' }}>
+                        Why? {tq.explanation}
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -1487,51 +1551,82 @@ const audioContextRef = useRef<AudioContext | null>(null);
     );
   };
 
-  const renderMastery = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', padding: '24px', textAlign: 'center', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ fontSize: '64px', marginBottom: '24px' }}>&#127942;</div>
-      <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', lineHeight: '1.2', background: 'linear-gradient(135deg, #ef4444, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-        Radiation Effects Master!
-      </h2>
-      <div style={{ ...cardStyle(true), maxWidth: '500px' }}>
-        <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '20px', lineHeight: '1.6' }}>
-          You understand why space electronics must be specially hardened!
+  const renderMastery = () => {
+    const finalScore = calculateTestScore();
+    const total = testQuestions.length;
+    const pct = Math.round((finalScore / total) * 100);
+    const grade = pct >= 90 ? 'A' : pct >= 80 ? 'B' : pct >= 70 ? 'C' : pct >= 60 ? 'D' : 'F';
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', paddingBottom: '80px', textAlign: 'center', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>&#127942;</div>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, marginBottom: '8px', lineHeight: '1.2', background: 'linear-gradient(135deg, #ef4444, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          Radiation Effects Master!
+        </h2>
+        <div style={{ fontSize: '40px', fontWeight: 800, color: pct >= 70 ? '#22c55e' : '#f59e0b', marginBottom: '4px' }}>
+          {finalScore} / {total} ({grade})
+        </div>
+        <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px' }}>
+          {pct >= 90 ? 'Outstanding — you truly understand space radiation!' : pct >= 70 ? 'Great work — you\'ve mastered the fundamentals!' : 'Good effort — review the answer key to strengthen your understanding.'}
         </p>
-        <div style={{ textAlign: 'left' }}>
-          {[
-            'SEU, TID, and Latchup mechanisms',
-            'Van Allen belts trap dangerous particles',
-            'Shielding and rad-hardening protect electronics',
-            'Different orbits have different radiation levels'
-          ].map((item, i) => (
-            <p key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px', fontSize: '14px', color: '#cbd5e1' }}>
-              <span style={{ color: '#22c55e', fontSize: '18px', fontWeight: 700 }}>{'\u2713'}</span>
-              {item}
-            </p>
-          ))}
+
+        {/* Answer Key */}
+        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#e2e8f0', marginBottom: '12px', textAlign: 'left', width: '100%', maxWidth: '600px' }}>Answer Key</h3>
+        <div style={{ maxWidth: '600px', width: '100%', maxHeight: '50vh', overflowY: 'auto' as const, marginBottom: '20px' }}>
+          {testQuestions.map((tq, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== -1 && tq.options[userAnswer].correct;
+            const correctOption = tq.options.find(o => o.correct);
+            return (
+              <div key={qIndex} style={{ marginBottom: '12px', padding: '14px', borderRadius: '10px', background: 'rgba(30,41,59,0.7)', borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`, textAlign: 'left' }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: '#e2e8f0', marginBottom: '8px', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: '16px', marginRight: '6px' }}>{isCorrect ? '\u2705' : '\u274C'}</span>
+                  {qIndex + 1}. {tq.question}
+                </p>
+                {!isCorrect && userAnswer !== -1 && (
+                  <p style={{ fontSize: '13px', color: '#fca5a5', marginBottom: '6px', padding: '6px 10px', borderRadius: '6px', background: 'rgba(239,68,68,0.15)' }}>
+                    Your answer: {tq.options[userAnswer].text}
+                  </p>
+                )}
+                <p style={{ fontSize: '13px', color: '#86efac', marginBottom: '8px', padding: '6px 10px', borderRadius: '6px', background: 'rgba(34,197,94,0.15)' }}>
+                  Correct: {correctOption?.text}
+                </p>
+                {tq.explanation && (
+                  <p style={{ fontSize: '12px', color: '#fbbf24', padding: '8px 10px', borderRadius: '6px', background: 'rgba(245,158,11,0.12)', lineHeight: '1.5' }}>
+                    Why? {tq.explanation}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Fixed bottom Complete Game button */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 24px', background: 'linear-gradient(to top, #0f172a 80%, transparent)', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
+          <button
+            onClick={() => {
+              onGameEvent?.({ type: 'mastery_achieved', details: { score: finalScore, total, pct } });
+              window.location.href = '/games';
+            }}
+            style={{
+              padding: '14px 48px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #ef4444, #a855f7)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '16px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(239,68,68,0.4)',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              minHeight: '48px',
+            }}
+          >
+            Complete Game
+          </button>
         </div>
       </div>
-      <button
-        onClick={() => goToPhase('hook')}
-        style={{
-          marginTop: '24px',
-          padding: '12px 24px',
-          borderRadius: '10px',
-          border: '1px solid #334155',
-          background: '#1e293b',
-          color: '#e2e8f0',
-          fontWeight: 600,
-          fontSize: '14px',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        Start Over
-      </button>
-    </div>
-  );
+    );
+  };
 
   const renderPhaseContent = () => {
     switch (phase) {

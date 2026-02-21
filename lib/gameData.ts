@@ -14,6 +14,7 @@ export const gameCategories = {
   semiconductor: { name: 'Semiconductor', icon: '🔬', color: '#14B8A6', description: 'Chip design and fabrication' },
   solar: { name: 'Solar & PV', icon: '☀️', color: '#FBBF24', description: 'Solar cells and photovoltaics' },
   elon: { name: 'ELON', icon: '🚀', color: '#F97316', description: 'Systems thinking across energy, space, chips' },
+  electronics: { name: 'Electronics', icon: '🔧', color: '#0EA5E9', description: 'Analog design, power electronics, motors, sensors, and PCB' },
 };
 
 export type GameCategoryKey = keyof typeof gameCategories;
@@ -92,6 +93,34 @@ export const searchTags: Record<string, string[]> = {
   'e-s-d-protection': ['static', 'discharge', 'ESD', 'zap'],
   'electromigration': ['current', 'wire', 'failure', 'atoms'],
   'process-variation': ['manufacturing', 'sigma', 'yield', 'variation'],
+  // Electronics Engineering
+  'oscilloscope-triggerer': ['scope', 'trigger', 'waveform', 'measurement'],
+  'power-supply-decoupling-layout': ['bypass', 'capacitor', 'layout', 'PDN'],
+  'voltage-divider-design': ['resistor', 'divider', 'ratio', 'attenuation'],
+  'current-mirror-matching': ['mirror', 'bias', 'matching', 'analog IC'],
+  'op-amp-stability': ['op-amp', 'gain margin', 'phase margin', 'feedback'],
+  'a-d-c-quantization-noise': ['ADC', 'quantization', 'ENOB', 'SNR'],
+  'd-a-c-settling-time': ['DAC', 'settling', 'glitch', 'output'],
+  'p-l-l-lock-dynamics': ['PLL', 'lock', 'VCO', 'phase detector'],
+  'clock-recovery': ['CDR', 'data recovery', 'jitter', 'bit clock'],
+  'signal-integrity-eye-diagram': ['eye diagram', 'jitter', 'ISI', 'BER'],
+  'thermal-noise': ['Johnson noise', 'kTB', 'noise floor', 'SNR'],
+  'switch-bounce': ['debounce', 'contact', 'mechanical switch', 'glitch'],
+  'motor-back-e-m-f': ['back EMF', 'motor', 'BEMF', 'speed'],
+  'h-bridge-drive': ['H-bridge', 'motor driver', 'PWM', 'direction'],
+  'buck-converter-ripple': ['buck', 'step-down', 'ripple', 'inductor'],
+  'boost-converter': ['boost', 'step-up', 'duty cycle', 'inductor'],
+  'flyback-converter': ['flyback', 'isolated', 'transformer', 'SMPS'],
+  'gate-driver': ['gate driver', 'MOSFET', 'bootstrap', 'dead time'],
+  'stepper-motor': ['stepper', 'step angle', 'microstepping', 'holding torque'],
+  'servo-control': ['servo', 'PID', 'position', 'feedback loop'],
+  'wheatstone-balance': ['Wheatstone', 'bridge', 'balance', 'null detector'],
+  'strain-gauge-sensor': ['strain gauge', 'load cell', 'piezoresistive', 'bridge'],
+  'thermocouple-nonlinearity': ['thermocouple', 'Seebeck', 'cold junction', 'linearization'],
+  'impedance-matching': ['impedance', 'matching', 'reflection', 'VSWR'],
+  'filter-design': ['low-pass', 'high-pass', 'band-pass', 'cutoff frequency'],
+  'e-m-c-compliance': ['EMC', 'EMI', 'radiated', 'conducted emissions'],
+  'solder-reflow': ['reflow', 'solder paste', 'thermal profile', 'PCB assembly'],
 };
 
 export const games: { name: string; slug: string; category: string; difficulty: string }[] = [
@@ -457,6 +486,35 @@ export const games: { name: string; slug: string; category: string; difficulty: 
   { name: 'ELON Policy Risk', slug: 'e-l-o-n_-policy-risk', category: 'elon', difficulty: 'intermediate' },
   { name: 'ELON Gigawatt Blueprint', slug: 'e-l-o-n_-gigawatt-blueprint', category: 'elon', difficulty: 'advanced' },
   { name: 'ELON Power Plant Picker', slug: 'e-l-o-n_-power-plant-picker', category: 'elon', difficulty: 'beginner' },
+
+  // ELECTRONICS ENGINEERING
+  { name: 'Oscilloscope Triggerer', slug: 'oscilloscope-triggerer', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Power Supply Decoupling Layout', slug: 'power-supply-decoupling-layout', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Voltage Divider Design', slug: 'voltage-divider-design', category: 'electronics', difficulty: 'beginner' },
+  { name: 'Current Mirror Matching', slug: 'current-mirror-matching', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Op Amp Stability', slug: 'op-amp-stability', category: 'electronics', difficulty: 'advanced' },
+  { name: 'ADC Quantization Noise', slug: 'a-d-c-quantization-noise', category: 'electronics', difficulty: 'advanced' },
+  { name: 'DAC Settling Time', slug: 'd-a-c-settling-time', category: 'electronics', difficulty: 'advanced' },
+  { name: 'PLL Lock Dynamics', slug: 'p-l-l-lock-dynamics', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Clock Recovery', slug: 'clock-recovery', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Signal Integrity Eye Diagram', slug: 'signal-integrity-eye-diagram', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Thermal Noise', slug: 'thermal-noise', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Switch Bounce', slug: 'switch-bounce', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Motor Back EMF', slug: 'motor-back-e-m-f', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'H-Bridge Drive', slug: 'h-bridge-drive', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Buck Converter Ripple', slug: 'buck-converter-ripple', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Boost Converter', slug: 'boost-converter', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Flyback Converter', slug: 'flyback-converter', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Gate Driver', slug: 'gate-driver', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Stepper Motor', slug: 'stepper-motor', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Servo Control', slug: 'servo-control', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Wheatstone Balance', slug: 'wheatstone-balance', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Strain Gauge Sensor', slug: 'strain-gauge-sensor', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Thermocouple Nonlinearity', slug: 'thermocouple-nonlinearity', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Impedance Matching', slug: 'impedance-matching', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'Filter Design', slug: 'filter-design', category: 'electronics', difficulty: 'intermediate' },
+  { name: 'EMC Compliance', slug: 'e-m-c-compliance', category: 'electronics', difficulty: 'advanced' },
+  { name: 'Solder Reflow', slug: 'solder-reflow', category: 'electronics', difficulty: 'intermediate' },
 ];
 
 // Simple fuzzy match: checks if all characters of query appear in order in target
