@@ -185,7 +185,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const wasAnonymous = !!user?.isAnonymous;
     const reason = authModalState.reason;
     if (user?.isAnonymous) {
-      await linkAnonymousToGoogle();
+      try {
+        await linkAnonymousToGoogle();
+      } catch (err: any) {
+        const code = err?.code || '';
+        // Google account already exists — sign out anonymous and sign in normally
+        if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
+          await firebaseSignOut();
+          await firebaseSignInWithGoogle();
+        } else {
+          throw err;
+        }
+      }
     } else {
       await firebaseSignInWithGoogle();
     }
