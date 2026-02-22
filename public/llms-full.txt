@@ -1,5 +1,5 @@
 # Atlas Coach — Complete Reference for AI Search Engines
-# https://atlascoach-5e3af.web.app
+# https://coachatlas.ai
 # 342 interactive physics, engineering, and AI simulation games
 # with AI coaching, comparison pages, glossary, how-it-works guides, and more
 
@@ -807,12 +807,12 @@ Tailored landing pages for specific audiences:
 
 ## Site Information
 
-- Homepage: https://atlascoach-5e3af.web.app
-- All Games: https://atlascoach-5e3af.web.app/games
-- Topics Hub: https://atlascoach-5e3af.web.app/topics
-- Glossary: https://atlascoach-5e3af.web.app/glossary
-- Comparisons: https://atlascoach-5e3af.web.app/compare
-- How It Works: https://atlascoach-5e3af.web.app/how
+- Homepage: https://coachatlas.ai
+- All Games: https://coachatlas.ai/games
+- Topics Hub: https://coachatlas.ai/topics
+- Glossary: https://coachatlas.ai/glossary
+- Comparisons: https://coachatlas.ai/compare
+- How It Works: https://coachatlas.ai/how
 
 ---
 

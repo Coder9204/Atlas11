@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getPriceId } from '../lib/stripeConfig';
 import { createCheckout, openCustomerPortal } from '../services/subscriptionService';
+import { updateMeta, SEO_CONFIG } from '../lib/seo';
 
 const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
@@ -12,6 +13,55 @@ const PricingPage: React.FC = () => {
 
   let auth: ReturnType<typeof useAuth> | null = null;
   try { auth = useAuth(); } catch { /* AuthProvider may not be mounted in tests */ }
+
+  useEffect(() => {
+    updateMeta({
+      title: 'Pricing - Atlas Coach | Free, Plus & Pro Plans',
+      description: 'Choose your Atlas Coach plan. Free tier with 5 games/day, Plus at $5.99/mo for unlimited access & AI coaching, or Pro at $11.99/mo with offline mode & certificates.',
+      canonicalUrl: '/pricing',
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: 'Atlas Coach',
+          description: 'Interactive physics, engineering, and AI education platform with 342 games and AI-powered coaching.',
+          url: `${SEO_CONFIG.baseUrl}/pricing`,
+          brand: { '@type': 'Organization', name: 'Atlas Coach' },
+          offers: [
+            {
+              '@type': 'Offer',
+              name: 'Free',
+              price: '0',
+              priceCurrency: 'USD',
+              description: '5 games per day with basic progress tracking',
+              availability: 'https://schema.org/InStock',
+              url: `${SEO_CONFIG.baseUrl}/pricing`,
+            },
+            {
+              '@type': 'Offer',
+              name: 'Plus',
+              price: '5.99',
+              priceCurrency: 'USD',
+              description: 'Unlimited games, AI voice coach, progress analytics',
+              availability: 'https://schema.org/InStock',
+              priceValidUntil: '2027-12-31',
+              url: `${SEO_CONFIG.baseUrl}/pricing`,
+            },
+            {
+              '@type': 'Offer',
+              name: 'Pro',
+              price: '11.99',
+              priceCurrency: 'USD',
+              description: 'Everything in Plus, offline mode, certificates, priority support',
+              availability: 'https://schema.org/InStock',
+              priceValidUntil: '2027-12-31',
+              url: `${SEO_CONFIG.baseUrl}/pricing`,
+            },
+          ],
+        },
+      ],
+    });
+  }, []);
 
   const handleTierCTA = async (tierId: string) => {
     if (tierId === 'free') {

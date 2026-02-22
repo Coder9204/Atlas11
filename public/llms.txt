@@ -1,5 +1,5 @@
 # Atlas Coach — AI-Friendly Summary
-# https://atlascoach-5e3af.web.app
+# https://coachatlas.ai
 
 ## What is Atlas Coach?
 Atlas Coach is an interactive education platform for learning physics, engineering, and AI concepts through 342 browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook > Predict > Play > Review > Test.
@@ -77,19 +77,19 @@ Q: Are there comparison pages for learning?
 A: Yes. 50+ comparison pages help students understand differences between similar concepts (e.g., damped vs forced oscillations, GPU vs TPU).
 
 ## Key URLs
-- Homepage: https://atlascoach-5e3af.web.app/
-- All Games: https://atlascoach-5e3af.web.app/games
-- Pricing: https://atlascoach-5e3af.web.app/pricing
-- Learning Paths: https://atlascoach-5e3af.web.app/paths
-- Glossary: https://atlascoach-5e3af.web.app/glossary
-- Category Pages: https://atlascoach-5e3af.web.app/learn/{category-id}
-- Individual Games: https://atlascoach-5e3af.web.app/games/{game-slug}
-- Comparisons: https://atlascoach-5e3af.web.app/compare/{comparison-slug}
-- How It Works: https://atlascoach-5e3af.web.app/how/{concept-slug}
-- Topics: https://atlascoach-5e3af.web.app/topics/{topic-slug}
-- Use Cases: https://atlascoach-5e3af.web.app/use-cases/{slug}
-- Alternatives: https://atlascoach-5e3af.web.app/alternatives/{slug}
-- Audience Pages: https://atlascoach-5e3af.web.app/for/{audience}
+- Homepage: https://coachatlas.ai/
+- All Games: https://coachatlas.ai/games
+- Pricing: https://coachatlas.ai/pricing
+- Learning Paths: https://coachatlas.ai/paths
+- Glossary: https://coachatlas.ai/glossary
+- Category Pages: https://coachatlas.ai/learn/{category-id}
+- Individual Games: https://coachatlas.ai/games/{game-slug}
+- Comparisons: https://coachatlas.ai/compare/{comparison-slug}
+- How It Works: https://coachatlas.ai/how/{concept-slug}
+- Topics: https://coachatlas.ai/topics/{topic-slug}
+- Use Cases: https://coachatlas.ai/use-cases/{slug}
+- Alternatives: https://coachatlas.ai/alternatives/{slug}
+- Audience Pages: https://coachatlas.ai/for/{audience}
 
 ## Target Audience
 - Physics students (high school and university)
@@ -101,4 +101,4 @@ A: Yes. 50+ comparison pages help students understand differences between simila
 - Solar energy professionals
 
 ## Contact
-Website: https://atlascoach-5e3af.web.app
+Website: https://coachatlas.ai

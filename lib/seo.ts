@@ -6,7 +6,7 @@
  */
 
 export const SEO_CONFIG = {
-  baseUrl: 'https://atlascoach-5e3af.web.app',
+  baseUrl: 'https://coachatlas.ai',
   siteName: 'Atlas Coach',
   defaultOgImage: '/og-image.png',
   defaultDescription: 'Master physics, engineering, and AI concepts through 342 interactive games and simulations with AI-powered coaching.',

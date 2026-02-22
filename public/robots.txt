@@ -1,5 +1,5 @@
 # Atlas Coach - Robots.txt
-# https://atlascoach-5e3af.web.app
+# https://coachatlas.ai
 
 User-agent: *
 Allow: /
@@ -29,7 +29,7 @@ Allow: /
 User-agent: Amazonbot
 Allow: /
 
-Sitemap: https://atlascoach-5e3af.web.app/sitemap.xml
+Sitemap: https://coachatlas.ai/sitemap.xml
 
 # AI-friendly content files
 # See /llms.txt for a summary optimized for AI assistants

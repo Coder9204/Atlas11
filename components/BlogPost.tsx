@@ -157,6 +157,15 @@ export default function BlogPost() {
         description: legacyPost.description,
         canonicalUrl: `/blog/${slug}`,
         ogType: 'article',
+        jsonLd: [
+          blogArticleSchema({
+            title: legacyPost.title,
+            description: legacyPost.description,
+            url: `/blog/${slug}`,
+            datePublished: legacyPost.date,
+            author: legacyPost.author,
+          }),
+        ],
       });
     }
   }, [dataPost, legacyPost, slug]);

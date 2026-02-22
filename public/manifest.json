@@ -1,0 +1,19 @@
+{
+  "name": "Atlas Coach - Interactive Physics & Engineering Learning",
+  "short_name": "Atlas Coach",
+  "description": "Master physics, engineering, and AI concepts through 342 interactive games and simulations with AI-powered coaching.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#3B82F6",
+  "orientation": "any",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
