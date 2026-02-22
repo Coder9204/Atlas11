@@ -1,10 +1,11 @@
 # Games To Build - Complete Reference Catalog
 
 ## Status Summary
-- **Total game concepts (251-450):** 200
-- **Already built as renderers:** 27
+- **Total game concepts to build:** 174 (1 from original 1-250 list + 173 from 251-450)
+- **Already built as renderers (251-280):** 27
 - **Failed builds (need rebuild):** 3 (RTDLinearization #274, PowerBudget #277, PCBStackup #279)
-- **Remaining to build:** 173 games
+- **Remaining to build (251-450):** 173 games
+- **Unbuilt from original list (1-250):** 1 (Piezoelectricity #141)
 - **Current renderer count:** 367
 
 ## Already Built Renderers (27 total)
@@ -53,6 +54,25 @@ These renderers exist and are deployed. They were built based on an earlier vers
 
 Each game must follow the 10-phase structure:
 `hook → predict → play → review → twist_predict → twist_play → twist_review → transfer → test → mastery`
+
+---
+
+### SECTION 0: Unbuilt Game from Original List (1-250)
+
+#### 141) Piezoelectricity (Force → Voltage)
+- **Renderer file:** `PiezoelectricityRenderer.tsx`
+- **Slug:** `piezoelectricity`
+- **Concept:** Piezoelectric effect — mechanical stress generates electric charge in certain crystals
+- **Hook + Predict:** "Can squeezing a crystal create electricity instantly?" Ask learners whether pressing harder or pressing faster generates more voltage. Most guess harder pressure matters most, but impulse speed is equally critical.
+- **Do:** Interactive simulation of a piezoelectric element (quartz/PZT crystal). User applies force via slider or click-tap interactions. A voltmeter shows the generated voltage spike in real time. Vary force magnitude, rate of application, and crystal thickness. Show charge accumulation on crystal faces with animated + and − charges separating under stress.
+- **Notice:** Sharp mechanical impacts produce sharp voltage spikes; slow steady pressure produces almost nothing on the voltmeter (charge leaks away). Thinner crystals produce higher voltage for the same force. The voltage reverses when force is released.
+- **Why:** When a piezoelectric crystal is stressed, its internal dipoles shift, creating a net charge separation across the crystal faces. The voltage is proportional to stress and inversely proportional to thickness. Because real circuits have finite impedance, static force lets charge leak — only *changing* force sustains measurable voltage. This is why piezo igniters use a sudden snap mechanism.
+- **Twist:** Switch from "sensor mode" (force → voltage) to "actuator mode" (voltage → displacement). Apply voltage to the crystal and watch it physically deform by nanometers. Show how this is used in inkjet printer heads, precision positioning stages, and ultrasonic transducers. Compare quartz (natural, low d₃₃) vs PZT ceramic (engineered, high d₃₃).
+- **AI Viz:** Crystal lattice animation showing dipole alignment under stress. Voltage waveform display synced to force input. Split-screen: sensor mode (tap → spike) vs actuator mode (voltage → deformation). Frequency sweep mode showing resonant frequency of the piezo element where output peaks dramatically.
+- **Troubleshoot:** Common misconceptions: (1) "Piezo generates steady power" — no, it generates transient charge from changing stress. (2) "Harder = more voltage always" — rate of force change matters as much as magnitude. (3) "Piezo is fragile" — PZT ceramics are brittle but quartz is robust. Safety: real piezo igniters can produce thousands of volts (but negligible current) — simulation avoids shock risk while teaching the same physics.
+- **Real-world applications:** BBQ/lighter igniters, piezo buzzers/speakers, quartz watches (32.768 kHz resonator), ultrasonic sensors (parking sensors, medical imaging), energy harvesting from vibrations (bridge monitors, shoe generators), AFM/STM precision positioning, inkjet print heads, sonar transducers.
+- **Key equations (hidden, drive simulation):** V = g₃₃ · σ · t (voltage = piezo voltage coefficient × stress × thickness); Q = d₃₃ · F (charge = piezo charge coefficient × force); resonant frequency f₀ = 1/(2t) · √(c/ρ)
+- **Test phase:** 5 scenario-based questions covering sensor vs actuator mode, effect of thickness, why static force doesn't sustain voltage, resonant frequency behavior, and real-world application matching.
 
 ---
 
@@ -2162,6 +2182,7 @@ Each new game must be:
 ### Category Organization
 | Category | Game Range | Count |
 |----------|-----------|-------|
+| Unbuilt from Original List | #141 | 1 |
 | Measurement & Data Acquisition | 251-260 | 10 |
 | Analog Building Blocks | 261-270 | 10 |
 | Digital Hardware Reality | 271-280 | 10 |
@@ -2178,4 +2199,4 @@ Each new game must be:
 | System Engineering | 341-350 | 10 |
 | Mechanical Engineering | 351-400 | 50 |
 | Battery Technology | 401-450 | 50 |
-| **TOTAL** | **251-450** | **200** |
+| **TOTAL** | **#141 + 251-450** | **201** |
