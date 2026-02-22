@@ -157,7 +157,7 @@ export async function signInWithGoogle(): Promise<User | null> {
     return result.user;
   } catch (error) {
     console.error('Google sign-in failed:', error);
-    return null;
+    throw error;
   }
 }
 
