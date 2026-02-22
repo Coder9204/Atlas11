@@ -290,10 +290,10 @@ const GamesPage: React.FC = () => {
           <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
-          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Blog</a>
-          <a href="/pricing" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
-          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>About</a>
+          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Home</a>
+          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Blog</a>
+          <a href="/pricing" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Pricing</a>
+          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>About</a>
           <button
             onClick={() => auth?.showAuthModal('manual')}
             style={{

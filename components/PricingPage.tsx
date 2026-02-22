@@ -232,10 +232,10 @@ const PricingPage: React.FC = () => {
           <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
-          <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Games</a>
-          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Blog</a>
-          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>About</a>
+          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Home</a>
+          <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Games</a>
+          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>Blog</a>
+          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px', display: 'flex', alignItems: 'center' }}>About</a>
           {auth?.isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {auth.subscription && auth.subscription.tier !== 'free' && (

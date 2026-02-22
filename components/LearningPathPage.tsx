@@ -220,11 +220,11 @@ export default function LearningPathPage() {
           <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <a href="/" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Home</a>
-          <a href="/games" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>
-          <a href="/blog" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Blog</a>
-          <a href="/pricing" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
-          <a href="/about" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>About</a>
+          <a href="/" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>Home</a>
+          <a href="/games" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>Games</a>
+          <a href="/blog" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>Blog</a>
+          <a href="/pricing" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>Pricing</a>
+          <a href="/about" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14, display: 'flex', alignItems: 'center' }}>About</a>
         </nav>
       </header>
 
