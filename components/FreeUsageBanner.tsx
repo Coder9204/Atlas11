@@ -51,8 +51,8 @@ export default function FreeUsageBanner() {
             Sign up free for {formatDailyLimit('starter')} of gameplay
           </span>
         </div>
-        <a
-          href="/signup"
+        <button
+          onClick={() => auth?.showAuthModal('signup_required')}
           style={{
             fontSize: 12,
             fontWeight: 700,
@@ -60,13 +60,18 @@ export default function FreeUsageBanner() {
             background: theme.colors.info,
             padding: '6px 14px',
             borderRadius: 8,
-            textDecoration: 'none',
+            border: 'none',
+            cursor: 'pointer',
             whiteSpace: 'nowrap',
             flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1.4,
           }}
         >
           Sign Up
-        </a>
+        </button>
       </div>
     );
   }

@@ -304,63 +304,299 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '60vh',
-          padding: 40,
+          minHeight: '85vh',
+          padding: '40px 20px',
           textAlign: 'center',
           fontFamily: "'Inter', sans-serif",
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>{isAnonymousOnNonGuestGame ? '\uD83D\uDD13' : '\u23F0'}</div>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc', marginBottom: 8 }}>
-            {isAnonymousOnNonGuestGame ? 'Sign Up to Play' : 'Daily Play Time Used Up'}
-          </h2>
-          <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 400, lineHeight: 1.6, marginBottom: 24 }}>
-            {isAnonymousOnNonGuestGame
-              ? 'Create a free account to unlock 15 minutes of daily gameplay across all 340+ games.'
-              : 'Your daily play time has been used. Come back tomorrow, or upgrade for more time!'}
-          </p>
+          {/* Animated background particles */}
+          <style>{`
+            @keyframes float-particle {
+              0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+              50% { transform: translateY(-20px) rotate(180deg); opacity: 0.7; }
+            }
+            @keyframes pulse-glow {
+              0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+              50% { box-shadow: 0 0 40px rgba(59,130,246,0.6), 0 0 60px rgba(139,92,246,0.2); }
+            }
+            @keyframes slide-up {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes orbit {
+              0% { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+              100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+            }
+          `}</style>
+
+          {/* Floating particles */}
+          {[...Array(6)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: 6 + (i % 3) * 4,
+              height: 6 + (i % 3) * 4,
+              borderRadius: '50%',
+              background: i % 2 === 0
+                ? 'rgba(59,130,246,0.4)'
+                : 'rgba(139,92,246,0.4)',
+              top: `${15 + (i * 13) % 70}%`,
+              left: `${10 + (i * 17) % 80}%`,
+              animation: `float-particle ${3 + i * 0.7}s ease-in-out infinite`,
+              animationDelay: `${i * 0.5}s`,
+              pointerEvents: 'none',
+            }} />
+          ))}
+
           {isAnonymousOnNonGuestGame ? (
-            <button
-              onClick={() => auth?.showAuthModal('signup_required')}
-              style={{
-                padding: '14px 32px',
-                background: '#3B82F6',
-                color: '#fff',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              Create Free Account
-            </button>
+            <>
+              {/* Orbiting atom icon */}
+              <div style={{
+                position: 'relative',
+                width: 140,
+                height: 140,
+                marginBottom: 24,
+                animation: 'slide-up 0.6s ease-out',
+              }}>
+                {/* Center nucleus */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                  animation: 'pulse-glow 2s ease-in-out infinite',
+                }}>
+                  {'\u26A1'}
+                </div>
+                {/* Orbiting electrons */}
+                {[0, 1, 2].map(i => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: 10,
+                    height: 10,
+                    marginTop: -5,
+                    marginLeft: -5,
+                    borderRadius: '50%',
+                    background: ['#60A5FA', '#A78BFA', '#34D399'][i],
+                    animation: `orbit ${3 + i * 0.5}s linear infinite`,
+                    animationDelay: `${i * 1}s`,
+                  }} />
+                ))}
+                {/* Orbit rings */}
+                {[60, 50, 70].map((r, i) => (
+                  <div key={`ring-${i}`} style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: r * 2,
+                    height: r * 2,
+                    marginTop: -r,
+                    marginLeft: -r,
+                    borderRadius: '50%',
+                    border: '1px solid rgba(148,163,184,0.15)',
+                    transform: `rotate(${i * 60}deg)`,
+                    pointerEvents: 'none',
+                  }} />
+                ))}
+              </div>
+
+              <h2 style={{
+                fontSize: 26,
+                fontWeight: 800,
+                color: '#f8fafc',
+                marginBottom: 6,
+                animation: 'slide-up 0.6s ease-out 0.1s both',
+              }}>
+                Ready to explore <span style={{ color: '#60A5FA' }}>{gameTitle}</span>?
+              </h2>
+              <p style={{
+                fontSize: 15,
+                color: '#94a3b8',
+                maxWidth: 420,
+                lineHeight: 1.7,
+                marginBottom: 28,
+                animation: 'slide-up 0.6s ease-out 0.2s both',
+              }}>
+                Sign up in 10 seconds to start playing. It's free.
+              </p>
+
+              {/* Feature cards */}
+              <div style={{
+                display: 'flex',
+                gap: 12,
+                marginBottom: 32,
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                animation: 'slide-up 0.6s ease-out 0.3s both',
+              }}>
+                {[
+                  { icon: '\uD83C\uDFAE', label: '340+ games' },
+                  { icon: '\u23F1\uFE0F', label: '15 min/day free' },
+                  { icon: '\uD83E\uDDE0', label: 'Learn by playing' },
+                ].map(({ icon, label }) => (
+                  <div key={label} style={{
+                    background: 'rgba(30,41,59,0.8)',
+                    border: '1px solid rgba(148,163,184,0.12)',
+                    borderRadius: 10,
+                    padding: '10px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 13,
+                    color: '#cbd5e1',
+                    fontWeight: 500,
+                  }}>
+                    <span style={{ fontSize: 18 }}>{icon}</span>
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA buttons */}
+              <div style={{ animation: 'slide-up 0.6s ease-out 0.4s both' }}>
+                <button
+                  onClick={() => auth?.showAuthModal('signup_required')}
+                  style={{
+                    padding: '14px 40px',
+                    background: 'linear-gradient(135deg, #3B82F6, #6366F1)',
+                    color: '#fff',
+                    borderRadius: 14,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    animation: 'pulse-glow 2.5s ease-in-out infinite',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    transition: 'transform 0.15s ease',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                >
+                  {'\u25B6\uFE0F'} Start Playing Free
+                </button>
+
+                <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+                  <button
+                    onClick={() => auth?.showAuthModal('manual')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#60A5FA',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: 3,
+                    }}
+                  >
+                    Already have an account? Sign in
+                  </button>
+                </div>
+                <a
+                  href="/games"
+                  style={{
+                    display: 'inline-block',
+                    marginTop: 10,
+                    color: '#64748b',
+                    fontSize: 13,
+                    textDecoration: 'none',
+                    opacity: 0.8,
+                  }}
+                >
+                  {'\u2190'} Browse all games
+                </a>
+              </div>
+            </>
           ) : (
-            <a
-              href="/pricing"
-              style={{
-                padding: '14px 32px',
-                background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-                color: '#fff',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 700,
-                textDecoration: 'none',
-              }}
-            >
-              Upgrade for More Time
-            </a>
+            /* Time exhausted state */
+            <>
+              <div style={{
+                fontSize: 56,
+                marginBottom: 20,
+                animation: 'slide-up 0.6s ease-out',
+              }}>
+                {'\u2615'}
+              </div>
+              <h2 style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: '#f8fafc',
+                marginBottom: 8,
+                animation: 'slide-up 0.6s ease-out 0.1s both',
+              }}>
+                Great session! Time for a break.
+              </h2>
+              <p style={{
+                fontSize: 15,
+                color: '#94a3b8',
+                maxWidth: 400,
+                lineHeight: 1.7,
+                marginBottom: 20,
+                animation: 'slide-up 0.6s ease-out 0.2s both',
+              }}>
+                Your daily play time resets tomorrow. Upgrade for up to 4 hours/day.
+              </p>
+              <p style={{
+                fontSize: 12,
+                color: '#64748b',
+                marginBottom: 28,
+                fontStyle: 'italic',
+                animation: 'slide-up 0.6s ease-out 0.25s both',
+              }}>
+                Fun fact: Spaced repetition works best with breaks between sessions!
+              </p>
+              <div style={{ animation: 'slide-up 0.6s ease-out 0.3s both' }}>
+                <a
+                  href="/pricing"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '14px 36px',
+                    background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                    color: '#fff',
+                    borderRadius: 14,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    animation: 'pulse-glow 2.5s ease-in-out infinite',
+                    transition: 'transform 0.15s ease',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                >
+                  {'\uD83D\uDE80'} Upgrade for More Time
+                </a>
+                <div style={{ marginTop: 14 }}>
+                  <a
+                    href="/games"
+                    style={{
+                      color: '#64748b',
+                      fontSize: 13,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {'\u2190'} Browse all games
+                  </a>
+                </div>
+              </div>
+            </>
           )}
-          <a
-            href="/games"
-            style={{
-              marginTop: 14,
-              color: '#94a3b8',
-              fontSize: 13,
-              textDecoration: 'underline',
-            }}
-          >
-            Back to games
-          </a>
         </div>
       ) : enhancedChildren}
       <AICoachPanel />
