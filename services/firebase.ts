@@ -382,13 +382,14 @@ async function createUserProfile(user: User, name?: string): Promise<void> {
       }
     });
   } else {
-    await updateDoc(userRef, {
-      displayName: name || user.displayName || undefined,
-      email: user.email || undefined,
-      photoURL: user.photoURL || undefined,
+    const updates: Record<string, any> = {
       updatedAt: serverTimestamp(),
       lastActiveDate: serverTimestamp(),
-    });
+    };
+    if (name || user.displayName) updates.displayName = name || user.displayName;
+    if (user.email) updates.email = user.email;
+    if (user.photoURL) updates.photoURL = user.photoURL;
+    await updateDoc(userRef, updates);
   }
 }
 
