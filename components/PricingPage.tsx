@@ -234,6 +234,7 @@ const PricingPage: React.FC = () => {
         <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
           <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
           <a href="/games" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Games</a>
+          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Blog</a>
           <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>About</a>
           {auth?.isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

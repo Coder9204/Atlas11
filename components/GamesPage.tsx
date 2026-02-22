@@ -287,16 +287,20 @@ const GamesPage: React.FC = () => {
         zIndex: 100,
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/logo.png" alt="Coach Atlas" style={{ height: '36px', width: 'auto' }} />
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <a href="/paths" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Learning Paths</a>
-          <a href="/progress" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>My Progress</a>
-          <a href="/build" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Build</a>
-          <button style={{
-            background: colors.accent, color: 'white', border: 'none',
-            padding: '8px 18px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
-          }}>
+          <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
+          <a href="/blog" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Blog</a>
+          <a href="/pricing" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Pricing</a>
+          <a href="/about" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>About</a>
+          <button
+            onClick={() => auth?.showAuthModal('manual')}
+            style={{
+              background: colors.accent, color: 'white', border: 'none',
+              padding: '8px 18px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
+            }}
+          >
             Sign In
           </button>
         </nav>

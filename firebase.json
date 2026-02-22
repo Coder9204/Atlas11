@@ -72,14 +72,7 @@
         ]
       }
     ],
-    "redirects": [
-      {
-        "source": "/",
-        "destination": "https://coachatlas.ai/",
-        "type": 301,
-        "condition": "request.headers['X-Forwarded-Host'] == 'atlascoach-5e3af.web.app'"
-      }
-    ],
+    "redirects": [],
     "rewrites": [
       {
         "source": "/game-server/**",

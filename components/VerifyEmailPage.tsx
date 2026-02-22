@@ -99,7 +99,7 @@ const VerifyEmailPage: React.FC = () => {
       }}>
         {/* Logo */}
         <a href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-          <img src="/logo.png" alt="Coach Atlas" style={{ height: '36px', width: 'auto' }} />
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
 
         {/* Verifying state */}

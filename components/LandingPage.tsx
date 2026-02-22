@@ -68,9 +68,9 @@ const howItWorksSteps = [
 ];
 
 const pricingPreview = [
-  { name: 'Free', price: '$0', period: '', description: '5 games/day, basic tracking', color: theme.colors.textMuted },
-  { name: 'Plus', price: '$4.17', period: '/mo', description: 'All games, AI coach, analytics', color: theme.colors.success, popular: true },
-  { name: 'Pro', price: '$8.33', period: '/mo', description: 'Plus + offline, certs, priority', color: theme.colors.info },
+  { name: 'Free', price: '$0', period: '', description: '15 min/day, basic tracking', color: theme.colors.textMuted },
+  { name: 'Plus', price: '$9.50', period: '/mo', description: '90 min/day, AI coach, no ads', color: theme.colors.success, popular: true },
+  { name: 'Pro', price: '$14.50', period: '/mo', description: '4 hrs/day, certs, priority', color: theme.colors.info },
 ];
 
 const LandingPage: React.FC = () => {
@@ -137,12 +137,12 @@ const LandingPage: React.FC = () => {
         maxWidth: 1200,
         margin: '0 auto',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 28 }}>{'\u269B\uFE0F'}</span>
-          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px' }}>Atlas</span>
-        </div>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
+        </a>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <a href="/games" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>
+          <a href="/blog" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Blog</a>
           <a href="/pricing" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
           <a href="/about" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>About</a>
           <button
@@ -821,11 +821,12 @@ const LandingPage: React.FC = () => {
         gap: 16,
       }}>
         <div style={{ color: theme.colors.textMuted, fontSize: 13 }}>
-          {'\u00A9'} 2026 Atlas. Learn physics by playing.
+          {'\u00A9'} 2026 Coach Atlas. Learn physics by playing.
         </div>
         <div style={{ display: 'flex', gap: 20 }}>
           {[
             { label: 'Games', href: '/games' },
+            { label: 'Blog', href: '/blog' },
             { label: 'Pricing', href: '/pricing' },
             { label: 'About', href: '/about' },
           ].map((link, i) => (

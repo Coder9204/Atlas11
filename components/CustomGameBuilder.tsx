@@ -398,12 +398,14 @@ export default function CustomGameBuilder() {
         zIndex: 100,
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.png" alt="Coach Atlas" style={{ height: '36px', width: 'auto' }} />
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <a href="/" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Home</a>
           <a href="/games" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>
-          <a href="/paths" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Paths</a>
-          <a href="/progress" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Progress</a>
+          <a href="/blog" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Blog</a>
+          <a href="/pricing" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
+          <a href="/about" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>About</a>
         </nav>
       </header>
 

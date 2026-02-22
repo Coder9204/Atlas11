@@ -482,7 +482,7 @@ export default function AdminPanel() {
         zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/" style={{ color: theme.textMuted, textDecoration: 'none', fontSize: 14 }}>Coach Atlas</a>
+          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}><img src="/logo.png" alt="Coach Atlas" style={{ height: '32px', width: 'auto' }} /></a>
           <span style={{ color: theme.border }}>/</span>
           <span style={{ fontSize: 16, fontWeight: 700, color: theme.textPrimary }}>Admin</span>
         </div>

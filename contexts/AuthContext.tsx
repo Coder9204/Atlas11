@@ -4,15 +4,11 @@ import {
   subscribeToAuthState,
   signInAnonymousUser,
   signInWithGoogle as firebaseSignInWithGoogle,
-  signInWithFacebook as firebaseSignInWithFacebook,
-  signInWithTwitter as firebaseSignInWithTwitter,
   signOut as firebaseSignOut,
   signUpWithEmail as firebaseSignUpWithEmail,
   signInWithEmail as firebaseSignInWithEmail,
   linkAnonymousToEmail,
   linkAnonymousToGoogle,
-  linkAnonymousToFacebook,
-  linkAnonymousToTwitter,
   isFirebaseConfigured,
   getFirestoreInstance,
 } from '../services/firebase';
@@ -41,8 +37,6 @@ export interface AuthContextValue {
   signInWithEmail(email: string, password: string): Promise<void>;
   signUpWithEmail(email: string, password: string, name: string): Promise<void>;
   signInWithGoogle(): Promise<void>;
-  signInWithFacebook(): Promise<void>;
-  signInWithTwitter(): Promise<void>;
   signOut(): Promise<void>;
   showAuthModal(reason?: string): void;
   hideAuthModal(): void;
@@ -175,38 +169,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, hideAuthModal, authModalState.reason]);
 
-  const handleSignInWithFacebook = useCallback(async () => {
-    const wasAnonymous = !!user?.isAnonymous;
-    const reason = authModalState.reason;
-    if (user?.isAnonymous) {
-      await linkAnonymousToFacebook();
-    } else {
-      await firebaseSignInWithFacebook();
-    }
-    trackSignupCompleted('facebook', wasAnonymous);
-    clearFreeTimer();
-    hideAuthModal();
-    if (reason === 'pricing_cta') {
-      window.location.href = '/pricing';
-    }
-  }, [user, hideAuthModal, authModalState.reason]);
-
-  const handleSignInWithTwitter = useCallback(async () => {
-    const wasAnonymous = !!user?.isAnonymous;
-    const reason = authModalState.reason;
-    if (user?.isAnonymous) {
-      await linkAnonymousToTwitter();
-    } else {
-      await firebaseSignInWithTwitter();
-    }
-    trackSignupCompleted('twitter', wasAnonymous);
-    clearFreeTimer();
-    hideAuthModal();
-    if (reason === 'pricing_cta') {
-      window.location.href = '/pricing';
-    }
-  }, [user, hideAuthModal, authModalState.reason]);
-
   const handleSignOut = useCallback(async () => {
     await firebaseSignOut();
     setSubscription(null);
@@ -222,8 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithEmail: handleSignInWithEmail,
     signUpWithEmail: handleSignUpWithEmail,
     signInWithGoogle: handleSignInWithGoogle,
-    signInWithFacebook: handleSignInWithFacebook,
-    signInWithTwitter: handleSignInWithTwitter,
     signOut: handleSignOut,
     showAuthModal,
     hideAuthModal,

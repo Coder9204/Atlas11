@@ -57,12 +57,12 @@ const AboutPage: React.FC = () => {
         margin: '0 auto',
         borderBottom: `1px solid ${theme.colors.border}`,
       }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <span style={{ fontSize: 28 }}>{'\u269B\uFE0F'}</span>
-          <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.5px', color: theme.colors.textPrimary }}>Atlas</span>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <a href="/games" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>
+          <a href="/blog" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Blog</a>
           <a href="/pricing" style={{ color: theme.colors.textSecondary, textDecoration: 'none', fontSize: 14 }}>Pricing</a>
           <a href="/about" style={{ color: theme.colors.info, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>About</a>
           <button
