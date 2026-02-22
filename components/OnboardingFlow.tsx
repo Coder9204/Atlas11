@@ -671,9 +671,19 @@ const OnboardingFlow: React.FC = () => {
         goToStep(3);
       } catch (err: any) {
         const code = err?.code || '';
-        if (code === 'auth/email-already-in-use') setAuthError('This email already has an account.');
-        else if (code === 'auth/weak-password') setAuthError('Password must be at least 6 characters.');
-        else setAuthError(err?.message || 'Account creation failed.');
+        if (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') {
+          // Account exists — try signing in instead
+          try {
+            await auth.signInWithEmail(email, password);
+            goToStep(3);
+          } catch {
+            setAuthError('This email already has an account. Please use the correct password to sign in.');
+          }
+        } else if (code === 'auth/weak-password') {
+          setAuthError('Password must be at least 6 characters.');
+        } else {
+          setAuthError(err?.message || 'Account creation failed.');
+        }
       } finally {
         setAuthLoading(false);
       }

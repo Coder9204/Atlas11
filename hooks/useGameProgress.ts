@@ -99,6 +99,7 @@ export function useGameProgress(
   const [record, setRecord] = useState<GameRecord | null>(null);
   const timerStartRef = useRef<number | null>(null);
   const accumulatedMsRef = useRef<number>(0);
+  const isTimerRunningRef = useRef(false);
 
   // Load existing progress on mount and record activity
   useEffect(() => {
@@ -113,6 +114,27 @@ export function useGameProgress(
       // Graceful fallback — leave record as null
     }
   }, [slug]);
+
+  // Pause/resume timer based on tab visibility — only count active visible time
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!isTimerRunningRef.current) return;
+      if (document.hidden) {
+        // Tab hidden — pause: accumulate elapsed time and clear start
+        if (timerStartRef.current !== null) {
+          accumulatedMsRef.current += Date.now() - timerStartRef.current;
+          timerStartRef.current = null;
+        }
+      } else {
+        // Tab visible — resume: restart the timer
+        if (timerStartRef.current === null) {
+          timerStartRef.current = Date.now();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   /**
    * Save the current phase. If phase is 'mastery', also sets completedAt.
@@ -217,10 +239,12 @@ export function useGameProgress(
 
   /**
    * Start the session timer. Records the current timestamp.
-   * If a timer is already running, this is a no-op.
+   * Only starts if the tab is visible. If tab is hidden, the timer
+   * will begin when the tab becomes visible (via visibilitychange listener).
    */
   const startTimer = useCallback(() => {
-    if (timerStartRef.current === null) {
+    isTimerRunningRef.current = true;
+    if (timerStartRef.current === null && !document.hidden) {
       timerStartRef.current = Date.now();
     }
   }, []);
@@ -228,22 +252,23 @@ export function useGameProgress(
   /**
    * Stop the session timer and persist accumulated time.
    * Adds elapsed time since startTimer was called to the cumulative total.
+   * Only counts time when the tab was visible (paused via visibilitychange).
    */
   const stopTimer = useCallback(() => {
+    isTimerRunningRef.current = false;
     if (timerStartRef.current !== null) {
-      const elapsed = Date.now() - timerStartRef.current;
-      accumulatedMsRef.current += elapsed;
+      accumulatedMsRef.current += Date.now() - timerStartRef.current;
       timerStartRef.current = null;
+    }
 
-      try {
-        saveGameProgress(slug, {
-          timeSpentMs: accumulatedMsRef.current,
-        });
-        const updated = getGameProgress(slug);
-        setRecord(updated);
-      } catch {
-        // Silently fail
-      }
+    try {
+      saveGameProgress(slug, {
+        timeSpentMs: accumulatedMsRef.current,
+      });
+      const updated = getGameProgress(slug);
+      setRecord(updated);
+    } catch {
+      // Silently fail
     }
   }, [slug]);
 

@@ -134,22 +134,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignInWithEmail = useCallback(async (email: string, password: string) => {
     await firebaseSignInWithEmail(email, password);
-    hideAuthModal();
-  }, [hideAuthModal]);
-
-  const handleSignUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
-    const wasAnonymous = !!user?.isAnonymous;
-    const reason = authModalState.reason;
-    if (user?.isAnonymous) {
-      await linkAnonymousToEmail(email, password, name);
-    } else {
-      await firebaseSignUpWithEmail(email, password, name);
-    }
-    trackSignupCompleted('email', wasAnonymous);
     clearFreeTimer();
+    const reason = authModalState.reason;
     hideAuthModal();
     if (reason === 'pricing_cta') {
       window.location.href = '/pricing';
+    }
+  }, [hideAuthModal, authModalState.reason]);
+
+  const handleSignUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
+    const wasAnonymous = !!user?.isAnonymous;
+    try {
+      if (user?.isAnonymous) {
+        await linkAnonymousToEmail(email, password, name);
+      } else {
+        await firebaseSignUpWithEmail(email, password, name);
+      }
+      trackSignupCompleted('email', wasAnonymous);
+      clearFreeTimer();
+      // Don't close modal here — let AuthModal handle the verification flow.
+      // Modal will close after user verifies email or clicks "Skip for now".
+    } catch (err: any) {
+      const code = err?.code || '';
+      // If email is already registered and user was anonymous, fall back to sign-in.
+      // This handles the "account already exists" case gracefully.
+      if (
+        (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') &&
+        wasAnonymous
+      ) {
+        try {
+          await firebaseSignOut();
+          await firebaseSignInWithEmail(email, password);
+          clearFreeTimer();
+          const reason = authModalState.reason;
+          hideAuthModal();
+          if (reason === 'pricing_cta') {
+            window.location.href = '/pricing';
+          }
+          return; // Successfully signed in with existing account
+        } catch {
+          // Sign-in fallback failed (e.g. wrong password) — re-throw original error
+          // so AuthModal can show "account exists, try signing in" and switch tab
+        }
+      }
+      throw err; // Re-throw for AuthModal to handle
     }
   }, [user, hideAuthModal, authModalState.reason]);
 

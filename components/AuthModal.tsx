@@ -8,7 +8,11 @@ import { theme } from '../lib/theme';
 const REASONS: Record<string, { title: string; subtitle: string }> = {
   timer_expired: {
     title: 'Your free preview has ended',
-    subtitle: 'Create a free account to keep learning with 5 games/month.',
+    subtitle: 'Sign in or create a free account to keep learning.',
+  },
+  signup_required: {
+    title: 'Sign in to play',
+    subtitle: 'Sign in or create a free account to unlock 15 minutes of daily gameplay across all 340+ games.',
   },
   paywall: {
     title: 'Upgrade to continue',
@@ -16,7 +20,7 @@ const REASONS: Record<string, { title: string; subtitle: string }> = {
   },
   pricing_cta: {
     title: 'Sign in to subscribe',
-    subtitle: 'Create an account to start your subscription.',
+    subtitle: 'Sign in or create an account to start your subscription.',
   },
   manual: {
     title: 'Welcome back',
@@ -28,13 +32,14 @@ type ModalStep = 'auth' | 'verify';
 
 export default function AuthModal() {
   const { authModalState, hideAuthModal, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
-  const [tab, setTab] = useState<'signin' | 'signup'>('signup');
+  const [tab, setTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [signupComplete, setSignupComplete] = useState(false);
 
   // Email verification state
   const [step, setStep] = useState<ModalStep>('auth');
@@ -46,6 +51,20 @@ export default function AuthModal() {
 
   const reason = REASONS[authModalState.reason] || REASONS.manual;
 
+  /** Close modal and redirect to pricing if the modal was opened for pricing_cta */
+  const closeModal = () => {
+    const currentReason = authModalState.reason;
+    hideAuthModal();
+    setStep('auth');
+    setSignupComplete(false);
+    setVerificationCode('');
+    setVerificationSuccess(false);
+    setError('');
+    if (signupComplete && currentReason === 'pricing_cta') {
+      window.location.href = '/pricing';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -54,26 +73,32 @@ export default function AuthModal() {
     try {
       if (tab === 'signin') {
         await signInWithEmail(email, password);
+        // signInWithEmail closes modal and handles redirect via AuthContext
       } else {
         await signUpWithEmail(email, password, name);
-        // After signup, send verification code
+        // Signup succeeded — mark complete and proceed to verification
+        setSignupComplete(true);
         try {
           await requestVerificationCode(email);
           setVerificationSent(true);
           setStep('verify');
         } catch {
-          // Verification send failed, but account was created — continue
-          // User can request code later
+          // Verification send failed, but account was created — close modal
+          closeModal();
         }
       }
     } catch (err: any) {
       const code = err?.code || '';
-      if (code === 'auth/email-already-in-use') {
-        setError('An account with this email already exists. Try signing in.');
+      if (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') {
+        // Auto-switch to sign-in tab so user can sign in with existing account
+        setTab('signin');
+        setError('An account with this email already exists. Sign in with your password below.');
       } else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
         setError('Incorrect email or password.');
       } else if (code === 'auth/user-not-found') {
-        setError('No account found. Create one below.');
+        // Auto-switch to signup tab
+        setTab('signup');
+        setError('No account found with this email. Create one below.');
       } else if (code === 'auth/weak-password') {
         setError('Password must be at least 6 characters.');
       } else {
@@ -89,10 +114,12 @@ export default function AuthModal() {
     setLoading(true);
     try {
       await signInWithGoogle();
+      // Google auth is handled by AuthContext (closes modal + redirects if needed)
     } catch (err: any) {
       const code = err?.code || '';
       if (code === 'auth/account-exists-with-different-credential') {
-        setError('An account already exists with this email using a different sign-in method.');
+        setTab('signin');
+        setError('An account already exists with this email. Try signing in with email and password instead.');
       } else if (code === 'auth/popup-closed-by-user') {
         // User closed popup, no error needed
       } else {
@@ -135,7 +162,7 @@ export default function AuthModal() {
       if (verified) {
         setVerificationSuccess(true);
         setTimeout(() => {
-          hideAuthModal();
+          closeModal();
         }, 1500);
       }
     } catch (err: any) {
@@ -199,7 +226,7 @@ export default function AuthModal() {
 
   return (
     <div
-      onClick={hideAuthModal}
+      onClick={closeModal}
       style={{
         position: 'fixed',
         inset: 0,
@@ -227,7 +254,7 @@ export default function AuthModal() {
       >
         {/* Close button */}
         <button
-          onClick={hideAuthModal}
+          onClick={closeModal}
           style={{
             position: 'absolute',
             top: 14,
@@ -344,7 +371,7 @@ export default function AuthModal() {
                     Resend code
                   </button>
                   <button
-                    onClick={() => { setStep('auth'); setError(''); }}
+                    onClick={closeModal}
                     style={{
                       background: 'none',
                       border: 'none',
