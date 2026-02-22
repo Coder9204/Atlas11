@@ -230,10 +230,27 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
     updatePhase(phase);
   }, [updatePhase]);
 
+  // Determine resume phase: if user has prior progress on this game, skip the hook
+  // and resume at their last phase (or 'play' if they completed/mastered the game).
+  const resumePhase = (() => {
+    if (!record) return undefined; // First visit — start at hook
+    const last = record.lastPhase;
+    // If they've completed or mastered the game, drop them into play to re-explore
+    if (record.completedAt && (!last || last === 'mastery' || last === 'test')) {
+      return 'play';
+    }
+    // If they have a saved phase, resume there (skip hook on revisit)
+    if (last && last !== 'hook') return last;
+    // They've been here before but only saw hook — advance to predict
+    if (last === 'hook' && record.lastPlayedAt) return 'predict';
+    return undefined;
+  })();
+
   // Clone children with the props that renderers actually accept
   const enhancedChildren = React.cloneElement(children, {
     onGameEvent: handleGameEvent,
     onPhaseComplete: handlePhaseComplete,
+    ...(resumePhase ? { gamePhase: resumePhase } : {}),
   });
 
   // Determine access: subscriber = unlimited, anonymous+expired = auth modal, free tier+exhausted = paywall
