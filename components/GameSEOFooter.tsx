@@ -103,7 +103,7 @@ export default function GameSEOFooter({ slug }: GameSEOFooterProps) {
           Master the concepts behind {title} through an interactive simulation.
           Predict outcomes, experiment with variables, and test your understanding
           with AI-powered coaching.
-          {category && ` Part of the ${category.name} topic on Atlas Coach.`}
+          {category && ` Part of the ${category.name} topic on Coach Atlas.`}
         </p>
       </div>
 

@@ -22,10 +22,10 @@ export default function AlternativesPage() {
         url: `https://atlascoach-5e3af.web.app/alternatives/${entry.slug}`,
         author: {
           '@type': 'Organization',
-          name: 'Atlas Coach',
+          name: 'Coach Atlas',
         },
         about: [
-          { '@type': 'Thing', name: 'Atlas Coach' },
+          { '@type': 'Thing', name: 'Coach Atlas' },
           { '@type': 'Thing', name: entry.competitor },
         ],
       },
@@ -45,7 +45,7 @@ export default function AlternativesPage() {
       }}>
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '36px', marginBottom: '16px' }}>Comparison Not Found</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>See how Atlas Coach compares to other platforms.</p>
+          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>See how Coach Atlas compares to other platforms.</p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {alternativeEntries.map(alt => (
               <a
@@ -136,7 +136,7 @@ export default function AlternativesPage() {
                 color: '#3B82F6',
                 borderRight: '1px solid #2a2a3a',
               }}>
-                Atlas Coach
+                Coach Atlas
               </div>
               <div style={{
                 padding: '16px 20px',
@@ -226,7 +226,7 @@ export default function AlternativesPage() {
           marginBottom: '48px',
         }}>
           <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px' }}>
-            Try Atlas Coach Free
+            Try Coach Atlas Free
           </h2>
           <p style={{
             color: '#94a3b8',

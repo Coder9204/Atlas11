@@ -217,14 +217,7 @@ export default function LearningPathPage() {
         zIndex: 100,
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 9,
-            background: `linear-gradient(135deg, ${theme.accent}, #8B5CF6)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-          }}>
-            {'\uD83C\uDF93'}
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: theme.textPrimary }}>Atlas Coach</span>
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '36px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <a href="/games" style={{ color: theme.textSecondary, textDecoration: 'none', fontSize: 14 }}>Games</a>

@@ -18,9 +18,9 @@ interface AudienceContent {
 
 const audienceData: Record<AudienceKey, AudienceContent> = {
   teachers: {
-    title: 'Atlas Coach for Teachers',
+    title: 'Coach Atlas for Teachers',
     subtitle: 'Turn abstract concepts into hands-on discoveries',
-    description: 'Atlas Coach gives you 340+ interactive simulations that align with AP Physics, IB, and university curricula. Assign specific games, track student progress, and use the AI coach as a teaching assistant that never runs out of patience.',
+    description: 'Coach Atlas gives you 340+ interactive simulations that align with AP Physics, IB, and university curricula. Assign specific games, track student progress, and use the AI coach as a teaching assistant that never runs out of patience.',
     heroColor: '#8b5cf6',
     heroIcon: '🎓',
     features: [
@@ -56,9 +56,9 @@ const audienceData: Record<AudienceKey, AudienceContent> = {
     cta: { text: 'Start a Free Teacher Account', href: '/onboarding' },
   },
   students: {
-    title: 'Atlas Coach for Students',
+    title: 'Coach Atlas for Students',
     subtitle: 'Learn physics by doing, not just reading',
-    description: 'Stop staring at textbook diagrams. Atlas Coach lets you predict, experiment, and test 340+ physics concepts through interactive games. The AI coach guides you step by step, and spaced repetition ensures you remember what you learn for exams.',
+    description: 'Stop staring at textbook diagrams. Coach Atlas lets you predict, experiment, and test 340+ physics concepts through interactive games. The AI coach guides you step by step, and spaced repetition ensures you remember what you learn for exams.',
     heroColor: '#3B82F6',
     heroIcon: '📚',
     features: [
@@ -94,9 +94,9 @@ const audienceData: Record<AudienceKey, AudienceContent> = {
     cta: { text: 'Start Learning Free', href: '/onboarding' },
   },
   engineers: {
-    title: 'Atlas Coach for Engineers',
+    title: 'Coach Atlas for Engineers',
     subtitle: 'Refresh fundamentals and explore interdisciplinary concepts',
-    description: 'Whether you are a seasoned professional brushing up on first principles or a new grad bridging theory to practice, Atlas Coach offers 340+ simulations spanning semiconductor physics, power systems, RF, AI hardware, and more.',
+    description: 'Whether you are a seasoned professional brushing up on first principles or a new grad bridging theory to practice, Coach Atlas offers 340+ simulations spanning semiconductor physics, power systems, RF, AI hardware, and more.',
     heroColor: '#06b6d4',
     heroIcon: '🔧',
     features: [
@@ -132,9 +132,9 @@ const audienceData: Record<AudienceKey, AudienceContent> = {
     cta: { text: 'Explore Engineering Simulations', href: '/games' },
   },
   parents: {
-    title: 'Atlas Coach for Parents',
+    title: 'Coach Atlas for Parents',
     subtitle: 'Give your kids a head start in science and engineering',
-    description: 'Atlas Coach turns screen time into learning time. Kids play interactive physics games that build real understanding. The AI coach keeps them engaged and challenged, while you track their progress. No physics degree required from you.',
+    description: 'Coach Atlas turns screen time into learning time. Kids play interactive physics games that build real understanding. The AI coach keeps them engaged and challenged, while you track their progress. No physics degree required from you.',
     heroColor: '#22c55e',
     heroIcon: '👨‍👩‍👧‍👦',
     features: [
@@ -156,7 +156,7 @@ const audienceData: Record<AudienceKey, AudienceContent> = {
       {
         icon: '🧠',
         title: 'Builds Real Understanding',
-        description: 'Unlike flashcard apps, Atlas Coach builds intuition through experimentation. Kids understand why things work, not just memorize facts.',
+        description: 'Unlike flashcard apps, Coach Atlas builds intuition through experimentation. Kids understand why things work, not just memorize facts.',
       },
     ],
     gameRecommendations: [
@@ -307,7 +307,7 @@ export default function AudiencePage() {
             textAlign: 'center',
             marginBottom: '32px',
           }}>
-            Why {validAudience.charAt(0).toUpperCase() + validAudience.slice(1)} Love Atlas Coach
+            Why {validAudience.charAt(0).toUpperCase() + validAudience.slice(1)} Love Coach Atlas
           </h2>
           <div style={{
             display: 'grid',
@@ -424,7 +424,7 @@ export default function AudiencePage() {
             maxWidth: '500px',
             margin: '0 auto 24px',
           }}>
-            Join thousands of {validAudience} who are using Atlas Coach to master physics and engineering.
+            Join thousands of {validAudience} who are using Coach Atlas to master physics and engineering.
           </p>
           <a
             href={content.cta.href}
@@ -457,7 +457,7 @@ export default function AudiencePage() {
             color: '#94a3b8',
             marginBottom: '12px',
           }}>
-            Atlas Coach is also for
+            Coach Atlas is also for
           </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {VALID_AUDIENCES

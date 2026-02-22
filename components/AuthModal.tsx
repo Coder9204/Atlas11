@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { theme, withOpacity } from '../lib/theme';
+import { requestVerificationCode, submitVerificationCode } from '../services/emailVerificationService';
+import { theme } from '../lib/theme';
 
 const REASONS: Record<string, { title: string; subtitle: string }> = {
   timer_expired: {
@@ -23,8 +24,10 @@ const REASONS: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
+type ModalStep = 'auth' | 'verify';
+
 export default function AuthModal() {
-  const { authModalState, hideAuthModal, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { authModalState, hideAuthModal, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithFacebook, signInWithTwitter } = useAuth();
   const [tab, setTab] = useState<'signin' | 'signup'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +35,12 @@ export default function AuthModal() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  // Email verification state
+  const [step, setStep] = useState<ModalStep>('auth');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   if (!authModalState.open) return null;
 
@@ -47,6 +56,15 @@ export default function AuthModal() {
         await signInWithEmail(email, password);
       } else {
         await signUpWithEmail(email, password, name);
+        // After signup, send verification code
+        try {
+          await requestVerificationCode(email);
+          setVerificationSent(true);
+          setStep('verify');
+        } catch {
+          // Verification send failed, but account was created — continue
+          // User can request code later
+        }
       }
     } catch (err: any) {
       const code = err?.code || '';
@@ -66,13 +84,22 @@ export default function AuthModal() {
     }
   };
 
-  const handleGoogle = async () => {
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'twitter') => {
     setError('');
     setLoading(true);
     try {
-      await signInWithGoogle();
+      if (provider === 'google') await signInWithGoogle();
+      else if (provider === 'facebook') await signInWithFacebook();
+      else if (provider === 'twitter') await signInWithTwitter();
     } catch (err: any) {
-      setError(err?.message || 'Google sign-in failed. Please try again.');
+      const code = err?.code || '';
+      if (code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email using a different sign-in method.');
+      } else if (code === 'auth/popup-closed-by-user') {
+        // User closed popup, no error needed
+      } else {
+        setError(err?.message || `${provider} sign-in failed. Please try again.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -98,6 +125,49 @@ export default function AuthModal() {
     }
   };
 
+  const handleVerifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      setError('Please enter the 6-digit code from your email.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const verified = await submitVerificationCode(verificationCode);
+      if (verified) {
+        setVerificationSuccess(true);
+        setTimeout(() => {
+          hideAuthModal();
+        }, 1500);
+      }
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('expired')) {
+        setError('Code expired. Click "Resend" to get a new code.');
+      } else if (msg.includes('Incorrect')) {
+        setError('Incorrect code. Please check your email and try again.');
+      } else {
+        setError(msg || 'Verification failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await requestVerificationCode(email);
+      setVerificationSent(true);
+      setError('');
+    } catch (err: any) {
+      setError('Failed to resend code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '12px 14px',
@@ -110,6 +180,24 @@ export default function AuthModal() {
     outline: 'none',
     boxSizing: 'border-box',
   };
+
+  const socialBtnStyle = (bg: string): React.CSSProperties => ({
+    width: '100%',
+    padding: '12px 16px',
+    background: bg,
+    color: bg === '#fff' ? '#333' : '#fff',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    fontFamily: theme.fontFamily,
+    cursor: loading ? 'not-allowed' : 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    opacity: loading ? 0.7 : 1,
+  });
 
   return (
     <div
@@ -158,196 +246,316 @@ export default function AuthModal() {
           &#10005;
         </button>
 
-        {/* Header */}
-        <h2 style={{
-          fontSize: 22,
-          fontWeight: 700,
-          color: theme.colors.textPrimary,
-          fontFamily: theme.fontFamily,
-          margin: '0 0 4px',
-        }}>
-          {reason.title}
-        </h2>
-        <p style={{
-          fontSize: 14,
-          color: theme.colors.textMuted,
-          fontFamily: theme.fontFamily,
-          margin: '0 0 24px',
-          lineHeight: 1.5,
-        }}>
-          {reason.subtitle}
-        </p>
-
-        {/* Google button */}
-        <button
-          onClick={handleGoogle}
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '12px 16px',
-            background: '#fff',
-            color: '#333',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            fontFamily: theme.fontFamily,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10,
-            marginBottom: 20,
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        {/* Divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          marginBottom: 20,
-        }}>
-          <div style={{ flex: 1, height: 1, background: theme.colors.border }} />
-          <span style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.fontFamily }}>or</span>
-          <div style={{ flex: 1, height: 1, background: theme.colors.border }} />
-        </div>
-
-        {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: 4,
-          marginBottom: 20,
-          background: theme.colors.bgSecondary,
-          borderRadius: 8,
-          padding: 3,
-        }}>
-          {(['signin', 'signup'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => { setTab(t); setError(''); }}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                background: tab === t ? theme.colors.info : 'transparent',
-                color: tab === t ? '#fff' : theme.colors.textMuted,
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                fontFamily: theme.fontFamily,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              {t === 'signin' ? 'Sign In' : 'Create Account'}
-            </button>
-          ))}
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {tab === 'signup' && (
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-            />
-          )}
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={inputStyle}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            style={inputStyle}
-          />
-
-          {error && (
-            <p style={{
-              fontSize: 13,
-              color: theme.colors.error,
+        {/* ─── VERIFICATION STEP ─── */}
+        {step === 'verify' ? (
+          <>
+            <h2 style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: theme.colors.textPrimary,
               fontFamily: theme.fontFamily,
-              margin: 0,
-              lineHeight: 1.4,
+              margin: '0 0 4px',
             }}>
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              background: theme.colors.info,
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
+              {verificationSuccess ? 'Email verified!' : 'Check your email'}
+            </h2>
+            <p style={{
               fontSize: 14,
-              fontWeight: 600,
-              fontFamily: theme.fontFamily,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              marginTop: 4,
-            }}
-          >
-            {loading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-
-        {/* Forgot password */}
-        {tab === 'signin' && (
-          <button
-            onClick={showForgotPassword ? handleForgotPassword : () => setShowForgotPassword(true)}
-            style={{
-              display: 'block',
-              margin: '12px auto 0',
-              background: 'none',
-              border: 'none',
               color: theme.colors.textMuted,
-              fontSize: 13,
               fontFamily: theme.fontFamily,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-          >
-            {showForgotPassword ? 'Send Reset Email' : 'Forgot password?'}
-          </button>
-        )}
+              margin: '0 0 24px',
+              lineHeight: 1.5,
+            }}>
+              {verificationSuccess
+                ? 'Your email has been verified. Redirecting...'
+                : `We sent a 6-digit code to ${email}. Enter it below or click the link in the email.`}
+            </p>
 
-        {/* Terms */}
-        <p style={{
-          fontSize: 11,
-          color: theme.colors.textMuted,
-          fontFamily: theme.fontFamily,
-          textAlign: 'center',
-          margin: '16px 0 0',
-          lineHeight: 1.5,
-        }}>
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </p>
+            {verificationSuccess ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <span style={{ fontSize: 48 }}>&#10003;</span>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setVerificationCode(val);
+                  }}
+                  maxLength={6}
+                  style={{
+                    ...inputStyle,
+                    textAlign: 'center',
+                    fontSize: 24,
+                    fontWeight: 700,
+                    letterSpacing: 8,
+                    marginBottom: 12,
+                  }}
+                  autoFocus
+                />
+
+                {error && (
+                  <p style={{
+                    fontSize: 13,
+                    color: theme.colors.error,
+                    fontFamily: theme.fontFamily,
+                    margin: '0 0 12px',
+                    lineHeight: 1.4,
+                  }}>
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  onClick={handleVerifyCode}
+                  disabled={loading || verificationCode.length !== 6}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: theme.colors.info,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    fontFamily: theme.fontFamily,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading || verificationCode.length !== 6 ? 0.7 : 1,
+                    marginBottom: 12,
+                  }}
+                >
+                  {loading ? 'Verifying...' : 'Verify Email'}
+                </button>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: theme.colors.textMuted,
+                      fontSize: 13,
+                      fontFamily: theme.fontFamily,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Resend code
+                  </button>
+                  <button
+                    onClick={() => { setStep('auth'); setError(''); }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: theme.colors.textMuted,
+                      fontSize: 13,
+                      fontFamily: theme.fontFamily,
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          /* ─── AUTH STEP ─── */
+          <>
+            {/* Header */}
+            <h2 style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.fontFamily,
+              margin: '0 0 4px',
+            }}>
+              {reason.title}
+            </h2>
+            <p style={{
+              fontSize: 14,
+              color: theme.colors.textMuted,
+              fontFamily: theme.fontFamily,
+              margin: '0 0 24px',
+              lineHeight: 1.5,
+            }}>
+              {reason.subtitle}
+            </p>
+
+            {/* Social login buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {/* Google */}
+              <button onClick={() => handleSocialLogin('google')} disabled={loading} style={socialBtnStyle('#fff')}>
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Continue with Google
+              </button>
+
+              {/* Facebook */}
+              <button onClick={() => handleSocialLogin('facebook')} disabled={loading} style={socialBtnStyle('#1877F2')}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Continue with Facebook
+              </button>
+
+              {/* Twitter / X */}
+              <button onClick={() => handleSocialLogin('twitter')} disabled={loading} style={socialBtnStyle('#000')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                Continue with X
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 20,
+            }}>
+              <div style={{ flex: 1, height: 1, background: theme.colors.border }} />
+              <span style={{ fontSize: 12, color: theme.colors.textMuted, fontFamily: theme.fontFamily }}>or use email</span>
+              <div style={{ flex: 1, height: 1, background: theme.colors.border }} />
+            </div>
+
+            {/* Tabs */}
+            <div style={{
+              display: 'flex',
+              gap: 4,
+              marginBottom: 20,
+              background: theme.colors.bgSecondary,
+              borderRadius: 8,
+              padding: 3,
+            }}>
+              {(['signin', 'signup'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { setTab(t); setError(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    background: tab === t ? theme.colors.info : 'transparent',
+                    color: tab === t ? '#fff' : theme.colors.textMuted,
+                    border: 'none',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    fontFamily: theme.fontFamily,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {t === 'signin' ? 'Sign In' : 'Create Account'}
+                </button>
+              ))}
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {tab === 'signup' && (
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  style={inputStyle}
+                />
+              )}
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={inputStyle}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                style={inputStyle}
+              />
+
+              {error && (
+                <p style={{
+                  fontSize: 13,
+                  color: theme.colors.error,
+                  fontFamily: theme.fontFamily,
+                  margin: 0,
+                  lineHeight: 1.4,
+                }}>
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: theme.colors.info,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: theme.fontFamily,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  marginTop: 4,
+                }}
+              >
+                {loading ? 'Please wait...' : tab === 'signin' ? 'Sign In' : 'Create Account'}
+              </button>
+            </form>
+
+            {/* Forgot password */}
+            {tab === 'signin' && (
+              <button
+                onClick={showForgotPassword ? handleForgotPassword : () => setShowForgotPassword(true)}
+                style={{
+                  display: 'block',
+                  margin: '12px auto 0',
+                  background: 'none',
+                  border: 'none',
+                  color: theme.colors.textMuted,
+                  fontSize: 13,
+                  fontFamily: theme.fontFamily,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                {showForgotPassword ? 'Send Reset Email' : 'Forgot password?'}
+              </button>
+            )}
+
+            {/* Terms */}
+            <p style={{
+              fontSize: 11,
+              color: theme.colors.textMuted,
+              fontFamily: theme.fontFamily,
+              textAlign: 'center',
+              margin: '16px 0 0',
+              lineHeight: 1.5,
+            }}>
+              By continuing, you agree to our Terms of Service and Privacy Policy.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

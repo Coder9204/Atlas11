@@ -35,7 +35,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'newtons-third-law': {
-    metaTitle: 'Newton\'s Third Law - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Newton\'s Third Law - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore Newton\'s Third Law with an interactive simulator. Push objects, observe equal and opposite reaction forces, and build intuition for action-reaction pairs in real time.',
     concepts: ['Newton\'s third law', 'action-reaction pairs', 'force', 'contact forces'],
     difficulty: 'beginner',
@@ -47,7 +47,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'momentum-conservation': {
-    metaTitle: 'Conservation of Momentum - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Conservation of Momentum - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize momentum conservation in collisions. Adjust masses and velocities, watch elastic and inelastic impacts, and verify that total momentum is always conserved.',
     concepts: ['momentum', 'conservation law', 'collision', 'impulse'],
     difficulty: 'intermediate',
@@ -59,7 +59,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'centripetal-force': {
-    metaTitle: 'Centripetal Force - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Centripetal Force - Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover centripetal force with hands-on simulation. Swing objects in circles, adjust radius and speed, and see how the required inward force changes in real time.',
     concepts: ['centripetal force', 'circular motion', 'centripetal acceleration', 'angular velocity'],
     difficulty: 'beginner',
@@ -71,7 +71,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'energy-conservation': {
-    metaTitle: 'Energy Conservation - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Energy Conservation - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch kinetic and potential energy transform in real time. Launch objects, track energy bar charts, and prove that total mechanical energy is conserved without friction.',
     concepts: ['kinetic energy', 'potential energy', 'conservation of energy', 'work-energy theorem'],
     difficulty: 'beginner',
@@ -83,7 +83,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'static-kinetic-friction': {
-    metaTitle: 'Static vs Kinetic Friction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Static vs Kinetic Friction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare static and kinetic friction in this interactive simulator. Apply increasing force, observe the breakaway point, and measure both friction coefficients.',
     concepts: ['static friction', 'kinetic friction', 'friction coefficient', 'normal force'],
     difficulty: 'intermediate',
@@ -95,7 +95,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'angular-momentum': {
-    metaTitle: 'Angular Momentum - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Angular Momentum - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore angular momentum conservation with spinning objects. Change moment of inertia and watch rotation speed change, like a figure skater pulling in their arms.',
     concepts: ['angular momentum', 'moment of inertia', 'conservation of angular momentum', 'torque'],
     difficulty: 'intermediate',
@@ -107,7 +107,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'terminal-velocity': {
-    metaTitle: 'Terminal Velocity - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Terminal Velocity - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate terminal velocity for different objects. Adjust mass, area, and drag coefficient to find the speed where gravitational force equals air resistance.',
     concepts: ['terminal velocity', 'drag force', 'air resistance', 'free fall'],
     difficulty: 'intermediate',
@@ -123,7 +123,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'pendulum-period': {
-    metaTitle: 'Pendulum Period - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Pendulum Period - Interactive Simulator | Coach Atlas',
     metaDescription: 'Measure pendulum period as a function of length and gravity. Verify that period depends on length but not mass, and explore the small-angle approximation limits.',
     concepts: ['simple harmonic motion', 'pendulum period', 'small angle approximation', 'gravity'],
     difficulty: 'beginner',
@@ -135,7 +135,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'resonance': {
-    metaTitle: 'Resonance - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Resonance - Interactive Simulator | Coach Atlas',
     metaDescription: 'Drive an oscillator at different frequencies and watch amplitude peak at resonance. Adjust damping, measure Q factor, and understand frequency response curves.',
     concepts: ['resonance', 'natural frequency', 'Q factor', 'forced oscillation', 'damping'],
     difficulty: 'intermediate',
@@ -147,7 +147,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'doppler-effect': {
-    metaTitle: 'Doppler Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Doppler Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Hear and see the Doppler effect in action. Move a sound source, observe frequency shifts, and learn how radar guns, ultrasound, and redshift work.',
     concepts: ['Doppler effect', 'frequency shift', 'wavelength compression', 'sonic boom'],
     difficulty: 'intermediate',
@@ -159,7 +159,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'standing-waves': {
-    metaTitle: 'Standing Waves - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Standing Waves - Interactive Simulator | Coach Atlas',
     metaDescription: 'Create standing waves on a virtual string. Find harmonics, visualize nodes and antinodes, and understand how musical instruments produce specific pitches.',
     concepts: ['standing waves', 'harmonics', 'nodes', 'antinodes', 'resonant frequencies'],
     difficulty: 'intermediate',
@@ -175,7 +175,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'bernoulli': {
-    metaTitle: 'Bernoulli\'s Principle - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Bernoulli\'s Principle - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate fluid flow through pipes and measure pressure changes. Visualize Bernoulli\'s equation in action and understand why fast-moving fluids have low pressure.',
     concepts: ['Bernoulli\'s principle', 'fluid pressure', 'continuity equation', 'dynamic pressure'],
     difficulty: 'intermediate',
@@ -187,7 +187,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'laminar-turbulent': {
-    metaTitle: 'Laminar vs Turbulent Flow - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Laminar vs Turbulent Flow - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch the transition from laminar to turbulent flow in real time. Calculate Reynolds numbers and learn when smooth flow breaks down into chaotic turbulence.',
     concepts: ['laminar flow', 'turbulent flow', 'Reynolds number', 'flow transition', 'viscosity'],
     difficulty: 'intermediate',
@@ -199,7 +199,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'buoyancy': {
-    metaTitle: 'Buoyancy & Archimedes Principle - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Buoyancy & Archimedes Principle - Interactive Simulator | Coach Atlas',
     metaDescription: 'Submerge objects of different densities and watch buoyant forces act. Verify Archimedes\' principle by comparing displaced water weight to the measured buoyant force.',
     concepts: ['buoyancy', 'Archimedes\' principle', 'density', 'displaced volume', 'floating'],
     difficulty: 'beginner',
@@ -211,7 +211,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'venturi-effect': {
-    metaTitle: 'Venturi Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Venturi Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate flow through a Venturi tube. Measure pressure drops at the throat, calculate flow rates, and see how carburetors and aspirators work.',
     concepts: ['Venturi effect', 'continuity equation', 'pressure drop', 'flow measurement'],
     difficulty: 'intermediate',
@@ -223,7 +223,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'hydraulic-jump': {
-    metaTitle: 'Hydraulic Jump - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Hydraulic Jump - Interactive Simulator | Coach Atlas',
     metaDescription: 'Observe the dramatic transition from supercritical to subcritical flow. Adjust Froude number and channel geometry to control the hydraulic jump position.',
     concepts: ['hydraulic jump', 'Froude number', 'supercritical flow', 'energy dissipation'],
     difficulty: 'intermediate',
@@ -239,7 +239,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'carnot-cycle': {
-    metaTitle: 'Carnot Cycle - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Carnot Cycle - Interactive Simulator | Coach Atlas',
     metaDescription: 'Trace the Carnot cycle on PV and TS diagrams. Adjust reservoir temperatures to see maximum theoretical efficiency change. Understand the second law of thermodynamics.',
     concepts: ['Carnot cycle', 'thermodynamic efficiency', 'isothermal process', 'adiabatic process'],
     difficulty: 'advanced',
@@ -251,7 +251,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'thermal-expansion': {
-    metaTitle: 'Thermal Expansion - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Expansion - Interactive Simulator | Coach Atlas',
     metaDescription: 'Heat different materials and measure their expansion. Compare expansion coefficients, explore bimetallic strips, and learn why bridges need expansion joints.',
     concepts: ['thermal expansion', 'linear expansion coefficient', 'bimetallic strip', 'thermal stress'],
     difficulty: 'beginner',
@@ -263,7 +263,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'entropy': {
-    metaTitle: 'Entropy - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Entropy - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize entropy and the second law of thermodynamics. Watch ordered states evolve into disorder and understand why some processes are inherently irreversible.',
     concepts: ['entropy', 'second law of thermodynamics', 'disorder', 'irreversibility', 'microstates'],
     difficulty: 'advanced',
@@ -275,7 +275,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'leidenfrost': {
-    metaTitle: 'Leidenfrost Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Leidenfrost Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Drop water on a virtual hot surface and watch the Leidenfrost effect. Explore the boiling curve, find the Leidenfrost point, and understand vapor film insulation.',
     concepts: ['Leidenfrost effect', 'film boiling', 'nucleate boiling', 'vapor cushion', 'boiling curve'],
     difficulty: 'intermediate',
@@ -291,7 +291,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'coulombs-law': {
-    metaTitle: 'Coulomb\'s Law - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Coulomb\'s Law - Interactive Simulator | Coach Atlas',
     metaDescription: 'Place electric charges and watch forces appear in real time. Verify the inverse-square law, explore superposition, and build intuition for electrostatic interactions.',
     concepts: ['Coulomb\'s law', 'electric force', 'inverse-square law', 'charge', 'superposition'],
     difficulty: 'beginner',
@@ -303,7 +303,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'kirchhoffs-laws': {
-    metaTitle: 'Kirchhoff\'s Laws - Interactive Circuit Simulator | Atlas Coach',
+    metaTitle: 'Kirchhoff\'s Laws - Interactive Circuit Simulator | Coach Atlas',
     metaDescription: 'Build circuits and verify Kirchhoff\'s current and voltage laws. Add resistors, batteries, and junctions, then trace current and voltage around any loop.',
     concepts: ['KCL', 'KVL', 'circuit analysis', 'node equations', 'loop equations'],
     difficulty: 'intermediate',
@@ -315,7 +315,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'electromagnetic-induction': {
-    metaTitle: 'Electromagnetic Induction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electromagnetic Induction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Move magnets through coils and generate electricity. Visualize Faraday\'s law, observe Lenz\'s law in action, and understand how generators and transformers work.',
     concepts: ['Faraday\'s law', 'electromagnetic induction', 'Lenz\'s law', 'magnetic flux', 'EMF'],
     difficulty: 'intermediate',
@@ -327,7 +327,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'faraday-cage': {
-    metaTitle: 'Faraday Cage - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Faraday Cage - Interactive Simulator | Coach Atlas',
     metaDescription: 'Build a Faraday cage and test electromagnetic shielding. Vary mesh size, material conductivity, and signal frequency to see how shielding effectiveness changes.',
     concepts: ['Faraday cage', 'electromagnetic shielding', 'charge redistribution', 'skin depth'],
     difficulty: 'intermediate',
@@ -343,7 +343,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'snells-law': {
-    metaTitle: 'Snell\'s Law - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Snell\'s Law - Interactive Simulator | Coach Atlas',
     metaDescription: 'Bend light rays at material boundaries. Adjust refractive indices, measure incidence and refraction angles, and discover the critical angle for total internal reflection.',
     concepts: ['Snell\'s law', 'refraction', 'refractive index', 'critical angle', 'total internal reflection'],
     difficulty: 'beginner',
@@ -355,7 +355,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'diffraction': {
-    metaTitle: 'Diffraction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Diffraction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Pass light through slits and observe diffraction patterns. Adjust wavelength and slit width to explore single-slit, double-slit, and grating diffraction.',
     concepts: ['diffraction', 'single slit', 'double slit', 'diffraction grating', 'interference'],
     difficulty: 'intermediate',
@@ -367,7 +367,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'polarization': {
-    metaTitle: 'Polarization - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Polarization - Interactive Simulator | Coach Atlas',
     metaDescription: 'Rotate polarizers, observe Malus\'s law, and understand how polarized sunglasses, LCD screens, and 3D movies use the polarization of light.',
     concepts: ['polarization', 'Malus\'s law', 'polarizer', 'linear polarization', 'crossed polarizers'],
     difficulty: 'intermediate',
@@ -379,7 +379,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'photoelectric-effect': {
-    metaTitle: 'Photoelectric Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Photoelectric Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Shine light on metal surfaces and eject electrons. Vary frequency and intensity to discover why the photoelectric effect proved light is quantized into photons.',
     concepts: ['photoelectric effect', 'photon energy', 'work function', 'threshold frequency', 'quantum mechanics'],
     difficulty: 'intermediate',
@@ -391,7 +391,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'total-internal-reflection': {
-    metaTitle: 'Total Internal Reflection - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Total Internal Reflection - Interactive Simulator | Coach Atlas',
     metaDescription: 'Guide light through glass and find the critical angle where it all reflects. Understand how fiber optics, diamond brilliance, and prism binoculars work.',
     concepts: ['total internal reflection', 'critical angle', 'fiber optics', 'evanescent wave'],
     difficulty: 'intermediate',
@@ -407,7 +407,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'm-o-s-f-e-t-switching': {
-    metaTitle: 'MOSFET Switching - Interactive Simulator | Atlas Coach',
+    metaTitle: 'MOSFET Switching - Interactive Simulator | Coach Atlas',
     metaDescription: 'Control a virtual MOSFET transistor. Adjust gate voltage, observe channel formation, and understand the switching behavior powering all modern digital electronics.',
     concepts: ['MOSFET', 'threshold voltage', 'channel formation', 'digital switching', 'CMOS'],
     difficulty: 'advanced',
@@ -419,7 +419,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'photolithography': {
-    metaTitle: 'Photolithography - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Photolithography - Interactive Simulator | Coach Atlas',
     metaDescription: 'Step through the lithography process used to manufacture chips. Expose photoresist, develop patterns, and etch nanometer-scale circuit features.',
     concepts: ['photolithography', 'photoresist', 'mask alignment', 'EUV', 'resolution limit'],
     difficulty: 'intermediate',
@@ -431,7 +431,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'chiplets-vs-monoliths': {
-    metaTitle: 'Chiplets vs Monoliths - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chiplets vs Monoliths - Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare chiplet and monolithic die architectures. Explore yield, cost, interconnect, and performance tradeoffs shaping modern chip packaging decisions.',
     concepts: ['chiplet', 'monolithic die', 'yield', 'advanced packaging', 'interconnect overhead'],
     difficulty: 'intermediate',
@@ -443,7 +443,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'a-s-i-cvs-g-p-u': {
-    metaTitle: 'ASIC vs GPU - Interactive Comparison | Atlas Coach',
+    metaTitle: 'ASIC vs GPU - Interactive Comparison | Coach Atlas',
     metaDescription: 'Compare ASIC and GPU architectures for AI and specialized workloads. Adjust parallelism, power, and batch sizes to discover when each wins.',
     concepts: ['ASIC', 'GPU', 'hardware specialization', 'performance per watt', 'design tradeoffs'],
     difficulty: 'intermediate',
@@ -455,7 +455,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   't-p-uvs-g-p-u': {
-    metaTitle: 'TPU vs GPU - Interactive Comparison | Atlas Coach',
+    metaTitle: 'TPU vs GPU - Interactive Comparison | Coach Atlas',
     metaDescription: 'Compare Google TPUs and NVIDIA GPUs for deep learning. Explore systolic arrays vs CUDA cores, software ecosystems, and cost-performance tradeoffs.',
     concepts: ['TPU', 'GPU', 'systolic array', 'AI accelerator', 'deep learning hardware'],
     difficulty: 'intermediate',
@@ -471,7 +471,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'a-i-inference-latency': {
-    metaTitle: 'AI Inference Latency - Interactive Simulator | Atlas Coach',
+    metaTitle: 'AI Inference Latency - Interactive Simulator | Coach Atlas',
     metaDescription: 'Model end-to-end neural network inference latency. Explore how batch size, model size, quantization, and hardware choice affect response time and throughput.',
     concepts: ['inference latency', 'throughput', 'batch size', 'model optimization', 'serving'],
     difficulty: 'advanced',
@@ -483,7 +483,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'g-p-u-memory-bandwidth': {
-    metaTitle: 'GPU Memory Bandwidth - Interactive Simulator | Atlas Coach',
+    metaTitle: 'GPU Memory Bandwidth - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore why memory bandwidth often limits AI performance more than compute FLOPS. Simulate data movement between cores and HBM to find your bottleneck.',
     concepts: ['memory bandwidth', 'HBM', 'memory-bound', 'compute-bound', 'roofline model'],
     difficulty: 'intermediate',
@@ -495,7 +495,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'memory-hierarchy': {
-    metaTitle: 'Memory Hierarchy - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Memory Hierarchy - Interactive Simulator | Coach Atlas',
     metaDescription: 'Navigate the memory hierarchy from registers to disk. Visualize access latencies spanning six orders of magnitude and learn why cache locality matters.',
     concepts: ['memory hierarchy', 'cache', 'latency', 'locality', 'cache miss'],
     difficulty: 'intermediate',
@@ -511,7 +511,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'solar-cell': {
-    metaTitle: 'Solar Cell - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar Cell - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate a solar cell from photon absorption to current generation. Adjust bandgap, temperature, and irradiance to explore IV curves and efficiency limits.',
     concepts: ['photovoltaic effect', 'p-n junction', 'bandgap', 'open circuit voltage', 'short circuit current'],
     difficulty: 'intermediate',
@@ -523,7 +523,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'p-v-i-v-curve': {
-    metaTitle: 'Solar PV IV Curve - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar PV IV Curve - Interactive Simulator | Coach Atlas',
     metaDescription: 'Trace the current-voltage curve of a solar panel. Find the maximum power point, observe shading effects, and understand fill factor and its impact on efficiency.',
     concepts: ['IV curve', 'maximum power point', 'fill factor', 'Voc', 'Isc'],
     difficulty: 'intermediate',
@@ -535,7 +535,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'm-p-p-t': {
-    metaTitle: 'MPPT Solar Tracker - Interactive Simulator | Atlas Coach',
+    metaTitle: 'MPPT Solar Tracker - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch MPPT algorithms find the maximum power point in real time. Compare perturb-and-observe, incremental conductance, and global scan methods.',
     concepts: ['MPPT', 'maximum power point', 'perturb and observe', 'DC-DC converter', 'tracking'],
     difficulty: 'intermediate',
@@ -547,7 +547,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'series-parallel-p-v': {
-    metaTitle: 'Series vs Parallel Solar Panels - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Series vs Parallel Solar Panels - Interactive Simulator | Coach Atlas',
     metaDescription: 'Wire virtual solar panels in series and parallel. Compare voltage, current, shading tolerance, and total power for each wiring configuration in real time.',
     concepts: ['series wiring', 'parallel wiring', 'string voltage', 'shade tolerance', 'bypass diodes'],
     difficulty: 'intermediate',
@@ -563,7 +563,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'orbital-mechanics': {
-    metaTitle: 'Orbital Mechanics - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Orbital Mechanics - Interactive Simulator | Coach Atlas',
     metaDescription: 'Launch satellites into orbit and perform maneuvers. Learn Kepler\'s laws, Hohmann transfers, and gravity assists through hands-on orbital simulation.',
     concepts: ['Kepler\'s laws', 'orbital velocity', 'Hohmann transfer', 'gravity assist', 'delta-v'],
     difficulty: 'advanced',
@@ -575,7 +575,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'coriolis-effect': {
-    metaTitle: 'Coriolis Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Coriolis Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Launch projectiles on a rotating Earth and watch them curve. Understand hurricanes, trade winds, and ocean gyres through the Coriolis effect simulation.',
     concepts: ['Coriolis effect', 'rotating reference frame', 'fictitious force', 'cyclone formation'],
     difficulty: 'intermediate',
@@ -591,7 +591,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'brownian-motion': {
-    metaTitle: 'Brownian Motion - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Brownian Motion - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch microscopic particles jitter from molecular collisions. Adjust temperature, particle size, and viscosity to explore the random walk that proved atoms exist.',
     concepts: ['Brownian motion', 'random walk', 'diffusion', 'Einstein relation', 'molecular bombardment'],
     difficulty: 'intermediate',
@@ -607,7 +607,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'reaction-time': {
-    metaTitle: 'Reaction Time Test - Interactive Experiment | Atlas Coach',
+    metaTitle: 'Reaction Time Test - Interactive Experiment | Coach Atlas',
     metaDescription: 'Measure your reaction time with precision timing. Understand the neuroscience of sensory processing and compare visual, auditory, and tactile response speeds.',
     concepts: ['reaction time', 'neuroscience', 'sensory processing', 'motor response', 'human factors'],
     difficulty: 'beginner',
@@ -623,7 +623,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'antenna-gain': {
-    metaTitle: 'Antenna Gain - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Antenna Gain - Interactive Simulator | Coach Atlas',
     metaDescription: 'Design antennas and visualize radiation patterns. Adjust element count, spacing, and orientation to maximize gain and understand directivity concepts.',
     concepts: ['antenna gain', 'radiation pattern', 'directivity', 'beamwidth', 'isotropic radiator'],
     difficulty: 'intermediate',
@@ -635,7 +635,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'link-budget': {
-    metaTitle: 'Link Budget Calculator - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Link Budget Calculator - Interactive Simulator | Coach Atlas',
     metaDescription: 'Calculate wireless link budgets step by step. Account for transmit power, antenna gains, path loss, and receiver sensitivity to determine link feasibility.',
     concepts: ['link budget', 'path loss', 'free space loss', 'fade margin', 'receiver sensitivity'],
     difficulty: 'intermediate',
@@ -651,7 +651,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'd-c-d-c-converter': {
-    metaTitle: 'DC-DC Converter - Interactive Simulator | Atlas Coach',
+    metaTitle: 'DC-DC Converter - Interactive Simulator | Coach Atlas',
     metaDescription: 'Build buck and boost converters. Adjust duty cycle, switching frequency, and load to learn how voltage conversion works in modern power electronics.',
     concepts: ['DC-DC conversion', 'buck converter', 'boost converter', 'duty cycle', 'switching frequency'],
     difficulty: 'intermediate',
@@ -663,7 +663,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'grid-frequency': {
-    metaTitle: 'Grid Frequency - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Grid Frequency - Interactive Simulator | Coach Atlas',
     metaDescription: 'Balance generation and demand to keep grid frequency at 50/60 Hz. Understand frequency droop, spinning reserves, and load-following dynamics in real time.',
     concepts: ['grid frequency', 'supply-demand balance', 'frequency droop', 'grid inertia', 'load following'],
     difficulty: 'intermediate',
@@ -679,7 +679,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   // ================================================================
 
   'oscilloscope-triggering': {
-    metaTitle: 'Oscilloscope Triggering — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Oscilloscope Triggering — Interactive Simulator | Coach Atlas',
     metaDescription: 'Master oscilloscope triggering modes interactively. Adjust edge type, trigger level, and holdoff to stabilize periodic and aperiodic waveforms on screen.',
     concepts: ['oscilloscope', 'edge triggering', 'holdoff', 'waveform capture', 'signal measurement'],
     difficulty: 'intermediate',
@@ -691,7 +691,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'power-supply-decoupling-layout': {
-    metaTitle: 'Power Supply Decoupling Layout — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Power Supply Decoupling Layout — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design effective power supply decoupling networks. Place bypass capacitors, evaluate trace inductance, and minimize high-frequency noise on PCB power rails interactively.',
     concepts: ['decoupling capacitor', 'bypass capacitor', 'PCB layout', 'power integrity', 'parasitic inductance'],
     difficulty: 'advanced',
@@ -703,7 +703,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'voltage-divider-design': {
-    metaTitle: 'Voltage Divider Design — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Voltage Divider Design — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design and analyze voltage dividers interactively. Choose resistor values, observe loading effects, and compute Thevenin equivalent output for real-world circuit applications.',
     concepts: ['voltage divider', 'resistor ratio', 'loading effect', 'Thevenin equivalent', 'circuit design'],
     difficulty: 'beginner',
@@ -715,7 +715,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'current-mirror-matching': {
-    metaTitle: 'Current Mirror Matching — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Current Mirror Matching — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore transistor current mirror matching interactively. Adjust device parameters, observe mismatch effects, and learn how layout techniques improve current copying accuracy.',
     concepts: ['current mirror', 'transistor matching', 'analog IC design', 'systematic offset', 'cascode mirror'],
     difficulty: 'advanced',
@@ -727,7 +727,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'op-amp-stability': {
-    metaTitle: 'Op-Amp Stability — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Op-Amp Stability — Interactive Simulator | Coach Atlas',
     metaDescription: 'Analyze op-amp stability with Bode plots and phase margin interactively. Add compensation networks, adjust feedback, and prevent oscillation in closed-loop amplifier circuits.',
     concepts: ['op-amp stability', 'phase margin', 'gain margin', 'frequency compensation', 'Bode plot'],
     difficulty: 'advanced',
@@ -739,7 +739,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'adc-quantization-noise': {
-    metaTitle: 'ADC Quantization Noise — Interactive Simulator | Atlas Coach',
+    metaTitle: 'ADC Quantization Noise — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize ADC quantization noise and its effect on signal quality. Adjust bit depth, sampling rate, and input amplitude to see how resolution limits introduce quantization error.',
     concepts: ['ADC', 'quantization noise', 'signal-to-noise ratio', 'bit depth', 'sampling'],
     difficulty: 'intermediate',
@@ -751,7 +751,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'dac-settling-time': {
-    metaTitle: 'DAC Settling Time — Interactive Simulator | Atlas Coach',
+    metaTitle: 'DAC Settling Time — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore DAC settling time behavior interactively. Step through code transitions, observe glitch energy and slew-rate effects, and understand how settling limits update rate.',
     concepts: ['DAC', 'settling time', 'glitch energy', 'slew rate', 'digital-to-analog conversion'],
     difficulty: 'intermediate',
@@ -763,7 +763,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'pll-lock-dynamics': {
-    metaTitle: 'PLL Lock Dynamics — Interactive Simulator | Atlas Coach',
+    metaTitle: 'PLL Lock Dynamics — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate phase-locked loop lock-in dynamics. Adjust loop bandwidth, damping factor, and reference frequency to observe capture range, lock time, and phase noise performance.',
     concepts: ['phase-locked loop', 'PLL', 'loop bandwidth', 'lock time', 'phase noise'],
     difficulty: 'advanced',
@@ -775,7 +775,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'clock-recovery': {
-    metaTitle: 'Clock Recovery — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Clock Recovery — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore clock and data recovery (CDR) circuits interactively. Adjust data patterns, jitter levels, and loop parameters to see how embedded clocks are extracted from serial data streams.',
     concepts: ['clock recovery', 'CDR', 'jitter', 'serial data', 'bit synchronization'],
     difficulty: 'advanced',
@@ -787,7 +787,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'signal-integrity-eye-diagram': {
-    metaTitle: 'Signal Integrity Eye Diagram — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Signal Integrity Eye Diagram — Interactive Simulator | Coach Atlas',
     metaDescription: 'Analyze signal integrity through eye diagrams interactively. Adjust data rate, channel loss, and equalization to see how signal degradation closes the eye opening.',
     concepts: ['eye diagram', 'signal integrity', 'inter-symbol interference', 'channel equalization', 'bit error rate'],
     difficulty: 'advanced',
@@ -799,7 +799,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'thermal-noise': {
-    metaTitle: 'Thermal Noise (Johnson-Nyquist) — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Noise (Johnson-Nyquist) — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize Johnson-Nyquist thermal noise in resistors. Adjust temperature, resistance, and bandwidth to compute noise voltage and understand fundamental limits of electronic measurements.',
     concepts: ['thermal noise', 'Johnson-Nyquist noise', 'noise voltage', 'noise floor', 'Boltzmann constant'],
     difficulty: 'intermediate',
@@ -811,7 +811,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'switch-bounce': {
-    metaTitle: 'Switch Bounce & Debouncing — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Switch Bounce & Debouncing — Interactive Simulator | Coach Atlas',
     metaDescription: 'Observe mechanical switch bounce and learn debouncing techniques. Compare hardware RC filters and software debounce algorithms to achieve clean digital switching signals.',
     concepts: ['switch bounce', 'debouncing', 'RC filter', 'digital input', 'mechanical contacts'],
     difficulty: 'beginner',
@@ -823,7 +823,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'motor-back-emf': {
-    metaTitle: 'Motor Back-EMF — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Motor Back-EMF — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore motor back-EMF and its effect on current and speed. Adjust load, supply voltage, and motor constants to see how counter-electromotive force regulates DC motor behavior.',
     concepts: ['back-EMF', 'DC motor', 'counter-electromotive force', 'motor speed regulation', 'armature current'],
     difficulty: 'intermediate',
@@ -835,7 +835,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'h-bridge-drive': {
-    metaTitle: 'H-Bridge Motor Drive — Interactive Simulator | Atlas Coach',
+    metaTitle: 'H-Bridge Motor Drive — Interactive Simulator | Coach Atlas',
     metaDescription: 'Control DC motors with H-bridge circuits interactively. Toggle switches for forward, reverse, and braking modes while observing current paths and PWM speed regulation.',
     concepts: ['H-bridge', 'motor driver', 'PWM speed control', 'bidirectional drive', 'shoot-through protection'],
     difficulty: 'intermediate',
@@ -847,7 +847,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'buck-converter-ripple': {
-    metaTitle: 'Buck Converter Ripple — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Buck Converter Ripple — Interactive Simulator | Coach Atlas',
     metaDescription: 'Analyze buck converter output ripple interactively. Adjust switching frequency, inductance, and output capacitance to minimize voltage ripple and understand continuous vs. discontinuous conduction.',
     concepts: ['buck converter', 'voltage ripple', 'inductor current', 'switching frequency', 'continuous conduction mode'],
     difficulty: 'intermediate',
@@ -859,7 +859,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'boost-converter': {
-    metaTitle: 'Boost Converter — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Boost Converter — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate boost converter operation interactively. Adjust duty cycle and load to see how energy stored in an inductor is used to step up voltage above the input supply level.',
     concepts: ['boost converter', 'step-up converter', 'duty cycle', 'inductor energy storage', 'DC-DC conversion'],
     difficulty: 'intermediate',
@@ -871,7 +871,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'flyback-converter': {
-    metaTitle: 'Flyback Converter — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Flyback Converter — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore flyback converter operation with transformer isolation. Adjust turns ratio, duty cycle, and snubber circuits to understand energy transfer and voltage clamping in isolated power supplies.',
     concepts: ['flyback converter', 'transformer isolation', 'turns ratio', 'snubber circuit', 'isolated power supply'],
     difficulty: 'advanced',
@@ -883,7 +883,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'gate-driver': {
-    metaTitle: 'Gate Driver Design — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Gate Driver Design — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design MOSFET gate driver circuits interactively. Analyze gate charge, drive current, switching speed trade-offs, and bootstrap techniques for high-side switch control.',
     concepts: ['gate driver', 'MOSFET switching', 'gate charge', 'bootstrap circuit', 'switching loss'],
     difficulty: 'advanced',
@@ -895,7 +895,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'stepper-motor': {
-    metaTitle: 'Stepper Motor Control — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Stepper Motor Control — Interactive Simulator | Coach Atlas',
     metaDescription: 'Control stepper motors step by step interactively. Explore full-step, half-step, and microstepping drive modes while observing torque, speed, and resonance behavior.',
     concepts: ['stepper motor', 'microstepping', 'holding torque', 'step angle', 'motor resonance'],
     difficulty: 'intermediate',
@@ -907,7 +907,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'servo-control': {
-    metaTitle: 'Servo Control Loop (PID) — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Servo Control Loop (PID) — Interactive Simulator | Coach Atlas',
     metaDescription: 'Tune PID servo control loops interactively. Adjust proportional, integral, and derivative gains to minimize overshoot, settling time, and steady-state error in closed-loop positioning systems.',
     concepts: ['PID control', 'servo loop', 'proportional gain', 'integral windup', 'derivative damping'],
     difficulty: 'intermediate',
@@ -919,7 +919,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'wheatstone-balance': {
-    metaTitle: 'Wheatstone Bridge Balance — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wheatstone Bridge Balance — Interactive Simulator | Coach Atlas',
     metaDescription: 'Balance a Wheatstone bridge interactively to measure unknown resistance. Adjust bridge arms and observe null-detection sensitivity for precision measurement applications.',
     concepts: ['Wheatstone bridge', 'bridge balance', 'null detection', 'resistance measurement', 'bridge sensitivity'],
     difficulty: 'intermediate',
@@ -931,7 +931,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'strain-gauge-sensor': {
-    metaTitle: 'Strain Gauge & Load Cell — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Strain Gauge & Load Cell — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore strain gauge sensors and load cells interactively. Apply forces, observe resistance changes, and see how Wheatstone bridge configurations convert mechanical strain into electrical signals.',
     concepts: ['strain gauge', 'load cell', 'gauge factor', 'Wheatstone bridge', 'force measurement'],
     difficulty: 'intermediate',
@@ -943,7 +943,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'thermocouple-nonlinearity': {
-    metaTitle: 'Thermocouple Nonlinearity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermocouple Nonlinearity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore thermocouple nonlinearity and cold junction compensation. Compare thermocouple types, observe Seebeck voltage curves, and apply linearization for accurate temperature measurement.',
     concepts: ['thermocouple', 'Seebeck effect', 'cold junction compensation', 'linearization', 'temperature measurement'],
     difficulty: 'intermediate',
@@ -955,7 +955,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'impedance-matching': {
-    metaTitle: 'Impedance Matching — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Impedance Matching — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design impedance matching networks interactively. Use L-networks, Smith charts, and stub tuners to maximize power transfer and minimize reflections in RF and transmission line systems.',
     concepts: ['impedance matching', 'Smith chart', 'reflection coefficient', 'VSWR', 'maximum power transfer'],
     difficulty: 'advanced',
@@ -967,7 +967,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'filter-design': {
-    metaTitle: 'Active Filter Design — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Active Filter Design — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design active filters interactively with op-amps. Compare Butterworth, Chebyshev, and Bessel responses, adjust cutoff frequency and order, and view Bode plots in real time.',
     concepts: ['active filter', 'Butterworth response', 'Chebyshev response', 'cutoff frequency', 'filter order'],
     difficulty: 'intermediate',
@@ -979,7 +979,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'emc-compliance': {
-    metaTitle: 'EMC Compliance — Interactive Simulator | Atlas Coach',
+    metaTitle: 'EMC Compliance — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate electromagnetic compatibility testing interactively. Identify emission sources, apply filtering and shielding strategies, and evaluate designs against regulatory EMC limits.',
     concepts: ['EMC', 'electromagnetic interference', 'conducted emissions', 'radiated emissions', 'shielding effectiveness'],
     difficulty: 'advanced',
@@ -991,7 +991,7 @@ export const gameSEOData: Record<string, GameSEOEntry> = {
   },
 
   'solder-reflow': {
-    metaTitle: 'Solder Reflow Profile — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solder Reflow Profile — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design solder reflow profiles interactively. Adjust preheat, soak, reflow, and cooling zones to achieve reliable solder joints while avoiding thermal shock and tombstoning defects.',
     concepts: ['solder reflow', 'reflow profile', 'thermal profile', 'surface mount technology', 'solder paste'],
     difficulty: 'intermediate',
@@ -1051,7 +1051,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'adiabatic-heating': {
-    metaTitle: 'Adiabatic Heating & Cooling — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Adiabatic Heating & Cooling — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate adiabatic heating and cooling of gases. Compress or expand gas without heat exchange and observe temperature changes governed by the first law of thermodynamics.',
     concepts: ['adiabatic process', 'gas compression', 'thermodynamics', 'first law of thermodynamics'],
     difficulty: 'intermediate',
@@ -1063,7 +1063,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'angular-momentum-transfer': {
-    metaTitle: 'Angular Momentum Transfer — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Angular Momentum Transfer — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore angular momentum transfer between rotating objects. Visualize how torque and collisions redistribute rotational motion while total angular momentum is conserved.',
     concepts: ['angular momentum', 'torque', 'moment of inertia', 'rotational collision'],
     difficulty: 'intermediate',
@@ -1075,7 +1075,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'antenna-polarization': {
-    metaTitle: 'Antenna Polarization Matching — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Antenna Polarization Matching — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate antenna polarization alignment and signal loss. Rotate transmitting and receiving antennas to see how polarization mismatch reduces received power by cos-squared law.',
     concepts: ['polarization', 'antenna alignment', 'electromagnetic waves', 'signal attenuation'],
     difficulty: 'advanced',
@@ -1087,7 +1087,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'anti-reflective-coating': {
-    metaTitle: 'Anti-Reflective Coating — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Anti-Reflective Coating — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design anti-reflective thin film coatings interactively. Adjust coating thickness and refractive index to minimize reflection through destructive interference of light waves.',
     concepts: ['thin film interference', 'anti-reflection', 'refractive index', 'optical coating'],
     difficulty: 'advanced',
@@ -1099,7 +1099,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'arrhenius': {
-    metaTitle: 'Arrhenius Equation — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Arrhenius Equation — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the Arrhenius equation and temperature-dependent reaction rates. Adjust activation energy and temperature to see how chemical reaction speeds change exponentially.',
     concepts: ['Arrhenius equation', 'activation energy', 'reaction rate', 'temperature dependence'],
     difficulty: 'intermediate',
@@ -1111,7 +1111,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'ask-for-assumptions': {
-    metaTitle: 'Ask for Assumptions — Interactive AI Prompt Simulator | Atlas Coach',
+    metaTitle: 'Ask for Assumptions — Interactive AI Prompt Simulator | Coach Atlas',
     metaDescription: 'Practice the "ask for assumptions" prompting technique. Learn how explicitly requesting an LLM to state its assumptions improves response clarity and reduces errors.',
     concepts: ['prompt engineering', 'LLM assumptions', 'AI reasoning', 'chain-of-thought'],
     difficulty: 'beginner',
@@ -1123,7 +1123,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'attention-loves-bandwidth': {
-    metaTitle: 'Attention Loves Bandwidth — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Attention Loves Bandwidth — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize how attention mechanisms consume memory bandwidth in transformers. Adjust sequence length and model size to see GPU bandwidth bottlenecks in real time.',
     concepts: ['attention mechanism', 'memory bandwidth', 'GPU utilization', 'transformer performance'],
     difficulty: 'advanced',
@@ -1135,7 +1135,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'attention-memory': {
-    metaTitle: 'Attention Memory in Transformers — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Attention Memory in Transformers — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how transformer attention allocates memory across layers and heads. Visualize KV cache growth and understand memory scaling with sequence length and batch size.',
     concepts: ['KV cache', 'transformer memory', 'attention heads', 'sequence length scaling'],
     difficulty: 'advanced',
@@ -1147,7 +1147,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'ballistic-pendulum': {
-    metaTitle: 'Ballistic Pendulum — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Ballistic Pendulum — Interactive Simulator | Coach Atlas',
     metaDescription: 'Measure projectile velocity using a ballistic pendulum simulation. Fire a projectile into a pendulum bob and apply conservation of momentum and energy to find the speed.',
     concepts: ['ballistic pendulum', 'momentum conservation', 'energy conservation', 'projectile velocity'],
     difficulty: 'intermediate',
@@ -1159,7 +1159,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'batching-latency': {
-    metaTitle: 'Batching Latency in GPU Inference — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Batching Latency in GPU Inference — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate the tradeoff between batching requests and inference latency. Adjust batch size, arrival rate, and GPU throughput to optimize AI serving performance.',
     concepts: ['request batching', 'inference latency', 'GPU throughput', 'queuing theory'],
     difficulty: 'intermediate',
@@ -1171,7 +1171,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'battery-internal-resistance': {
-    metaTitle: 'Battery Internal Resistance — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Battery Internal Resistance — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how battery internal resistance affects voltage and power delivery. Adjust load resistance and observe voltage drop, heat dissipation, and maximum power transfer.',
     concepts: ['internal resistance', 'voltage drop', 'maximum power transfer', 'battery efficiency'],
     difficulty: 'intermediate',
@@ -1183,7 +1183,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'beats': {
-    metaTitle: 'Beat Frequency — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Beat Frequency — Interactive Simulator | Coach Atlas',
     metaDescription: 'Hear and visualize beat frequencies from two close sound waves. Adjust the frequency of each wave and observe the amplitude modulation pattern that produces audible beats.',
     concepts: ['beat frequency', 'superposition', 'wave interference', 'amplitude modulation'],
     difficulty: 'beginner',
@@ -1195,7 +1195,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'bifacial-albedo': {
-    metaTitle: 'Bifacial Solar Module Albedo — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Bifacial Solar Module Albedo — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate bifacial solar panel energy gain from ground-reflected light. Adjust ground albedo, module height, and tilt to maximize rear-side irradiance and total energy yield.',
     concepts: ['bifacial gain', 'ground albedo', 'rear irradiance', 'solar energy yield'],
     difficulty: 'advanced',
@@ -1207,7 +1207,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'bimetal-thermostat': {
-    metaTitle: 'Bimetallic Strip Thermostat — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Bimetallic Strip Thermostat — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate a bimetallic strip thermostat switching on and off. Adjust temperature and see how differential thermal expansion bends the strip to open or close a circuit.',
     concepts: ['thermal expansion', 'bimetallic strip', 'thermostat', 'temperature control'],
     difficulty: 'beginner',
@@ -1219,7 +1219,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'boiling-pressure': {
-    metaTitle: 'Boiling Point & Pressure — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Boiling Point & Pressure — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how atmospheric pressure affects boiling point. Adjust altitude and pressure to see water boil at different temperatures using the Clausius-Clapeyron relation.',
     concepts: ['boiling point', 'vapor pressure', 'Clausius-Clapeyron equation', 'phase transition'],
     difficulty: 'intermediate',
@@ -1231,7 +1231,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'bottle-tornado': {
-    metaTitle: 'Bottle Tornado Vortex — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Bottle Tornado Vortex — Interactive Simulator | Coach Atlas',
     metaDescription: 'Create a virtual bottle tornado and explore vortex dynamics. Swirl water between connected bottles and observe how angular momentum creates a stable air-core vortex.',
     concepts: ['vortex dynamics', 'angular momentum', 'fluid rotation', 'Bernoulli effect'],
     difficulty: 'beginner',
@@ -1243,7 +1243,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'brachistochrone': {
-    metaTitle: 'Brachistochrone Curve — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Brachistochrone Curve — Interactive Simulator | Coach Atlas',
     metaDescription: 'Race balls down different curves to find the fastest path. Compare straight lines, parabolas, and the cycloid brachistochrone to discover the curve of fastest descent.',
     concepts: ['brachistochrone', 'cycloid', 'calculus of variations', 'optimization'],
     difficulty: 'advanced',
@@ -1255,7 +1255,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'brewster-angle': {
-    metaTitle: 'Brewster\'s Angle — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Brewster\'s Angle — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate Brewster\'s angle and complete polarization of reflected light. Adjust the angle of incidence and refractive index to find where reflected light becomes fully polarized.',
     concepts: ['Brewster\'s angle', 'polarization', 'reflection', 'refractive index'],
     difficulty: 'intermediate',
@@ -1267,7 +1267,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'buckling': {
-    metaTitle: 'Column Buckling — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Column Buckling — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate Euler column buckling under compressive loads. Adjust column length, cross-section, and end conditions to find the critical buckling load and observe failure modes.',
     concepts: ['Euler buckling', 'critical load', 'slenderness ratio', 'structural stability'],
     difficulty: 'advanced',
@@ -1279,7 +1279,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'bypass-diodes': {
-    metaTitle: 'Bypass Diodes in Solar Modules — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Bypass Diodes in Solar Modules — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate bypass diode operation in partially shaded solar panels. See how bypass diodes prevent hot spots and maintain power output when individual cells are shaded.',
     concepts: ['bypass diode', 'partial shading', 'hot spot', 'solar module I-V curve'],
     difficulty: 'intermediate',
@@ -1291,7 +1291,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'c-m-p-planarization': {
-    metaTitle: 'CMP Planarization — Interactive Simulator | Atlas Coach',
+    metaTitle: 'CMP Planarization — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate chemical mechanical planarization in semiconductor fabrication. Adjust pressure, slurry chemistry, and pad speed to achieve wafer surface flatness at nanometer scale.',
     concepts: ['CMP', 'wafer planarization', 'semiconductor fabrication', 'surface flatness'],
     difficulty: 'advanced',
@@ -1303,7 +1303,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cable-sizing': {
-    metaTitle: 'Electrical Cable Sizing — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electrical Cable Sizing — Interactive Simulator | Coach Atlas',
     metaDescription: 'Size electrical cables for voltage drop and current capacity. Input load current, cable length, and material to find the minimum wire gauge that meets code requirements.',
     concepts: ['voltage drop', 'wire gauge', 'current capacity', 'electrical resistance'],
     difficulty: 'intermediate',
@@ -1315,7 +1315,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'camera-obscura': {
-    metaTitle: 'Camera Obscura — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Camera Obscura — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build a virtual camera obscura and explore pinhole imaging. Adjust aperture size and distance to see how inverted images form and how sharpness trades off with brightness.',
     concepts: ['pinhole imaging', 'camera obscura', 'geometric optics', 'image formation'],
     difficulty: 'beginner',
@@ -1327,7 +1327,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'capacitive-touch': {
-    metaTitle: 'Capacitive Touch Sensing — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Capacitive Touch Sensing — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate capacitive touch screen technology. See how a finger changes the local capacitance of a sensor grid and how the controller detects touch position from charge changes.',
     concepts: ['capacitive sensing', 'mutual capacitance', 'touch detection', 'electric field'],
     difficulty: 'intermediate',
@@ -1339,7 +1339,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'capillary-action': {
-    metaTitle: 'Capillary Action — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Capillary Action — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate capillary action in narrow tubes. Adjust tube diameter, liquid surface tension, and contact angle to see how liquids rise or fall against gravity in thin channels.',
     concepts: ['capillary action', 'surface tension', 'contact angle', 'meniscus'],
     difficulty: 'beginner',
@@ -1355,7 +1355,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'cartesian-diver': {
-    metaTitle: 'Cartesian Diver - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cartesian Diver - Interactive Simulator | Coach Atlas',
     metaDescription: 'Squeeze the bottle and watch the diver sink. Explore how pressure changes affect buoyancy, gas compressibility, and density in this classic fluid mechanics demo.',
     concepts: ['buoyancy', 'pressure', 'compressibility', 'density', 'Cartesian diver'],
     difficulty: 'beginner',
@@ -1367,7 +1367,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cavitation': {
-    metaTitle: 'Cavitation - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cavitation - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize cavitation bubbles forming in low-pressure fluid zones. Adjust flow speed and pressure to see how vapor cavities collapse and damage surfaces.',
     concepts: ['cavitation', 'vapor pressure', 'bubble collapse', 'fluid dynamics', 'erosion'],
     difficulty: 'intermediate',
@@ -1379,7 +1379,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cell-to-module-losses': {
-    metaTitle: 'Cell to Module Losses - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cell to Module Losses - Interactive Simulator | Coach Atlas',
     metaDescription: 'Trace power losses from individual solar cells to assembled modules. Quantify resistive, optical, and mismatch losses that reduce real-world panel efficiency.',
     concepts: ['cell-to-module loss', 'resistive loss', 'optical loss', 'cell mismatch', 'module efficiency'],
     difficulty: 'intermediate',
@@ -1391,7 +1391,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'center-of-mass': {
-    metaTitle: 'Center of Mass - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Center of Mass - Interactive Simulator | Coach Atlas',
     metaDescription: 'Position masses on a plane and watch the center of mass update in real time. Explore stability, balance points, and how mass distribution affects motion.',
     concepts: ['center of mass', 'balance', 'stability', 'mass distribution', 'torque'],
     difficulty: 'beginner',
@@ -1403,7 +1403,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'chain-fountain': {
-    metaTitle: 'Chain Fountain - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chain Fountain - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch a bead chain leap upward from a jar in the mesmerizing chain fountain effect. Explore the physics of momentum, rigidity, and the Mould effect.',
     concepts: ['chain fountain', 'Mould effect', 'momentum', 'rigid body dynamics', 'self-siphoning'],
     difficulty: 'intermediate',
@@ -1415,7 +1415,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'chiller-c-o-p': {
-    metaTitle: 'Chiller COP - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chiller COP - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate a chiller system and calculate its coefficient of performance. Adjust condenser and evaporator temperatures to optimize cooling efficiency in real time.',
     concepts: ['coefficient of performance', 'chiller', 'refrigeration cycle', 'Carnot COP', 'evaporator'],
     difficulty: 'intermediate',
@@ -1427,7 +1427,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'chiplet-architecture': {
-    metaTitle: 'Chiplet Architecture - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chiplet Architecture - Interactive Simulator | Coach Atlas',
     metaDescription: 'Design a chiplet-based processor and explore yield, interconnect, and heterogeneous integration tradeoffs. See why chiplets dominate modern chip packaging.',
     concepts: ['chiplet', 'advanced packaging', 'die-to-die interconnect', 'heterogeneous integration', 'yield'],
     difficulty: 'advanced',
@@ -1439,7 +1439,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'chladni-patterns': {
-    metaTitle: 'Chladni Patterns - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chladni Patterns - Interactive Simulator | Coach Atlas',
     metaDescription: 'Drive a virtual plate at resonant frequencies and watch sand form Chladni patterns. Explore nodal lines, mode shapes, and how vibration creates geometric beauty.',
     concepts: ['Chladni patterns', 'vibration modes', 'nodal lines', 'resonant frequency', 'standing waves'],
     difficulty: 'intermediate',
@@ -1451,7 +1451,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'chromatic-aberration': {
-    metaTitle: 'Chromatic Aberration - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chromatic Aberration - Interactive Simulator | Coach Atlas',
     metaDescription: 'Observe color fringing as a lens focuses different wavelengths at different points. Adjust lens curvature and material to understand and correct chromatic aberration.',
     concepts: ['chromatic aberration', 'dispersion', 'achromatic doublet', 'Abbe number', 'color fringing'],
     difficulty: 'intermediate',
@@ -1463,7 +1463,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'circuits': {
-    metaTitle: 'Circuits - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Circuits - Interactive Simulator | Coach Atlas',
     metaDescription: 'Build and analyze electric circuits with resistors, batteries, and switches. Apply Ohm\'s law, trace current paths, and measure voltage drops in real time.',
     concepts: ['electric circuit', 'Ohm\'s law', 'series circuit', 'parallel circuit', 'voltage'],
     difficulty: 'beginner',
@@ -1475,7 +1475,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'classic-d-c-motor': {
-    metaTitle: 'Classic DC Motor - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Classic DC Motor - Interactive Simulator | Coach Atlas',
     metaDescription: 'Spin a virtual DC motor and explore torque, back-EMF, and speed control. Adjust voltage and load to understand how brushed DC motors convert electricity to motion.',
     concepts: ['DC motor', 'back-EMF', 'torque', 'commutator', 'armature'],
     difficulty: 'intermediate',
@@ -1487,7 +1487,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cleanroom-yield': {
-    metaTitle: 'Cleanroom Yield - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cleanroom Yield - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate semiconductor cleanroom contamination and its effect on die yield. Adjust particle density and die size to predict wafer yield using Poisson models.',
     concepts: ['cleanroom', 'particle contamination', 'die yield', 'defect density', 'Poisson model'],
     difficulty: 'intermediate',
@@ -1499,7 +1499,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'clock-distribution': {
-    metaTitle: 'Clock Distribution - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Clock Distribution - Interactive Simulator | Coach Atlas',
     metaDescription: 'Design a clock distribution network for a digital chip. Balance skew, manage buffers, and explore H-tree and mesh topologies to synchronize billions of transistors.',
     concepts: ['clock distribution', 'clock skew', 'clock tree', 'H-tree', 'buffer insertion'],
     difficulty: 'advanced',
@@ -1511,7 +1511,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'clock-jitter': {
-    metaTitle: 'Clock Jitter - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Clock Jitter - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize timing uncertainty in digital clock signals. Measure period jitter, cycle-to-cycle jitter, and explore how noise sources degrade timing margins.',
     concepts: ['clock jitter', 'timing uncertainty', 'phase noise', 'PLL', 'timing margin'],
     difficulty: 'advanced',
@@ -1523,7 +1523,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cloud-in-bottle': {
-    metaTitle: 'Cloud in a Bottle - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cloud in a Bottle - Interactive Simulator | Coach Atlas',
     metaDescription: 'Create a cloud inside a virtual bottle by changing pressure and temperature. Explore adiabatic cooling, condensation nuclei, and how real clouds form in the atmosphere.',
     concepts: ['cloud formation', 'adiabatic cooling', 'condensation nuclei', 'vapor pressure', 'dew point'],
     difficulty: 'beginner',
@@ -1535,7 +1535,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'convection': {
-    metaTitle: 'Convection - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Convection - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate convective heat transfer from heated surfaces. Adjust temperature, geometry, and fluid properties to compare natural and forced convection coefficients.',
     concepts: ['convection', 'heat transfer coefficient', 'natural convection', 'forced convection', 'Nusselt number'],
     difficulty: 'intermediate',
@@ -1547,7 +1547,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'convection-currents': {
-    metaTitle: 'Convection Currents - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Convection Currents - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch fluid circulation patterns driven by temperature differences. Heat a fluid from below and observe how density-driven convection currents form and evolve.',
     concepts: ['convection currents', 'Rayleigh number', 'buoyancy-driven flow', 'thermal plume', 'circulation cell'],
     difficulty: 'beginner',
@@ -1559,7 +1559,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'coupled-pendulums': {
-    metaTitle: 'Coupled Pendulums - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Coupled Pendulums - Interactive Simulator | Coach Atlas',
     metaDescription: 'Connect two pendulums with a spring and watch energy transfer back and forth. Explore normal modes, beat frequencies, and resonant energy exchange in coupled oscillators.',
     concepts: ['coupled oscillators', 'normal modes', 'energy transfer', 'beat frequency', 'resonance'],
     difficulty: 'intermediate',
@@ -1571,7 +1571,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'crosstalk': {
-    metaTitle: 'Crosstalk - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Crosstalk - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate electromagnetic crosstalk between parallel signal traces. Adjust spacing, length, and rise time to measure near-end and far-end crosstalk coupling.',
     concepts: ['crosstalk', 'capacitive coupling', 'inductive coupling', 'NEXT', 'FEXT'],
     difficulty: 'advanced',
@@ -1583,7 +1583,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'cycloid-motion': {
-    metaTitle: 'Cycloid Motion - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Cycloid Motion - Interactive Simulator | Coach Atlas',
     metaDescription: 'Trace the cycloid curve generated by a point on a rolling circle. Explore brachistochrone and tautochrone properties of this elegant mathematical curve.',
     concepts: ['cycloid', 'rolling motion', 'brachistochrone', 'tautochrone', 'parametric curve'],
     difficulty: 'intermediate',
@@ -1595,7 +1595,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'd-r-a-m-refresh': {
-    metaTitle: 'DRAM Refresh - Interactive Simulator | Atlas Coach',
+    metaTitle: 'DRAM Refresh - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize how DRAM cells store data as charge and why periodic refresh is essential. Explore refresh intervals, power costs, and retention time in modern memory.',
     concepts: ['DRAM', 'charge storage', 'refresh cycle', 'capacitor leakage', 'retention time'],
     difficulty: 'intermediate',
@@ -1607,7 +1607,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'd-v-f-s': {
-    metaTitle: 'DVFS - Interactive Simulator | Atlas Coach',
+    metaTitle: 'DVFS - Interactive Simulator | Coach Atlas',
     metaDescription: 'Adjust CPU voltage and frequency dynamically and observe power and performance tradeoffs. Learn how dynamic voltage frequency scaling saves energy in modern processors.',
     concepts: ['DVFS', 'dynamic voltage scaling', 'frequency scaling', 'power consumption', 'energy efficiency'],
     difficulty: 'intermediate',
@@ -1619,7 +1619,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'damped-oscillations': {
-    metaTitle: 'Damped Oscillations - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Damped Oscillations - Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch oscillation amplitude decay over time under damping. Adjust damping ratio to explore underdamped, critically damped, and overdamped system responses.',
     concepts: ['damped oscillation', 'damping ratio', 'exponential decay', 'quality factor', 'energy dissipation'],
     difficulty: 'intermediate',
@@ -1631,7 +1631,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'damping': {
-    metaTitle: 'Damping - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Damping - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how viscous, Coulomb, and structural damping affect oscillating systems. Compare damping types, measure decay rates, and design optimal damping levels.',
     concepts: ['damping', 'viscous damping', 'Coulomb damping', 'structural damping', 'logarithmic decrement'],
     difficulty: 'intermediate',
@@ -1643,7 +1643,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'data-movement-energy': {
-    metaTitle: 'Data Movement Energy - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Data Movement Energy - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize the energy cost of moving data across the memory hierarchy. Compare register access to DRAM fetch and network transfer to understand why data locality matters.',
     concepts: ['data movement', 'energy efficiency', 'memory hierarchy', 'data locality', 'communication cost'],
     difficulty: 'intermediate',
@@ -1659,7 +1659,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'decoupling-capacitor': {
-    metaTitle: 'Decoupling Capacitor — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Decoupling Capacitor — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate decoupling capacitors filtering power supply noise in digital circuits. Place bypass caps, observe voltage ripple reduction, and learn why local energy reservoirs stabilize ICs.',
     concepts: ['decoupling capacitor', 'bypass capacitor', 'power supply noise', 'voltage ripple', 'IC power integrity'],
     difficulty: 'intermediate',
@@ -1671,7 +1671,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'deposition-types': {
-    metaTitle: 'Deposition Types — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Deposition Types — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare CVD, PVD, and ALD thin film deposition methods in semiconductor manufacturing. Adjust parameters and observe film growth, conformality, and step coverage.',
     concepts: ['CVD', 'PVD', 'ALD', 'thin film deposition', 'step coverage', 'semiconductor fabrication'],
     difficulty: 'intermediate',
@@ -1683,7 +1683,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'depth-of-field': {
-    metaTitle: 'Depth of Field — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Depth of Field — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore depth of field in photography and optics. Adjust aperture, focal length, and subject distance to see how the in-focus range changes in this interactive simulation.',
     concepts: ['depth of field', 'aperture', 'focal length', 'circle of confusion', 'bokeh'],
     difficulty: 'beginner',
@@ -1695,7 +1695,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'design-to-fab-translation': {
-    metaTitle: 'Design-to-Fab Translation — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Design-to-Fab Translation — Interactive Simulator | Coach Atlas',
     metaDescription: 'Map chip designs to fabrication layers interactively. Translate schematic elements to metal, via, poly, and diffusion layers and understand how layout becomes silicon.',
     concepts: ['design-to-fabrication', 'layout', 'metal layers', 'vias', 'design rules', 'GDSII'],
     difficulty: 'advanced',
@@ -1707,7 +1707,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'diffusion-convection': {
-    metaTitle: 'Diffusion vs Convection — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Diffusion vs Convection — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare diffusion and convection heat and mass transport. Simulate random molecular motion versus bulk fluid flow and discover when each mechanism dominates.',
     concepts: ['diffusion', 'convection', 'mass transport', 'Peclet number', 'temperature gradient'],
     difficulty: 'intermediate',
@@ -1719,7 +1719,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'direction-finding': {
-    metaTitle: 'Direction Finding — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Direction Finding — Interactive Simulator | Coach Atlas',
     metaDescription: 'Locate radio signal sources using direction-finding techniques. Rotate antenna arrays, measure signal strength, and triangulate transmitter positions interactively.',
     concepts: ['radio direction finding', 'antenna array', 'triangulation', 'bearing', 'signal strength'],
     difficulty: 'intermediate',
@@ -1731,7 +1731,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'dispersion': {
-    metaTitle: 'Dispersion — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Dispersion — Interactive Simulator | Coach Atlas',
     metaDescription: 'Send light through prisms and observe wavelength-dependent refraction. Adjust material properties to see how dispersion splits white light into a rainbow spectrum.',
     concepts: ['dispersion', 'refractive index', 'prism', 'wavelength dependence', 'chromatic aberration'],
     difficulty: 'intermediate',
@@ -1743,7 +1743,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'doping-diffusion': {
-    metaTitle: 'Doping Diffusion — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Doping Diffusion — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate dopant diffusion into silicon wafers. Adjust temperature, time, and dopant species to control junction depth and carrier concentration profiles interactively.',
     concepts: ['doping', 'diffusion', 'Fick\'s law', 'junction depth', 'carrier concentration', 'p-n junction'],
     difficulty: 'advanced',
@@ -1755,7 +1755,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'drag-force': {
-    metaTitle: 'Drag Force — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Drag Force — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate aerodynamic drag on objects of different shapes and speeds. Adjust velocity, area, and drag coefficient to explore how air resistance affects motion.',
     concepts: ['drag force', 'drag coefficient', 'air resistance', 'Reynolds number', 'aerodynamics'],
     difficulty: 'beginner',
@@ -1767,7 +1767,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'droplet-breakup': {
-    metaTitle: 'Droplet Breakup — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Droplet Breakup — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the Rayleigh-Plateau instability and how liquid jets break into droplets. Adjust flow rate and viscosity to observe necking, pinch-off, and droplet formation.',
     concepts: ['Rayleigh-Plateau instability', 'surface tension', 'droplet formation', 'viscosity', 'Weber number'],
     difficulty: 'intermediate',
@@ -1779,7 +1779,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'e-c-c-memory': {
-    metaTitle: 'ECC Memory — Interactive Simulator | Atlas Coach',
+    metaTitle: 'ECC Memory — Interactive Simulator | Coach Atlas',
     metaDescription: 'Learn how error-correcting code memory detects and fixes bit errors using Hamming codes. Flip bits, watch parity checks, and understand why servers require ECC RAM.',
     concepts: ['ECC', 'Hamming code', 'parity bit', 'single-bit error correction', 'memory reliability'],
     difficulty: 'intermediate',
@@ -1791,7 +1791,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'e-m-i-shielding': {
-    metaTitle: 'EMI Shielding — Interactive Simulator | Atlas Coach',
+    metaTitle: 'EMI Shielding — Interactive Simulator | Coach Atlas',
     metaDescription: 'Test electromagnetic interference shielding with different cable types and enclosures. Compare unshielded, twisted pair, and coaxial designs to reduce EMI susceptibility.',
     concepts: ['EMI shielding', 'electromagnetic interference', 'twisted pair', 'coaxial cable', 'shielding effectiveness'],
     difficulty: 'intermediate',
@@ -1803,7 +1803,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'e-s-d-protection': {
-    metaTitle: 'ESD Protection — Interactive Simulator | Atlas Coach',
+    metaTitle: 'ESD Protection — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design electrostatic discharge protection circuits for sensitive ICs. Simulate ESD events, place clamp diodes, and learn how chips survive kilovolt static shocks.',
     concepts: ['ESD protection', 'electrostatic discharge', 'clamp diode', 'human body model', 'IC reliability'],
     difficulty: 'advanced',
@@ -1815,7 +1815,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'echo-time-of-flight': {
-    metaTitle: 'Echo Time of Flight — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Echo Time of Flight — Interactive Simulator | Coach Atlas',
     metaDescription: 'Measure distances using echo timing. Send sound pulses, record return times, and calculate target distance with the speed of sound in this interactive sonar simulation.',
     concepts: ['time of flight', 'echo', 'sonar', 'speed of sound', 'distance measurement'],
     difficulty: 'beginner',
@@ -1827,7 +1827,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'eddy-current-pendulum': {
-    metaTitle: 'Eddy Current Pendulum — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Eddy Current Pendulum — Interactive Simulator | Coach Atlas',
     metaDescription: 'Swing a metal pendulum through a magnetic field and watch eddy currents brake its motion. Explore Lenz\'s law, conductor material effects, and magnetic damping.',
     concepts: ['eddy currents', 'magnetic braking', 'Lenz\'s law', 'electromagnetic damping', 'pendulum'],
     difficulty: 'intermediate',
@@ -1839,7 +1839,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'eddy-currents': {
-    metaTitle: 'Eddy Currents — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Eddy Currents — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize circular induced currents in conductors exposed to changing magnetic fields. Explore how eddy currents cause heating, braking, and energy loss in transformers.',
     concepts: ['eddy currents', 'electromagnetic induction', 'Lenz\'s law', 'skin effect', 'core losses'],
     difficulty: 'intermediate',
@@ -1851,7 +1851,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'egg-drop': {
-    metaTitle: 'Egg Drop — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Egg Drop — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design protective packaging for an egg drop challenge. Explore impulse physics, crumple zones, and how extending impact time reduces force to keep your egg intact.',
     concepts: ['impulse', 'momentum', 'crumple zone', 'impact force', 'deceleration time'],
     difficulty: 'beginner',
@@ -1863,7 +1863,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'elastic-potential-energy': {
-    metaTitle: 'Elastic Potential Energy — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Elastic Potential Energy — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compress springs and launch objects to explore elastic potential energy. Measure stored energy with Hooke\'s law and watch it convert to kinetic energy on release.',
     concepts: ['elastic potential energy', 'Hooke\'s law', 'spring constant', 'energy conversion', 'restoring force'],
     difficulty: 'beginner',
@@ -1875,7 +1875,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'electric-field': {
-    metaTitle: 'Electric Field — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electric Field — Interactive Simulator | Coach Atlas',
     metaDescription: 'Place point charges and visualize electric field lines and vectors in real time. Explore superposition, field strength, and the inverse-square law interactively.',
     concepts: ['electric field', 'field lines', 'Coulomb\'s law', 'superposition', 'force per unit charge'],
     difficulty: 'intermediate',
@@ -1887,7 +1887,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'electric-field-mapping': {
-    metaTitle: 'Electric Field Mapping — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electric Field Mapping — Interactive Simulator | Coach Atlas',
     metaDescription: 'Map electric field lines and equipotential surfaces around charge configurations. Trace field patterns for dipoles, parallel plates, and arbitrary charge arrangements.',
     concepts: ['electric field mapping', 'equipotential lines', 'field lines', 'dipole', 'parallel plates'],
     difficulty: 'intermediate',
@@ -1899,7 +1899,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'electric-potential': {
-    metaTitle: 'Electric Potential — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electric Potential — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore voltage and electric potential around point charges. Calculate work per unit charge, visualize equipotential surfaces, and connect potential to electric field.',
     concepts: ['electric potential', 'voltage', 'work per unit charge', 'equipotential surface', 'potential difference'],
     difficulty: 'intermediate',
@@ -1911,7 +1911,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'electromagnet': {
-    metaTitle: 'Electromagnet — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electromagnet — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build an electromagnet by winding coils and adjusting current. Explore how number of turns, core material, and current strength control magnetic field intensity.',
     concepts: ['electromagnet', 'solenoid', 'magnetic field', 'number of turns', 'ferromagnetic core'],
     difficulty: 'beginner',
@@ -1923,7 +1923,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'electromigration': {
-    metaTitle: 'Electromigration — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Electromigration — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate metal atom migration in IC interconnects under high current density. Observe void and hillock formation, and learn how electromigration limits chip reliability.',
     concepts: ['electromigration', 'current density', 'void formation', 'hillock', 'Black\'s equation'],
     difficulty: 'advanced',
@@ -1935,7 +1935,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'encapsulation-u-v-aging': {
-    metaTitle: 'Encapsulation UV Aging — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Encapsulation UV Aging — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate UV degradation of solar panel encapsulants over years. Observe yellowing, transmittance loss, and how material choice and UV stabilizers affect module lifetime.',
     concepts: ['UV aging', 'encapsulant', 'EVA yellowing', 'transmittance loss', 'solar panel degradation'],
     difficulty: 'intermediate',
@@ -1947,7 +1947,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'endothermic-exothermic': {
-    metaTitle: 'Endothermic vs Exothermic — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Endothermic vs Exothermic — Interactive Simulator | Coach Atlas',
     metaDescription: 'Dissolve salts in water and measure temperature changes. Compare endothermic and exothermic reactions by balancing bond-breaking energy against hydration energy release.',
     concepts: ['endothermic', 'exothermic', 'enthalpy of dissolution', 'bond energy', 'hydration energy'],
     difficulty: 'beginner',
@@ -1963,7 +1963,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'energy-per-token': {
-    metaTitle: 'Energy Per Token — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Energy Per Token — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the energy cost of generating AI tokens. Adjust model size, hardware, and batch parameters to understand the joules and carbon footprint behind every LLM inference.',
     concepts: ['energy per token', 'AI energy consumption', 'LLM inference cost', 'compute efficiency'],
     difficulty: 'intermediate',
@@ -1975,7 +1975,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'etch-anisotropy': {
-    metaTitle: 'Etch Anisotropy — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Etch Anisotropy — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare anisotropic and isotropic etching in semiconductor fabrication. Adjust etch chemistry and see how sidewall profiles change for different process conditions.',
     concepts: ['anisotropic etching', 'isotropic etching', 'plasma etching', 'sidewall profile', 'semiconductor fabrication'],
     difficulty: 'intermediate',
@@ -1987,7 +1987,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'evaporative-cooling': {
-    metaTitle: 'Evaporative Cooling — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Evaporative Cooling — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate evaporative cooling and observe temperature drops in real time. Adjust humidity, airflow, and surface area to understand how sweat, swamp coolers, and cooling towers work.',
     concepts: ['evaporative cooling', 'latent heat of vaporization', 'wet-bulb temperature', 'humidity'],
     difficulty: 'beginner',
@@ -1999,7 +1999,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fan-laws': {
-    metaTitle: 'Fan Laws — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fan Laws — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the fan affinity laws that relate speed, flow, pressure, and power. Change RPM and see how airflow scales linearly while power scales with the cube of speed.',
     concepts: ['fan affinity laws', 'airflow', 'static pressure', 'fan power', 'system curve'],
     difficulty: 'intermediate',
@@ -2011,7 +2011,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fiber-signal-loss': {
-    metaTitle: 'Fiber Signal Loss — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fiber Signal Loss — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate optical fiber signal attenuation over distance. Adjust wavelength, fiber type, and splice count to calculate total link loss and design reliable fiber optic links.',
     concepts: ['fiber attenuation', 'optical loss', 'dB per km', 'splice loss', 'fiber optic link budget'],
     difficulty: 'intermediate',
@@ -2023,7 +2023,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fill-factor': {
-    metaTitle: 'Fill Factor — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fill Factor — Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize solar cell fill factor by adjusting series resistance, shunt resistance, and temperature. Visualize how fill factor shapes the IV curve and impacts panel efficiency.',
     concepts: ['fill factor', 'IV curve', 'series resistance', 'shunt resistance', 'solar cell efficiency'],
     difficulty: 'intermediate',
@@ -2035,7 +2035,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'flip-chip-wirebond': {
-    metaTitle: 'Flip Chip vs Wire Bond — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Flip Chip vs Wire Bond — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare flip chip and wire bond packaging for semiconductors. Explore inductance, thermal performance, I/O density, and cost tradeoffs between the two interconnect methods.',
     concepts: ['flip chip', 'wire bonding', 'die packaging', 'solder bumps', 'interconnect inductance'],
     difficulty: 'intermediate',
@@ -2047,7 +2047,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'floating-paperclip': {
-    metaTitle: 'Floating Paperclip — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Floating Paperclip — Interactive Simulator | Coach Atlas',
     metaDescription: 'Float a virtual paperclip on water using surface tension. Adjust liquid properties and object weight to explore how surface tension supports objects denser than the fluid.',
     concepts: ['surface tension', 'meniscus', 'contact angle', 'capillary forces', 'fluid interface'],
     difficulty: 'beginner',
@@ -2059,7 +2059,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fluorescence': {
-    metaTitle: 'Fluorescence — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fluorescence — Interactive Simulator | Coach Atlas',
     metaDescription: 'Excite fluorescent molecules and observe light emission at longer wavelengths. Explore Stokes shift, absorption spectra, and quantum yield in this interactive optics simulator.',
     concepts: ['fluorescence', 'Stokes shift', 'absorption spectrum', 'emission spectrum', 'quantum yield'],
     difficulty: 'intermediate',
@@ -2071,7 +2071,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'forced-oscillations': {
-    metaTitle: 'Forced Oscillations — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Forced Oscillations — Interactive Simulator | Coach Atlas',
     metaDescription: 'Drive an oscillator at varying frequencies and observe resonance. Adjust damping and driving force to map the amplitude response curve and understand phase lag behavior.',
     concepts: ['forced oscillation', 'resonance', 'driving frequency', 'damping ratio', 'phase lag'],
     difficulty: 'intermediate',
@@ -2083,7 +2083,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fracture-mechanics': {
-    metaTitle: 'Fracture Mechanics — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fracture Mechanics — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate crack propagation in materials under stress. Adjust crack length, applied stress, and fracture toughness to predict failure using stress intensity factor analysis.',
     concepts: ['fracture toughness', 'stress intensity factor', 'crack propagation', 'Griffith criterion', 'fatigue'],
     difficulty: 'advanced',
@@ -2095,7 +2095,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'fresnel-zones': {
-    metaTitle: 'Fresnel Zones — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Fresnel Zones — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize Fresnel zone clearance for radio links. Adjust frequency, distance, and obstacle height to determine whether your wireless path has adequate clearance for reliable signal.',
     concepts: ['Fresnel zone', 'line of sight', 'radio propagation', 'diffraction loss', 'path clearance'],
     difficulty: 'intermediate',
@@ -2107,7 +2107,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'g-p-u-occupancy': {
-    metaTitle: 'GPU Occupancy — Interactive Simulator | Atlas Coach',
+    metaTitle: 'GPU Occupancy — Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize GPU thread occupancy by adjusting block size, shared memory, and register usage. Visualize how occupancy affects latency hiding and compute throughput on CUDA GPUs.',
     concepts: ['GPU occupancy', 'CUDA', 'warp scheduling', 'shared memory', 'register pressure'],
     difficulty: 'advanced',
@@ -2119,7 +2119,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'g-p-u-power-states': {
-    metaTitle: 'GPU Power States — Interactive Simulator | Atlas Coach',
+    metaTitle: 'GPU Power States — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore GPU power state transitions from idle to full boost. Understand how clock speed, voltage scaling, and thermal throttling affect performance and power consumption.',
     concepts: ['GPU power states', 'DVFS', 'thermal throttling', 'clock speed', 'power management'],
     difficulty: 'intermediate',
@@ -2131,7 +2131,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'galvanic-corrosion': {
-    metaTitle: 'Galvanic Corrosion — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Galvanic Corrosion — Interactive Simulator | Coach Atlas',
     metaDescription: 'Pair different metals and watch galvanic corrosion develop. Explore the galvanic series, electrolyte effects, and area ratios to understand why some metal joints corrode rapidly.',
     concepts: ['galvanic corrosion', 'galvanic series', 'anode', 'cathode', 'electrode potential'],
     difficulty: 'intermediate',
@@ -2143,7 +2143,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'gas-laws': {
-    metaTitle: 'Gas Laws — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Gas Laws — Interactive Simulator | Coach Atlas',
     metaDescription: 'Experiment with the ideal gas law PV = nRT interactively. Adjust pressure, volume, temperature, and amount of gas to verify Boyle, Charles, and Avogadro relationships.',
     concepts: ['ideal gas law', 'Boyle\'s law', 'Charles\'s law', 'Avogadro\'s law', 'PV = nRT'],
     difficulty: 'beginner',
@@ -2155,7 +2155,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'generator-startup': {
-    metaTitle: 'Generator Startup — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Generator Startup — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate generator startup transients from initial excitation to synchronization. Observe voltage buildup, frequency stabilization, and the process of connecting to the grid.',
     concepts: ['generator startup', 'excitation', 'synchronization', 'voltage regulation', 'inrush current'],
     difficulty: 'advanced',
@@ -2167,7 +2167,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'ground-bounce': {
-    metaTitle: 'Ground Bounce — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Ground Bounce — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize ground bounce noise in digital circuits when multiple outputs switch simultaneously. Adjust inductance, switching speed, and pin count to see voltage spikes.',
     concepts: ['ground bounce', 'simultaneous switching noise', 'package inductance', 'SSO', 'signal integrity'],
     difficulty: 'advanced',
@@ -2179,7 +2179,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'ground-fault': {
-    metaTitle: 'Ground Fault — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Ground Fault — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate ground fault conditions and observe how protection devices respond. Explore GFCI operation, fault current paths, and the role of grounding in electrical safety.',
     concepts: ['ground fault', 'GFCI', 'residual current device', 'fault current', 'electrical safety'],
     difficulty: 'intermediate',
@@ -2191,7 +2191,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'gyroscope-stability': {
-    metaTitle: 'Gyroscope Stability — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Gyroscope Stability — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how spinning gyroscopes resist changes in orientation. Adjust spin rate and applied torques to understand gyroscopic rigidity used in navigation and stabilization.',
     concepts: ['gyroscopic stability', 'angular momentum', 'rigidity in space', 'nutation', 'gimbal'],
     difficulty: 'intermediate',
@@ -2203,7 +2203,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'gyroscopic-precession': {
-    metaTitle: 'Gyroscopic Precession — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Gyroscopic Precession — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch a spinning gyroscope precess under gravity. Adjust spin speed, mass, and pivot distance to verify the precession rate formula and build intuition for rotational dynamics.',
     concepts: ['gyroscopic precession', 'torque', 'angular momentum', 'precession rate', 'rotational dynamics'],
     difficulty: 'intermediate',
@@ -2215,7 +2215,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'h-d-d-physics': {
-    metaTitle: 'HDD Physics — Interactive Simulator | Atlas Coach',
+    metaTitle: 'HDD Physics — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the physics of hard disk drives including platter rotation, head flying height, and magnetic recording. Understand seek time, rotational latency, and data density limits.',
     concepts: ['hard disk drive', 'magnetic recording', 'areal density', 'seek time', 'rotational latency'],
     difficulty: 'intermediate',
@@ -2227,7 +2227,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'hand-warmer': {
-    metaTitle: 'Hand Warmer — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Hand Warmer — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate chemical hand warmer heat release. Explore exothermic crystallization in supersaturated sodium acetate, iron oxidation warmers, and heat output over time curves.',
     concepts: ['exothermic reaction', 'crystallization', 'supersaturation', 'sodium acetate', 'heat of reaction'],
     difficulty: 'beginner',
@@ -2239,7 +2239,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'heat-sink-thermal': {
-    metaTitle: 'Heat Sink Thermal — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Heat Sink Thermal — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design heat sinks by adjusting fin count, height, material, and airflow. Calculate thermal resistance, junction temperature, and heat dissipation capacity in real time.',
     concepts: ['heat sink', 'thermal resistance', 'fin design', 'forced convection', 'junction temperature'],
     difficulty: 'intermediate',
@@ -2251,7 +2251,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'heat-transfer-capacity': {
-    metaTitle: 'Heat Transfer Capacity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Heat Transfer Capacity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare conduction, convection, and radiation heat transfer rates. Adjust material properties, geometry, and temperatures to determine the dominant heat transfer mode.',
     concepts: ['heat transfer', 'conduction', 'convection', 'radiation', 'thermal conductivity'],
     difficulty: 'intermediate',
@@ -2267,7 +2267,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'helium-balloon-car': {
-    metaTitle: 'Helium Balloon in Accelerating Car — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Helium Balloon in Accelerating Car — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch a helium balloon move forward in an accelerating car. Explore buoyancy in non-inertial frames, pseudo-forces, and why lighter-than-air objects defy intuition.',
     concepts: ['buoyancy', 'non-inertial reference frame', 'pseudo-force', 'pressure gradient', 'acceleration'],
     difficulty: 'intermediate',
@@ -2279,7 +2279,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'homopolar-motor': {
-    metaTitle: 'Homopolar Motor — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Homopolar Motor — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build a virtual homopolar motor with a battery, magnet, and wire. Visualize the Lorentz force, current flow, and continuous rotation in the simplest electric motor.',
     concepts: ['Lorentz force', 'magnetic field', 'electric current', 'torque', 'homopolar motor'],
     difficulty: 'beginner',
@@ -2291,7 +2291,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'hookes-law': {
-    metaTitle: 'Hooke\'s Law — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Hooke\'s Law — Interactive Simulator | Coach Atlas',
     metaDescription: 'Stretch and compress virtual springs to verify Hooke\'s Law. Measure spring constants, plot force vs displacement, and explore elastic limits interactively.',
     concepts: ['Hooke\'s law', 'spring constant', 'elastic force', 'displacement', 'restoring force'],
     difficulty: 'beginner',
@@ -2303,7 +2303,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'hotspots': {
-    metaTitle: 'Thermal Hotspots in Chips — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Hotspots in Chips — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize thermal hotspots forming in processor chips. Adjust power density, cooling, and layout to understand how heat concentrates and affects chip performance.',
     concepts: ['thermal hotspot', 'power density', 'heat dissipation', 'thermal throttling', 'chip design'],
     difficulty: 'advanced',
@@ -2315,7 +2315,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'humidity-e-s-d': {
-    metaTitle: 'Humidity Effects on ESD — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Humidity Effects on ESD — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how humidity affects electrostatic discharge risk. Simulate charge buildup at different humidity levels and learn why dry environments damage electronics.',
     concepts: ['electrostatic discharge', 'humidity', 'charge buildup', 'surface resistivity', 'ESD protection'],
     difficulty: 'intermediate',
@@ -2327,7 +2327,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'hydrostatic-pressure': {
-    metaTitle: 'Hydrostatic Pressure — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Hydrostatic Pressure — Interactive Simulator | Coach Atlas',
     metaDescription: 'Measure pressure at different depths in virtual fluids. Verify that pressure increases linearly with depth and explore Pascal\'s law with interactive controls.',
     concepts: ['hydrostatic pressure', 'fluid depth', 'Pascal\'s law', 'pressure gradient', 'fluid density'],
     difficulty: 'beginner',
@@ -2339,7 +2339,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'i-r-drop': {
-    metaTitle: 'IR Drop in Power Grids — Interactive Simulator | Atlas Coach',
+    metaTitle: 'IR Drop in Power Grids — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate voltage drop across semiconductor power distribution networks. Visualize IR drop hotspots, adjust metal widths, and optimize power grid integrity.',
     concepts: ['IR drop', 'power grid', 'voltage drop', 'metal resistance', 'power integrity'],
     difficulty: 'advanced',
@@ -2351,7 +2351,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'inclined-plane': {
-    metaTitle: 'Inclined Plane — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Inclined Plane — Interactive Simulator | Coach Atlas',
     metaDescription: 'Analyze forces on an inclined plane interactively. Decompose gravity into parallel and normal components, add friction, and predict acceleration and sliding.',
     concepts: ['inclined plane', 'force decomposition', 'normal force', 'friction', 'gravitational components'],
     difficulty: 'beginner',
@@ -2363,7 +2363,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'induction-heating': {
-    metaTitle: 'Induction Heating — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Induction Heating — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate electromagnetic induction heating in metals. Adjust frequency, coil geometry, and material properties to observe eddy currents and Joule heating effects.',
     concepts: ['induction heating', 'eddy currents', 'Joule heating', 'electromagnetic induction', 'skin effect'],
     difficulty: 'intermediate',
@@ -2375,7 +2375,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'inductive-kickback': {
-    metaTitle: 'Inductive Kickback — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Inductive Kickback — Interactive Simulator | Coach Atlas',
     metaDescription: 'Observe dangerous voltage spikes when switching inductive loads. Simulate flyback diodes, snubber circuits, and learn how to protect circuits from inductive kickback.',
     concepts: ['inductive kickback', 'flyback voltage', 'inductor', 'Lenz\'s law', 'flyback diode'],
     difficulty: 'intermediate',
@@ -2387,7 +2387,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'inelastic-collisions': {
-    metaTitle: 'Inelastic Collisions — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Inelastic Collisions — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate perfectly and partially inelastic collisions. Track momentum conservation while measuring kinetic energy loss and coefficient of restitution in real time.',
     concepts: ['inelastic collision', 'kinetic energy loss', 'momentum conservation', 'coefficient of restitution'],
     difficulty: 'intermediate',
@@ -2399,7 +2399,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'inertia': {
-    metaTitle: 'Inertia — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Inertia — Interactive Simulator | Coach Atlas',
     metaDescription: 'Experience Newton\'s first law through interactive inertia demonstrations. Apply forces to objects of different masses and observe resistance to changes in motion.',
     concepts: ['inertia', 'Newton\'s first law', 'mass', 'net force', 'equilibrium'],
     difficulty: 'beginner',
@@ -2411,7 +2411,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'infrared-emissivity': {
-    metaTitle: 'Infrared Emissivity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Infrared Emissivity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare infrared emission from different surfaces and materials. Adjust emissivity, temperature, and wavelength to understand thermal radiation and Kirchhoff\'s law.',
     concepts: ['emissivity', 'infrared radiation', 'Stefan-Boltzmann law', 'Kirchhoff\'s law', 'blackbody'],
     difficulty: 'intermediate',
@@ -2423,7 +2423,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'interconnect-topology': {
-    metaTitle: 'Interconnect Topology — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Interconnect Topology — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore network interconnect topologies like mesh, torus, and fat tree. Compare latency, bandwidth, and cost tradeoffs for data center and chip multiprocessor designs.',
     concepts: ['interconnect topology', 'mesh network', 'torus', 'fat tree', 'network latency', 'bisection bandwidth'],
     difficulty: 'advanced',
@@ -2435,7 +2435,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'inverter-sine-wave': {
-    metaTitle: 'Inverter Sine Wave Generation — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Inverter Sine Wave Generation — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate how inverters convert DC to AC sine waves using PWM. Adjust switching frequency, filter design, and modulation to produce clean sinusoidal output.',
     concepts: ['inverter', 'pulse width modulation', 'sine wave', 'DC to AC', 'harmonic distortion'],
     difficulty: 'intermediate',
@@ -2447,7 +2447,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'ion-implantation': {
-    metaTitle: 'Ion Implantation — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Ion Implantation — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate the ion implantation doping process in semiconductors. Control energy, dose, and species to shape dopant profiles and understand channeling effects.',
     concepts: ['ion implantation', 'doping', 'dopant profile', 'channeling', 'annealing'],
     difficulty: 'advanced',
@@ -2459,7 +2459,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'jar-lid-expansion': {
-    metaTitle: 'Jar Lid Thermal Expansion — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Jar Lid Thermal Expansion — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate how hot water loosens stuck jar lids through differential thermal expansion. Compare expansion rates of metal lids and glass jars to understand the trick.',
     concepts: ['thermal expansion', 'differential expansion', 'expansion coefficient', 'heat transfer'],
     difficulty: 'beginner',
@@ -2471,7 +2471,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'k-v-cache': {
-    metaTitle: 'KV Cache in Transformers — Interactive Simulator | Atlas Coach',
+    metaTitle: 'KV Cache in Transformers — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize key-value caching in transformer inference. See how KV cache eliminates redundant computation, reduces latency, and trades memory for speed in LLMs.',
     concepts: ['KV cache', 'transformer', 'attention mechanism', 'autoregressive inference', 'memory-compute tradeoff'],
     difficulty: 'advanced',
@@ -2483,7 +2483,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'karman-vortex': {
-    metaTitle: 'Von Karman Vortex Street — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Von Karman Vortex Street — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch von Karman vortex streets form behind obstacles in fluid flow. Adjust Reynolds number and obstacle geometry to explore periodic vortex shedding patterns.',
     concepts: ['von Karman vortex street', 'vortex shedding', 'Strouhal number', 'Reynolds number', 'wake'],
     difficulty: 'intermediate',
@@ -2495,7 +2495,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'kinetic-theory-gases': {
-    metaTitle: 'Kinetic Theory of Gases — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Kinetic Theory of Gases — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate gas molecules bouncing in a container. Measure pressure, temperature, and speed distributions to verify the kinetic theory and Maxwell-Boltzmann statistics.',
     concepts: ['kinetic theory', 'Maxwell-Boltzmann distribution', 'ideal gas law', 'molecular speed', 'gas pressure'],
     difficulty: 'intermediate',
@@ -2507,7 +2507,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'l-c-resonance': {
-    metaTitle: 'LC Circuit Resonance — Interactive Simulator | Atlas Coach',
+    metaTitle: 'LC Circuit Resonance — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build LC circuits and observe electrical resonance. Watch energy oscillate between inductor and capacitor, measure resonant frequency, and explore Q factor effects.',
     concepts: ['LC resonance', 'resonant frequency', 'inductor', 'capacitor', 'energy oscillation'],
     difficulty: 'intermediate',
@@ -2519,7 +2519,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'l-e-d-as-solar-cell': {
-    metaTitle: 'LED as Solar Cell — Interactive Simulator | Atlas Coach',
+    metaTitle: 'LED as Solar Cell — Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover how LEDs generate electricity when exposed to light. Measure photovoltage and photocurrent from LEDs, compare efficiency to silicon solar cells.',
     concepts: ['photovoltaic effect', 'LED', 'p-n junction', 'solar cell', 'bandgap energy'],
     difficulty: 'intermediate',
@@ -2531,7 +2531,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'l-l-m-to-s-p-i-c-e': {
-    metaTitle: 'LLM to SPICE Netlist — Interactive Simulator | Atlas Coach',
+    metaTitle: 'LLM to SPICE Netlist — Interactive Simulator | Coach Atlas',
     metaDescription: 'See how large language models generate SPICE circuit netlists from natural language descriptions. Explore AI-assisted electronic design automation interactively.',
     concepts: ['LLM', 'SPICE netlist', 'electronic design automation', 'circuit synthesis', 'natural language processing'],
     difficulty: 'advanced',
@@ -2543,7 +2543,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'laminar-flow': {
-    metaTitle: 'Laminar Flow — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Laminar Flow — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize smooth laminar flow in pipes and channels. Observe parabolic velocity profiles, measure viscous forces, and explore conditions that maintain laminar regimes.',
     concepts: ['laminar flow', 'viscosity', 'parabolic velocity profile', 'Reynolds number', 'Hagen-Poiseuille'],
     difficulty: 'intermediate',
@@ -2555,7 +2555,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'laser-speckle': {
-    metaTitle: 'Laser Speckle Patterns — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Laser Speckle Patterns — Interactive Simulator | Coach Atlas',
     metaDescription: 'Generate and analyze laser speckle patterns interactively. Explore coherent light scattering from rough surfaces and learn how speckle reveals surface properties.',
     concepts: ['laser speckle', 'coherence', 'interference', 'surface roughness', 'speckle contrast'],
     difficulty: 'advanced',
@@ -2571,7 +2571,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'latent-heat': {
-    metaTitle: 'Latent Heat — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Latent Heat — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore latent heat during phase changes with an interactive simulator. Observe energy absorbed and released as substances melt, boil, freeze, and condense in real time.',
     concepts: ['latent heat', 'phase change', 'enthalpy of fusion', 'enthalpy of vaporization', 'energy transfer'],
     difficulty: 'intermediate',
@@ -2583,7 +2583,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'law-of-reflection': {
-    metaTitle: 'Law of Reflection — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Law of Reflection — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize the law of reflection with an interactive light ray simulator. Adjust incidence angles, swap mirror surfaces, and verify that angle in equals angle out.',
     concepts: ['law of reflection', 'angle of incidence', 'angle of reflection', 'normal line', 'specular reflection'],
     difficulty: 'beginner',
@@ -2595,7 +2595,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'leakage-current': {
-    metaTitle: 'Leakage Current — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Leakage Current — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate transistor leakage current and its impact on chip power consumption. Adjust gate oxide thickness, voltage, and temperature to explore subthreshold leakage.',
     concepts: ['leakage current', 'subthreshold conduction', 'gate oxide', 'MOSFET off-state', 'tunneling'],
     difficulty: 'advanced',
@@ -2607,7 +2607,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'leakage-power': {
-    metaTitle: 'Leakage Power — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Leakage Power — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore static power dissipation from transistor leakage. Adjust technology node, supply voltage, and temperature to see how leakage power scales in modern chips.',
     concepts: ['leakage power', 'static power', 'dynamic power', 'power density', 'voltage scaling'],
     difficulty: 'advanced',
@@ -2619,7 +2619,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'lens-focusing': {
-    metaTitle: 'Lens Focusing — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Lens Focusing — Interactive Simulator | Coach Atlas',
     metaDescription: 'Bend light rays through convex and concave lenses. Adjust focal length, object distance, and lens curvature to explore image formation and the thin lens equation.',
     concepts: ['focal length', 'thin lens equation', 'convex lens', 'concave lens', 'image formation'],
     difficulty: 'beginner',
@@ -2631,7 +2631,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'lift-force': {
-    metaTitle: 'Lift Force — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Lift Force — Interactive Simulator | Coach Atlas',
     metaDescription: 'Generate aerodynamic lift on virtual airfoils. Adjust angle of attack, airspeed, and wing shape to explore how aircraft wings produce the force that enables flight.',
     concepts: ['lift force', 'angle of attack', 'airfoil', 'Bernoulli principle', 'circulation theory'],
     difficulty: 'intermediate',
@@ -2643,7 +2643,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'liquid-cooling': {
-    metaTitle: 'Liquid Cooling — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Liquid Cooling — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design a liquid cooling loop for electronics. Adjust flow rate, coolant type, radiator size, and heat load to optimize thermal performance for CPUs and GPUs.',
     concepts: ['liquid cooling', 'thermal resistance', 'heat dissipation', 'flow rate', 'coolant properties'],
     difficulty: 'intermediate',
@@ -2655,7 +2655,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'litho-focus-dose': {
-    metaTitle: 'Litho Focus-Dose — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Litho Focus-Dose — Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize lithography focus and exposure dose for chip manufacturing. Map the process window, find best focus, and understand how dose affects critical dimension control.',
     concepts: ['focus-dose matrix', 'process window', 'critical dimension', 'depth of focus', 'exposure latitude'],
     difficulty: 'advanced',
@@ -2667,7 +2667,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'magnetic-field': {
-    metaTitle: 'Magnetic Field — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Magnetic Field — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize magnetic field lines around magnets, wires, and solenoids. Place sources, observe field patterns, and build intuition for how magnetic fields behave in space.',
     concepts: ['magnetic field', 'field lines', 'magnetic dipole', 'right-hand rule', 'superposition'],
     difficulty: 'beginner',
@@ -2679,7 +2679,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'magnetic-mapping': {
-    metaTitle: 'Magnetic Mapping — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Magnetic Mapping — Interactive Simulator | Coach Atlas',
     metaDescription: 'Map magnetic field lines around current-carrying conductors and permanent magnets. Place virtual compasses, trace field topology, and visualize complex field geometries.',
     concepts: ['magnetic field mapping', 'field topology', 'compass needle', 'current loops', 'magnetic flux'],
     difficulty: 'intermediate',
@@ -2691,7 +2691,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'magnus-effect': {
-    metaTitle: 'Magnus Effect — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Magnus Effect — Interactive Simulator | Coach Atlas',
     metaDescription: 'Spin a ball and watch it curve through the air. Adjust spin rate, velocity, and ball size to explore the Magnus effect behind curveballs, topspin, and free kicks.',
     concepts: ['Magnus effect', 'spin', 'pressure asymmetry', 'curved trajectory', 'aerodynamic force'],
     difficulty: 'intermediate',
@@ -2703,7 +2703,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'make-microphone': {
-    metaTitle: 'Make a Microphone — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Make a Microphone — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build a DIY microphone from basic components. Explore how diaphragms, magnets, and coils convert sound pressure waves into electrical signals step by step.',
     concepts: ['electromagnetic induction', 'diaphragm', 'voice coil', 'sound transducer', 'signal conversion'],
     difficulty: 'beginner',
@@ -2715,7 +2715,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'manufacturing-drives-architecture': {
-    metaTitle: 'Manufacturing Drives Architecture — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Manufacturing Drives Architecture — Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover how semiconductor manufacturing constraints shape chip architecture decisions. Explore yield, die size, power limits, and process node tradeoffs interactively.',
     concepts: ['chip architecture', 'manufacturing constraints', 'die yield', 'process node', 'design-technology co-optimization'],
     difficulty: 'advanced',
@@ -2727,7 +2727,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'marangoni-tears': {
-    metaTitle: 'Marangoni Tears — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Marangoni Tears — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch wine tears form on glass driven by surface tension gradients. Adjust alcohol concentration and evaporation rate to explore the Marangoni effect in thin films.',
     concepts: ['Marangoni effect', 'surface tension gradient', 'wine tears', 'capillary flow', 'evaporation'],
     difficulty: 'intermediate',
@@ -2739,7 +2739,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'metastability': {
-    metaTitle: 'Metastability — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Metastability — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore metastable states in digital flip-flops. Trigger setup and hold violations, observe unpredictable outputs, and learn how synchronizers prevent data corruption.',
     concepts: ['metastability', 'flip-flop', 'setup time', 'hold time', 'clock domain crossing'],
     difficulty: 'advanced',
@@ -2751,7 +2751,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'metronome-sync': {
-    metaTitle: 'Metronome Sync — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Metronome Sync — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch metronomes spontaneously synchronize on a shared platform. Adjust coupling strength, frequency mismatch, and damping to explore coupled oscillator physics.',
     concepts: ['synchronization', 'coupled oscillators', 'phase locking', 'resonance coupling', 'Kuramoto model'],
     difficulty: 'intermediate',
@@ -2763,7 +2763,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'microphone': {
-    metaTitle: 'Microphone — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Microphone — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore microphone transducer physics interactively. Compare dynamic, condenser, and ribbon designs to understand how sound pressure converts to electrical signals.',
     concepts: ['microphone', 'transducer', 'dynamic microphone', 'condenser microphone', 'frequency response'],
     difficulty: 'intermediate',
@@ -2775,7 +2775,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'microwave-standing-wave': {
-    metaTitle: 'Microwave Standing Wave — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Microwave Standing Wave — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize standing waves inside a microwave oven. Map hot and cold spots, understand why turntables exist, and explore how 2.45 GHz waves heat food unevenly.',
     concepts: ['standing waves', 'microwave heating', 'cavity resonance', 'wavelength', 'dielectric heating'],
     difficulty: 'intermediate',
@@ -2787,7 +2787,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'minimal-surfaces': {
-    metaTitle: 'Minimal Surfaces — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Minimal Surfaces — Interactive Simulator | Coach Atlas',
     metaDescription: 'Create soap film minimal surfaces by defining wire frame boundaries. Explore catenoids, helicoids, and how surface tension drives films to minimize their total area.',
     concepts: ['minimal surfaces', 'surface tension', 'soap film', 'mean curvature', 'variational calculus'],
     difficulty: 'advanced',
@@ -2799,7 +2799,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'model-as-reviewer': {
-    metaTitle: 'Model as Reviewer — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Model as Reviewer — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore using large language models as automated code reviewers. Simulate review workflows, evaluate feedback quality, and learn prompt strategies for better reviews.',
     concepts: ['LLM code review', 'automated review', 'prompt engineering', 'code quality', 'AI-assisted development'],
     difficulty: 'intermediate',
@@ -2811,7 +2811,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'moire-patterns': {
-    metaTitle: 'Moire Patterns — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Moire Patterns — Interactive Simulator | Coach Atlas',
     metaDescription: 'Overlay grids and gratings to generate moire interference patterns. Adjust spacing, rotation, and curvature to explore how small misalignments create dramatic visual effects.',
     concepts: ['moire pattern', 'spatial frequency', 'interference', 'aliasing', 'superposition of gratings'],
     difficulty: 'intermediate',
@@ -2823,7 +2823,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'molecular-orbitals': {
-    metaTitle: 'Molecular Orbitals — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Molecular Orbitals — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build molecular orbital diagrams from atomic orbitals. Visualize bonding and antibonding orbitals, calculate bond order, and predict molecular stability and magnetism.',
     concepts: ['molecular orbital theory', 'bonding orbital', 'antibonding orbital', 'bond order', 'LCAO'],
     difficulty: 'advanced',
@@ -2835,7 +2835,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'moment-of-inertia': {
-    metaTitle: 'Moment of Inertia — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Moment of Inertia — Interactive Simulator | Coach Atlas',
     metaDescription: 'Calculate and visualize moment of inertia for different shapes. Roll objects down ramps, redistribute mass, and see how rotational inertia governs angular acceleration.',
     concepts: ['moment of inertia', 'rotational inertia', 'parallel axis theorem', 'angular acceleration', 'mass distribution'],
     difficulty: 'intermediate',
@@ -2847,7 +2847,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'network-congestion': {
-    metaTitle: 'Network Congestion — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Network Congestion — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate network congestion and observe throughput collapse. Adjust traffic load, buffer sizes, and congestion control algorithms to maintain stable network performance.',
     concepts: ['network congestion', 'TCP congestion control', 'throughput', 'packet loss', 'buffer bloat'],
     difficulty: 'intermediate',
@@ -2859,7 +2859,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'network-latency': {
-    metaTitle: 'Network Latency — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Network Latency — Interactive Simulator | Coach Atlas',
     metaDescription: 'Trace packets across networks and measure end-to-end latency. Explore propagation delay, queuing delay, serialization, and optimization techniques for faster responses.',
     concepts: ['network latency', 'propagation delay', 'queuing delay', 'round-trip time', 'CDN optimization'],
     difficulty: 'intermediate',
@@ -2875,7 +2875,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'newton-cooling': {
-    metaTitle: 'Newton\'s Law of Cooling - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Newton\'s Law of Cooling - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate Newton\'s law of cooling in real time. Adjust initial temperature, ambient conditions, and cooling constants to watch exponential temperature decay unfold.',
     concepts: ['Newton\'s law of cooling', 'exponential decay', 'heat transfer', 'thermal equilibrium'],
     difficulty: 'beginner',
@@ -2887,7 +2887,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'noise-margin': {
-    metaTitle: 'Noise Margin - Interactive Digital Logic Simulator | Atlas Coach',
+    metaTitle: 'Noise Margin - Interactive Digital Logic Simulator | Coach Atlas',
     metaDescription: 'Explore digital logic noise margins interactively. Adjust voltage thresholds, visualize high and low noise margins, and learn why reliable signal transfer matters.',
     concepts: ['noise margin', 'logic levels', 'voltage threshold', 'signal integrity', 'digital logic'],
     difficulty: 'intermediate',
@@ -2899,7 +2899,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'non-newtonian-armor': {
-    metaTitle: 'Non-Newtonian Fluid Armor - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Non-Newtonian Fluid Armor - Interactive Simulator | Coach Atlas',
     metaDescription: 'Test non-Newtonian fluid body armor under impact. Vary shear rate and observe how shear-thickening fluids stiffen on impact to absorb ballistic energy.',
     concepts: ['non-Newtonian fluid', 'shear thickening', 'impact absorption', 'ballistic protection', 'viscosity'],
     difficulty: 'intermediate',
@@ -2911,7 +2911,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'oersted-experiment': {
-    metaTitle: 'Oersted\'s Experiment - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Oersted\'s Experiment - Interactive Simulator | Coach Atlas',
     metaDescription: 'Recreate Oersted\'s 1820 discovery that electric current deflects a compass needle. Adjust current direction and magnitude to explore the magnetic field around a wire.',
     concepts: ['Oersted\'s experiment', 'electromagnetism', 'magnetic field', 'compass deflection', 'right-hand rule'],
     difficulty: 'beginner',
@@ -2923,7 +2923,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'orbital-mechanics-basics': {
-    metaTitle: 'Orbital Mechanics Basics - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Orbital Mechanics Basics - Interactive Simulator | Coach Atlas',
     metaDescription: 'Learn fundamental orbital mechanics by launching satellites. Explore circular and elliptical orbits, orbital velocity, and Kepler\'s laws through hands-on simulation.',
     concepts: ['orbital velocity', 'Kepler\'s laws', 'circular orbit', 'elliptical orbit', 'gravitational parameter'],
     difficulty: 'intermediate',
@@ -2935,7 +2935,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'overlay-error': {
-    metaTitle: 'Lithography Overlay Error - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Lithography Overlay Error - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate overlay alignment errors in semiconductor lithography. Adjust translation, rotation, and magnification to see how misalignment degrades chip yield.',
     concepts: ['overlay error', 'lithography alignment', 'registration', 'semiconductor yield', 'multi-patterning'],
     difficulty: 'advanced',
@@ -2947,7 +2947,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'p-c-ie-bandwidth': {
-    metaTitle: 'PCIe Bandwidth - Interactive Simulator | Atlas Coach',
+    metaTitle: 'PCIe Bandwidth - Interactive Simulator | Coach Atlas',
     metaDescription: 'Calculate PCIe bus bandwidth across generations and lane configurations. Compare PCIe 3.0 through 6.0 and understand encoding overhead, latency, and throughput.',
     concepts: ['PCIe', 'bus bandwidth', 'lane configuration', 'encoding overhead', 'serial interconnect'],
     difficulty: 'intermediate',
@@ -2959,7 +2959,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'p-u-e-calculator': {
-    metaTitle: 'PUE Calculator - Interactive Data Center Simulator | Atlas Coach',
+    metaTitle: 'PUE Calculator - Interactive Data Center Simulator | Coach Atlas',
     metaDescription: 'Calculate Power Usage Effectiveness for data centers. Adjust cooling, lighting, and IT load to optimize PUE and reduce energy waste in facility operations.',
     concepts: ['PUE', 'data center efficiency', 'cooling overhead', 'IT load', 'energy management'],
     difficulty: 'beginner',
@@ -2971,7 +2971,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'p-waves-s-waves': {
-    metaTitle: 'P-Waves and S-Waves - Interactive Seismology Simulator | Atlas Coach',
+    metaTitle: 'P-Waves and S-Waves - Interactive Seismology Simulator | Coach Atlas',
     metaDescription: 'Visualize P-waves and S-waves traveling through Earth. Compare compression and shear wave speeds, observe arrival times, and learn seismograph interpretation.',
     concepts: ['P-waves', 'S-waves', 'seismology', 'wave propagation', 'earthquake location'],
     difficulty: 'intermediate',
@@ -2983,7 +2983,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'pascal-law': {
-    metaTitle: 'Pascal\'s Law - Interactive Hydraulic Simulator | Atlas Coach',
+    metaTitle: 'Pascal\'s Law - Interactive Hydraulic Simulator | Coach Atlas',
     metaDescription: 'Explore Pascal\'s law of pressure transmission in fluids. Apply force to pistons of different areas and see how hydraulic systems multiply force in real time.',
     concepts: ['Pascal\'s law', 'hydraulic press', 'pressure transmission', 'force multiplication', 'fluid statics'],
     difficulty: 'beginner',
@@ -2995,7 +2995,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'passivation-recombination': {
-    metaTitle: 'Surface Passivation and Recombination - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Surface Passivation and Recombination - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate surface recombination in solar cells. Adjust passivation quality and see how dangling bonds at silicon surfaces reduce carrier lifetime and cell efficiency.',
     concepts: ['surface passivation', 'recombination velocity', 'carrier lifetime', 'dangling bonds', 'solar cell efficiency'],
     difficulty: 'advanced',
@@ -3007,7 +3007,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'patch-discipline': {
-    metaTitle: 'Patch Discipline - Interactive AI Prompting Simulator | Atlas Coach',
+    metaTitle: 'Patch Discipline - Interactive AI Prompting Simulator | Coach Atlas',
     metaDescription: 'Practice disciplined patch-based prompting for AI systems. Learn to write focused, minimal edits that reduce errors and improve reliability in code generation.',
     concepts: ['patch-based prompting', 'prompt engineering', 'code generation', 'minimal edits', 'AI reliability'],
     difficulty: 'intermediate',
@@ -3019,7 +3019,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'phase-change-energy': {
-    metaTitle: 'Phase Change Energy - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Phase Change Energy - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize energy absorption during phase transitions. Heat ice through melting and boiling, observe temperature plateaus, and explore latent heat concepts.',
     concepts: ['latent heat', 'phase transition', 'melting point', 'boiling point', 'specific heat capacity'],
     difficulty: 'beginner',
@@ -3031,7 +3031,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'phone-seismometer': {
-    metaTitle: 'Phone Seismometer - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Phone Seismometer - Interactive Simulator | Coach Atlas',
     metaDescription: 'Turn a smartphone accelerometer into a seismometer. Visualize vibration data, filter noise, and detect micro-tremors using the sensors in your pocket.',
     concepts: ['accelerometer', 'seismometer', 'vibration sensing', 'signal filtering', 'MEMS sensor'],
     difficulty: 'beginner',
@@ -3043,7 +3043,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'photoelasticity': {
-    metaTitle: 'Photoelasticity - Interactive Stress Visualization Simulator | Atlas Coach',
+    metaTitle: 'Photoelasticity - Interactive Stress Visualization Simulator | Coach Atlas',
     metaDescription: 'Visualize stress distributions using photoelasticity. Apply loads to transparent models and observe colorful fringe patterns that reveal internal stress fields.',
     concepts: ['photoelasticity', 'stress birefringence', 'fringe pattern', 'polarized light', 'stress analysis'],
     difficulty: 'intermediate',
@@ -3055,7 +3055,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'poisson-ratio': {
-    metaTitle: 'Poisson\'s Ratio - Interactive Material Simulator | Atlas Coach',
+    metaTitle: 'Poisson\'s Ratio - Interactive Material Simulator | Coach Atlas',
     metaDescription: 'Stretch and compress materials to observe Poisson\'s ratio. Measure lateral contraction under axial loading and compare values for metals, rubber, and cork.',
     concepts: ['Poisson\'s ratio', 'lateral strain', 'axial strain', 'elastic deformation', 'auxetic materials'],
     difficulty: 'intermediate',
@@ -3067,7 +3067,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'polarized-sky': {
-    metaTitle: 'Polarized Sky - Interactive Skylight Simulator | Atlas Coach',
+    metaTitle: 'Polarized Sky - Interactive Skylight Simulator | Coach Atlas',
     metaDescription: 'Explore how sunlight becomes polarized by atmospheric scattering. Rotate a virtual polarizer across the sky and discover the Rayleigh scattering polarization pattern.',
     concepts: ['skylight polarization', 'Rayleigh scattering', 'polarization pattern', 'atmospheric optics', 'navigation'],
     difficulty: 'intermediate',
@@ -3079,7 +3079,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'power-delivery-network': {
-    metaTitle: 'Chip Power Delivery Network - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Chip Power Delivery Network - Interactive Simulator | Coach Atlas',
     metaDescription: 'Design a chip power delivery network from VRM to transistor. Manage voltage droop, decoupling capacitors, and IR drop across the PDN impedance profile.',
     concepts: ['power delivery network', 'voltage droop', 'decoupling capacitors', 'IR drop', 'PDN impedance'],
     difficulty: 'advanced',
@@ -3091,7 +3091,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'power-factor': {
-    metaTitle: 'Power Factor Correction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Power Factor Correction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize AC power factor with phasor diagrams. Adjust reactive loads, add correction capacitors, and see how power factor affects real power delivery efficiency.',
     concepts: ['power factor', 'reactive power', 'apparent power', 'phasor diagram', 'capacitor correction'],
     difficulty: 'intermediate',
@@ -3103,7 +3103,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'power-loss': {
-    metaTitle: 'Power Loss in Transmission - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Power Loss in Transmission - Interactive Simulator | Coach Atlas',
     metaDescription: 'Calculate power loss in electrical transmission lines. Vary voltage, current, distance, and conductor size to understand why high-voltage transmission is essential.',
     concepts: ['transmission loss', 'I-squared-R loss', 'high voltage transmission', 'conductor resistance', 'grid efficiency'],
     difficulty: 'beginner',
@@ -3115,7 +3115,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'precession-nutation': {
-    metaTitle: 'Precession and Nutation - Interactive Gyroscope Simulator | Atlas Coach',
+    metaTitle: 'Precession and Nutation - Interactive Gyroscope Simulator | Coach Atlas',
     metaDescription: 'Spin a virtual gyroscope and observe precession and nutation. Adjust spin rate, torque, and moment of inertia to explore rotational dynamics in three dimensions.',
     concepts: ['precession', 'nutation', 'gyroscope', 'angular momentum', 'torque'],
     difficulty: 'advanced',
@@ -3127,7 +3127,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'pressure-drop': {
-    metaTitle: 'Pressure Drop in Pipes - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Pressure Drop in Pipes - Interactive Simulator | Coach Atlas',
     metaDescription: 'Calculate pressure drop through pipe systems. Adjust flow rate, pipe diameter, length, and roughness to apply the Darcy-Weisbach equation interactively.',
     concepts: ['pressure drop', 'Darcy-Weisbach equation', 'friction factor', 'pipe flow', 'Moody chart'],
     difficulty: 'intermediate',
@@ -3139,7 +3139,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'process-variation': {
-    metaTitle: 'Process Variation - Interactive Semiconductor Simulator | Atlas Coach',
+    metaTitle: 'Process Variation - Interactive Semiconductor Simulator | Coach Atlas',
     metaDescription: 'Explore semiconductor manufacturing process variation. Simulate threshold voltage shifts, gate length variation, and their impact on chip speed and power distribution.',
     concepts: ['process variation', 'threshold voltage', 'gate length', 'yield', 'statistical design'],
     difficulty: 'advanced',
@@ -3151,7 +3151,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'projectile-independence': {
-    metaTitle: 'Projectile Motion Independence - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Projectile Motion Independence - Interactive Simulator | Coach Atlas',
     metaDescription: 'Prove that horizontal and vertical motions are independent. Drop and launch projectiles simultaneously and watch them hit the ground at the same time.',
     concepts: ['projectile motion', 'independence of motion', 'free fall', 'horizontal velocity', 'superposition'],
     difficulty: 'beginner',
@@ -3163,7 +3163,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'prompt-injection-safety': {
-    metaTitle: 'Prompt Injection Safety - Interactive AI Security Simulator | Atlas Coach',
+    metaTitle: 'Prompt Injection Safety - Interactive AI Security Simulator | Coach Atlas',
     metaDescription: 'Learn to defend against prompt injection attacks on AI systems. Test malicious inputs, build guardrails, and understand how to keep language models secure.',
     concepts: ['prompt injection', 'AI safety', 'input sanitization', 'guardrails', 'adversarial inputs'],
     difficulty: 'intermediate',
@@ -3175,7 +3175,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'quantization-precision': {
-    metaTitle: 'Model Quantization Precision - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Model Quantization Precision - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore AI model quantization tradeoffs interactively. Compare FP32, FP16, INT8, and INT4 precision to see how reducing bit width affects accuracy and speed.',
     concepts: ['quantization', 'model compression', 'floating point precision', 'inference speed', 'accuracy tradeoff'],
     difficulty: 'intermediate',
@@ -3195,7 +3195,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'r-c-delay': {
-    metaTitle: 'RC Delay in Interconnects - Interactive Simulator | Atlas Coach',
+    metaTitle: 'RC Delay in Interconnects - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate RC time delay in semiconductor interconnects. Adjust wire dimensions, materials, and spacing to minimize signal propagation delay in integrated circuits.',
     concepts: ['RC delay', 'interconnect resistance', 'parasitic capacitance', 'signal propagation', 'wire scaling'],
     difficulty: 'advanced',
@@ -3207,7 +3207,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'r-c-delay-interconnect': {
-    metaTitle: 'Interconnect RC Delay Optimization - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Interconnect RC Delay Optimization - Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize interconnect RC delay by tuning wire width, spacing, and dielectric properties. Compare metal layers and routing strategies for faster chip performance.',
     concepts: ['interconnect optimization', 'wire resistance', 'coupling capacitance', 'metal layers', 'signal integrity'],
     difficulty: 'advanced',
@@ -3223,7 +3223,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'r-c-time-constant': {
-    metaTitle: 'RC Time Constant - Interactive Simulator | Atlas Coach',
+    metaTitle: 'RC Time Constant - Interactive Simulator | Coach Atlas',
     metaDescription: 'Charge and discharge an RC circuit in real time. Measure the time constant tau, plot exponential curves, and understand how capacitors store and release energy.',
     concepts: ['RC circuit', 'time constant', 'capacitor charging', 'exponential decay', 'tau'],
     difficulty: 'beginner',
@@ -3239,7 +3239,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'radiation-effects': {
-    metaTitle: 'Radiation Effects on Electronics - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Radiation Effects on Electronics - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how radiation damages semiconductor devices. Simulate single-event upsets, total ionizing dose, and displacement damage in space-grade electronics.',
     concepts: ['radiation hardening', 'single-event upset', 'total ionizing dose', 'displacement damage', 'latchup'],
     difficulty: 'advanced',
@@ -3255,7 +3255,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'rattleback': {
-    metaTitle: 'Rattleback Reversal Spin - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Rattleback Reversal Spin - Interactive Simulator | Coach Atlas',
     metaDescription: 'Spin a virtual rattleback and watch it reverse direction. Explore asymmetric mass distribution, chirality, and the physics behind this counter-intuitive toy.',
     concepts: ['rattleback', 'asymmetric inertia', 'chirality', 'rotational dynamics', 'instability'],
     difficulty: 'intermediate',
@@ -3271,7 +3271,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'rayleigh-mie-scattering': {
-    metaTitle: 'Rayleigh and Mie Scattering - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Rayleigh and Mie Scattering - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate light scattering by particles of different sizes. Compare Rayleigh and Mie regimes to understand why the sky is blue and sunsets are red.',
     concepts: ['Rayleigh scattering', 'Mie scattering', 'particle size parameter', 'wavelength dependence', 'atmospheric optics'],
     difficulty: 'intermediate',
@@ -3283,7 +3283,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'reflection': {
-    metaTitle: 'Light Reflection - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Light Reflection - Interactive Simulator | Coach Atlas',
     metaDescription: 'Bounce light rays off mirrors and surfaces. Verify the law of reflection, build corner reflectors, and explore specular versus diffuse reflection interactively.',
     concepts: ['law of reflection', 'specular reflection', 'diffuse reflection', 'mirror', 'angle of incidence'],
     difficulty: 'beginner',
@@ -3295,7 +3295,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'refraction': {
-    metaTitle: 'Light Refraction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Light Refraction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Bend light rays at material interfaces and explore how refractive index changes light speed and direction. Visualize refraction through prisms, lenses, and water.',
     concepts: ['refraction', 'refractive index', 'Snell\'s law', 'dispersion', 'optical density'],
     difficulty: 'beginner',
@@ -3307,7 +3307,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'retroreflection': {
-    metaTitle: 'Retroreflection - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Retroreflection - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore retroreflective surfaces that bounce light back to its source. Simulate corner cubes, glass beads, and understand road signs, bike reflectors, and lunar ranging.',
     concepts: ['retroreflection', 'corner cube reflector', 'glass bead retroreflector', 'road safety', 'lunar laser ranging'],
     difficulty: 'intermediate',
@@ -3323,7 +3323,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'reverberation': {
-    metaTitle: 'Sound Reverberation - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Sound Reverberation - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate sound reverberation in rooms of different sizes and materials. Adjust absorption coefficients, calculate RT60, and design ideal acoustic spaces.',
     concepts: ['reverberation time', 'RT60', 'acoustic absorption', 'Sabine equation', 'room acoustics'],
     difficulty: 'intermediate',
@@ -3339,7 +3339,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'rolling-race': {
-    metaTitle: 'Rolling Race Down an Incline - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Rolling Race Down an Incline - Interactive Simulator | Coach Atlas',
     metaDescription: 'Race different shaped objects down a ramp. Discover why solid spheres beat hollow cylinders and learn how moment of inertia determines rolling acceleration.',
     concepts: ['moment of inertia', 'rolling motion', 'rotational kinetic energy', 'inclined plane', 'angular acceleration'],
     difficulty: 'beginner',
@@ -3355,7 +3355,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'rolling-shutter': {
-    metaTitle: 'Rolling Shutter Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Rolling Shutter Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize how rolling shutter distorts fast-moving objects. Compare global vs rolling shutter capture, adjust scan speed, and understand wobble and skew artifacts.',
     concepts: ['rolling shutter', 'CMOS sensor', 'temporal aliasing', 'image distortion', 'scan rate'],
     difficulty: 'beginner',
@@ -3371,7 +3371,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'rolling-vs-sliding': {
-    metaTitle: 'Rolling vs Sliding Friction - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Rolling vs Sliding Friction - Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare rolling and sliding friction on different surfaces. Measure friction coefficients, energy losses, and understand why wheels revolutionized transportation.',
     concepts: ['rolling friction', 'sliding friction', 'friction coefficient', 'energy dissipation', 'deformation'],
     difficulty: 'intermediate',
@@ -3387,7 +3387,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   's-r-a-m-cell': {
-    metaTitle: 'SRAM Memory Cell Design - Interactive Simulator | Atlas Coach',
+    metaTitle: 'SRAM Memory Cell Design - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the 6-transistor SRAM cell used in CPU caches. Toggle read and write operations, adjust transistor ratios, and understand static memory stability.',
     concepts: ['SRAM', '6T cell', 'cross-coupled inverters', 'read stability', 'write margin'],
     difficulty: 'advanced',
@@ -3399,7 +3399,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   's-r-a-m-yield-redundancy': {
-    metaTitle: 'SRAM Yield and Redundancy - Interactive Simulator | Atlas Coach',
+    metaTitle: 'SRAM Yield and Redundancy - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate SRAM array yield improvement through redundant rows and columns. Explore defect density, repair algorithms, and how redundancy boosts chip manufacturing yield.',
     concepts: ['SRAM yield', 'redundancy', 'defect density', 'repair algorithm', 'manufacturing yield'],
     difficulty: 'advanced',
@@ -3415,7 +3415,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'satellite-doppler': {
-    metaTitle: 'Satellite Doppler Shift - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Satellite Doppler Shift - Interactive Simulator | Coach Atlas',
     metaDescription: 'Track a satellite and observe Doppler frequency shift as it passes overhead. Calculate velocity from frequency data and understand GPS and satellite communication.',
     concepts: ['Doppler shift', 'satellite tracking', 'frequency offset', 'relative velocity', 'LEO communication'],
     difficulty: 'intermediate',
@@ -3427,7 +3427,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'satellite-solar-angle': {
-    metaTitle: 'Satellite Solar Panel Angle - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Satellite Solar Panel Angle - Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize satellite solar panel orientation for maximum power generation. Adjust orbital parameters, panel tilt, and sun angle to maximize energy harvest in orbit.',
     concepts: ['solar panel angle', 'sun incidence angle', 'orbital geometry', 'power generation', 'cosine loss'],
     difficulty: 'intermediate',
@@ -3439,7 +3439,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'satellite-thermal': {
-    metaTitle: 'Satellite Thermal Control - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Satellite Thermal Control - Interactive Simulator | Coach Atlas',
     metaDescription: 'Balance heating and cooling on a virtual satellite. Manage solar flux, albedo, and IR radiation to keep components within operating temperature limits in orbit.',
     concepts: ['thermal control', 'radiative equilibrium', 'solar absorptance', 'thermal emissivity', 'MLI blankets'],
     difficulty: 'intermediate',
@@ -3455,7 +3455,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'screen-printing-metallization': {
-    metaTitle: 'Screen Printing Metallization - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Screen Printing Metallization - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate the screen printing process for solar cell metallization. Adjust paste composition, screen mesh, and print speed to optimize contact finger quality.',
     concepts: ['screen printing', 'metallization', 'contact resistance', 'finger width', 'silver paste'],
     difficulty: 'intermediate',
@@ -3471,7 +3471,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'server-airflow': {
-    metaTitle: 'Server Rack Airflow Management - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Server Rack Airflow Management - Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize server rack cooling by managing hot and cold aisles. Adjust fan speeds, blanking panels, and containment to prevent hot air recirculation and overheating.',
     concepts: ['hot aisle', 'cold aisle', 'airflow management', 'thermal management', 'data center cooling'],
     difficulty: 'intermediate',
@@ -3487,7 +3487,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'shear-thinning': {
-    metaTitle: 'Shear Thinning Viscosity - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Shear Thinning Viscosity - Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore shear-thinning fluids that become less viscous under stress. Adjust shear rate and see viscosity drop in ketchup, paint, blood, and polymer solutions.',
     concepts: ['shear thinning', 'non-Newtonian fluid', 'viscosity', 'power-law fluid', 'pseudoplastic'],
     difficulty: 'intermediate',
@@ -3499,7 +3499,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'shower-curtain': {
-    metaTitle: 'Shower Curtain Bernoulli Effect - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Shower Curtain Bernoulli Effect - Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover why shower curtains blow inward when the water is running. Explore the Bernoulli effect, vortex theory, and buoyancy-driven convection explanations.',
     concepts: ['Bernoulli effect', 'pressure differential', 'convection', 'vortex', 'fluid dynamics'],
     difficulty: 'beginner',
@@ -3515,7 +3515,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'shunt-series-defects': {
-    metaTitle: 'Shunt and Series Resistance Defects - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Shunt and Series Resistance Defects - Interactive Simulator | Coach Atlas',
     metaDescription: 'Diagnose solar cell defects by analyzing shunt and series resistance effects on IV curves. Adjust resistance values and see how each degrades cell performance.',
     concepts: ['shunt resistance', 'series resistance', 'IV curve degradation', 'fill factor loss', 'solar cell defects'],
     difficulty: 'intermediate',
@@ -3527,7 +3527,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'silicon-texturing': {
-    metaTitle: 'Silicon Surface Texturing - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Silicon Surface Texturing - Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate silicon wafer texturing to reduce reflection losses. Compare random pyramids, inverted pyramids, and black silicon for optimal light trapping in solar cells.',
     concepts: ['surface texturing', 'anti-reflection', 'random pyramids', 'light trapping', 'KOH etching'],
     difficulty: 'intermediate',
@@ -3543,7 +3543,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'siphon': {
-    metaTitle: 'Siphon Fluid Transfer - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Siphon Fluid Transfer - Interactive Simulator | Coach Atlas',
     metaDescription: 'Start a virtual siphon and watch fluid flow uphill before draining to a lower level. Explore atmospheric pressure, gravity, and the maximum siphon height limit.',
     concepts: ['siphon', 'atmospheric pressure', 'gravity-driven flow', 'fluid column', 'cavitation limit'],
     difficulty: 'beginner',
@@ -3559,7 +3559,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
   'sleeping-top': {
-    metaTitle: 'Sleeping Top Gyroscopic Motion - Interactive Simulator | Atlas Coach',
+    metaTitle: 'Sleeping Top Gyroscopic Motion - Interactive Simulator | Coach Atlas',
     metaDescription: 'Spin a top and watch it stand upright through gyroscopic effects. Explore precession, nutation, and the stability transition that makes a spinning top sleep.',
     concepts: ['gyroscopic precession', 'nutation', 'angular momentum', 'spin stability', 'sleeping top'],
     difficulty: 'intermediate',
@@ -3575,7 +3575,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'soap-boat': {
-    metaTitle: 'Soap Boat — Interactive Surface Tension Simulator | Atlas Coach',
+    metaTitle: 'Soap Boat — Interactive Surface Tension Simulator | Coach Atlas',
     metaDescription: 'Build a soap-powered boat and explore surface tension and the Marangoni effect. Adjust surfactant type and concentration to see how reducing surface tension propels objects across water.',
     concepts: ['surface tension', 'Marangoni effect', 'surfactants', 'cohesive forces'],
     difficulty: 'beginner',
@@ -3587,7 +3587,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'solar-temp-coefficient': {
-    metaTitle: 'Solar Panel Temperature Coefficient — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar Panel Temperature Coefficient — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how temperature affects solar cell voltage, current, and power output. Adjust panel temperature and see the temperature coefficient reduce efficiency in real time.',
     concepts: ['temperature coefficient', 'solar cell efficiency', 'open circuit voltage', 'thermal losses'],
     difficulty: 'intermediate',
@@ -3599,7 +3599,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'solar-thermal-derating': {
-    metaTitle: 'Solar Thermal Derating — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar Thermal Derating — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate how hot weather derates solar panel output. Visualize the gap between nameplate and real-world power as cell temperature rises above standard test conditions.',
     concepts: ['thermal derating', 'NOCT', 'cell temperature', 'real-world solar performance'],
     difficulty: 'intermediate',
@@ -3611,7 +3611,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'solar-vs-i-c-purity': {
-    metaTitle: 'Solar vs IC Silicon Purity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar vs IC Silicon Purity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Compare silicon purity requirements for solar cells and integrated circuits. Explore why ICs need 11 nines purity while solar panels work at 6 nines, and the cost implications.',
     concepts: ['silicon purity', 'semiconductor grade', 'solar grade', 'carrier lifetime', 'defect density'],
     difficulty: 'intermediate',
@@ -3623,7 +3623,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'solar-yield-prediction': {
-    metaTitle: 'Solar Yield Prediction — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Solar Yield Prediction — Interactive Simulator | Coach Atlas',
     metaDescription: 'Estimate annual solar energy yield by combining irradiance data, temperature effects, and system losses. Learn how P50 and P90 confidence intervals guide project finance.',
     concepts: ['solar yield', 'irradiance', 'performance ratio', 'P50/P90', 'system losses'],
     difficulty: 'intermediate',
@@ -3635,7 +3635,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'sound-interference': {
-    metaTitle: 'Sound Interference — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Sound Interference — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize constructive and destructive sound interference patterns. Position two speakers, adjust frequency, and map the regions of loud and quiet in real time.',
     concepts: ['constructive interference', 'destructive interference', 'path difference', 'superposition'],
     difficulty: 'intermediate',
@@ -3647,7 +3647,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'space-radiation': {
-    metaTitle: 'Space Radiation & Bit Flips — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Space Radiation & Bit Flips — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how cosmic rays and solar particles cause single-event upsets in space electronics. Shield circuits and add redundancy to protect spacecraft computers from bit flips.',
     concepts: ['single-event upset', 'cosmic rays', 'radiation hardening', 'triple modular redundancy'],
     difficulty: 'advanced',
@@ -3659,7 +3659,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'sparsity': {
-    metaTitle: 'Neural Network Sparsity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Neural Network Sparsity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover how zeros in neural network weights enable faster, more efficient AI. Prune model weights, measure accuracy, and see how sparsity accelerates computation.',
     concepts: ['model sparsity', 'weight pruning', 'sparse matrix', 'AI efficiency', 'inference acceleration'],
     difficulty: 'intermediate',
@@ -3671,7 +3671,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'speaker-principle': {
-    metaTitle: 'Speaker Electromagnetic Principle — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Speaker Electromagnetic Principle — Interactive Simulator | Coach Atlas',
     metaDescription: 'See how speakers convert electricity into sound using the Lorentz force. Adjust current, magnetic field, and frequency to control cone movement and sound output.',
     concepts: ['Lorentz force', 'voice coil', 'electromagnetic transducer', 'audio signal conversion'],
     difficulty: 'intermediate',
@@ -3683,7 +3683,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'spec-first-prompting': {
-    metaTitle: 'Specification-First Prompting — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Specification-First Prompting — Interactive Simulator | Coach Atlas',
     metaDescription: 'Learn the spec-first prompting technique for AI. Write structured specifications before generating code, reducing ambiguity and improving LLM output quality.',
     concepts: ['spec-first prompting', 'prompt engineering', 'structured specification', 'LLM output quality'],
     difficulty: 'intermediate',
@@ -3695,7 +3695,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'spectral-mismatch': {
-    metaTitle: 'Spectral Mismatch — Interactive Solar Simulator | Atlas Coach',
+    metaTitle: 'Spectral Mismatch — Interactive Solar Simulator | Coach Atlas',
     metaDescription: 'Explore why sunlight spectrum matters for solar cell output. Compare how different atmospheric conditions and light sources shift spectrum and change panel performance.',
     concepts: ['spectral mismatch', 'AM1.5 spectrum', 'spectral response', 'air mass', 'solar cell current'],
     difficulty: 'advanced',
@@ -3707,7 +3707,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'speed-of-sound': {
-    metaTitle: 'Speed of Sound — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Speed of Sound — Interactive Simulator | Coach Atlas',
     metaDescription: 'Measure the speed of sound through different materials. Explore how temperature, density, and stiffness determine whether sound travels at 340 m/s or 6000 m/s.',
     concepts: ['speed of sound', 'bulk modulus', 'acoustic velocity', 'material properties', 'temperature dependence'],
     difficulty: 'beginner',
@@ -3719,7 +3719,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'stable-levitation': {
-    metaTitle: 'Stable Magnetic Levitation — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Stable Magnetic Levitation — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore why stable levitation is so difficult and how feedback control, diamagnets, and superconductors overcome Earnshaw\'s theorem to float objects in midair.',
     concepts: ['magnetic levitation', 'Earnshaw\'s theorem', 'feedback control', 'diamagnetism', 'stability'],
     difficulty: 'intermediate',
@@ -3731,7 +3731,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'static-electricity': {
-    metaTitle: 'Static Electricity — Interactive Tribocharging Simulator | Atlas Coach',
+    metaTitle: 'Static Electricity — Interactive Tribocharging Simulator | Coach Atlas',
     metaDescription: 'Rub virtual materials together and watch charge transfer through the triboelectric effect. Build up static charge, observe sparks, and learn the triboelectric series.',
     concepts: ['triboelectric effect', 'static charge', 'electron transfer', 'triboelectric series', 'electrostatic discharge'],
     difficulty: 'beginner',
@@ -3743,7 +3743,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'stick-slip': {
-    metaTitle: 'Stick-Slip Friction — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Stick-Slip Friction — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate stick-slip oscillation where objects alternately stick then slide. Explore how static friction builds elastic energy that releases as sudden motion, like earthquakes.',
     concepts: ['stick-slip friction', 'static vs kinetic friction', 'elastic energy', 'seismic cycles', 'oscillation'],
     difficulty: 'intermediate',
@@ -3755,7 +3755,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'straw-instrument': {
-    metaTitle: 'Straw Musical Instrument — Interactive Acoustics Simulator | Atlas Coach',
+    metaTitle: 'Straw Musical Instrument — Interactive Acoustics Simulator | Coach Atlas',
     metaDescription: 'Build a straw instrument and explore how tube length determines pitch. Cut straws to different lengths, play notes, and discover the physics of resonant air columns.',
     concepts: ['resonant frequency', 'air column', 'open tube harmonics', 'acoustic resonance', 'pitch'],
     difficulty: 'beginner',
@@ -3767,7 +3767,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'string-sizing': {
-    metaTitle: 'PV String Sizing — Interactive Solar Design Simulator | Atlas Coach',
+    metaTitle: 'PV String Sizing — Interactive Solar Design Simulator | Coach Atlas',
     metaDescription: 'Design solar panel strings by selecting the right number of modules in series. Match string voltage to inverter input range while accounting for temperature extremes.',
     concepts: ['string sizing', 'inverter voltage window', 'Voc temperature correction', 'series wiring', 'system design'],
     difficulty: 'advanced',
@@ -3779,7 +3779,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'supercooling': {
-    metaTitle: 'Supercooling — Interactive Crystallization Simulator | Atlas Coach',
+    metaTitle: 'Supercooling — Interactive Crystallization Simulator | Coach Atlas',
     metaDescription: 'Cool water below freezing without it turning to ice, then trigger instant crystallization. Explore nucleation, metastable states, and the physics of supercooled liquids.',
     concepts: ['supercooling', 'nucleation', 'metastable state', 'crystallization', 'phase transition'],
     difficulty: 'intermediate',
@@ -3791,7 +3791,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'superhydrophobic': {
-    metaTitle: 'Superhydrophobic Surfaces — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Superhydrophobic Surfaces — Interactive Simulator | Coach Atlas',
     metaDescription: 'Design water-repellent surfaces by tuning nanostructure and chemistry. Explore contact angles, the lotus effect, and how superhydrophobic coatings enable self-cleaning.',
     concepts: ['superhydrophobic', 'contact angle', 'lotus effect', 'Cassie-Baxter state', 'surface energy'],
     difficulty: 'intermediate',
@@ -3803,7 +3803,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'swing-pumping': {
-    metaTitle: 'Swing Pumping — Interactive Parametric Oscillation Simulator | Atlas Coach',
+    metaTitle: 'Swing Pumping — Interactive Parametric Oscillation Simulator | Coach Atlas',
     metaDescription: 'Learn the physics of pumping a swing higher without being pushed. Time your body movements to inject energy through parametric excitation at twice the natural frequency.',
     concepts: ['parametric excitation', 'resonance', 'energy injection', 'center of mass', 'natural frequency'],
     difficulty: 'beginner',
@@ -3815,7 +3815,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'systolic-array': {
-    metaTitle: 'Systolic Array Architecture — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Systolic Array Architecture — Interactive Simulator | Coach Atlas',
     metaDescription: 'Watch data flow through a systolic array as it computes matrix multiplications. Understand how TPUs use this architecture to accelerate AI workloads with maximum data reuse.',
     concepts: ['systolic array', 'matrix multiplication', 'data reuse', 'TPU architecture', 'parallel computing'],
     difficulty: 'advanced',
@@ -3827,7 +3827,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tape-birefringence': {
-    metaTitle: 'Tape Birefringence — Interactive Optics Simulator | Atlas Coach',
+    metaTitle: 'Tape Birefringence — Interactive Optics Simulator | Coach Atlas',
     metaDescription: 'Place adhesive tape between polarizers and discover birefringence. Stack layers, rotate angles, and see vivid colors emerge as polarization splits into fast and slow axes.',
     concepts: ['birefringence', 'polarization', 'retardation', 'crossed polarizers', 'interference colors'],
     difficulty: 'intermediate',
@@ -3839,7 +3839,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tensor-core': {
-    metaTitle: 'Tensor Core GPU Architecture — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tensor Core GPU Architecture — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how NVIDIA tensor cores perform fused matrix multiply-accumulate operations. Compare FP32, FP16, and BF16 precision to see the throughput and accuracy tradeoffs in AI training.',
     concepts: ['tensor core', 'matrix multiply-accumulate', 'mixed precision', 'BF16', 'AI training hardware'],
     difficulty: 'advanced',
@@ -3851,7 +3851,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'test-first-prompting': {
-    metaTitle: 'Test-First Prompting — Interactive AI Technique Simulator | Atlas Coach',
+    metaTitle: 'Test-First Prompting — Interactive AI Technique Simulator | Coach Atlas',
     metaDescription: 'Learn test-first prompting for AI code generation. Write tests before asking the LLM to implement code, dramatically improving correctness and reducing iteration cycles.',
     concepts: ['test-first prompting', 'TDD for AI', 'prompt engineering', 'LLM code generation', 'verification'],
     difficulty: 'intermediate',
@@ -3863,7 +3863,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'texturing-vs-lithography': {
-    metaTitle: 'Texturing vs Lithography — Interactive Solar Simulator | Atlas Coach',
+    metaTitle: 'Texturing vs Lithography — Interactive Solar Simulator | Coach Atlas',
     metaDescription: 'Compare surface texturing for solar cells with lithography for chips. Explore how the same silicon surface is deliberately roughened or precisely patterned for opposite goals.',
     concepts: ['surface texturing', 'photolithography', 'light trapping', 'feature resolution', 'silicon processing'],
     difficulty: 'intermediate',
@@ -3879,7 +3879,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   // ================================================================
 
 'thermal-contact': {
-    metaTitle: 'Thermal Contact Resistance — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Contact Resistance — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore thermal contact resistance at material interfaces. Adjust surface roughness, pressure, and interstitial materials to see how heat flow is impeded across junctions.',
     concepts: ['thermal contact resistance', 'heat transfer', 'surface roughness', 'thermal conductivity'],
     difficulty: 'intermediate',
@@ -3891,7 +3891,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'thermal-interface': {
-    metaTitle: 'Thermal Interface Materials — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Interface Materials — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate thermal interface materials for semiconductor cooling. Compare thermal pads, greases, and phase-change compounds to optimize heat dissipation from chip to heatsink.',
     concepts: ['thermal interface material', 'semiconductor cooling', 'thermal conductivity', 'heat dissipation'],
     difficulty: 'intermediate',
@@ -3903,7 +3903,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'thermal-throttling': {
-    metaTitle: 'Thermal Throttling — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thermal Throttling — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize CPU and GPU thermal throttling in real time. Adjust workloads, cooling capacity, and TDP limits to understand how processors reduce clock speed to prevent overheating.',
     concepts: ['thermal throttling', 'CPU temperature', 'clock speed', 'TDP'],
     difficulty: 'intermediate',
@@ -3915,7 +3915,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'thin-film-interference': {
-    metaTitle: 'Thin Film Interference — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Thin Film Interference — Interactive Simulator | Coach Atlas',
     metaDescription: 'Discover thin film interference colors interactively. Adjust film thickness, refractive index, and viewing angle to see how light waves constructively and destructively interfere.',
     concepts: ['thin film interference', 'optical path difference', 'refractive index', 'constructive interference'],
     difficulty: 'intermediate',
@@ -3927,7 +3927,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tidal-forces': {
-    metaTitle: 'Tidal Forces — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tidal Forces — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate tidal forces from gravity gradients. Visualize how differential gravitational pull stretches and compresses bodies, creating ocean tides and shaping moons and planets.',
     concepts: ['tidal force', 'gravity gradient', 'Roche limit', 'ocean tides'],
     difficulty: 'intermediate',
@@ -3939,7 +3939,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tidal-locking': {
-    metaTitle: 'Tidal Locking — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tidal Locking — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore tidal locking and synchronous rotation. Simulate how gravitational torques slow a moon\'s spin until one face permanently faces its planet, as with Earth\'s Moon.',
     concepts: ['tidal locking', 'synchronous rotation', 'tidal bulge', 'gravitational torque'],
     difficulty: 'advanced',
@@ -3951,7 +3951,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tipping-point': {
-    metaTitle: 'Tipping Point — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tipping Point — Interactive Simulator | Coach Atlas',
     metaDescription: 'Investigate center of mass and tipping stability. Tilt objects, shift loads, and find the critical angle where the center of gravity passes the support base edge.',
     concepts: ['center of mass', 'tipping stability', 'base of support', 'torque equilibrium'],
     difficulty: 'beginner',
@@ -3963,7 +3963,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tool-aware-prompting': {
-    metaTitle: 'Tool-Aware Prompting — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tool-Aware Prompting — Interactive Simulator | Coach Atlas',
     metaDescription: 'Learn tool-aware prompting for large language models. Practice crafting prompts that guide LLMs to select and use external tools effectively for complex tasks.',
     concepts: ['tool-aware prompting', 'LLM tool use', 'function calling', 'prompt engineering'],
     difficulty: 'advanced',
@@ -3975,7 +3975,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'torque': {
-    metaTitle: 'Torque — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Torque — Interactive Simulator | Coach Atlas',
     metaDescription: 'Master torque with an interactive lever simulator. Apply forces at different distances and angles to see how rotational force depends on lever arm and force direction.',
     concepts: ['torque', 'lever arm', 'rotational force', 'moment of force'],
     difficulty: 'beginner',
@@ -3987,7 +3987,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'transmission-line': {
-    metaTitle: 'Transmission Line Reflections — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Transmission Line Reflections — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate transmission line reflections and impedance matching. Visualize signal propagation, reflections at mismatched loads, and standing wave patterns in real time.',
     concepts: ['transmission line', 'impedance matching', 'signal reflection', 'standing waves'],
     difficulty: 'advanced',
@@ -3999,7 +3999,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'tuned-mass-damper': {
-    metaTitle: 'Tuned Mass Damper — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Tuned Mass Damper — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build and tune a mass damper to suppress vibrations. Adjust mass, stiffness, and damping ratio to cancel resonant oscillations in buildings, bridges, and machinery.',
     concepts: ['tuned mass damper', 'vibration control', 'resonance suppression', 'dynamic absorber'],
     difficulty: 'advanced',
@@ -4011,7 +4011,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'two-ball-collision': {
-    metaTitle: 'Two-Ball Collision Stacking — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Two-Ball Collision Stacking — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore the two-ball drop stacking effect. Drop a small ball atop a large ball and watch the small ball launch dramatically higher through momentum transfer upon impact.',
     concepts: ['elastic collision', 'momentum transfer', 'energy conservation', 'superball stacking'],
     difficulty: 'beginner',
@@ -4023,7 +4023,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'u-p-s-battery-sizing': {
-    metaTitle: 'UPS Battery Sizing — Interactive Calculator | Atlas Coach',
+    metaTitle: 'UPS Battery Sizing — Interactive Calculator | Coach Atlas',
     metaDescription: 'Calculate UPS battery sizing for your power needs. Input load wattage, backup duration, and efficiency to determine the required battery capacity in amp-hours and watt-hours.',
     concepts: ['UPS battery sizing', 'backup power', 'amp-hour capacity', 'power load calculation'],
     difficulty: 'intermediate',
@@ -4035,7 +4035,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'u-p-s-efficiency': {
-    metaTitle: 'UPS Efficiency — Interactive Simulator | Atlas Coach',
+    metaTitle: 'UPS Efficiency — Interactive Simulator | Coach Atlas',
     metaDescription: 'Optimize UPS efficiency across load levels. Compare online, line-interactive, and offline topologies to minimize energy waste and heat generation in your power protection setup.',
     concepts: ['UPS efficiency', 'double conversion', 'line-interactive UPS', 'power protection'],
     difficulty: 'intermediate',
@@ -4047,7 +4047,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'verification-harness': {
-    metaTitle: 'Verification Harness — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Verification Harness — Interactive Simulator | Coach Atlas',
     metaDescription: 'Build a verification harness for LLM outputs. Design test cases, define correctness criteria, and automate output validation to ensure reliable AI-generated results.',
     concepts: ['verification harness', 'LLM output validation', 'test automation', 'correctness criteria'],
     difficulty: 'advanced',
@@ -4059,7 +4059,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'viscoelasticity': {
-    metaTitle: 'Viscoelasticity — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Viscoelasticity — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate viscoelastic material behavior under stress. Explore creep, stress relaxation, and hysteresis with adjustable Maxwell and Kelvin-Voigt model parameters.',
     concepts: ['viscoelasticity', 'creep', 'stress relaxation', 'Maxwell model'],
     difficulty: 'advanced',
@@ -4071,7 +4071,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'viscosity-temperature': {
-    metaTitle: 'Viscosity vs Temperature — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Viscosity vs Temperature — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore how viscosity changes with temperature for liquids and gases. Adjust temperature and compare fluids using Arrhenius and Sutherland models in this simulator.',
     concepts: ['viscosity', 'temperature dependence', 'Arrhenius equation', 'fluid dynamics'],
     difficulty: 'intermediate',
@@ -4083,7 +4083,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'vortex-rings': {
-    metaTitle: 'Vortex Rings — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Vortex Rings — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate vortex ring formation and propagation. Adjust impulse strength, orifice size, and fluid viscosity to create and study toroidal vortex structures in fluid flow.',
     concepts: ['vortex ring', 'toroidal vortex', 'fluid dynamics', 'vorticity'],
     difficulty: 'intermediate',
@@ -4095,7 +4095,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'wagon-wheel-aliasing': {
-    metaTitle: 'Wagon Wheel Aliasing — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wagon Wheel Aliasing — Interactive Simulator | Coach Atlas',
     metaDescription: 'Demonstrate the wagon wheel effect and temporal aliasing. Adjust wheel speed and frame rate to observe apparent backward rotation when sampling rate is too low.',
     concepts: ['temporal aliasing', 'wagon wheel effect', 'Nyquist frequency', 'stroboscopic effect'],
     difficulty: 'intermediate',
@@ -4107,7 +4107,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'water-hammer': {
-    metaTitle: 'Water Hammer — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Water Hammer — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate water hammer pressure surges in pipes. Close valves at different speeds and see how sudden flow stoppage creates dangerous pressure waves traveling through the system.',
     concepts: ['water hammer', 'pressure surge', 'pipe flow', 'valve closure'],
     difficulty: 'intermediate',
@@ -4119,7 +4119,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'wave-interference': {
-    metaTitle: 'Wave Interference — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wave Interference — Interactive Simulator | Coach Atlas',
     metaDescription: 'Visualize wave interference patterns from two or more sources. Adjust frequency, amplitude, and phase to create constructive and destructive interference in real time.',
     concepts: ['wave interference', 'constructive interference', 'destructive interference', 'superposition'],
     difficulty: 'beginner',
@@ -4131,7 +4131,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'wave-particle-duality': {
-    metaTitle: 'Wave-Particle Duality — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wave-Particle Duality — Interactive Simulator | Coach Atlas',
     metaDescription: 'Explore wave-particle duality through double-slit experiments. Toggle between photon and electron sources to see how quantum objects exhibit both wave and particle behavior.',
     concepts: ['wave-particle duality', 'double-slit experiment', 'quantum mechanics', 'de Broglie wavelength'],
     difficulty: 'advanced',
@@ -4143,7 +4143,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'wave-speed-tension': {
-    metaTitle: 'Wave Speed vs String Tension — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wave Speed vs String Tension — Interactive Simulator | Coach Atlas',
     metaDescription: 'Investigate how wave speed depends on string tension and linear density. Adjust tension and mass per length to verify the wave speed formula v = sqrt(T/mu) interactively.',
     concepts: ['wave speed', 'string tension', 'linear density', 'transverse waves'],
     difficulty: 'beginner',
@@ -4155,7 +4155,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'wireless-charging': {
-    metaTitle: 'Wireless Charging — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Wireless Charging — Interactive Simulator | Coach Atlas',
     metaDescription: 'Simulate wireless charging via electromagnetic induction. Adjust coil alignment, distance, and frequency to optimize power transfer efficiency between transmitter and receiver.',
     concepts: ['wireless charging', 'electromagnetic induction', 'resonant coupling', 'power transfer efficiency'],
     difficulty: 'intermediate',
@@ -4167,7 +4167,7 @@ export function getGameSEO(slug: string): GameSEOResult {
   },
 
   'work-power': {
-    metaTitle: 'Work and Power — Interactive Simulator | Atlas Coach',
+    metaTitle: 'Work and Power — Interactive Simulator | Coach Atlas',
     metaDescription: 'Master work and power concepts interactively. Apply forces over distances, measure energy transferred, and compare power output across different rates of doing work.',
     concepts: ['work', 'power', 'energy transfer', 'force times distance'],
     difficulty: 'beginner',

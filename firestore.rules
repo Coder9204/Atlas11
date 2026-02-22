@@ -51,6 +51,12 @@ service cloud.firestore {
       allow write: if false; // Only admin via backend
     }
 
+    // Email verifications — users can read their own status, writes are server-only (Admin SDK)
+    match /email_verifications/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Only Cloud Functions via Admin SDK
+    }
+
     // Analytics (write-only, no read from client)
     match /analytics/{document=**} {
       allow read: if false;

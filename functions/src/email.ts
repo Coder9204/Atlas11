@@ -11,7 +11,7 @@ function getResend(): Resend {
   return new Resend(apiKey);
 }
 
-const FROM_ADDRESS = 'Atlas Coach <hello@atlascoach.com>';
+const FROM_ADDRESS = 'Coach Atlas <hello@atlascoach.com>';
 
 /**
  * Send an email using a named template.

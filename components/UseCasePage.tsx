@@ -11,7 +11,7 @@ export default function UseCasePage() {
   useEffect(() => {
     if (!useCase) return;
     updateMeta({
-      title: `${useCase.title} | Atlas Coach`,
+      title: `${useCase.title} | Coach Atlas`,
       description: useCase.description,
       canonicalUrl: `/use-cases/${useCase.slug}`,
     });
@@ -118,7 +118,7 @@ export default function UseCasePage() {
         {/* Benefits */}
         <section style={{ marginBottom: '64px' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 700, textAlign: 'center', marginBottom: '32px' }}>
-            Why Atlas Coach?
+            Why Coach Atlas?
           </h2>
           <div style={{
             display: 'grid',

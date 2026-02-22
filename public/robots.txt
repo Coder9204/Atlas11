@@ -1,4 +1,4 @@
-# Atlas Coach - Robots.txt
+# Coach Atlas - Robots.txt
 # https://coachatlas.ai
 
 User-agent: *

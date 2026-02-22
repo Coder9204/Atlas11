@@ -289,7 +289,7 @@ export { createCheckoutSession, handleStripeWebhook, createCustomerPortal } from
 // EMAIL FUNCTIONS
 // =============================================================
 
-import { triggerEmail } from './email';
+import { triggerEmail, sendEmail } from './email';
 export { sendStreakReminders } from './email';
 
 /**
@@ -540,3 +540,246 @@ export const getConfiguredGamesList = functions.https.onCall(async (data, contex
     count: getConfiguredGames().length
   };
 });
+
+// =============================================================
+// EMAIL VERIFICATION
+// =============================================================
+
+/**
+ * Send a 6-digit verification code to the user's email via Resend.
+ * Stores the code in Firestore with a 10-minute TTL.
+ * Also includes a magic link the user can click to verify instantly.
+ */
+export const sendVerificationCode = functions.https.onCall(async (data, context) => {
+  const userId = verifyAuth(context);
+  checkRateLimit(userId);
+
+  const userDoc = await admin.firestore().collection('users').doc(userId).get();
+  const userData = userDoc.data();
+  const email = userData?.email || data.email;
+
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    throw new functions.https.HttpsError('invalid-argument', 'Valid email is required.');
+  }
+
+  // Generate 6-digit code
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Store verification record
+  await admin.firestore().collection('email_verifications').doc(userId).set({
+    code,
+    email,
+    expiresAt,
+    verified: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Build magic link
+  const verifyUrl = `https://atlascoach.com/verify?uid=${userId}&code=${code}`;
+
+  // Send via Resend
+  await sendEmail(email, 'email_verification', {
+    name: userData?.displayName || 'there',
+    code,
+    verifyUrl,
+  });
+
+  return { sent: true };
+});
+
+/**
+ * Verify a 6-digit email verification code.
+ * Marks the user's email as verified in Firestore.
+ */
+export const verifyEmailCode = functions.https.onCall(async (data, context) => {
+  // Allow both authenticated calls and magic-link calls (with uid param)
+  const userId = context.auth?.uid || data.uid;
+  if (!userId) {
+    throw new functions.https.HttpsError('unauthenticated', 'User ID required.');
+  }
+
+  const code = data.code;
+  if (!code || typeof code !== 'string' || code.length !== 6) {
+    throw new functions.https.HttpsError('invalid-argument', 'A 6-digit code is required.');
+  }
+
+  const verifyDoc = await admin.firestore().collection('email_verifications').doc(userId).get();
+  const verifyData = verifyDoc.data();
+
+  if (!verifyData) {
+    throw new functions.https.HttpsError('not-found', 'No verification pending. Request a new code.');
+  }
+
+  if (verifyData.verified) {
+    return { verified: true, alreadyVerified: true };
+  }
+
+  const expiresAt = verifyData.expiresAt?.toDate ? verifyData.expiresAt.toDate() : new Date(verifyData.expiresAt);
+  if (new Date() > expiresAt) {
+    throw new functions.https.HttpsError('deadline-exceeded', 'Code expired. Request a new code.');
+  }
+
+  if (verifyData.code !== code) {
+    throw new functions.https.HttpsError('permission-denied', 'Incorrect code. Please try again.');
+  }
+
+  // Mark as verified
+  await admin.firestore().collection('email_verifications').doc(userId).update({
+    verified: true,
+    verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Update user profile
+  await admin.firestore().collection('users').doc(userId).update({
+    emailVerified: true,
+    emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { verified: true };
+});
+
+// =============================================================
+// LIFECYCLE EMAIL TRIGGERS
+// =============================================================
+
+/**
+ * Scheduled: send trial-ending emails 2 days before trial expires.
+ * Runs daily at 10 AM UTC.
+ */
+export const sendTrialEndingEmails = functions.pubsub
+  .schedule('0 10 * * *')
+  .timeZone('UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+    const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    const threeDaysFromNow = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+    const snapshot = await db.collection('users')
+      .where('subscription.status', '==', 'trialing')
+      .where('subscription.currentPeriodEnd', '>=', twoDaysFromNow.getTime())
+      .where('subscription.currentPeriodEnd', '<', threeDaysFromNow.getTime())
+      .where('emailPreferences.productUpdates', '==', true)
+      .limit(500)
+      .get();
+
+    const promises: Promise<void>[] = [];
+    for (const userDoc of snapshot.docs) {
+      promises.push(
+        triggerEmail(userDoc.id, 'trial_ending').catch((err) =>
+          console.error(`Failed trial_ending email for ${userDoc.id}:`, err)
+        )
+      );
+    }
+
+    await Promise.all(promises);
+    console.log(`Sent ${promises.length} trial ending emails.`);
+  });
+
+/**
+ * Scheduled: send reactivation emails to users inactive for 14+ days.
+ * Runs weekly on Mondays at 10 AM UTC.
+ */
+export const sendReactivationEmails = functions.pubsub
+  .schedule('0 10 * * 1')
+  .timeZone('UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const snapshot = await db.collection('users')
+      .where('emailPreferences.marketing', '==', true)
+      .where('lastActiveDate', '>=', thirtyDaysAgo)
+      .where('lastActiveDate', '<', fourteenDaysAgo)
+      .limit(200)
+      .get();
+
+    const promises: Promise<void>[] = [];
+    for (const userDoc of snapshot.docs) {
+      const userData = userDoc.data();
+      if (userData.email) {
+        promises.push(
+          triggerEmail(userDoc.id, 'reactivation').catch((err) =>
+            console.error(`Failed reactivation email for ${userDoc.id}:`, err)
+          )
+        );
+      }
+    }
+
+    await Promise.all(promises);
+    console.log(`Sent ${promises.length} reactivation emails.`);
+  });
+
+/**
+ * Scheduled: send upgrade nudge emails to free users who have played 10+ games.
+ * Runs Wednesdays at 10 AM UTC.
+ */
+export const sendUpgradeNudgeEmails = functions.pubsub
+  .schedule('0 10 * * 3')
+  .timeZone('UTC')
+  .onRun(async () => {
+    const db = admin.firestore();
+
+    // Find free-tier users with emailPreferences.marketing enabled
+    const snapshot = await db.collection('users')
+      .where('subscription.tier', '==', 'free')
+      .where('emailPreferences.marketing', '==', true)
+      .limit(300)
+      .get();
+
+    const promises: Promise<void>[] = [];
+    for (const userDoc of snapshot.docs) {
+      const userData = userDoc.data();
+      if (!userData.email) continue;
+
+      // Check if they have game progress (10+ games played)
+      const progressSnap = await db.collection('users').doc(userDoc.id)
+        .collection('game_progress').limit(10).get();
+
+      if (progressSnap.size >= 10) {
+        promises.push(
+          sendEmail(userData.email, 'upgrade_nudge', {
+            name: userData.displayName || 'Learner',
+            gamesPlayed: String(progressSnap.size),
+          }).catch((err) => console.error(`Failed upgrade_nudge email for ${userDoc.id}:`, err))
+        );
+      }
+    }
+
+    await Promise.all(promises);
+    console.log(`Sent ${promises.length} upgrade nudge emails.`);
+  });
+
+/**
+ * Firestore trigger: send milestone email when user reaches game completion milestones.
+ * Fires when a game_progress doc is created/updated under a user.
+ */
+export const onGameProgressUpdate = functions.firestore
+  .document('users/{userId}/game_progress/{gameId}')
+  .onWrite(async (change, context) => {
+    const userId = context.params.userId;
+    const db = admin.firestore();
+
+    // Count total completed games
+    const progressSnap = await db.collection('users').doc(userId)
+      .collection('game_progress')
+      .where('passed', '==', true)
+      .get();
+
+    const completedCount = progressSnap.size;
+    const milestones = [10, 25, 50, 100, 200, 300];
+    const hitMilestone = milestones.find(m => m === completedCount);
+
+    if (!hitMilestone) return;
+
+    // Check user email preferences
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    if (!userData?.email || !userData?.emailPreferences?.productUpdates) return;
+
+    await sendEmail(userData.email, 'milestone', {
+      name: userData.displayName || 'Learner',
+      milestone: `${hitMilestone} games completed!`,
+    }).catch((err) => console.error(`Failed milestone email for ${userId}:`, err));
+  });

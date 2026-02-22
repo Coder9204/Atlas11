@@ -7,7 +7,7 @@
 
 export const SEO_CONFIG = {
   baseUrl: 'https://coachatlas.ai',
-  siteName: 'Atlas Coach',
+  siteName: 'Coach Atlas',
   defaultOgImage: '/og-image.png',
   defaultDescription: 'Master physics, engineering, and AI concepts through 342 interactive games and simulations with AI-powered coaching.',
 };

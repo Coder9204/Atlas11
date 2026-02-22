@@ -11,7 +11,7 @@ export default function GlossaryTerm() {
   useEffect(() => {
     if (!entry) return;
     updateMeta({
-      title: `${entry.term} — Definition & Interactive Simulations | Atlas Coach`,
+      title: `${entry.term} — Definition & Interactive Simulations | Coach Atlas`,
       description: entry.definition,
       canonicalUrl: `/glossary/${entry.slug}`,
       jsonLd: {
@@ -21,7 +21,7 @@ export default function GlossaryTerm() {
         description: entry.definition,
         inDefinedTermSet: {
           '@type': 'DefinedTermSet',
-          name: 'Atlas Coach Physics & Engineering Glossary',
+          name: 'Coach Atlas Physics & Engineering Glossary',
           url: 'https://atlascoach-5e3af.web.app/glossary',
         },
       },

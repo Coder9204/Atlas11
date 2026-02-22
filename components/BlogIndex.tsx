@@ -25,7 +25,7 @@ const legacyPosts: BlogPostEntry[] = [
   {
     slug: 'why-interactive-simulations-beat-textbooks',
     title: 'Why Interactive Simulations Beat Textbooks for Learning Physics',
-    description: 'Research shows active learning outperforms passive reading by 2x. Here is how Atlas Coach applies cognitive science to physics education.',
+    description: 'Research shows active learning outperforms passive reading by 2x. Here is how Coach Atlas applies cognitive science to physics education.',
     date: '2025-04-15',
     category: 'Study Tips',
     readTime: '6 min',
@@ -57,7 +57,7 @@ const legacyPosts: BlogPostEntry[] = [
   {
     slug: 'spaced-repetition-for-stem-learning',
     title: 'Spaced Repetition for STEM Learning: A Practical Guide',
-    description: 'How the SM-2 algorithm schedules reviews at the perfect time, and why Atlas Coach uses it to help you remember what you learn.',
+    description: 'How the SM-2 algorithm schedules reviews at the perfect time, and why Coach Atlas uses it to help you remember what you learn.',
     date: '2025-03-20',
     category: 'Study Tips',
     readTime: '5 min',
@@ -105,8 +105,8 @@ export default function BlogIndex() {
 
   useEffect(() => {
     updateMeta({
-      title: 'Blog - Physics, Engineering & AI Insights | Atlas Coach',
-      description: 'Articles, app comparisons, and guides on physics, engineering, AI, and effective STEM learning. Practical insights from the Atlas Coach team.',
+      title: 'Blog - Physics, Engineering & AI Insights | Coach Atlas',
+      description: 'Articles, app comparisons, and guides on physics, engineering, AI, and effective STEM learning. Practical insights from the Coach Atlas team.',
       canonicalUrl: '/blog',
     });
   }, []);
@@ -159,7 +159,7 @@ export default function BlogIndex() {
             fontWeight: 800,
             margin: '0 0 12px',
           }}>
-            Atlas Coach Blog
+            Coach Atlas Blog
           </h1>
           <p style={{
             color: '#94a3b8',

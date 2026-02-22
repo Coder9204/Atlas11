@@ -10,10 +10,12 @@ import {
   getPageViewAnalytics,
   getUserCohorts,
   getAllEvents,
+  getPaymentFunnelMetrics,
   dateRangeFromPreset,
   type FunnelMetrics,
   type GameAnalytics,
   type PhaseDropOff,
+  type PaymentFunnelMetrics,
   type DateRange,
   type DatePreset,
 } from '../services/AnalyticsService';
@@ -37,7 +39,7 @@ import {
 } from '../services/AdminAnalyticsService';
 
 // ============================================================================
-// ADMIN PANEL — Analytics dashboard for Atlas Coach
+// ADMIN PANEL — Analytics dashboard for Coach Atlas
 // Route: /admin | Password-gated (localStorage auth)
 // ============================================================================
 
@@ -232,6 +234,7 @@ export default function AdminPanel() {
   const [firestoreUsers, setFirestoreUsers] = useState<FirestoreUserStats | null>(null);
   const [firestoreTests, setFirestoreTests] = useState<FirestoreTestStats | null>(null);
   const [conversionData, setConversionData] = useState<ConversionMetrics | null>(null);
+  const [paymentFunnel, setPaymentFunnel] = useState<PaymentFunnelMetrics | null>(null);
 
   // Check existing auth
   useEffect(() => {
@@ -250,6 +253,7 @@ export default function AdminPanel() {
     setFunnel(getFunnelMetrics(range));
     setGameAnalytics(getPerGameAnalytics(range));
     setPhaseDropOff(getPhaseDropOffAnalysis(range));
+    setPaymentFunnel(getPaymentFunnelMetrics(range));
     setAllRecords(getAllGameProgress());
     setPaths(getAllPaths());
     setLastRefresh(Date.now());
@@ -429,7 +433,7 @@ export default function AdminPanel() {
             Sign In
           </button>
           <a href="/" style={{ display: 'block', marginTop: 16, fontSize: 13, color: theme.textMuted, textDecoration: 'none' }}>
-            Back to Atlas Coach
+            Back to Coach Atlas
           </a>
         </div>
       </div>
@@ -478,7 +482,7 @@ export default function AdminPanel() {
         zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/" style={{ color: theme.textMuted, textDecoration: 'none', fontSize: 14 }}>Atlas Coach</a>
+          <a href="/" style={{ color: theme.textMuted, textDecoration: 'none', fontSize: 14 }}>Coach Atlas</a>
           <span style={{ color: theme.border }}>/</span>
           <span style={{ fontSize: 16, fontWeight: 700, color: theme.textPrimary }}>Admin</span>
         </div>
@@ -968,6 +972,31 @@ export default function AdminPanel() {
                   <FunnelStep label="Trialing" count={conversionData.totalTrialing} />
                   <FunnelStep label="Paid" count={conversionData.totalActiveSubscribers} rate={conversionData.freeToPaidRate} />
                 </div>
+
+                {/* Payment Funnel (from local analytics) */}
+                {paymentFunnel && (
+                  <div style={{ marginTop: 32 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 12px', color: theme.textSecondary }}>Payment Funnel</h3>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                      gap: 16,
+                      marginBottom: 16,
+                    }}>
+                      <StatCard label="Pricing Views" value={paymentFunnel.pricingPageViews} />
+                      <StatCard label="Upgrade Clicks" value={paymentFunnel.upgradeClicked} />
+                      <StatCard label="Checkouts Started" value={paymentFunnel.checkoutStarted} />
+                      <StatCard label="Checkouts Completed" value={paymentFunnel.checkoutCompleted} />
+                      <StatCard label="Checkout Conversion" value={formatPercent(paymentFunnel.checkoutConversionRate)} />
+                      <StatCard label="Portal Opens" value={paymentFunnel.billingPortalOpened} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 600 }}>
+                      <FunnelStep label="Pricing Page Views" count={paymentFunnel.pricingPageViews} />
+                      <FunnelStep label="Checkout Started" count={paymentFunnel.checkoutStarted} prevCount={paymentFunnel.pricingPageViews} rate={paymentFunnel.pricingPageViews > 0 ? paymentFunnel.checkoutStarted / paymentFunnel.pricingPageViews : 0} />
+                      <FunnelStep label="Checkout Completed" count={paymentFunnel.checkoutCompleted} prevCount={paymentFunnel.checkoutStarted} rate={paymentFunnel.checkoutConversionRate} />
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: 60 }}>

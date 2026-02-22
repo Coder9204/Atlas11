@@ -104,7 +104,7 @@ export default function DifficultyPage() {
   useEffect(() => {
     if (!meta || !validLevel) return;
     updateMeta({
-      title: `${meta.title} Physics Simulations | Atlas Coach`,
+      title: `${meta.title} Physics Simulations | Coach Atlas`,
       description: `${meta.description} Browse ${totalGames}+ interactive simulations at the ${validLevel} level.`,
       canonicalUrl: `/difficulty/${validLevel}`,
     });

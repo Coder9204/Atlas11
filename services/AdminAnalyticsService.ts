@@ -40,12 +40,10 @@ export interface ConversionMetrics {
   freeToPaidRate: number;
 }
 
-// Tier pricing for MRR calculation
+// Tier pricing for MRR calculation (must match Stripe price tiers)
 const TIER_MONTHLY_PRICES: Record<string, number> = {
-  student: 9.99,
-  pro: 19.99,
-  family: 29.99,
-  lifetime: 0, // one-time, not recurring
+  plus: 9.50,
+  pro: 14.50,
 };
 
 // ============================================================

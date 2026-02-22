@@ -1,19 +1,36 @@
 {
-  "name": "Atlas Coach - Interactive Physics & Engineering Learning",
-  "short_name": "Atlas Coach",
+  "name": "Coach Atlas - Interactive Physics & Engineering Learning",
+  "short_name": "Coach Atlas",
   "description": "Master physics, engineering, and AI concepts through 342 interactive games and simulations with AI-powered coaching.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
-  "theme_color": "#3B82F6",
+  "theme_color": "#2D1B69",
   "orientation": "any",
   "categories": ["education", "games"],
   "icons": [
     {
-      "src": "/og-image.png",
-      "sizes": "1200x630",
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

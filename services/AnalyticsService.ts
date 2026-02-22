@@ -53,6 +53,15 @@ export interface PhaseDropOff {
   dropOffRate: number;
 }
 
+export interface PaymentFunnelMetrics {
+  pricingPageViews: number;
+  checkoutStarted: number;
+  checkoutCompleted: number;
+  billingPortalOpened: number;
+  upgradeClicked: number;
+  checkoutConversionRate: number;
+}
+
 export interface SearchAnalytics {
   query: string;
   resultsCount: number;
@@ -293,6 +302,38 @@ export function trackAICoachMessageSent(gameSlug: string, phase: string): void {
 
 export function trackAICoachHintRequested(gameSlug: string, phase: string): void {
   trackEvent('ai_coach_hint_requested', { gameSlug, phase });
+}
+
+export function trackCheckoutCompleted(tier: string): void {
+  trackEvent('checkout_completed', { tier });
+}
+
+export function trackBillingPortalOpened(): void {
+  trackEvent('billing_portal_opened');
+}
+
+/**
+ * Payment funnel metrics for admin Revenue tab.
+ */
+export function getPaymentFunnelMetrics(range?: DateRange): PaymentFunnelMetrics {
+  const events = filterByRange(loadEvents(), range);
+
+  const pricingPageViews = events.filter(
+    e => e.type === 'page_view' && (e.data?.route as string) === '/pricing'
+  ).length;
+  const checkoutStarted = events.filter(e => e.type === 'checkout_started').length;
+  const checkoutCompleted = events.filter(e => e.type === 'checkout_completed').length;
+  const billingPortalOpened = events.filter(e => e.type === 'billing_portal_opened').length;
+  const upgradeClicked = events.filter(e => e.type === 'upgrade_clicked').length;
+
+  return {
+    pricingPageViews,
+    checkoutStarted,
+    checkoutCompleted,
+    billingPortalOpened,
+    upgradeClicked,
+    checkoutConversionRate: checkoutStarted > 0 ? checkoutCompleted / checkoutStarted : 0,
+  };
 }
 
 // ============================================================

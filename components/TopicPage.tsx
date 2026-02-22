@@ -11,7 +11,7 @@ export default function TopicPage() {
   useEffect(() => {
     if (!topic) return;
     updateMeta({
-      title: `${topic.title} — Interactive Simulations & Learning | Atlas Coach`,
+      title: `${topic.title} — Interactive Simulations & Learning | Coach Atlas`,
       description: topic.description,
       canonicalUrl: `/topics/${topic.slug}`,
       jsonLd: {
@@ -22,7 +22,7 @@ export default function TopicPage() {
         url: `https://atlascoach-5e3af.web.app/topics/${topic.slug}`,
         provider: {
           '@type': 'Organization',
-          name: 'Atlas Coach',
+          name: 'Coach Atlas',
         },
         numberOfItems: topic.gameSlugs.length,
       },

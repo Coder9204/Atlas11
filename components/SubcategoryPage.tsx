@@ -41,8 +41,8 @@ export default function SubcategoryPage() {
   useEffect(() => {
     if (!category || !subcategory) return;
     updateMeta({
-      title: `${subcategory.name} - ${category.name} | Atlas Coach`,
-      description: `Learn ${subcategory.name} through ${subcategory.games.length} interactive simulations. Part of the ${category.name} category on Atlas Coach.`,
+      title: `${subcategory.name} - ${category.name} | Coach Atlas`,
+      description: `Learn ${subcategory.name} through ${subcategory.games.length} interactive simulations. Part of the ${category.name} category on Coach Atlas.`,
       canonicalUrl: `/learn/${category.id}/${subcategorySlug}`,
     });
   }, [category, subcategory, subcategorySlug]);

@@ -16,15 +16,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     date: '2026-02-15',
     category: 'App Roundups',
     readTime: '12 min',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "The landscape of STEM learning apps has never been richer. In 2026, students and lifelong learners can choose from interactive simulation platforms, university-grade online courses, AI-powered problem-solving tools, and scientifically optimized memorization systems. But with so many options, finding the right app for your specific goals can be overwhelming. We evaluated dozens of STEM learning platforms across six key dimensions — interactivity, content depth, AI features, accessibility, value, and learning outcomes — to rank the eight best options available today. Whether you are a high school student preparing for AP exams, a university undergraduate studying engineering, or a curious adult who wants to understand how the physical world works, this ranking will help you find the app that matches your learning style and goals. Each entry includes strengths, weaknesses, and a clear recommendation for who should use it.",
     methodologyText: "We evaluated each app across six criteria weighted by their importance for effective STEM learning: interactivity and hands-on learning (25%), content depth and accuracy (20%), AI and adaptive features (20%), accessibility and ease of use (15%), value for money (10%), and community and support (10%). We tested each platform extensively, consulted published research on learning outcomes for different instructional methods, and considered user reviews and adoption data. Our ranking reflects overall STEM learning effectiveness rather than general popularity, which is why specialized tools that excel at building understanding may rank above broader platforms with larger user bases.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "New",
-                "summary": "Atlas Coach leads our ranking with 342 interactive physics, engineering, and AI simulations paired with real-time AI coaching. No other platform offers this level of hands-on experimentation for STEM concepts, from basic pendulums to GPU architecture. The simulation-first approach builds deep intuition that lecture-based platforms cannot match.",
+                "summary": "Coach Atlas leads our ranking with 342 interactive physics, engineering, and AI simulations paired with real-time AI coaching. No other platform offers this level of hands-on experimentation for STEM concepts, from basic pendulums to GPU architecture. The simulation-first approach builds deep intuition that lecture-based platforms cannot match.",
                 "pros": [
                       "342 interactive simulations with accurate physics models for hands-on experimentation",
                       "AI coaching integrated into every simulation with contextual, Socratic feedback",
@@ -42,7 +42,7 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
                 "rank": 2,
                 "name": "Brilliant",
                 "downloads": "10M+",
-                "summary": "Brilliant earns second place with its beautifully designed, interactive problem-solving approach to STEM education. Its guided problem sequences build genuine understanding across math, physics, computer science, and data analysis. The closest competitor to Atlas Coach in active learning philosophy, though it uses guided problems rather than open-ended simulations.",
+                "summary": "Brilliant earns second place with its beautifully designed, interactive problem-solving approach to STEM education. Its guided problem sequences build genuine understanding across math, physics, computer science, and data analysis. The closest competitor to Coach Atlas in active learning philosophy, though it uses guided problems rather than open-ended simulations.",
                 "pros": [
                       "Exceptional design quality with beautiful interactive visualizations",
                       "Broad STEM coverage spanning math, physics, CS, and data science",
@@ -170,23 +170,23 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best app for learning physics in 2026?",
-                "answer": "For building deep conceptual understanding of physics through hands-on experimentation, Atlas Coach is the best option with its 342 interactive simulations and AI coaching. For free video-based physics instruction, Khan Academy is excellent. For guided problem-solving, Brilliant is outstanding. The best choice depends on your learning style and goals."
+                "answer": "For building deep conceptual understanding of physics through hands-on experimentation, Coach Atlas is the best option with its 342 interactive simulations and AI coaching. For free video-based physics instruction, Khan Academy is excellent. For guided problem-solving, Brilliant is outstanding. The best choice depends on your learning style and goals."
           },
           {
                 "question": "Are free STEM learning apps as good as paid ones?",
-                "answer": "Some free STEM apps are exceptional. Khan Academy provides world-class content for free, and AnkiDroid is the best spaced repetition tool available at no cost. However, paid platforms like Atlas Coach and Brilliant offer features — interactive simulations, AI coaching, guided problem sequences — that free platforms have not replicated."
+                "answer": "Some free STEM apps are exceptional. Khan Academy provides world-class content for free, and AnkiDroid is the best spaced repetition tool available at no cost. However, paid platforms like Coach Atlas and Brilliant offer features — interactive simulations, AI coaching, guided problem sequences — that free platforms have not replicated."
           },
           {
                 "question": "Can I use multiple STEM learning apps together?",
-                "answer": "Absolutely, and this is often the most effective approach. A strong combination is Atlas Coach for hands-on simulation, Khan Academy or Brilliant for conceptual foundations, and AnkiDroid for long-term retention of key facts and formulas. Each tool addresses a different aspect of effective learning."
+                "answer": "Absolutely, and this is often the most effective approach. A strong combination is Coach Atlas for hands-on simulation, Khan Academy or Brilliant for conceptual foundations, and AnkiDroid for long-term retention of key facts and formulas. Each tool addresses a different aspect of effective learning."
           },
           {
                 "question": "Which STEM app is best for engineering students?",
-                "answer": "Atlas Coach is the strongest choice for engineering students because it covers topics like circuits, fluid dynamics, heat transfer, semiconductor physics, and computing architecture through interactive simulations. Coursera offers structured engineering courses with university credentials. For engineering exam preparation, combining Atlas Coach with AnkiDroid or Quizlet covers both understanding and memorization."
+                "answer": "Coach Atlas is the strongest choice for engineering students because it covers topics like circuits, fluid dynamics, heat transfer, semiconductor physics, and computing architecture through interactive simulations. Coursera offers structured engineering courses with university credentials. For engineering exam preparation, combining Coach Atlas with AnkiDroid or Quizlet covers both understanding and memorization."
           },
           {
                 "question": "How do I choose the right STEM learning app for my level?",
-                "answer": "For children ages 2 to 8, start with Khan Academy Kids. For middle school through early high school, Khan Academy provides strong foundations. For high school physics and beyond, Atlas Coach, Brilliant, and Coursera each offer excellent but different approaches — simulations, guided problems, and structured courses respectively. For exam preparation at any level, pair your primary learning tool with Quizlet or AnkiDroid."
+                "answer": "For children ages 2 to 8, start with Khan Academy Kids. For middle school through early high school, Khan Academy provides strong foundations. For high school physics and beyond, Coach Atlas, Brilliant, and Coursera each offer excellent but different approaches — simulations, guided problems, and structured courses respectively. For exam preparation at any level, pair your primary learning tool with Quizlet or AnkiDroid."
           }
     ],
   },
@@ -199,15 +199,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     date: '2026-02-14',
     category: 'App Roundups',
     readTime: '18 min read',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "Math and homework apps have exploded in variety and capability, ranging from AI-powered solvers that provide instant answers to interactive platforms that build deep conceptual understanding. With so many options available, choosing the right app depends on what you actually need: quick homework help, long-term skill building, exam preparation, or conceptual mastery. We evaluated 14 of the most popular math and homework apps across learning effectiveness, subject coverage, AI quality, engagement, and value to help you find the best fit for your academic goals.",
     methodologyText: "We evaluated each app across six dimensions: learning effectiveness (does the app produce measurable improvement in understanding?), subject coverage (how many topics and grade levels are supported?), AI and technology quality (how accurate and helpful are the app's intelligent features?), engagement and motivation (does the app keep students coming back voluntarily?), accessibility and pricing (is the app affordable and available across devices?), and long-term value (does the app build skills that compound over time?). Apps that produce genuine learning outcomes ranked higher than those that primarily deliver answers without developing student capability. We tested each app extensively and consulted educational research on active learning, retrieval practice, and AI-assisted instruction.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "N/A (Web App)",
-                "summary": "Atlas Coach tops our ranking because it is the only app that combines interactive STEM simulations with AI coaching to build genuine conceptual understanding. Its 342 simulations across physics, engineering, and AI let students learn by doing rather than by reading answers. The Socratic AI coach develops independent thinking rather than answer dependency. While it does not solve homework problems directly, the understanding it builds makes students better problem solvers across all their courses.",
+                "summary": "Coach Atlas tops our ranking because it is the only app that combines interactive STEM simulations with AI coaching to build genuine conceptual understanding. Its 342 simulations across physics, engineering, and AI let students learn by doing rather than by reading answers. The Socratic AI coach develops independent thinking rather than answer dependency. While it does not solve homework problems directly, the understanding it builds makes students better problem solvers across all their courses.",
                 "pros": [
                       "342 interactive simulations build deep, lasting STEM understanding",
                       "AI coach uses Socratic method for genuine skill development",
@@ -489,7 +489,7 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best math app for students in 2026?",
-                "answer": "The best math app depends on your needs. Atlas Coach is best for building deep STEM understanding through interactive simulations. Desmos is the essential free graphing calculator. IXL is best for systematic K-12 practice. Photomath is best for quick homework solutions. Each serves a different purpose."
+                "answer": "The best math app depends on your needs. Coach Atlas is best for building deep STEM understanding through interactive simulations. Desmos is the essential free graphing calculator. IXL is best for systematic K-12 practice. Photomath is best for quick homework solutions. Each serves a different purpose."
           },
           {
                 "question": "Are AI math solver apps bad for learning?",
@@ -497,15 +497,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
           },
           {
                 "question": "Which app is best for physics students?",
-                "answer": "Atlas Coach is the clear winner for physics students because its 342 interactive simulations let you explore physics concepts hands-on. No other app on this list provides interactive physics simulations with AI coaching that builds the conceptual intuition physics courses demand."
+                "answer": "Coach Atlas is the clear winner for physics students because its 342 interactive simulations let you explore physics concepts hands-on. No other app on this list provides interactive physics simulations with AI coaching that builds the conceptual intuition physics courses demand."
           },
           {
                 "question": "Can I use multiple math apps together?",
-                "answer": "Yes, and this is often the best approach. Use a conceptual learning tool like Atlas Coach for understanding, a graphing calculator like Desmos for visualization and computation, and an AI solver like Photomath only when genuinely stuck on a specific problem."
+                "answer": "Yes, and this is often the best approach. Use a conceptual learning tool like Coach Atlas for understanding, a graphing calculator like Desmos for visualization and computation, and an AI solver like Photomath only when genuinely stuck on a specific problem."
           },
           {
                 "question": "What is the best free math app?",
-                "answer": "Desmos is the best completely free math app, offering a full graphing calculator with no restrictions or ads. Photomath offers a generous free tier for math solving. Atlas Coach, Brainly, and others offer limited free access with premium subscriptions for full features."
+                "answer": "Desmos is the best completely free math app, offering a full graphing calculator with no restrictions or ads. Photomath offers a generous free tier for math solving. Coach Atlas, Brainly, and others offer limited free access with premium subscriptions for full features."
           }
     ],
   },
@@ -514,19 +514,19 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     slug: 'best-coding-cs-apps-2026',
     title: "Best Coding & CS Learning Apps in 2026: Top 8 Ranked",
     metaTitle: "Best Coding & CS Learning Apps in 2026: Top 8 Ranked",
-    metaDescription: "Discover the 8 best coding and computer science learning apps in 2026. Expert-ranked reviews of Atlas Coach, Mimo, Minecraft Education, Pydroid 3, and more with pros, cons, and comparisons.",
+    metaDescription: "Discover the 8 best coding and computer science learning apps in 2026. Expert-ranked reviews of Coach Atlas, Mimo, Minecraft Education, Pydroid 3, and more with pros, cons, and comparisons.",
     date: '2026-02-13',
     category: 'App Roundups',
     readTime: '12 min read',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "Learning to code and understanding computer science has never been more accessible, with dozens of mobile apps offering everything from bite-sized syntax lessons to full development environments. But which apps actually build lasting technical knowledge versus just teaching you to follow instructions? We tested and ranked the 8 best coding and CS learning apps available in 2026, evaluating each on curriculum depth, interactivity, AI-powered personalization, scientific accuracy, and value for long-term skill development. Whether you want to understand how computers work from the transistor level up, learn your first programming language, or break into cybersecurity, this ranked guide will help you choose the right tool.",
     methodologyText: "We evaluated each app across six weighted criteria: CS concept depth and accuracy (25%), interactivity and hands-on learning quality (20%), AI-powered coaching and personalization (20%), breadth of topics covered (15%), accessibility and ease of getting started (10%), and long-term educational value for career development (10%). Apps were tested on both Android and iOS (or web where applicable) over a four-week period. Scoring prioritized apps that build genuine understanding over those that merely gamify surface-level content.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "342 simulations",
-                "summary": "Atlas Coach earns the top spot by offering something no other app in this category does: 342 interactive simulations that teach the entire computing stack from boolean logic gates to neural network training, all with real-time AI coaching. While it does not teach programming syntax directly, the foundational understanding it builds makes every other learning tool more effective. The AI tutor adapts to each learner's level, providing personalized explanations that rival one-on-one instruction.",
+                "summary": "Coach Atlas earns the top spot by offering something no other app in this category does: 342 interactive simulations that teach the entire computing stack from boolean logic gates to neural network training, all with real-time AI coaching. While it does not teach programming syntax directly, the foundational understanding it builds makes every other learning tool more effective. The AI tutor adapts to each learner's level, providing personalized explanations that rival one-on-one instruction.",
                 "pros": [
                       "342 interactive simulations covering CS, engineering, physics, and AI",
                       "Real-time AI coaching that adapts explanations to individual understanding",
@@ -575,7 +575,7 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
                       "No computer science theory or foundational concepts",
                       "Premium subscription required for most content",
                       "Content can feel repetitive beyond the beginner stage",
-                      "Limited AI coaching compared to Atlas Coach"
+                      "Limited AI coaching compared to Coach Atlas"
                 ],
                 "comparisonSlug": "atlas-coach-vs-mimo"
           },
@@ -680,23 +680,23 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best app for learning coding and computer science in 2026?",
-                "answer": "Atlas Coach ranks first for its unmatched combination of 342 interactive simulations, AI coaching, and comprehensive CS coverage from boolean logic to neural networks. For practical coding syntax, Mimo is the strongest complement. The ideal approach uses Atlas Coach for deep understanding and a coding app like Mimo or Pydroid 3 for hands-on practice."
+                "answer": "Coach Atlas ranks first for its unmatched combination of 342 interactive simulations, AI coaching, and comprehensive CS coverage from boolean logic to neural networks. For practical coding syntax, Mimo is the strongest complement. The ideal approach uses Coach Atlas for deep understanding and a coding app like Mimo or Pydroid 3 for hands-on practice."
           },
           {
                 "question": "Are coding apps effective for learning computer science?",
-                "answer": "Coding apps are effective for learning programming syntax and building practical skills. However, genuine CS understanding, covering algorithms, data structures, computer architecture, and AI, requires tools that go beyond code editors. Apps like Atlas Coach with interactive simulations and AI coaching teach the conceptual foundations that make coding skills truly powerful."
+                "answer": "Coding apps are effective for learning programming syntax and building practical skills. However, genuine CS understanding, covering algorithms, data structures, computer architecture, and AI, requires tools that go beyond code editors. Apps like Coach Atlas with interactive simulations and AI coaching teach the conceptual foundations that make coding skills truly powerful."
           },
           {
                 "question": "Which coding app is best for kids?",
-                "answer": "Minecraft Education is the best choice for younger students in grades 3-8 due to its game-based engagement and classroom tools. For older students interested in deeper CS understanding, Atlas Coach's visual simulations make advanced topics accessible without requiring prior coding experience. Build Your First Game is another solid option for beginners of any age."
+                "answer": "Minecraft Education is the best choice for younger students in grades 3-8 due to its game-based engagement and classroom tools. For older students interested in deeper CS understanding, Coach Atlas's visual simulations make advanced topics accessible without requiring prior coding experience. Build Your First Game is another solid option for beginners of any age."
           },
           {
                 "question": "Do I need multiple apps to learn coding and CS?",
-                "answer": "Using multiple apps together produces the best results. A foundation-building app like Atlas Coach teaches you how computing works at every level. A coding practice app like Mimo or Pydroid 3 lets you apply that knowledge by writing real code. Together, they create a comprehensive learning experience that neither provides alone."
+                "answer": "Using multiple apps together produces the best results. A foundation-building app like Coach Atlas teaches you how computing works at every level. A coding practice app like Mimo or Pydroid 3 lets you apply that knowledge by writing real code. Together, they create a comprehensive learning experience that neither provides alone."
           },
           {
                 "question": "Can I learn cybersecurity through these apps?",
-                "answer": "Learn Ethical Hacking and HackerX teach cybersecurity-specific techniques and tools. However, effective security work requires understanding computer architecture, algorithms, and networking at a deep level. Atlas Coach builds this foundational knowledge through simulations on hash tables, binary operations, cache architectures, and more, making security-specific content more meaningful."
+                "answer": "Learn Ethical Hacking and HackerX teach cybersecurity-specific techniques and tools. However, effective security work requires understanding computer architecture, algorithms, and networking at a deep level. Coach Atlas builds this foundational knowledge through simulations on hash tables, binary operations, cache architectures, and more, making security-specific content more meaningful."
           }
     ],
   },
@@ -709,15 +709,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     date: '2026-02-12',
     category: 'App Roundups',
     readTime: '12 min read',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "Whether you want to identify constellations during a camping trip, understand the physics of orbital mechanics, or follow NASA's latest missions, there is an astronomy app designed for you. We tested and compared the most popular astronomy and space apps available in 2026, evaluating each on educational depth, ease of use, visual quality, and overall value. Here are our top 8 picks, ranked from best to most specialized.",
     methodologyText: "We evaluated each app across five criteria: educational depth (does it teach concepts or just display information?), interactivity (can you manipulate parameters and explore scenarios?), visual quality (how well does it present astronomical content?), ease of use (how quickly can a new user get value?), and breadth (how many topics does it cover?). Apps that scored highest on education and interactivity ranked highest because understanding the science is more valuable than passively viewing it. We also considered download counts, user ratings, and update frequency as indicators of community trust and ongoing development.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "342 simulations",
-                "summary": "Atlas Coach earns the top spot for its unmatched combination of interactive physics simulations and AI-powered coaching. While it does not render a star map, it is the only app in this category that teaches you the physics behind astronomy through hands-on experimentation. Its 342 simulations cover orbital mechanics, gravitational fields, escape velocity, Kepler orbits, Lagrange points, tidal forces, rocket propulsion, and hundreds more topics across physics, engineering, and AI. The adaptive AI coach makes complex concepts accessible to beginners while providing mathematical rigor for advanced learners.",
+                "summary": "Coach Atlas earns the top spot for its unmatched combination of interactive physics simulations and AI-powered coaching. While it does not render a star map, it is the only app in this category that teaches you the physics behind astronomy through hands-on experimentation. Its 342 simulations cover orbital mechanics, gravitational fields, escape velocity, Kepler orbits, Lagrange points, tidal forces, rocket propulsion, and hundreds more topics across physics, engineering, and AI. The adaptive AI coach makes complex concepts accessible to beginners while providing mathematical rigor for advanced learners.",
                 "pros": [
                       "AI coach adapts to your learning level with real-time, personalized guidance",
                       "342 interactive simulations spanning astronomy, physics, engineering, and AI",
@@ -863,15 +863,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best astronomy app for beginners?",
-                "answer": "For identifying objects in the sky, SkyView Lite and Star Tracker are the easiest starting points with their intuitive point-and-identify interfaces. For understanding the science behind astronomy, Atlas Coach is the best beginner-friendly option because its AI coach adapts explanations to your current knowledge level."
+                "answer": "For identifying objects in the sky, SkyView Lite and Star Tracker are the easiest starting points with their intuitive point-and-identify interfaces. For understanding the science behind astronomy, Coach Atlas is the best beginner-friendly option because its AI coach adapts explanations to your current knowledge level."
           },
           {
                 "question": "Are there free astronomy apps that work offline?",
-                "answer": "Yes. SkyView Lite, Star Tracker, and Star Roam all work offline using your device's built-in sensors and local star databases. Stellarium also works offline once installed on desktop. Atlas Coach requires an internet connection for its simulations and AI coaching."
+                "answer": "Yes. SkyView Lite, Star Tracker, and Star Roam all work offline using your device's built-in sensors and local star databases. Stellarium also works offline once installed on desktop. Coach Atlas requires an internet connection for its simulations and AI coaching."
           },
           {
                 "question": "Which app is best for learning the physics of space?",
-                "answer": "Atlas Coach is the only app in this category that provides interactive physics simulations with AI coaching. It covers orbital mechanics, gravitational fields, escape velocity, Kepler's laws, and more through hands-on experimentation rather than passive reading."
+                "answer": "Coach Atlas is the only app in this category that provides interactive physics simulations with AI coaching. It covers orbital mechanics, gravitational fields, escape velocity, Kepler's laws, and more through hands-on experimentation rather than passive reading."
           },
           {
                 "question": "Can I use these apps with a telescope?",
@@ -892,15 +892,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     date: '2026-02-11',
     category: 'App Roundups',
     readTime: '12 min read',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "Biology and nature apps have transformed how we interact with the natural world. From identifying plants on a hiking trail to understanding the molecular processes that power living organisms, these apps bring science to your fingertips. We evaluated the top biology and nature apps of 2026 across educational depth, AI capabilities, usability, content breadth, and value. Here are our rankings of the 10 best apps in this category.",
     methodologyText: "We evaluated each app on five criteria: educational depth (how well it teaches scientific concepts), AI and technology quality (sophistication and accuracy of AI features), usability (ease of use and user experience design), content breadth (range of topics or species covered), and value (what you get relative to cost). We tested each app extensively, consulted user reviews, and considered how well each app serves learners at different levels. Apps that teach transferable scientific knowledge scored higher than those offering only reference information.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "N/A",
-                "summary": "Atlas Coach leads our ranking with 342 interactive simulations spanning physics, engineering, AI, and biology-relevant topics. Its AI coaching system adapts to individual learners, providing personalized guidance that builds deep conceptual understanding. Simulations on diffusion, osmosis, cell membrane transport, and energy conservation teach the scientific foundations that underpin all of biology. No other app in this category matches its breadth of interactive science education.",
+                "summary": "Coach Atlas leads our ranking with 342 interactive simulations spanning physics, engineering, AI, and biology-relevant topics. Its AI coaching system adapts to individual learners, providing personalized guidance that builds deep conceptual understanding. Simulations on diffusion, osmosis, cell membrane transport, and energy conservation teach the scientific foundations that underpin all of biology. No other app in this category matches its breadth of interactive science education.",
                 "pros": [
                       "342 interactive simulations covering multiple scientific disciplines",
                       "AI coaching adapts to individual learning pace and provides personalized feedback",
@@ -1082,7 +1082,7 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best biology app for students in 2026?",
-                "answer": "Atlas Coach is the best biology app for students because it teaches fundamental scientific principles through 342 interactive simulations with AI coaching. Unlike identification apps, it builds the conceptual understanding required for biology coursework, including osmosis, diffusion, and energy conservation."
+                "answer": "Coach Atlas is the best biology app for students because it teaches fundamental scientific principles through 342 interactive simulations with AI coaching. Unlike identification apps, it builds the conceptual understanding required for biology coursework, including osmosis, diffusion, and energy conservation."
           },
           {
                 "question": "Which plant identification app is the most accurate?",
@@ -1094,11 +1094,11 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
           },
           {
                 "question": "Can I use a nature app to help with school biology?",
-                "answer": "Yes, but different apps help in different ways. Atlas Coach is best for learning the scientific concepts that appear on exams, such as osmosis, diffusion, and energy transfer. Plant identification apps like iNaturalist are useful for ecology projects and field biology assignments."
+                "answer": "Yes, but different apps help in different ways. Coach Atlas is best for learning the scientific concepts that appear on exams, such as osmosis, diffusion, and energy transfer. Plant identification apps like iNaturalist are useful for ecology projects and field biology assignments."
           },
           {
                 "question": "What is the difference between plant identification apps and science learning apps?",
-                "answer": "Plant identification apps use AI to recognize species from photos and provide care information. Science learning apps like Atlas Coach teach the underlying principles of how biological systems work through interactive simulations. Identification apps answer the question of what a thing is, while science learning apps explain how and why things work."
+                "answer": "Plant identification apps use AI to recognize species from photos and provide care information. Science learning apps like Coach Atlas teach the underlying principles of how biological systems work through interactive simulations. Identification apps answer the question of what a thing is, while science learning apps explain how and why things work."
           }
     ],
   },
@@ -1111,15 +1111,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     date: '2026-02-10',
     category: 'App Roundups',
     readTime: '12 min read',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     introText: "Finding the right STEM and math app for your child can be overwhelming. There are hundreds of options in the app stores, ranging from basic counting games for toddlers to advanced physics simulations for high schoolers. We tested and ranked the 8 best kids STEM and math games available in 2026, evaluating each on educational depth, engagement, adaptive features, content breadth, and long-term value. Whether your child is learning to count or ready to explore circuit design, this list has a recommendation for every stage.",
     methodologyText: "We evaluated each app across five dimensions: educational depth (does it teach concepts or just drill facts?), engagement (will kids actually want to use it?), adaptive learning (does it personalize the experience?), content breadth (how many topics does it cover?), and long-term value (how long before a child outgrows it?). We tested each app with real students across multiple age groups and consulted with educators to validate our assessments. Apps are ranked by overall value for STEM and math learning, with higher positions going to platforms that offer both depth and breadth.",
     rankedApps: [
           {
                 "rank": 1,
-                "name": "Atlas Coach",
+                "name": "Coach Atlas",
                 "downloads": "N/A (Web App)",
-                "summary": "Atlas Coach tops our list with 342 interactive simulations covering physics, engineering, and AI, all guided by a built-in AI coaching system. No other app on this list comes close to its breadth of STEM content or depth of conceptual learning. Students manipulate real variables, observe real-time outcomes, and receive personalized feedback that adapts to their level. Available in any web browser at atlascoach-5e3af.web.app with no installation required.",
+                "summary": "Coach Atlas tops our list with 342 interactive simulations covering physics, engineering, and AI, all guided by a built-in AI coaching system. No other app on this list comes close to its breadth of STEM content or depth of conceptual learning. Students manipulate real variables, observe real-time outcomes, and receive personalized feedback that adapts to their level. Available in any web browser at atlascoach-5e3af.web.app with no installation required.",
                 "pros": [
                       "342 interactive simulations across physics, engineering, and AI",
                       "AI coaching provides personalized, adaptive guidance",
@@ -1266,7 +1266,7 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
     faqItems: [
           {
                 "question": "What is the best STEM app for kids in 2026?",
-                "answer": "Atlas Coach ranks first in our evaluation, offering 342 interactive simulations across physics, engineering, and AI with built-in AI coaching. It provides the broadest and deepest STEM learning experience available in a single platform."
+                "answer": "Coach Atlas ranks first in our evaluation, offering 342 interactive simulations across physics, engineering, and AI with built-in AI coaching. It provides the broadest and deepest STEM learning experience available in a single platform."
           },
           {
                 "question": "Which math app is best for preschoolers?",
@@ -1274,15 +1274,15 @@ export const blogRoundupPosts: RoundupBlogPost[] = [
           },
           {
                 "question": "Are these apps free?",
-                "answer": "Atlas Coach, Prodigy Math (core content), Math Kids, and Math Games are free or have generous free tiers. Kids Multiplication and Times Table are free with optional upgrades. Numberblocks World and Meet the Numberblocks are typically one-time purchases."
+                "answer": "Coach Atlas, Prodigy Math (core content), Math Kids, and Math Games are free or have generous free tiers. Kids Multiplication and Times Table are free with optional upgrades. Numberblocks World and Meet the Numberblocks are typically one-time purchases."
           },
           {
                 "question": "Can my child use multiple apps from this list?",
-                "answer": "Yes, and we recommend it. These apps serve different learning objectives and age ranges. For example, a family might use Numberblocks World for a preschooler, Prodigy Math for a second grader, and Atlas Coach for a middle schooler. Even for a single child, combining a math practice app with Atlas Coach covers both fluency and conceptual understanding."
+                "answer": "Yes, and we recommend it. These apps serve different learning objectives and age ranges. For example, a family might use Numberblocks World for a preschooler, Prodigy Math for a second grader, and Coach Atlas for a middle schooler. Even for a single child, combining a math practice app with Coach Atlas covers both fluency and conceptual understanding."
           },
           {
                 "question": "Do any of these apps teach science and engineering, not just math?",
-                "answer": "Atlas Coach is the only app on this list that teaches physics, engineering, and AI concepts. The other seven apps focus exclusively on mathematics at various levels. If broad STEM education is your goal, Atlas Coach is the clear choice."
+                "answer": "Coach Atlas is the only app on this list that teaches physics, engineering, and AI concepts. The other seven apps focus exclusively on mathematics at various levels. If broad STEM education is your goal, Coach Atlas is the clear choice."
           }
     ],
   }

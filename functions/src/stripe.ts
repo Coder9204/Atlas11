@@ -137,7 +137,11 @@ export const handleStripeWebhook = functions.https.onRequest(async (req, res) =>
         });
 
         if (event.type === 'customer.subscription.created') {
-          await triggerEmail(uid, 'subscription_confirmed').catch(console.error);
+          if (sub.status === 'trialing') {
+            await triggerEmail(uid, 'trial_started').catch(console.error);
+          } else {
+            await triggerEmail(uid, 'subscription_confirmed').catch(console.error);
+          }
         }
         break;
       }

@@ -13,7 +13,7 @@ export default function HowItWorksPage() {
   useEffect(() => {
     if (!entry) return;
     updateMeta({
-      title: `${entry.title} | Atlas Coach`,
+      title: `${entry.title} | Coach Atlas`,
       description: entry.shortAnswer,
       canonicalUrl: `/how/${entry.slug}`,
       jsonLd: howItWorksSchema({

@@ -4,7 +4,7 @@
 
 import { getFunctionsInstance } from './firebase';
 import { httpsCallable } from 'firebase/functions';
-import { trackCheckoutStarted } from './AnalyticsService';
+import { trackCheckoutStarted, trackBillingPortalOpened } from './AnalyticsService';
 
 /**
  * Create a Stripe Checkout session and redirect to it.
@@ -33,6 +33,7 @@ export async function createCheckout(priceId: string): Promise<void> {
  * Open the Stripe Customer Portal for subscription management.
  */
 export async function openCustomerPortal(): Promise<void> {
+  trackBillingPortalOpened();
   const functions = getFunctionsInstance();
   if (!functions) {
     throw new Error('Firebase Functions not available.');

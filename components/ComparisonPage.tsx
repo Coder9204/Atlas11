@@ -13,7 +13,7 @@ export default function ComparisonPage() {
   useEffect(() => {
     if (!comparison) return;
     updateMeta({
-      title: `${comparison.title} | Atlas Coach`,
+      title: `${comparison.title} | Coach Atlas`,
       description: comparison.description,
       canonicalUrl: `/compare/${comparison.comparisonSlug}`,
       jsonLd: comparisonSchema({
@@ -59,7 +59,7 @@ export default function ComparisonPage() {
     },
     {
       question: 'Are there interactive simulations for these concepts?',
-      answer: 'Yes. Atlas Coach provides interactive games for both sides of this comparison. You can predict outcomes, experiment with variables, and test your understanding.',
+      answer: 'Yes. Coach Atlas provides interactive games for both sides of this comparison. You can predict outcomes, experiment with variables, and test your understanding.',
     },
   ];
 

@@ -156,7 +156,7 @@ export default function RoundupPostBody({ post }: Props) {
                       fontWeight: 600,
                     }}
                   >
-                    Read full comparison: Atlas Coach vs {app.name} &rarr;
+                    Read full comparison: Coach Atlas vs {app.name} &rarr;
                   </a>
                 )}
               </div>
@@ -200,7 +200,7 @@ export default function RoundupPostBody({ post }: Props) {
       {post.relatedSimulations.length > 0 && (
         <section style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px', color: '#f0f0f5' }}>
-            Try Related Atlas Coach Simulations
+            Try Related Coach Atlas Simulations
           </h2>
           <div style={{
             display: 'grid',
@@ -271,7 +271,7 @@ export default function RoundupPostBody({ post }: Props) {
         textAlign: 'center',
       }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: '#f0f0f5' }}>
-          Try Atlas Coach Free
+          Try Coach Atlas Free
         </h2>
         <p style={{
           color: '#94a3b8',

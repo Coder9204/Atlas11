@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Prerender Script for Atlas Coach
+ * Prerender Script for Coach Atlas
  *
  * Uses Puppeteer to prerender key pages at build time for SEO.
  * Captures rendered HTML with meta tags and writes to dist/{route}/index.html.

@@ -1,9 +1,9 @@
-# Atlas Coach — Complete Reference for AI Search Engines
+# Coach Atlas — Complete Reference for AI Search Engines
 # https://coachatlas.ai
 # 342 interactive physics, engineering, and AI simulation games
 # with AI coaching, comparison pages, glossary, how-it-works guides, and more
 
-> Atlas Coach is a free interactive physics and engineering education platform.
+> Coach Atlas is a free interactive physics and engineering education platform.
 > Students, teachers, engineers, and curious learners use it to build deep
 > intuition through predict-observe-explain simulations with AI coaching.
 
@@ -783,14 +783,14 @@ Pages targeting specific user intents and learning scenarios:
 
 Side-by-side comparisons with other education platforms:
 
-- Atlas Coach vs PhET Simulations (/alternatives/phet-simulations)
-- Atlas Coach vs Khan Academy (/alternatives/khan-academy)
-- Atlas Coach vs Brilliant (/alternatives/brilliant)
-- Atlas Coach vs Labster (/alternatives/labster)
-- Atlas Coach vs Algodoo (/alternatives/algodoo)
-- Atlas Coach vs Coursera Physics Courses (/alternatives/coursera-physics)
-- Atlas Coach vs Udemy Physics Courses (/alternatives/udemy-physics)
-- Atlas Coach vs The Physics Classroom (/alternatives/physics-classroom)
+- Coach Atlas vs PhET Simulations (/alternatives/phet-simulations)
+- Coach Atlas vs Khan Academy (/alternatives/khan-academy)
+- Coach Atlas vs Brilliant (/alternatives/brilliant)
+- Coach Atlas vs Labster (/alternatives/labster)
+- Coach Atlas vs Algodoo (/alternatives/algodoo)
+- Coach Atlas vs Coursera Physics Courses (/alternatives/coursera-physics)
+- Coach Atlas vs Udemy Physics Courses (/alternatives/udemy-physics)
+- Coach Atlas vs The Physics Classroom (/alternatives/physics-classroom)
 
 ---
 
@@ -827,67 +827,67 @@ Tailored landing pages for specific audiences:
 - Best Kids STEM & Math Games in 2026: Top 8 Ranked (/blog/best-kids-stem-math-games-2026)
 
 ### General STEM Comparisons (7 Posts)
-- Atlas Coach vs Khan Academy (/blog/atlas-coach-vs-khan-academy)
-- Atlas Coach vs Khan Academy Kids (/blog/atlas-coach-vs-khan-academy-kids)
-- Atlas Coach vs Coursera (/blog/atlas-coach-vs-coursera)
-- Atlas Coach vs Udemy (/blog/atlas-coach-vs-udemy)
-- Atlas Coach vs Brilliant (/blog/atlas-coach-vs-brilliant)
-- Atlas Coach vs Quizlet (/blog/atlas-coach-vs-quizlet)
-- Atlas Coach vs AnkiDroid (/blog/atlas-coach-vs-ankidroid)
+- Coach Atlas vs Khan Academy (/blog/atlas-coach-vs-khan-academy)
+- Coach Atlas vs Khan Academy Kids (/blog/atlas-coach-vs-khan-academy-kids)
+- Coach Atlas vs Coursera (/blog/atlas-coach-vs-coursera)
+- Coach Atlas vs Udemy (/blog/atlas-coach-vs-udemy)
+- Coach Atlas vs Brilliant (/blog/atlas-coach-vs-brilliant)
+- Coach Atlas vs Quizlet (/blog/atlas-coach-vs-quizlet)
+- Coach Atlas vs AnkiDroid (/blog/atlas-coach-vs-ankidroid)
 
 ### Math & Homework Comparisons (13 Posts)
-- Atlas Coach vs Photomath (/blog/atlas-coach-vs-photomath)
-- Atlas Coach vs Gauth (/blog/atlas-coach-vs-gauth)
-- Atlas Coach vs Brainly (/blog/atlas-coach-vs-brainly)
-- Atlas Coach vs Solvely (/blog/atlas-coach-vs-solvely)
-- Atlas Coach vs Quiz AI (/blog/atlas-coach-vs-quiz-ai)
-- Atlas Coach vs Question.AI (/blog/atlas-coach-vs-question-ai)
-- Atlas Coach vs Nerd AI (/blog/atlas-coach-vs-nerd-ai)
-- Atlas Coach vs IXL (/blog/atlas-coach-vs-ixl)
-- Atlas Coach vs AdaptedMind Math (/blog/atlas-coach-vs-adaptedmind-math)
-- Atlas Coach vs Desmos (/blog/atlas-coach-vs-desmos)
-- Atlas Coach vs Scientific Calculator Plus 991 (/blog/atlas-coach-vs-scientific-calculator-plus-991)
-- Atlas Coach vs Graphing Calculator Plus 84 83 (/blog/atlas-coach-vs-graphing-calculator-plus-84-83)
-- Atlas Coach vs Homework Helper & Math Solver (/blog/atlas-coach-vs-homework-helper-math-solver)
+- Coach Atlas vs Photomath (/blog/atlas-coach-vs-photomath)
+- Coach Atlas vs Gauth (/blog/atlas-coach-vs-gauth)
+- Coach Atlas vs Brainly (/blog/atlas-coach-vs-brainly)
+- Coach Atlas vs Solvely (/blog/atlas-coach-vs-solvely)
+- Coach Atlas vs Quiz AI (/blog/atlas-coach-vs-quiz-ai)
+- Coach Atlas vs Question.AI (/blog/atlas-coach-vs-question-ai)
+- Coach Atlas vs Nerd AI (/blog/atlas-coach-vs-nerd-ai)
+- Coach Atlas vs IXL (/blog/atlas-coach-vs-ixl)
+- Coach Atlas vs AdaptedMind Math (/blog/atlas-coach-vs-adaptedmind-math)
+- Coach Atlas vs Desmos (/blog/atlas-coach-vs-desmos)
+- Coach Atlas vs Scientific Calculator Plus 991 (/blog/atlas-coach-vs-scientific-calculator-plus-991)
+- Coach Atlas vs Graphing Calculator Plus 84 83 (/blog/atlas-coach-vs-graphing-calculator-plus-84-83)
+- Coach Atlas vs Homework Helper & Math Solver (/blog/atlas-coach-vs-homework-helper-math-solver)
 
 ### Coding & CS Comparisons (7 Posts)
-- Atlas Coach vs Mimo (/blog/atlas-coach-vs-mimo)
-- Atlas Coach vs Pydroid 3 (/blog/atlas-coach-vs-pydroid-3)
-- Atlas Coach vs Build Your First Game (/blog/atlas-coach-vs-build-your-first-game)
-- Atlas Coach vs Learn Ethical Hacking (/blog/atlas-coach-vs-learn-ethical-hacking)
-- Atlas Coach vs HackerX (/blog/atlas-coach-vs-hackerx)
-- Atlas Coach vs Minecraft Education (/blog/atlas-coach-vs-minecraft-education)
-- Atlas Coach vs Minecraft Education Preview (/blog/atlas-coach-vs-minecraft-education-preview)
+- Coach Atlas vs Mimo (/blog/atlas-coach-vs-mimo)
+- Coach Atlas vs Pydroid 3 (/blog/atlas-coach-vs-pydroid-3)
+- Coach Atlas vs Build Your First Game (/blog/atlas-coach-vs-build-your-first-game)
+- Coach Atlas vs Learn Ethical Hacking (/blog/atlas-coach-vs-learn-ethical-hacking)
+- Coach Atlas vs HackerX (/blog/atlas-coach-vs-hackerx)
+- Coach Atlas vs Minecraft Education (/blog/atlas-coach-vs-minecraft-education)
+- Coach Atlas vs Minecraft Education Preview (/blog/atlas-coach-vs-minecraft-education-preview)
 
 ### Astronomy & Space Comparisons (7 Posts)
-- Atlas Coach vs Stellarium (/blog/atlas-coach-vs-stellarium)
-- Atlas Coach vs SkyView Lite (/blog/atlas-coach-vs-skyview-lite)
-- Atlas Coach vs Star Walk 2 Plus (/blog/atlas-coach-vs-star-walk-2)
-- Atlas Coach vs Star Tracker (/blog/atlas-coach-vs-star-tracker)
-- Atlas Coach vs Solar System Scope (/blog/atlas-coach-vs-solar-system-scope)
-- Atlas Coach vs Star Roam (/blog/atlas-coach-vs-star-roam)
-- Atlas Coach vs NASA App (/blog/atlas-coach-vs-nasa-app)
+- Coach Atlas vs Stellarium (/blog/atlas-coach-vs-stellarium)
+- Coach Atlas vs SkyView Lite (/blog/atlas-coach-vs-skyview-lite)
+- Coach Atlas vs Star Walk 2 Plus (/blog/atlas-coach-vs-star-walk-2)
+- Coach Atlas vs Star Tracker (/blog/atlas-coach-vs-star-tracker)
+- Coach Atlas vs Solar System Scope (/blog/atlas-coach-vs-solar-system-scope)
+- Coach Atlas vs Star Roam (/blog/atlas-coach-vs-star-roam)
+- Coach Atlas vs NASA App (/blog/atlas-coach-vs-nasa-app)
 
 ### Biology & Nature Comparisons (9 Posts)
-- Atlas Coach vs iNaturalist (/blog/atlas-coach-vs-inaturalist)
-- Atlas Coach vs PictureThis (/blog/atlas-coach-vs-picturethis)
-- Atlas Coach vs Plant App (/blog/atlas-coach-vs-plant-app)
-- Atlas Coach vs PlantIn (/blog/atlas-coach-vs-plantin)
-- Atlas Coach vs Plant Identifier & Plant Care (/blog/atlas-coach-vs-plant-identifier-plant-care)
-- Atlas Coach vs Plantify (/blog/atlas-coach-vs-plantify)
-- Atlas Coach vs Plantum (/blog/atlas-coach-vs-plantum)
-- Atlas Coach vs LeafCheck (/blog/atlas-coach-vs-leafcheck)
-- Atlas Coach vs Bird Sound Identifier (/blog/atlas-coach-vs-bird-sound-identifier)
+- Coach Atlas vs iNaturalist (/blog/atlas-coach-vs-inaturalist)
+- Coach Atlas vs PictureThis (/blog/atlas-coach-vs-picturethis)
+- Coach Atlas vs Plant App (/blog/atlas-coach-vs-plant-app)
+- Coach Atlas vs PlantIn (/blog/atlas-coach-vs-plantin)
+- Coach Atlas vs Plant Identifier & Plant Care (/blog/atlas-coach-vs-plant-identifier-plant-care)
+- Coach Atlas vs Plantify (/blog/atlas-coach-vs-plantify)
+- Coach Atlas vs Plantum (/blog/atlas-coach-vs-plantum)
+- Coach Atlas vs LeafCheck (/blog/atlas-coach-vs-leafcheck)
+- Coach Atlas vs Bird Sound Identifier (/blog/atlas-coach-vs-bird-sound-identifier)
 
 ### Kids STEM & Math Comparisons (7 Posts)
-- Atlas Coach vs Prodigy Math (/blog/atlas-coach-vs-prodigy-math)
-- Atlas Coach vs Math Kids (/blog/atlas-coach-vs-math-kids)
-- Atlas Coach vs Math Games (/blog/atlas-coach-vs-math-games)
-- Atlas Coach vs Kids Multiplication (/blog/atlas-coach-vs-kids-multiplication)
-- Atlas Coach vs Times Table (/blog/atlas-coach-vs-times-table)
-- Atlas Coach vs Numberblocks World (/blog/atlas-coach-vs-numberblocks-world)
-- Atlas Coach vs Meet the Numberblocks (/blog/atlas-coach-vs-meet-the-numberblocks)
+- Coach Atlas vs Prodigy Math (/blog/atlas-coach-vs-prodigy-math)
+- Coach Atlas vs Math Kids (/blog/atlas-coach-vs-math-kids)
+- Coach Atlas vs Math Games (/blog/atlas-coach-vs-math-games)
+- Coach Atlas vs Kids Multiplication (/blog/atlas-coach-vs-kids-multiplication)
+- Coach Atlas vs Times Table (/blog/atlas-coach-vs-times-table)
+- Coach Atlas vs Numberblocks World (/blog/atlas-coach-vs-numberblocks-world)
+- Coach Atlas vs Meet the Numberblocks (/blog/atlas-coach-vs-meet-the-numberblocks)
 
 ---
 
-Atlas Coach is free to use. No account required. Works on any device with a modern web browser.
+Coach Atlas is free to use. No account required. Works on any device with a modern web browser.

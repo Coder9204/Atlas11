@@ -2,7 +2,10 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { getAllGameProgress, GameRecord } from '../services/GameProgressService';
+import { trackCheckoutCompleted } from '../services/AnalyticsService';
 import RetentionBanner from './RetentionBanner';
+import { isGuestGame, GUEST_GAME } from '../lib/accessConfig';
+import { useAuth } from '../contexts/AuthContext';
 import { games, gameCategories, searchTags, fuzzyMatch, getUniqueGames } from '../lib/gameData';
 import type { GameCategoryKey } from '../lib/gameData';
 
@@ -54,6 +57,28 @@ const GamesPage: React.FC = () => {
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const gridRef = useRef<HTMLDivElement>(null);
   const [progressMap, setProgressMap] = useState<Map<string, GameRecord>>(new Map());
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+  // Auth context for lock state
+  let auth: ReturnType<typeof useAuth> | null = null;
+  try { auth = useAuth(); } catch { /* AuthProvider may not be mounted */ }
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const isPaid = auth?.subscription?.tier === 'plus' || auth?.subscription?.tier === 'pro';
+
+  // Handle checkout success
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      setCheckoutSuccess(true);
+      trackCheckoutCompleted(params.get('tier') || 'unknown');
+      params.delete('checkout');
+      params.delete('tier');
+      const qs = params.toString();
+      const cleanUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+      window.history.replaceState(null, '', cleanUrl);
+    }
+  }, []);
 
   // Load game progress on mount
   useEffect(() => {
@@ -214,6 +239,40 @@ const GamesPage: React.FC = () => {
       color: colors.textPrimary,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
+      {/* ─── Checkout Success Banner ─── */}
+      {checkoutSuccess && (
+        <div style={{
+          background: 'linear-gradient(135deg, #10B981, #059669)',
+          color: 'white',
+          padding: '16px 24px',
+          textAlign: 'center',
+          fontSize: '15px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+        }}>
+          <span style={{ fontSize: '20px' }}>{'\uD83C\uDF89'}</span>
+          Welcome to Coach Atlas! You now have unlimited access to all games.
+          <button
+            onClick={() => setCheckoutSuccess(false)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '6px',
+              padding: '4px 12px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              marginLeft: '8px',
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* ─── Sticky Header ─── */}
       <header style={{
         padding: '16px 24px',
@@ -228,14 +287,7 @@ const GamesPage: React.FC = () => {
         zIndex: 100,
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '9px',
-            background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-          }}>
-            {'\uD83C\uDF93'}
-          </div>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: colors.textPrimary }}>Atlas Coach</span>
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '36px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
           <a href="/paths" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Learning Paths</a>
@@ -487,12 +539,26 @@ const GamesPage: React.FC = () => {
                     display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px',
                   }}>
                     <span style={{ fontSize: '20px' }}>{category.icon}</span>
-                    <span style={{
-                      fontSize: '10px', fontWeight: 600, color: getDifficultyColor(game.difficulty),
-                      textTransform: 'uppercase', letterSpacing: '0.5px',
-                    }}>
-                      {game.difficulty}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {isGuestGame(game.slug) && (
+                        <span style={{
+                          fontSize: '10px', fontWeight: 700, color: '#10B981',
+                          background: 'rgba(16, 185, 129, 0.12)', padding: '2px 7px',
+                          borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.3px',
+                        }}>
+                          Free
+                        </span>
+                      )}
+                      {!isPaid && !isAuthenticated && !isGuestGame(game.slug) && (
+                        <span style={{ fontSize: '12px', opacity: 0.5 }} title="Sign up to play">{'\uD83D\uDD12'}</span>
+                      )}
+                      <span style={{
+                        fontSize: '10px', fontWeight: 600, color: getDifficultyColor(game.difficulty),
+                        textTransform: 'uppercase', letterSpacing: '0.5px',
+                      }}>
+                        {game.difficulty}
+                      </span>
+                    </div>
                   </div>
                   <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '3px', lineHeight: '1.3' }}>
                     {searchQuery ? highlightText(game.name, searchQuery) : game.name}
@@ -560,7 +626,7 @@ const GamesPage: React.FC = () => {
           Unlock all {uniqueGames.length}+ games
         </h2>
         <p style={{ color: colors.textSecondary, marginBottom: '20px', fontSize: '15px' }}>
-          Start with 15 free games, or upgrade for unlimited access
+          Start with 15 free minutes daily, or upgrade for more time
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <a href="/pricing" style={{
@@ -582,7 +648,7 @@ const GamesPage: React.FC = () => {
       {/* ─── Footer ─── */}
       <footer style={{ borderTop: `1px solid ${colors.border}`, padding: '32px 24px', textAlign: 'center' }}>
         <div style={{ color: colors.textMuted, fontSize: '13px' }}>
-          {'\u00A9'} 2025 Atlas Coach. All rights reserved.
+          {'\u00A9'} 2025 Coach Atlas. All rights reserved.
         </div>
       </footer>
     </div>

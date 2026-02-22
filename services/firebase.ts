@@ -13,6 +13,8 @@ import {
   signInAnonymously,
   signInWithPopup,
   GoogleAuthProvider,
+  FacebookAuthProvider,
+  TwitterAuthProvider,
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -160,6 +162,43 @@ export async function signInWithGoogle(): Promise<User | null> {
 }
 
 /**
+ * Sign in with Facebook
+ */
+export async function signInWithFacebook(): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance) return null;
+
+  try {
+    const provider = new FacebookAuthProvider();
+    provider.addScope('email');
+    const result = await signInWithPopup(authInstance, provider);
+    await createUserProfile(result.user);
+    return result.user;
+  } catch (error) {
+    console.error('Facebook sign-in failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sign in with Twitter
+ */
+export async function signInWithTwitter(): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance) return null;
+
+  try {
+    const provider = new TwitterAuthProvider();
+    const result = await signInWithPopup(authInstance, provider);
+    await createUserProfile(result.user);
+    return result.user;
+  } catch (error) {
+    console.error('Twitter sign-in failed:', error);
+    throw error;
+  }
+}
+
+/**
  * Subscribe to auth state changes
  */
 export function subscribeToAuthState(callback: (user: User | null) => void): () => void {
@@ -272,6 +311,43 @@ export async function linkAnonymousToGoogle(): Promise<User | null> {
     return result.user;
   } catch (error) {
     console.error('Anonymous to Google link failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Upgrade anonymous user to Facebook account (preserves UID)
+ */
+export async function linkAnonymousToFacebook(): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance?.currentUser) return null;
+
+  try {
+    const provider = new FacebookAuthProvider();
+    provider.addScope('email');
+    const result = await linkWithPopup(authInstance.currentUser, provider);
+    await createUserProfile(result.user);
+    return result.user;
+  } catch (error) {
+    console.error('Anonymous to Facebook link failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Upgrade anonymous user to Twitter account (preserves UID)
+ */
+export async function linkAnonymousToTwitter(): Promise<User | null> {
+  const authInstance = getAuthInstance();
+  if (!authInstance?.currentUser) return null;
+
+  try {
+    const provider = new TwitterAuthProvider();
+    const result = await linkWithPopup(authInstance.currentUser, provider);
+    await createUserProfile(result.user);
+    return result.user;
+  } catch (error) {
+    console.error('Anonymous to Twitter link failed:', error);
     throw error;
   }
 }

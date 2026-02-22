@@ -1,8 +1,8 @@
-# Atlas Coach — AI-Friendly Summary
+# Coach Atlas — AI-Friendly Summary
 # https://coachatlas.ai
 
-## What is Atlas Coach?
-Atlas Coach is an interactive education platform for learning physics, engineering, and AI concepts through 342 browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook > Predict > Play > Review > Test.
+## What is Coach Atlas?
+Coach Atlas is an interactive education platform for learning physics, engineering, and AI concepts through 342 browser-based game simulations with AI-powered coaching. Each game follows a structured learning flow: Hook > Predict > Play > Review > Test.
 
 ## Key Features
 - 342 interactive simulation games
@@ -31,46 +31,46 @@ Atlas Coach is an interactive education platform for learning physics, engineeri
 
 ## Frequently Asked Questions
 
-Q: What is Atlas Coach?
-A: Atlas Coach is a free interactive physics and engineering learning platform with 342 browser-based simulations and AI coaching.
+Q: What is Coach Atlas?
+A: Coach Atlas is a free interactive physics and engineering learning platform with 342 browser-based simulations and AI coaching.
 
-Q: Is Atlas Coach free?
+Q: Is Coach Atlas free?
 A: Yes. The free tier includes 5 games per month. Premium plans start at $9.99/month for unlimited access.
 
-Q: What topics does Atlas Coach cover?
+Q: What topics does Coach Atlas cover?
 A: Physics (mechanics, waves, thermodynamics, E&M, optics), engineering (semiconductors, power systems, RF), AI hardware (GPU architecture, inference optimization), and solar energy.
 
-Q: How is Atlas Coach different from PhET?
-A: Atlas Coach has 342 simulations (vs ~160 for PhET), covers engineering and AI topics PhET doesn't, and includes AI coaching and progress tracking.
+Q: How is Coach Atlas different from PhET?
+A: Coach Atlas has 342 simulations (vs ~160 for PhET), covers engineering and AI topics PhET doesn't, and includes AI coaching and progress tracking.
 
-Q: Can I use Atlas Coach for AP Physics?
+Q: Can I use Coach Atlas for AP Physics?
 A: Yes. Simulations cover all AP Physics 1 and 2 topics with interactive predict-observe-explain methodology.
 
-Q: Does Atlas Coach work on phones?
+Q: Does Coach Atlas work on phones?
 A: Yes. All simulations run in any modern web browser on phones, tablets, and computers.
 
-Q: Can teachers use Atlas Coach in classrooms?
+Q: Can teachers use Coach Atlas in classrooms?
 A: Yes. Teachers can project simulations for demonstrations, assign specific games as homework, and track student progress.
 
-Q: What age group is Atlas Coach for?
-A: Atlas Coach serves high school students through professionals, with difficulty levels from beginner to advanced.
+Q: What age group is Coach Atlas for?
+A: Coach Atlas serves high school students through professionals, with difficulty levels from beginner to advanced.
 
 Q: How does the AI coaching work?
 A: The AI coach observes your simulation interactions and provides real-time hints, explanations, and feedback specific to the physics concepts being explored.
 
 Q: Is there a semiconductor/chip design section?
-A: Yes. Atlas Coach has 40+ semiconductor simulations covering MOSFET physics, photolithography, etching, doping, interconnects, packaging, and yield analysis.
+A: Yes. Coach Atlas has 40+ semiconductor simulations covering MOSFET physics, photolithography, etching, doping, interconnects, packaging, and yield analysis.
 
-Q: Does Atlas Coach cover AI hardware?
+Q: Does Coach Atlas cover AI hardware?
 A: Yes. Topics include GPU memory bandwidth, tensor cores, KV cache, quantization, batching latency, and inference optimization.
 
 Q: How many solar energy simulations are there?
 A: About 30 simulations covering solar cell physics, IV curves, MPPT, string sizing, temperature derating, and system design.
 
-Q: Can Atlas Coach help with engineering interviews?
+Q: Can Coach Atlas help with engineering interviews?
 A: Yes. Simulations cover the specific semiconductor, power, and hardware topics asked at companies like NVIDIA, Intel, TSMC, and Tesla.
 
-Q: What learning methodology does Atlas Coach use?
+Q: What learning methodology does Coach Atlas use?
 A: Predict-Observe-Explain. Students predict outcomes, run simulations, observe results, and test understanding through quizzes.
 
 Q: Are there comparison pages for learning?

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getPriceId } from '../lib/stripeConfig';
 import { createCheckout, openCustomerPortal } from '../services/subscriptionService';
 import { updateMeta, SEO_CONFIG } from '../lib/seo';
+import { trackPageView } from '../services/AnalyticsService';
 
 const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
@@ -15,34 +16,35 @@ const PricingPage: React.FC = () => {
   try { auth = useAuth(); } catch { /* AuthProvider may not be mounted in tests */ }
 
   useEffect(() => {
+    trackPageView('/pricing');
     updateMeta({
-      title: 'Pricing - Atlas Coach | Free, Plus & Pro Plans',
-      description: 'Choose your Atlas Coach plan. Free tier with 5 games/day, Plus at $5.99/mo for unlimited access & AI coaching, or Pro at $11.99/mo with offline mode & certificates.',
+      title: 'Pricing - Coach Atlas | Free, Plus & Pro Plans',
+      description: 'Choose your Coach Atlas plan. Free with 15 min/day, Plus at $9.50/mo for 90 min/day, or Pro at $14.50/mo with 4 hours/day and certificates.',
       canonicalUrl: '/pricing',
       jsonLd: [
         {
           '@context': 'https://schema.org',
           '@type': 'Product',
-          name: 'Atlas Coach',
+          name: 'Coach Atlas',
           description: 'Interactive physics, engineering, and AI education platform with 342 games and AI-powered coaching.',
           url: `${SEO_CONFIG.baseUrl}/pricing`,
-          brand: { '@type': 'Organization', name: 'Atlas Coach' },
+          brand: { '@type': 'Organization', name: 'Coach Atlas' },
           offers: [
             {
               '@type': 'Offer',
               name: 'Free',
               price: '0',
               priceCurrency: 'USD',
-              description: '5 games per day with basic progress tracking',
+              description: '15 minutes per day with basic progress tracking',
               availability: 'https://schema.org/InStock',
               url: `${SEO_CONFIG.baseUrl}/pricing`,
             },
             {
               '@type': 'Offer',
               name: 'Plus',
-              price: '5.99',
+              price: '9.50',
               priceCurrency: 'USD',
-              description: 'Unlimited games, AI voice coach, progress analytics',
+              description: '90 min/day gameplay, no ads, AI voice coach, progress analytics',
               availability: 'https://schema.org/InStock',
               priceValidUntil: '2027-12-31',
               url: `${SEO_CONFIG.baseUrl}/pricing`,
@@ -50,9 +52,9 @@ const PricingPage: React.FC = () => {
             {
               '@type': 'Offer',
               name: 'Pro',
-              price: '11.99',
+              price: '14.50',
               priceCurrency: 'USD',
-              description: 'Everything in Plus, offline mode, certificates, priority support',
+              description: '4 hours/day gameplay, no ads, offline mode, certificates, priority support',
               availability: 'https://schema.org/InStock',
               priceValidUntil: '2027-12-31',
               url: `${SEO_CONFIG.baseUrl}/pricing`,
@@ -117,14 +119,14 @@ const PricingPage: React.FC = () => {
       annualPrice: 0,
       color: colors.textSecondary,
       features: [
-        { text: '5 games per day', included: true },
+        { text: '15 min/day gameplay', included: true },
+        { text: 'All 340+ games', included: true },
         { text: 'Basic progress tracking', included: true },
-        { text: 'Community access', included: true },
-        { text: 'Full game library', included: false },
         { text: 'AI voice coach', included: false },
-        { text: 'Progress analytics', included: false },
+        { text: 'No ads', included: false },
         { text: 'Certificates', included: false },
         { text: 'Offline mode', included: false },
+        { text: 'Priority support', included: false },
       ],
       cta: 'Get Started Free',
       popular: false,
@@ -133,18 +135,18 @@ const PricingPage: React.FC = () => {
       id: 'plus',
       name: 'Plus',
       tagline: 'For dedicated learners',
-      monthlyPrice: 5.99,
-      annualPrice: 49.99,
+      monthlyPrice: 9.50,
+      annualPrice: 59.50,
       color: colors.success,
       features: [
-        { text: 'All 340+ games unlimited', included: true },
+        { text: '90 min/day gameplay', included: true },
+        { text: 'All 340+ games', included: true },
         { text: 'AI voice coach', included: true },
         { text: 'Progress analytics', included: true },
         { text: 'No ads', included: true },
         { text: 'Mobile & desktop sync', included: true },
         { text: 'Offline mode', included: false },
-        { text: 'Completion certificates', included: false },
-        { text: 'Priority support', included: false },
+        { text: 'Certificates', included: false },
       ],
       cta: 'Get Plus',
       popular: true,
@@ -153,18 +155,18 @@ const PricingPage: React.FC = () => {
       id: 'pro',
       name: 'Pro',
       tagline: 'The complete experience',
-      monthlyPrice: 11.99,
-      annualPrice: 99.99,
+      monthlyPrice: 14.50,
+      annualPrice: 99.50,
       color: colors.accent,
       features: [
+        { text: '4 hours/day gameplay', included: true },
         { text: 'Everything in Plus', included: true },
         { text: 'Offline mode', included: true },
         { text: 'Shareable certificates', included: true },
         { text: 'Priority support', included: true },
         { text: 'Early access to new games', included: true },
-        { text: 'Advanced analytics dashboard', included: true },
+        { text: 'Advanced analytics', included: true },
         { text: 'Custom learning paths', included: true },
-        { text: 'API access', included: true },
       ],
       cta: 'Start 7-Day Free Trial',
       popular: false,
@@ -227,21 +229,7 @@ const PricingPage: React.FC = () => {
         borderBottom: `1px solid ${colors.border}`,
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: `linear-gradient(135deg, ${colors.accent}, #8B5CF6)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px',
-          }}>
-            {'\uD83C\uDF93'}
-          </div>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: colors.textPrimary }}>
-            Atlas Coach
-          </span>
+          <img src="/logo.png" alt="Coach Atlas" style={{ height: '40px', width: 'auto' }} />
         </a>
         <nav style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
           <a href="/" style={{ color: colors.textSecondary, textDecoration: 'none', fontSize: '14px' }}>Home</a>
@@ -634,11 +622,11 @@ const PricingPage: React.FC = () => {
         {[
           {
             q: 'Can I try before I buy?',
-            a: 'Yes! The Free tier gives you 5 games per day forever. Pro includes a 7-day free trial with full access to everything.',
+            a: 'Yes! The Free tier gives you 15 minutes per day across all 340+ games. Pro includes a 7-day free trial with 4 hours/day.',
           },
           {
             q: 'What\'s the difference between Plus and Pro?',
-            a: 'Plus unlocks all 340+ games, AI coaching, and analytics. Pro adds offline mode, shareable certificates, priority support, and early access to new games.',
+            a: 'Plus gives you 90 min/day of gameplay, AI coaching, and analytics. Pro increases to 4 hours/day and adds offline mode, shareable certificates, priority support, and early access.',
           },
           {
             q: 'Can I switch plans later?',
@@ -680,7 +668,7 @@ const PricingPage: React.FC = () => {
           Ready to master physics?
         </h2>
         <p style={{ color: colors.textSecondary, marginBottom: '32px', fontSize: '18px' }}>
-          Join 50,000+ learners. Start with 5 free games every day.
+          Join 50,000+ learners. Start with 15 free minutes every day.
         </p>
         <button
           onClick={() => { window.location.href = '/games'; }}
@@ -707,7 +695,7 @@ const PricingPage: React.FC = () => {
         textAlign: 'center',
       }}>
         <div style={{ color: colors.textMuted, fontSize: '14px' }}>
-          {'\u00A9'} 2026 Atlas Coach. All rights reserved.
+          {'\u00A9'} 2026 Coach Atlas. All rights reserved.
         </div>
         <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
           <a href="/about" style={{ color: colors.textMuted, fontSize: '13px', textDecoration: 'none' }}>About</a>

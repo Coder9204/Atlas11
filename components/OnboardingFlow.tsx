@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ONBOARDING FLOW - 4-step onboarding for Atlas Coach learning platform
+// ONBOARDING FLOW - 4-step onboarding for Coach Atlas learning platform
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Theme constants
@@ -519,7 +519,7 @@ const OnboardingFlow: React.FC = () => {
         fontFamily: theme.fontStack,
         lineHeight: 1.2,
       }}>
-        Welcome to Atlas Coach
+        Welcome to Coach Atlas
       </h1>
       <p style={{
         fontSize: '18px',

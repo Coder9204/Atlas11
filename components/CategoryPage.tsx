@@ -27,7 +27,7 @@ export default function CategoryPage() {
     if (!category) return;
     const allGames = getGamesInCategory(category.id);
     updateMeta({
-      title: `${category.name} - Interactive Physics Simulations | Atlas Coach`,
+      title: `${category.name} - Interactive Physics Simulations | Coach Atlas`,
       description: `${category.description}. Explore ${allGames.length}+ interactive games and simulations covering ${category.subcategories.map(s => s.name).join(', ')}.`,
       canonicalUrl: `/learn/${category.id}`,
       jsonLd: courseSchema({
@@ -78,7 +78,7 @@ export default function CategoryPage() {
     },
     {
       question: 'Can I track my progress?',
-      answer: 'Yes. Atlas Coach uses spaced repetition (SM-2 algorithm) to schedule reviews and tracks your mastery across all games in this category.',
+      answer: 'Yes. Coach Atlas uses spaced repetition (SM-2 algorithm) to schedule reviews and tracks your mastery across all games in this category.',
     },
   ];
 

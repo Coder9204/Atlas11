@@ -6,8 +6,10 @@ import { getLearnerProfile, getAllGameProgress } from '../services/GameProgressS
 import { getActivePaths, advancePath, markGameInProgress, syncPathWithProgress } from '../services/LearningPathService';
 import { trackGameStarted, trackGameCompleted, trackPaywallShown } from '../services/AnalyticsService';
 import GameTutorialOverlay, { shouldShowTutorial } from './GameTutorialOverlay';
-import FreeUsageBanner, { isFreeUsageExhausted } from './FreeUsageBanner';
+import FreeUsageBanner, { isDailyTimeExhausted } from './FreeUsageBanner';
 import { useAuth } from '../contexts/AuthContext';
+import { useDailyPlayTimer } from '../hooks/useDailyPlayTimer';
+import { isGuestGame, formatTimeRemaining, type AccessLevel } from '../lib/accessConfig';
 import { useAICoach } from '../contexts/AICoachContext';
 import AICoachPanel from './AICoachPanel';
 import { updateMeta, resetMeta } from '../lib/seo';
@@ -84,6 +86,18 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
   let auth: ReturnType<typeof useAuth> | null = null;
   try { auth = useAuth(); } catch { /* AuthProvider may not be mounted */ }
 
+  // Determine access tier
+  const userTier: AccessLevel = (() => {
+    if (!auth?.isAuthenticated) return 'guest';
+    const tier = auth?.subscription?.tier;
+    if (tier === 'plus' || tier === 'pro') return tier;
+    return 'starter';
+  })();
+
+  // Daily play timer — ticks only for non-guest, non-guest-game
+  const isActiveGame = !isGuestGame(slug);
+  const { secondsRemaining, isExhausted: timeExhausted } = useDailyPlayTimer(userTier, isActiveGame);
+
   // AI Coach integration (null-safe — context may not be mounted)
   const coach = useAICoach();
 
@@ -114,7 +128,7 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
     ];
 
     updateMeta({
-      title: `${seo.title} - Interactive Simulator | Atlas Coach`,
+      title: `${seo.title} - Interactive Simulator | Coach Atlas`,
       description: seo.description,
       canonicalUrl: `/games/${slug}`,
       jsonLd: [
@@ -253,26 +267,26 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
     ...(resumePhase ? { gamePhase: resumePhase } : {}),
   });
 
-  // Determine access: subscriber = unlimited, anonymous+expired = auth modal, free tier+exhausted = paywall
-  const isSubscribed = auth?.subscription && auth.subscription.tier !== 'free' && auth.subscription.status !== 'canceled';
-  const isAnonymousExpired = auth?.user?.isAnonymous && auth?.freeTrialExpired;
-  const freeExhausted = !isSubscribed && isFreeUsageExhausted();
+  // Determine access: paid = unlimited, guest on non-guest game = signup, free tier+time exhausted = paywall
+  const isPaid = userTier === 'plus' || userTier === 'pro';
+  const isAnonymousOnNonGuestGame = userTier === 'guest' && !isGuestGame(slug);
+  const freeTimeExhausted = !isPaid && !isGuestGame(slug) && timeExhausted;
 
-  // If anonymous and timer expired, trigger auth modal
+  // If anonymous on non-guest game, trigger auth modal
   useEffect(() => {
-    if (isAnonymousExpired) {
-      auth?.showAuthModal('timer_expired');
+    if (isAnonymousOnNonGuestGame) {
+      auth?.showAuthModal('signup_required');
     }
-  }, [isAnonymousExpired]);
+  }, [isAnonymousOnNonGuestGame]);
 
-  const blocked = !isSubscribed && (isAnonymousExpired || freeExhausted);
+  const blocked = isAnonymousOnNonGuestGame || freeTimeExhausted;
 
   // Track paywall shown
   useEffect(() => {
     if (blocked) {
-      trackPaywallShown(slug, isAnonymousExpired ? 'anonymous_expired' : 'free_exhausted');
+      trackPaywallShown(slug, isAnonymousOnNonGuestGame ? 'signup_required' : 'daily_time_exhausted');
     }
-  }, [blocked, slug, isAnonymousExpired]);
+  }, [blocked, slug, isAnonymousOnNonGuestGame]);
 
   return (
     <div
@@ -295,18 +309,18 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
           textAlign: 'center',
           fontFamily: "'Inter', sans-serif",
         }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>{'\uD83D\uDD12'}</div>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>{isAnonymousOnNonGuestGame ? '\uD83D\uDD13' : '\u23F0'}</div>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#f8fafc', marginBottom: 8 }}>
-            {isAnonymousExpired ? 'Free Preview Ended' : 'Free Games Used Up'}
+            {isAnonymousOnNonGuestGame ? 'Sign Up to Play' : 'Daily Play Time Used Up'}
           </h2>
           <p style={{ fontSize: 15, color: '#94a3b8', maxWidth: 400, lineHeight: 1.6, marginBottom: 24 }}>
-            {isAnonymousExpired
-              ? 'Create a free account to keep learning, or upgrade for unlimited access.'
-              : "You've played all 5 free games this month. Upgrade to continue learning with unlimited access."}
+            {isAnonymousOnNonGuestGame
+              ? 'Create a free account to unlock 15 minutes of daily gameplay across all 340+ games.'
+              : 'Your daily play time has been used. Come back tomorrow, or upgrade for more time!'}
           </p>
-          {isAnonymousExpired ? (
+          {isAnonymousOnNonGuestGame ? (
             <button
-              onClick={() => auth?.showAuthModal('timer_expired')}
+              onClick={() => auth?.showAuthModal('signup_required')}
               style={{
                 padding: '14px 32px',
                 background: '#3B82F6',
@@ -325,7 +339,7 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
               href="/pricing"
               style={{
                 padding: '14px 32px',
-                background: '#3B82F6',
+                background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
                 color: '#fff',
                 borderRadius: 12,
                 fontSize: 16,
@@ -333,7 +347,7 @@ export default function GameShell({ slug: slugProp, category: categoryProp, diff
                 textDecoration: 'none',
               }}
             >
-              View Plans
+              Upgrade for More Time
             </a>
           )}
           <a

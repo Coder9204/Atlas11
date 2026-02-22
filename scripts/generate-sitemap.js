@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Sitemap Generator for Atlas Coach
+ * Sitemap Generator for Coach Atlas
  *
  * Generates a comprehensive sitemap.xml including all page types.
  * Uses sitemap index format when >1000 URLs.

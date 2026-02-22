@@ -4,16 +4,21 @@ import {
   subscribeToAuthState,
   signInAnonymousUser,
   signInWithGoogle as firebaseSignInWithGoogle,
+  signInWithFacebook as firebaseSignInWithFacebook,
+  signInWithTwitter as firebaseSignInWithTwitter,
   signOut as firebaseSignOut,
   signUpWithEmail as firebaseSignUpWithEmail,
   signInWithEmail as firebaseSignInWithEmail,
   linkAnonymousToEmail,
   linkAnonymousToGoogle,
+  linkAnonymousToFacebook,
+  linkAnonymousToTwitter,
   isFirebaseConfigured,
   getFirestoreInstance,
 } from '../services/firebase';
 import { onSnapshot, doc } from 'firebase/firestore';
-import { useFreeTimer, clearFreeTimer } from '../hooks/useFreeTimer';
+import { clearFreeTimer } from '../hooks/useFreeTimer';
+import { getDailySecondsUsed } from '../hooks/useDailyPlayTimer';
 import { trackAuthModalShown, trackAuthModalDismissed, trackSignupCompleted } from '../services/AnalyticsService';
 
 export interface Subscription {
@@ -36,6 +41,8 @@ export interface AuthContextValue {
   signInWithEmail(email: string, password: string): Promise<void>;
   signUpWithEmail(email: string, password: string, name: string): Promise<void>;
   signInWithGoogle(): Promise<void>;
+  signInWithFacebook(): Promise<void>;
+  signInWithTwitter(): Promise<void>;
   signOut(): Promise<void>;
   showAuthModal(reason?: string): void;
   hideAuthModal(): void;
@@ -57,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [authModalState, setAuthModalState] = useState<AuthModalState>({ open: false, reason: '' });
-  const { secondsLeft, isExpired } = useFreeTimer();
+  const [freeTrialExpired, setFreeTrialExpired] = useState(false);
   const subUnsubRef = useRef<(() => void) | null>(null);
   const timerTriggeredRef = useRef(false);
 
@@ -118,13 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsub();
   }, [user]);
 
-  // Auto-trigger auth modal when free trial expires for anonymous users
-  useEffect(() => {
-    if (isExpired && user?.isAnonymous && !timerTriggeredRef.current && !authModalState.open) {
-      timerTriggeredRef.current = true;
-      setAuthModalState({ open: true, reason: 'timer_expired' });
-    }
-  }, [isExpired, user, authModalState.open]);
+  // No longer auto-trigger based on wall-clock timer.
+  // Time gating is handled by GameShell via useDailyPlayTimer.
 
   const showAuthModal = useCallback((reason = 'manual') => {
     trackAuthModalShown(reason);
@@ -143,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignUpWithEmail = useCallback(async (email: string, password: string, name: string) => {
     const wasAnonymous = !!user?.isAnonymous;
+    const reason = authModalState.reason;
     if (user?.isAnonymous) {
       await linkAnonymousToEmail(email, password, name);
     } else {
@@ -151,10 +154,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     trackSignupCompleted('email', wasAnonymous);
     clearFreeTimer();
     hideAuthModal();
-  }, [user, hideAuthModal]);
+    if (reason === 'pricing_cta') {
+      window.location.href = '/pricing';
+    }
+  }, [user, hideAuthModal, authModalState.reason]);
 
   const handleSignInWithGoogle = useCallback(async () => {
     const wasAnonymous = !!user?.isAnonymous;
+    const reason = authModalState.reason;
     if (user?.isAnonymous) {
       await linkAnonymousToGoogle();
     } else {
@@ -163,7 +170,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     trackSignupCompleted('google', wasAnonymous);
     clearFreeTimer();
     hideAuthModal();
-  }, [user, hideAuthModal]);
+    if (reason === 'pricing_cta') {
+      window.location.href = '/pricing';
+    }
+  }, [user, hideAuthModal, authModalState.reason]);
+
+  const handleSignInWithFacebook = useCallback(async () => {
+    const wasAnonymous = !!user?.isAnonymous;
+    const reason = authModalState.reason;
+    if (user?.isAnonymous) {
+      await linkAnonymousToFacebook();
+    } else {
+      await firebaseSignInWithFacebook();
+    }
+    trackSignupCompleted('facebook', wasAnonymous);
+    clearFreeTimer();
+    hideAuthModal();
+    if (reason === 'pricing_cta') {
+      window.location.href = '/pricing';
+    }
+  }, [user, hideAuthModal, authModalState.reason]);
+
+  const handleSignInWithTwitter = useCallback(async () => {
+    const wasAnonymous = !!user?.isAnonymous;
+    const reason = authModalState.reason;
+    if (user?.isAnonymous) {
+      await linkAnonymousToTwitter();
+    } else {
+      await firebaseSignInWithTwitter();
+    }
+    trackSignupCompleted('twitter', wasAnonymous);
+    clearFreeTimer();
+    hideAuthModal();
+    if (reason === 'pricing_cta') {
+      window.location.href = '/pricing';
+    }
+  }, [user, hideAuthModal, authModalState.reason]);
 
   const handleSignOut = useCallback(async () => {
     await firebaseSignOut();
@@ -175,11 +217,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated,
     isLoading,
     subscription,
-    freeTrialExpired: isExpired,
-    freeTrialSecondsLeft: secondsLeft,
+    freeTrialExpired,
+    freeTrialSecondsLeft: 0,
     signInWithEmail: handleSignInWithEmail,
     signUpWithEmail: handleSignUpWithEmail,
     signInWithGoogle: handleSignInWithGoogle,
+    signInWithFacebook: handleSignInWithFacebook,
+    signInWithTwitter: handleSignInWithTwitter,
     signOut: handleSignOut,
     showAuthModal,
     hideAuthModal,

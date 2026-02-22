@@ -13,6 +13,7 @@ const LearningPathPage = lazy(() => import('./components/LearningPathPage'));
 const CustomGameBuilder = lazy(() => import('./components/CustomGameBuilder'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AboutPage = lazy(() => import('./components/AboutPage'));
+const VerifyEmailPage = lazy(() => import('./components/VerifyEmailPage'));
 
 // SEO page components (lazy loaded)
 const CategoryPage = lazy(() => import('./components/CategoryPage'));
@@ -162,6 +163,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <AdminPanel />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/verify',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <VerifyEmailPage />
       </Suspense>
     ),
   },

@@ -9,7 +9,7 @@ export default function GlossaryIndex() {
 
   useEffect(() => {
     updateMeta({
-      title: 'Physics & Engineering Glossary | Atlas Coach',
+      title: 'Physics & Engineering Glossary | Coach Atlas',
       description: 'Browse definitions for 100+ physics and engineering terms. Each term links to interactive simulations, related concepts, and formulas.',
       canonicalUrl: '/glossary',
     });

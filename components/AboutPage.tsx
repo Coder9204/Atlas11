@@ -116,7 +116,7 @@ const AboutPage: React.FC = () => {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            Atlas Coach
+            Coach Atlas
           </span>
         </h1>
         <p style={{
@@ -127,7 +127,7 @@ const AboutPage: React.FC = () => {
           lineHeight: 1.7,
           position: 'relative',
         }}>
-          We believe physics should be intuitive, not intimidating. Atlas Coach turns abstract
+          We believe physics should be intuitive, not intimidating. Coach Atlas turns abstract
           formulas into interactive games so every learner can discover the beauty of how the world works.
         </p>
       </section>
@@ -184,7 +184,7 @@ const AboutPage: React.FC = () => {
           maxWidth: 500,
           margin: '0 auto 48px',
         }}>
-          Four pillars that make Atlas Coach effective
+          Four pillars that make Coach Atlas effective
         </p>
 
         <div style={{
@@ -263,7 +263,7 @@ const AboutPage: React.FC = () => {
           margin: '0 auto',
         }}>
           <p style={{ marginBottom: 20 }}>
-            Atlas Coach started with a simple observation: students who play with physics simulations
+            Coach Atlas started with a simple observation: students who play with physics simulations
             understand concepts faster and remember them longer than those who only read textbooks.
           </p>
           <p style={{ marginBottom: 20 }}>
@@ -272,7 +272,7 @@ const AboutPage: React.FC = () => {
             proven learning cycle — predict, experiment, review, and master.
           </p>
           <p style={{ margin: 0 }}>
-            Today, Atlas Coach offers 340+ games across 11 categories, powered by an AI voice coach
+            Today, Coach Atlas offers 340+ games across 11 categories, powered by an AI voice coach
             that adapts to each learner's pace. Whether you're a high school student prepping for
             AP Physics or an engineering undergraduate tackling electromagnetism, Atlas meets you
             where you are and helps you level up.

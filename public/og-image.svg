@@ -44,7 +44,7 @@
   <text x="116" y="210" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">&#127891;</text>
 
   <!-- Title -->
-  <text x="80" y="300" fill="white" font-size="64" font-weight="800" font-family="'Inter', 'Segoe UI', Arial, sans-serif" letter-spacing="-1">Atlas Coach</text>
+  <text x="80" y="300" fill="white" font-size="64" font-weight="800" font-family="'Inter', 'Segoe UI', Arial, sans-serif" letter-spacing="-1">Coach Atlas</text>
 
   <!-- Tagline -->
   <text x="80" y="360" fill="#94A3B8" font-size="28" font-weight="400" font-family="'Inter', 'Segoe UI', Arial, sans-serif">Master Physics &amp; Engineering Through</text>

@@ -56,10 +56,10 @@ export default function ComparisonPostBody({ post }: Props) {
         </p>
       </section>
 
-      {/* What Is Atlas Coach */}
+      {/* What Is Coach Atlas */}
       <section style={{ marginBottom: '40px' }}>
         <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '16px', color: '#f0f0f5' }}>
-          What Is Atlas Coach?
+          What Is Coach Atlas?
         </h2>
         <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#e2e8f0' }}>
           {post.atlasCoachOverview}
@@ -99,7 +99,7 @@ export default function ComparisonPostBody({ post }: Props) {
               color: '#3B82F6',
               borderRight: '1px solid #2a2a3a',
             }}>
-              Atlas Coach
+              Coach Atlas
             </div>
             <div style={{
               padding: '16px 20px',
@@ -167,7 +167,7 @@ export default function ComparisonPostBody({ post }: Props) {
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '20px',
         }}>
-          {/* Atlas Coach */}
+          {/* Coach Atlas */}
           <div style={{
             background: '#1a1a24',
             border: '1px solid #3B82F640',
@@ -175,7 +175,7 @@ export default function ComparisonPostBody({ post }: Props) {
             padding: '24px',
           }}>
             <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#3B82F6', marginBottom: '16px' }}>
-              Atlas Coach
+              Coach Atlas
             </h3>
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#22c55e', marginBottom: '8px' }}>Pros</h4>
@@ -253,7 +253,7 @@ export default function ComparisonPostBody({ post }: Props) {
       {post.relatedSimulations.length > 0 && (
         <section style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '16px', color: '#f0f0f5' }}>
-            Try Related Atlas Coach Simulations
+            Try Related Coach Atlas Simulations
           </h2>
           <div style={{
             display: 'grid',
@@ -343,7 +343,7 @@ export default function ComparisonPostBody({ post }: Props) {
         textAlign: 'center',
       }}>
         <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px', color: '#f0f0f5' }}>
-          Try Atlas Coach Free
+          Try Coach Atlas Free
         </h2>
         <p style={{
           color: '#94a3b8',

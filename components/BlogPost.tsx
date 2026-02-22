@@ -19,11 +19,11 @@ const legacyPostData: Record<string, {
 }> = {
   'why-interactive-simulations-beat-textbooks': {
     title: 'Why Interactive Simulations Beat Textbooks for Learning Physics',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-04-15',
     category: 'Study Tips',
     readTime: '6 min',
-    description: 'Research shows active learning outperforms passive reading by 2x. Here is how Atlas Coach applies cognitive science to physics education.',
+    description: 'Research shows active learning outperforms passive reading by 2x. Here is how Coach Atlas applies cognitive science to physics education.',
     relatedGames: [
       { name: 'Pendulum Period', slug: 'pendulum-period' },
       { name: 'Energy Conservation', slug: 'energy-conservation' },
@@ -32,7 +32,7 @@ const legacyPostData: Record<string, {
   },
   'understanding-newtons-third-law-intuitively': {
     title: 'Understanding Newton\'s Third Law Intuitively',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-04-10',
     category: 'Physics',
     readTime: '5 min',
@@ -45,7 +45,7 @@ const legacyPostData: Record<string, {
   },
   'how-gpu-parallelism-mirrors-physics-simulations': {
     title: 'How GPU Parallelism Mirrors Physics Simulations',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-04-05',
     category: 'AI & Computing',
     readTime: '8 min',
@@ -58,7 +58,7 @@ const legacyPostData: Record<string, {
   },
   'solar-cell-efficiency-explained-simply': {
     title: 'Solar Cell Efficiency Explained Simply',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-03-28',
     category: 'Engineering',
     readTime: '7 min',
@@ -71,11 +71,11 @@ const legacyPostData: Record<string, {
   },
   'spaced-repetition-for-stem-learning': {
     title: 'Spaced Repetition for STEM Learning: A Practical Guide',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-03-20',
     category: 'Study Tips',
     readTime: '5 min',
-    description: 'How the SM-2 algorithm schedules reviews at the perfect time, and why Atlas Coach uses it to help you remember what you learn.',
+    description: 'How the SM-2 algorithm schedules reviews at the perfect time, and why Coach Atlas uses it to help you remember what you learn.',
     relatedGames: [
       { name: 'Circuits', slug: 'circuits' },
       { name: 'Bernoulli', slug: 'bernoulli' },
@@ -83,7 +83,7 @@ const legacyPostData: Record<string, {
   },
   'semiconductor-fabrication-for-beginners': {
     title: 'Semiconductor Fabrication for Beginners',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-03-15',
     category: 'Engineering',
     readTime: '10 min',
@@ -96,7 +96,7 @@ const legacyPostData: Record<string, {
   },
   'what-is-thermal-throttling': {
     title: 'What Is Thermal Throttling and Why Does It Slow Your Laptop?',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-03-10',
     category: 'AI & Computing',
     readTime: '6 min',
@@ -109,7 +109,7 @@ const legacyPostData: Record<string, {
   },
   'the-physics-of-roller-coasters': {
     title: 'The Physics of Roller Coasters: Energy, Forces, and G-Loads',
-    author: 'Atlas Coach Team',
+    author: 'Coach Atlas Team',
     date: '2025-03-01',
     category: 'Physics',
     readTime: '7 min',
@@ -153,7 +153,7 @@ export default function BlogPost() {
       });
     } else if (legacyPost) {
       updateMeta({
-        title: `${legacyPost.title} | Atlas Coach Blog`,
+        title: `${legacyPost.title} | Coach Atlas Blog`,
         description: legacyPost.description,
         canonicalUrl: `/blog/${slug}`,
         ogType: 'article',
@@ -362,7 +362,7 @@ export default function BlogPost() {
           <div style={{ color: '#e2e8f0', fontSize: '16px', lineHeight: 1.8 }}>
             <p style={{ marginBottom: '20px' }}>
               This article is coming soon. We are preparing in-depth content with
-              interactive examples and connections to the Atlas Coach simulation library.
+              interactive examples and connections to the Coach Atlas simulation library.
             </p>
             <p style={{ marginBottom: '20px' }}>
               In the meantime, you can explore the interactive simulations below to
